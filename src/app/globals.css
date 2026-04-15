@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { overflow: hidden; }
+
+/* ── Glassmorphism ─────────────────────────────────────────────────────────── */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ── Signature canvas ──────────────────────────────────────────────────────── */
+.sig-canvas { cursor: crosshair; touch-action: none; display: block; }
+
+/* ── Resize handles ────────────────────────────────────────────────────────── */
+.resize-handle {
+  position: absolute;
+  width: 8px; height: 8px;
+  background: #fff;
+  border: 1.5px solid #4f6ef7;
+  border-radius: 2px;
+  z-index: 50;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+.thin-scroll::-webkit-scrollbar { width: 4px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
+.thin-scroll::-webkit-scrollbar-thumb { background: #c0cae0; border-radius: 4px; }
+
+/* ── Responsive ────────────────────────────────────────────────────────────── */
+@media (max-width: 639px) {
+  /* Tighter canvas padding on small screens */
+  .canvas-wrap { padding: 10px !important; }
+}
+
+@media (max-width: 1023px) {
+  /* Ensure sidebars overlay rather than push content */
+  .sidebar-overlay { position: absolute !important; }
+}
+
+/* ── PDF canvas smooth rendering ───────────────────────────────────────────── */
+canvas {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* ── Transitions ───────────────────────────────────────────────────────────── */
+button { transition: opacity 0.12s, background 0.12s, color 0.12s; }
+button:active { opacity: 0.8; }
+
+/* ── Focus rings ───────────────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid #4f6ef7; outline-offset: 2px; }
+textarea:focus { outline: none; }
+
+/* ── Safe area on notched phones ───────────────────────────────────────────── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  nav { padding-bottom: max(4px, env(safe-area-inset-bottom)) !important; }
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────────── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes spin-reverse {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-ring {
+  0%,100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.4); }
+  50%      { box-shadow: 0 0 0 6px rgba(99,102,241,0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.spin { animation: spin 0.9s linear infinite; }
+.spin-reverse { animation: spin-reverse 0.9s linear infinite; }
+.fade-in-up { animation: fadeInUp 0.25s ease both; }
+.pulse-ring { animation: pulse-ring 2s ease-in-out infinite; }
+
+.page-skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* ── Crop overlay ───────────────────────────────────────────────────────────── */
+.crop-overlay-mask {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.45);
+  pointer-events: none;
+  z-index: 8;
+}
+.crop-selection-border {
+  position: absolute;
+  border: 2px dashed #f59e0b;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+  pointer-events: none;
+  z-index: 9;
+}

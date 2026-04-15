@@ -1,0 +1,2158 @@
+'use client'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { v4 as uuidv4 } from 'uuid'
+import DraggableElement from './DraggableElement'
+import PageSidebar from './PageSidebar'
+import PropertiesPanel from './PropertiesPanel'
+import SignatureModal from './SignatureModal'
+import DatePickerPanel from './DatePickerPanel'
+import OrganisePages from './OrganisePages'
+import type {
+  PDFElement, PDFSource, PageSlot, ToolMode,
+  TextElement, ImageElement, SignatureElement, StampElement, HighlightElement,
+  MarkElement, AnnotationElement, ShapeElement, DrawElement, WatermarkElement,
+} from '@/types'
+
+// ── Constants ────────────────────────────────────────────────────────────────
+const STAMP_COLOR: Record<string, string> = {
+  blue: '#1d4ed8', red: '#dc2626', orange: '#b45309', gray: '#64748b',
+}
+
+// ── pdfjs loader (singleton) ─────────────────────────────────────────────────
+let _pdfjs: any = null
+async function getPdfjs() {
+  if (!_pdfjs) {
+    _pdfjs = await import('pdfjs-dist')
+    _pdfjs.GlobalWorkerOptions.workerSrc =
+      `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${_pdfjs.version}/pdf.worker.min.js`
+  }
+  return _pdfjs
+}
+
+// ── Thumbnail generator ──────────────────────────────────────────────────────
+async function makeThumb(slot: PageSlot, sources: PDFSource[]): Promise<string> {
+  const sc = 0.2
+  const rot = slot.rotation || 0
+  const sw = rot === 90 || rot === 270
+  const c = document.createElement('canvas')
+  const ctx = c.getContext('2d')!
+  if (slot.type === 'pdf') {
+    const src = sources.find(s => s.id === slot.sourceId)
+    if (!src) return ''
+    const page = await src.doc.getPage(slot.pageNum!)
+    const vp = page.getViewport({ scale: sc, rotation: rot })
+    c.width = vp.width; c.height = vp.height
+    await page.render({ canvasContext: ctx, viewport: vp }).promise
+  } else if (slot.type === 'blank') {
+    c.width  = (sw ? slot.baseHeight : slot.baseWidth)  * sc
+    c.height = (sw ? slot.baseWidth  : slot.baseHeight) * sc
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height)
+    ctx.fillStyle = '#c8d0e0'; ctx.font = `${c.height * 0.12}px sans-serif`
+    ctx.textAlign = 'center'; ctx.fillText('Blank', c.width / 2, c.height / 2)
+  } else if (slot.type === 'image') {
+    await new Promise<void>(res => {
+      const img = new Image(); img.onload = () => {
+        c.width  = (sw ? slot.baseHeight : slot.baseWidth)  * sc
+        c.height = (sw ? slot.baseWidth  : slot.baseHeight) * sc
+        if (rot) {
+          ctx.save()
+          ctx.translate(c.width / 2, c.height / 2)
+          ctx.rotate(rot * Math.PI / 180)
+          ctx.drawImage(img, -slot.baseWidth * sc / 2, -slot.baseHeight * sc / 2, slot.baseWidth * sc, slot.baseHeight * sc)
+          ctx.restore()
+        } else {
+          ctx.drawImage(img, 0, 0, c.width, c.height)
+        }
+        res()
+      }; img.src = slot.imageSrc!
+    })
+  }
+  return c.toDataURL('image/jpeg', 0.65)
+}
+
+// ── Sub-components ───────────────────────────────────────────────────────────
+function HighlightDisplay({ el }: { el: HighlightElement }) {
+  return <div style={{ width: '100%', height: '100%', background: el.color, opacity: el.opacity, mixBlendMode: 'multiply', borderRadius: 2 }} />
+}
+
+function MarkDisplay({ el }: { el: MarkElement }) {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+      {el.markType === 'tick' ? (
+        <polyline points="10,55 38,82 90,18" fill="none" stroke={el.color}
+          strokeWidth={el.strokeWidth * 4} strokeLinecap="round" strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke" />
+      ) : (
+        <>
+          <line x1="12" y1="12" x2="88" y2="88" stroke={el.color}
+            strokeWidth={el.strokeWidth * 4} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <line x1="88" y1="12" x2="12" y2="88" stroke={el.color}
+            strokeWidth={el.strokeWidth * 4} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        </>
+      )}
+    </svg>
+  )
+}
+
+function AnnotationDisplay({ el, isEditing, onChange, onDblClick }: {
+  el: AnnotationElement; isEditing: boolean
+  onChange: (t: string) => void; onDblClick: () => void
+}) {
+  return (
+    <div style={{
+      width: '100%', height: '100%', background: el.color || '#fef9c3',
+      border: '1px solid rgba(180,160,0,0.25)', borderRadius: 4,
+      padding: '5px 7px', boxSizing: 'border-box',
+      boxShadow: '2px 3px 8px rgba(0,0,0,0.1)',
+      display: 'flex', flexDirection: 'column', overflow: 'hidden',
+    }}>
+      <div style={{ fontSize: 8, fontWeight: 800, color: 'rgba(0,0,0,0.28)', marginBottom: 3, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Note</div>
+      {isEditing ? (
+        <textarea autoFocus value={el.text} onChange={e => onChange(e.target.value)}
+          onClick={e => e.stopPropagation()}
+          style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', resize: 'none',
+            fontSize: 11, fontFamily: 'Inter, sans-serif', color: '#1e293b', lineHeight: 1.45 }} />
+      ) : (
+        <div onDoubleClick={onDblClick}
+          style={{ flex: 1, fontSize: 11, fontFamily: 'Inter, sans-serif', color: '#1e293b',
+            lineHeight: 1.45, whiteSpace: 'pre-wrap', overflow: 'hidden', cursor: 'move' }}>
+          {el.text || <span style={{ opacity: 0.4, fontStyle: 'italic' }}>Double-click…</span>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ShapeDisplay({ el }: { el: ShapeElement }) {
+  const stroke = el.strokeColor || '#1d4ed8'
+  const fill   = el.fillColor   || 'none'
+  const sw     = el.strokeWidth || 2
+  const vb     = 100
+  const ex = vb - sw, ey = sw, sx2 = sw, sy2 = vb - sw
+  const ang = Math.atan2(ey - sy2, ex - sx2)
+  const hs  = 16
+  return (
+    <svg width="100%" height="100%" viewBox={`0 0 ${vb} ${vb}`} preserveAspectRatio="none" style={{ display: 'block', overflow: 'visible' }}>
+      {el.shapeType === 'rectangle' && (
+        <rect x={sw/2} y={sw/2} width={vb-sw} height={vb-sw}
+          fill={fill} stroke={stroke} strokeWidth={sw} rx={2} vectorEffect="non-scaling-stroke" />
+      )}
+      {el.shapeType === 'ellipse' && (
+        <ellipse cx={vb/2} cy={vb/2} rx={vb/2-sw/2} ry={vb/2-sw/2}
+          fill={fill} stroke={stroke} strokeWidth={sw} vectorEffect="non-scaling-stroke" />
+      )}
+      {el.shapeType === 'line' && (
+        <line x1={sx2} y1={sy2} x2={ex} y2={ey}
+          stroke={stroke} strokeWidth={sw} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      )}
+      {el.shapeType === 'arrow' && (
+        <g>
+          <line x1={sx2} y1={sy2} x2={ex} y2={ey}
+            stroke={stroke} strokeWidth={sw} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <line x1={ex} y1={ey} x2={ex - hs*Math.cos(ang-0.45)} y2={ey - hs*Math.sin(ang-0.45)}
+            stroke={stroke} strokeWidth={sw} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <line x1={ex} y1={ey} x2={ex - hs*Math.cos(ang+0.45)} y2={ey - hs*Math.sin(ang+0.45)}
+            stroke={stroke} strokeWidth={sw} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+        </g>
+      )}
+      {el.shapeType === 'polygon' && (
+        <polygon
+          points={`${vb/2},${sw} ${vb-sw},${vb*0.38} ${vb*0.82},${vb-sw} ${vb*0.18},${vb-sw} ${sw},${vb*0.38}`}
+          fill={fill} stroke={stroke} strokeWidth={sw} vectorEffect="non-scaling-stroke" />
+      )}
+    </svg>
+  )
+}
+
+function DrawDisplay({ el, scale }: { el: DrawElement; scale: number }) {
+  if (el.points.length < 2) return null
+  const pts = el.points.map(p => `${(p.x - el.x) * scale},${(p.y - el.y) * scale}`).join(' ')
+  return (
+    <svg style={{ position:'absolute', inset:0, overflow:'visible', pointerEvents:'none' }}
+      width={el.width * scale} height={el.height * scale}>
+      <polyline points={pts} fill="none" stroke={el.color} strokeWidth={el.strokeWidth}
+        strokeLinecap="round" strokeLinejoin="round" opacity={el.opacity ?? 1} />
+    </svg>
+  )
+}
+
+function WatermarkDisplay({ el, scale }: { el: WatermarkElement; scale: number }) {
+  return (
+    <div style={{
+      width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center',
+      transform:`rotate(${el.rotation}deg)`, opacity: el.opacity ?? 0.25, pointerEvents:'none',
+      overflow:'hidden',
+    }}>
+      {el.imageSrc ? (
+        <img src={el.imageSrc} alt="watermark" draggable={false}
+          style={{ maxWidth:'80%', maxHeight:'80%', objectFit:'contain', userSelect:'none' }} />
+      ) : (
+        <span style={{
+          fontSize: el.fontSize * scale, fontWeight:800, color: el.color,
+          fontFamily:'Manrope,sans-serif', letterSpacing:'0.12em',
+          whiteSpace:'nowrap', userSelect:'none', textShadow:'0 1px 3px rgba(0,0,0,0.1)',
+        }}>{el.text}</span>
+      )}
+    </div>
+  )
+}
+
+// ── Ghost position marker ──────────────────────────────────────────────────
+function GhostMarker({ toolMode, x, y, activeMarkType, activeShapeType, shapeStroke }: {
+  toolMode: ToolMode; x: number; y: number
+  activeMarkType: 'tick' | 'cross'; activeShapeType: string; shapeStroke: string
+}) {
+  const base: React.CSSProperties = { position: 'absolute', left: x, top: y, pointerEvents: 'none', zIndex: 6, opacity: 0.55 }
+  if (toolMode === 'text') return (
+    <div style={{ ...base, width: 120, height: 28, border: '2px dashed #6366f1', borderRadius: 3, background: 'rgba(99,102,241,0.06)' }} />
+  )
+  if (toolMode === 'highlight') return (
+    <div style={{ ...base, width: 120, height: 20, background: '#fef08a', borderRadius: 2 }} />
+  )
+  if (toolMode === 'mark') return (
+    <div style={{ ...base, width: 36, height: 36 }}>
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        {activeMarkType === 'tick'
+          ? <polyline points="20 6 9 17 4 12"/>
+          : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}
+      </svg>
+    </div>
+  )
+  if (toolMode === 'annotation') return (
+    <div style={{ ...base, width: 100, height: 64, background: '#fef9c3', border: '1px solid rgba(180,160,0,0.25)', borderRadius: 4, boxShadow: '2px 3px 8px rgba(0,0,0,0.08)' }} />
+  )
+  if (toolMode === 'shape') return (
+    <div style={{ ...base, width: 80, height: 60 }}>
+      <svg width="80" height="60" viewBox="0 0 80 60" fill="none" stroke={shapeStroke} strokeWidth="1.5">
+        {activeShapeType === 'rectangle' && <rect x="2" y="2" width="76" height="56" rx="2"/>}
+        {activeShapeType === 'ellipse'   && <ellipse cx="40" cy="30" rx="38" ry="28"/>}
+        {activeShapeType === 'line'      && <line x1="5" y1="55" x2="75" y2="5"/>}
+        {activeShapeType === 'arrow'     && <><line x1="5" y1="55" x2="75" y2="5"/><polyline points="52,5 75,5 75,28"/></>}
+        {activeShapeType === 'polygon'   && <polygon points="40,3 77,20 65,57 15,57 3,20"/>}
+      </svg>
+    </div>
+  )
+  return null
+}
+
+function StampDisplay({ el, scale }: { el: StampElement; scale: number }) {
+  const c = el.color.startsWith('#') ? el.color : (STAMP_COLOR[el.color] || '#1d4ed8')
+  const fs = Math.max(8, Math.round(el.height * scale * 0.34))
+  return (
+    <div style={{
+      width: '100%', height: '100%', border: `2px solid ${c}`, borderRadius: 4,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: c, fontWeight: 800, fontSize: fs, letterSpacing: '0.05em',
+      fontFamily: 'Manrope, sans-serif', transform: 'rotate(-5deg)',
+      background: `${c}12`, opacity: el.opacity ?? 1,
+    }}>{el.label}</div>
+  )
+}
+
+function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
+  el: TextElement; scale: number; isEditing: boolean
+  onChange: (t: string) => void; onDblClick: () => void
+}) {
+  const fs = el.fontSize * scale
+  const shared: React.CSSProperties = {
+    width: '100%', height: '100%', fontSize: fs, fontFamily: el.fontFamily,
+    color: el.color, fontWeight: el.bold ? 700 : 400,
+    fontStyle: el.italic ? 'italic' : 'normal',
+    textDecoration: el.underline ? 'underline' : 'none',
+    textAlign: el.align, background: el.bgColor || 'transparent',
+    padding: '2px 4px', boxSizing: 'border-box', lineHeight: 1.4,
+    overflow: 'hidden', wordBreak: 'break-word',
+  }
+  if (isEditing)
+    return (
+      <textarea autoFocus value={el.text} onChange={e => onChange(e.target.value)}
+        onClick={e => e.stopPropagation()}
+        style={{ ...shared, border: 'none', outline: 'none', resize: 'none', cursor: 'text' }} />
+    )
+  return (
+    <div onDoubleClick={onDblClick}
+      style={{ ...shared, cursor: 'move', whiteSpace: 'pre-wrap', minHeight: '1em' }}>
+      {el.text || <span style={{ opacity: 0.3, fontStyle: 'italic' }}>Double-click to type…</span>}
+    </div>
+  )
+}
+
+// (Date formatting handled in DatePickerPanel)
+
+// ── Main ─────────────────────────────────────────────────────────────────────
+export default function PDFEditor() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)  // kept for compat; primary: canvasRefsMap
+  const canvasRefsMap = useRef<Record<string, HTMLCanvasElement | null>>({})
+
+  // PDF sources + page slots
+  const [sources, setSources]     = useState<PDFSource[]>([])
+  const [slots, setSlots]         = useState<PageSlot[]>([])
+  const [slotIdx, setSlotIdx]     = useState(0)
+  const [scale, setScale]         = useState(1.2)
+  const [rendering, setRendering] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+
+  // Annotation elements
+  const [elements, setElements]   = useState<PDFElement[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [editingId, setEditingId]   = useState<string | null>(null)
+  const [toolMode, setToolMode]     = useState<ToolMode>('text')
+
+  // UI
+  const [isDragOver, setIsDragOver]   = useState(false)
+  const [showSig, setShowSig]         = useState(false)
+  const [showDateMenu, setShowDateMenu] = useState(false)
+  const [showSidebar, setShowSidebar] = useState(true)
+  const [showPanel, setShowPanel]     = useState(true)
+  const [showOrganise, setShowOrganise] = useState(false)
+  const [vw, setVw]                   = useState(1280)
+  // New tool options
+  const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'>('tick')
+  const [markColor, setMarkColor]           = useState('#16a34a')
+  const [activeShapeType, setActiveShapeType] = useState<'rectangle'|'ellipse'|'line'|'arrow'|'polygon'>('rectangle')
+  const [shapeStroke, setShapeStroke]       = useState('#1d4ed8')
+  const [shapeFill, setShapeFill]           = useState('')
+  const [shapeStrokeWidth, setShapeStrokeWidth] = useState(2)
+  const [showMarkMenu, setShowMarkMenu]     = useState(false)
+  const [showShapeMenu, setShowShapeMenu]   = useState(false)
+  const [showStampMenu, setShowStampMenu]   = useState(false)
+  const [customStampText, setCustomStampText] = useState('')
+  const [pdfName, setPdfName]         = useState('')
+  const [editingName, setEditingName] = useState(false)
+
+  // Undo / redo
+  const historyRef = useRef<PDFElement[][]>([[]])
+  const histIdxRef = useRef(0)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
+
+  const pushHistory = useCallback((els: PDFElement[]) => {
+    const h = historyRef.current.slice(0, histIdxRef.current + 1)
+    h.push([...els])
+    historyRef.current = h
+    histIdxRef.current = h.length - 1
+    setCanUndo(h.length > 1)
+    setCanRedo(false)
+  }, [])
+
+  const undo = useCallback(() => {
+    if (histIdxRef.current <= 0) return
+    histIdxRef.current--
+    const els = historyRef.current[histIdxRef.current]
+    setElements([...els])
+    setCanUndo(histIdxRef.current > 0)
+    setCanRedo(true)
+  }, [])
+
+  const redo = useCallback(() => {
+    if (histIdxRef.current >= historyRef.current.length - 1) return
+    histIdxRef.current++
+    const els = historyRef.current[histIdxRef.current]
+    setElements([...els])
+    setCanUndo(true)
+    setCanRedo(histIdxRef.current < historyRef.current.length - 1)
+  }, [])
+
+  // Draw tool
+  const [drawColor, setDrawColor]           = useState('#1e293b')
+  const [drawStrokeWidth, setDrawStrokeWidth] = useState(3)
+  const [drawOpacity, setDrawOpacity]       = useState(1)
+  const [showDrawMenu, setShowDrawMenu]     = useState(false)
+  const isDrawing   = useRef(false)
+  const drawPoints  = useRef<{ x: number; y: number }[]>([])
+  const liveDrawEl  = useRef<DrawElement | null>(null)
+  const [drawPreviewPts, setDrawPreviewPts] = useState<{ x: number; y: number }[]>([])
+
+  // Watermark
+  const [showWmPanel, setShowWmPanel] = useState(false)
+  const [wmText, setWmText]           = useState('CONFIDENTIAL')
+  const [wmColor, setWmColor]         = useState('#dc2626')
+  const [wmOpacity, setWmOpacity]     = useState(0.2)
+  const [wmFontSize, setWmFontSize]   = useState(52)
+  const [wmRotation, setWmRotation]   = useState(-35)
+  const [wmImageSrc, setWmImageSrc]   = useState('')
+  const wmImageInput = useRef<HTMLInputElement>(null)
+
+  // Crop tool
+  const cropStart = useRef<{ x: number; y: number } | null>(null)
+  const [cropDraft, setCropDraft] = useState<{ x: number; y: number; w: number; h: number; slotId: string } | null>(null)
+
+  // Position marker (ghost element at cursor)
+  const [hoverPos, setHoverPos] = useState<{ x: number; y: number; slotId: string } | null>(null)
+
+  // Per-page hover (for rotate overlay)
+  const [hoveredPageIdx, setHoveredPageIdx] = useState<number | null>(null)
+
+  // Stored signature (reuse in same session)
+  const [savedSignature, setSavedSignature] = useState<string | null>(null)
+
+  // File inputs
+  const pdfInput     = useRef<HTMLInputElement>(null)
+  const imgInput     = useRef<HTMLInputElement>(null)
+  const mergeInput   = useRef<HTMLInputElement>(null)
+  const imgPageInput = useRef<HTMLInputElement>(null)
+
+  // Pan tool
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const panStart  = useRef<{ x: number; y: number; sl: number; st: number } | null>(null)
+
+  // Responsive
+  useEffect(() => {
+    const update = () => {
+      setVw(window.innerWidth)
+      setShowSidebar(window.innerWidth >= 768)
+      setShowPanel(window.innerWidth >= 1024)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  const isMobile = vw < 640
+  const isTablet = vw < 1024
+
+  // ── Render current slot ──────────────────────────────────────────────────
+  const renderSlot = useCallback(async (slot: PageSlot, sc: number, srcs: PDFSource[], canvas?: HTMLCanvasElement | null) => {
+    const c = canvas ?? canvasRef.current
+    if (!c) return
+    const ctx = c.getContext('2d')!
+    const rot = slot.rotation || 0
+    const sw  = rot === 90 || rot === 270
+    try {
+      if (slot.type === 'pdf') {
+        const src = srcs.find(s => s.id === slot.sourceId)
+        if (!src) return
+        const page = await src.doc.getPage(slot.pageNum!)
+        const vp = page.getViewport({ scale: sc, rotation: rot })
+        c.width = vp.width; c.height = vp.height
+        ctx.clearRect(0, 0, c.width, c.height)
+        await page.render({ canvasContext: ctx, viewport: vp }).promise
+      } else if (slot.type === 'blank') {
+        c.width  = slot.baseWidth  * sc
+        c.height = slot.baseHeight * sc
+        ctx.fillStyle = '#fff'
+        ctx.fillRect(0, 0, c.width, c.height)
+      } else if (slot.type === 'image') {
+        await new Promise<void>(res => {
+          const img = new Image(); img.onload = () => {
+            c.width  = (sw ? slot.baseHeight : slot.baseWidth)  * sc
+            c.height = (sw ? slot.baseWidth  : slot.baseHeight) * sc
+            ctx.clearRect(0, 0, c.width, c.height)
+            if (rot) {
+              ctx.save()
+              ctx.translate(c.width / 2, c.height / 2)
+              ctx.rotate(rot * Math.PI / 180)
+              ctx.drawImage(img, -slot.baseWidth * sc / 2, -slot.baseHeight * sc / 2, slot.baseWidth * sc, slot.baseHeight * sc)
+              ctx.restore()
+            } else {
+              ctx.drawImage(img, 0, 0, c.width, c.height)
+            }
+            res()
+          }; img.src = slot.imageSrc!
+        })
+      }
+    } catch { /* ignore render errors */ }
+  }, [])
+
+  // Render all slots whenever scale/slots/sources changes
+  useEffect(() => {
+    if (!slots.length) return
+    setRendering(true)
+    Promise.all(slots.map(slot => {
+      const cv = canvasRefsMap.current[slot.id]
+      if (cv) return renderSlot(slot, scale, sources, cv)
+      return Promise.resolve()
+    })).finally(() => setRendering(false))
+  }, [slots, scale, sources, renderSlot])
+
+  // When slotIdx changes clear selection
+  useEffect(() => {
+    setSelectedId(null); setEditingId(null)
+  }, [slotIdx])
+
+  // ── Load PDF ─────────────────────────────────────────────────────────────
+  const loadInitialPDF = async (file: File) => {
+    setUploading(true); setUploadProgress(5)
+    try {
+      const lib = await getPdfjs()
+      setUploadProgress(15)
+
+      const ab = await file.arrayBuffer()
+      setUploadProgress(28)
+      const bytes = ab.slice(0)
+
+      const loadingTask = lib.getDocument({ data: ab })
+      loadingTask.onProgress = ({ loaded, total }: { loaded: number; total: number }) => {
+        if (total) setUploadProgress(28 + Math.round((loaded / total) * 32)) // 28→60
+      }
+      const doc = await loadingTask.promise
+      setUploadProgress(62)
+
+      const srcId = uuidv4()
+      const newSrcs: PDFSource[] = [{ id: srcId, doc, bytes, name: file.name }]
+      setSources(newSrcs)
+
+      const newSlots: PageSlot[] = []
+      for (let i = 1; i <= doc.numPages; i++) {
+        const pg = await doc.getPage(i)
+        const vp = pg.getViewport({ scale: 1 })
+        const s: PageSlot = {
+          id: uuidv4(), type: 'pdf', sourceId: srcId, pageNum: i,
+          baseWidth: vp.width, baseHeight: vp.height, thumbUrl: '',
+        }
+        s.thumbUrl = await makeThumb(s, newSrcs)
+        newSlots.push(s)
+        setUploadProgress(62 + Math.round((i / doc.numPages) * 33)) // 62→95
+      }
+      setUploadProgress(100)
+      await new Promise(r => setTimeout(r, 350))
+
+      setSlots(newSlots); setSlotIdx(0); setElements([])
+      setPdfName(file.name.replace(/\.pdf$/i, ''))
+    } finally {
+      setUploading(false); setUploadProgress(0)
+    }
+  }
+
+  const mergePDF = async (file: File) => {
+    const lib = await getPdfjs()
+    const ab = await file.arrayBuffer()
+    const bytes = ab.slice(0)
+    const doc = await lib.getDocument({ data: ab }).promise
+    const srcId = uuidv4()
+    const newSrc: PDFSource = { id: srcId, doc, bytes, name: file.name }
+    const allSrcs = [...sources, newSrc]
+    setSources(allSrcs)
+
+    const newSlots: PageSlot[] = []
+    for (let i = 1; i <= doc.numPages; i++) {
+      const pg = await doc.getPage(i)
+      const vp = pg.getViewport({ scale: 1 })
+      const s: PageSlot = {
+        id: uuidv4(), type: 'pdf', sourceId: srcId, pageNum: i,
+        baseWidth: vp.width, baseHeight: vp.height, thumbUrl: '',
+      }
+      s.thumbUrl = await makeThumb(s, allSrcs)
+      newSlots.push(s)
+    }
+    setSlots(prev => [...prev, ...newSlots])
+  }
+
+  // ── File handlers ────────────────────────────────────────────────────────
+  const handlePDFFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (f) loadInitialPDF(f); e.target.value = ''
+  }
+  const handleMergeFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (f) mergePDF(f); e.target.value = ''
+  }
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setIsDragOver(false)
+    const f = e.dataTransfer.files[0]
+    if (f?.type === 'application/pdf') loadInitialPDF(f)
+  }
+
+  // ── Add image element ────────────────────────────────────────────────────
+  const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const src = reader.result as string
+      const canvas = canvasRefsMap.current[slots[slotIdx]?.id]
+      const cx = canvas ? canvas.width / scale / 2 - 100 : 100
+      const cy = canvas ? canvas.height / scale / 2 - 75 : 100
+      const el: ImageElement = {
+        id: uuidv4(), type: 'image',
+        x: Math.max(0, cx), y: Math.max(0, cy), width: 200, height: 150,
+        src, pageSlotId: slots[slotIdx]?.id ?? '',
+      }
+      setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+      setSelectedId(el.id)
+    }
+    reader.readAsDataURL(f); e.target.value = ''
+  }
+
+  // ── Draw tool event handlers ──────────────────────────────────────────────
+  const handleDrawStart = useCallback((e: React.MouseEvent<HTMLDivElement>, slotId: string) => {
+    if (toolMode !== 'draw') return
+    e.stopPropagation()
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / scale
+    const y = (e.clientY - rect.top) / scale
+    isDrawing.current = true
+    drawPoints.current = [{ x, y }]
+    setDrawPreviewPts([{ x, y }])
+  }, [toolMode, scale])
+
+  const handleDrawMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDrawing.current || toolMode !== 'draw') return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / scale
+    const y = (e.clientY - rect.top) / scale
+    drawPoints.current = [...drawPoints.current, { x, y }]
+    setDrawPreviewPts([...drawPoints.current])
+  }, [toolMode, scale])
+
+  const handleDrawEnd = useCallback((slotId: string) => {
+    if (!isDrawing.current || toolMode !== 'draw') return
+    isDrawing.current = false
+    const pts = drawPoints.current
+    if (pts.length < 2) { setDrawPreviewPts([]); return }
+    const xs = pts.map(p => p.x), ys = pts.map(p => p.y)
+    const minX = Math.min(...xs), maxX = Math.max(...xs)
+    const minY = Math.min(...ys), maxY = Math.max(...ys)
+    const el: DrawElement = {
+      id: uuidv4(), type: 'draw',
+      x: minX, y: minY,
+      width: Math.max(4, maxX - minX),
+      height: Math.max(4, maxY - minY),
+      points: pts, color: drawColor,
+      strokeWidth: drawStrokeWidth, opacity: drawOpacity,
+      pageSlotId: slotId,
+    }
+    setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+    setSelectedId(el.id)
+    setDrawPreviewPts([])
+    drawPoints.current = []
+  }, [toolMode, drawColor, drawStrokeWidth, drawOpacity, pushHistory])
+
+  // ── Add image as new page ────────────────────────────────────────────────
+  const handleImagePage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const src = reader.result as string
+      const img = new Image(); img.src = src
+      await new Promise(res => { img.onload = res })
+      const s: PageSlot = {
+        id: uuidv4(), type: 'image', imageSrc: src,
+        baseWidth: img.naturalWidth, baseHeight: img.naturalHeight, thumbUrl: '',
+      }
+      s.thumbUrl = await makeThumb(s, sources)
+      setSlots(prev => {
+        const next = [...prev]; next.splice(slotIdx + 1, 0, s); return next
+      })
+      setSlotIdx(slotIdx + 1)
+    }
+    reader.readAsDataURL(f); e.target.value = ''
+  }
+
+  // ── Signature ────────────────────────────────────────────────────────────
+  const handleSignatureApply = (dataUrl: string) => {
+    const canvas = canvasRefsMap.current[slots[slotIdx]?.id]
+    const cx = canvas ? canvas.width / scale / 2 - 100 : 100
+    const cy = canvas ? canvas.height / scale / 2 - 40 : 100
+    const el: SignatureElement = {
+      id: uuidv4(), type: 'signature',
+      x: Math.max(0, cx), y: Math.max(0, cy), width: 200, height: 80,
+      src: dataUrl, pageSlotId: slots[slotIdx]?.id ?? '',
+    }
+    setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+    setSavedSignature(dataUrl)
+    setSelectedId(el.id); setShowSig(false)
+  }
+
+  // ── Page management ───────────────────────────────────────────────────────
+  const addBlankPage = async () => {
+    const s: PageSlot = {
+      id: uuidv4(), type: 'blank', baseWidth: 595, baseHeight: 842, thumbUrl: '',
+    }
+    s.thumbUrl = await makeThumb(s, sources)
+    setSlots(prev => { const n = [...prev]; n.splice(slotIdx + 1, 0, s); return n })
+    setSlotIdx(slotIdx + 1)
+  }
+
+  const duplicatePage = async (idx: number) => {
+    const orig = slots[idx]
+    const newSlot: PageSlot = { ...orig, id: uuidv4() }
+    const origElems = elements.filter(e => e.pageSlotId === orig.id)
+    const newElems = origElems.map(e => ({ ...e, id: uuidv4(), pageSlotId: newSlot.id }))
+    setSlots(prev => { const n = [...prev]; n.splice(idx + 1, 0, newSlot); return n })
+    setElements(prev => [...prev, ...newElems])
+    setSlotIdx(idx + 1)
+  }
+
+  const deletePage = (idx: number) => {
+    if (slots.length === 1) return
+    const slot = slots[idx]
+    setSlots(prev => prev.filter((_, i) => i !== idx))
+    setElements(prev => prev.filter(e => e.pageSlotId !== slot.id))
+    setSlotIdx(Math.max(0, idx === slotIdx ? idx - 1 : slotIdx > idx ? slotIdx - 1 : slotIdx))
+  }
+
+  const movePage = (idx: number, dir: 'up' | 'down') => {
+    const to = dir === 'up' ? idx - 1 : idx + 1
+    if (to < 0 || to >= slots.length) return
+    setSlots(prev => { const n = [...prev]; [n[idx], n[to]] = [n[to], n[idx]]; return n })
+    setSlotIdx(to)
+  }
+
+  const rotatePage = async (idx: number) => {
+    const cur = slots[idx]
+    const newRot = (((cur.rotation || 0) + 90) % 360) as 0 | 90 | 180 | 270
+    const updated = { ...cur, rotation: newRot }
+    const thumb = await makeThumb(updated, sources)
+    setSlots(prev => prev.map((s, i) => i === idx ? { ...updated, thumbUrl: thumb } : s))
+  }
+
+  const rotateAllPages = async () => {
+    const updated = await Promise.all(slots.map(async slot => {
+      const newRot = (((slot.rotation || 0) + 90) % 360) as 0 | 90 | 180 | 270
+      const u = { ...slot, rotation: newRot }
+      u.thumbUrl = await makeThumb(u, sources)
+      return u
+    }))
+    setSlots(updated)
+  }
+
+  const addPageAfter = async (idx: number) => {
+    const s: PageSlot = { id: uuidv4(), type: 'blank', baseWidth: 595, baseHeight: 842, thumbUrl: '' }
+    s.thumbUrl = await makeThumb(s, sources)
+    setSlots(prev => { const n = [...prev]; n.splice(idx + 1, 0, s); return n })
+    setSlotIdx(idx + 1)
+  }
+
+  const handleReorder = (newSlots: PageSlot[], newIdx: number) => {
+    setSlots(newSlots)
+    setSlotIdx(newIdx)
+    setShowOrganise(false)
+  }
+
+  // ── Pan tool helpers (also triggered by middle mouse button) ────────────────
+  const handlePanDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (toolMode !== 'pan' && e.button !== 1) return
+    const el = scrollRef.current; if (!el) return
+    panStart.current = { x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop }
+    e.preventDefault()
+  }
+  const handlePanMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!panStart.current) return
+    const el = scrollRef.current; if (!el) return
+    el.scrollLeft = panStart.current.sl - (e.clientX - panStart.current.x)
+    el.scrollTop  = panStart.current.st - (e.clientY - panStart.current.y)
+  }
+  const handlePanUp = () => { panStart.current = null }
+
+  // ── Canvas click → place element ─────────────────────────────────────────
+  const handleOverlayClick = useCallback((e: React.MouseEvent<HTMLDivElement>, slotId: string) => {
+    if (!slots.length) return
+    const target = e.target as HTMLElement
+    if (target.tagName !== 'CANVAS' && target !== e.currentTarget) return
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / scale
+    const y = (e.clientY - rect.top) / scale
+
+    if (toolMode === 'text') {
+      const el: TextElement = {
+        id: uuidv4(), type: 'text', x, y, width: 220, height: 50,
+        text: '', fontSize: 14, fontFamily: 'Inter', color: '#1b1c1c',
+        bold: false, italic: false, underline: false, align: 'left', bgColor: '',
+        pageSlotId: slotId,
+      }
+      setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+      setSelectedId(el.id); setEditingId(el.id)
+    } else if (toolMode === 'highlight') {
+      const el: HighlightElement = {
+        id: uuidv4(), type: 'highlight', x, y, width: 200, height: 22,
+        color: '#fef08a', opacity: 0.5, pageSlotId: slotId,
+      }
+      setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+      setSelectedId(el.id)
+    } else if (toolMode === 'mark') {
+      const el: MarkElement = {
+        id: uuidv4(), type: 'mark', x, y, width: 52, height: 52,
+        markType: activeMarkType, color: markColor, strokeWidth: 3,
+        pageSlotId: slotId,
+      }
+      setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+      setSelectedId(el.id)
+    } else if (toolMode === 'annotation') {
+      const el: AnnotationElement = {
+        id: uuidv4(), type: 'annotation', x, y, width: 160, height: 90,
+        text: '', color: '#fef9c3', pageSlotId: slotId,
+      }
+      setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+      setSelectedId(el.id); setEditingId(el.id)
+    } else if (toolMode === 'shape') {
+      const el: ShapeElement = {
+        id: uuidv4(), type: 'shape', x, y, width: 150, height: 100,
+        shapeType: activeShapeType, strokeColor: shapeStroke,
+        fillColor: shapeFill, strokeWidth: shapeStrokeWidth,
+        pageSlotId: slotId,
+      }
+      setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+      setSelectedId(el.id)
+    } else {
+      setSelectedId(null); setEditingId(null)
+    }
+  }, [slots, scale, toolMode, activeMarkType, markColor, activeShapeType, shapeStroke, shapeFill, shapeStrokeWidth, pushHistory])
+
+  // ── Date insertion ────────────────────────────────────────────────────────
+  const insertDate = (text: string) => {
+    const canvas = canvasRefsMap.current[slots[slotIdx]?.id]
+    const cx = canvas ? canvas.width / scale / 2 - 80 : 100
+    const cy = canvas ? canvas.height / scale / 2 - 12 : 100
+    const el: TextElement = {
+      id: uuidv4(), type: 'text', x: Math.max(0, cx), y: Math.max(0, cy),
+      width: 220, height: 28, text,
+      fontSize: 13, fontFamily: 'Inter', color: '#1b1c1c',
+      bold: false, italic: false, underline: false, align: 'left', bgColor: '',
+      pageSlotId: slots[slotIdx]?.id ?? '',
+    }
+    setElements(prev => [...prev, el]); setSelectedId(el.id); setShowDateMenu(false)
+  }
+
+  const handleAddStamp = (label: string, color: string) => {
+    const canvas = canvasRefsMap.current[slots[slotIdx]?.id]
+    const cx = canvas ? canvas.width / scale / 2 - 60 : 100
+    const cy = canvas ? canvas.height / scale / 2 - 24 : 100
+    const el: StampElement = {
+      id: uuidv4(), type: 'stamp', x: Math.max(0, cx), y: Math.max(0, cy),
+      width: 120, height: 48, label, color, opacity: 1, pageSlotId: slots[slotIdx]?.id ?? '',
+    }
+    setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+    setSelectedId(el.id)
+  }
+
+  // ── Watermark (apply to all pages) ────────────────────────────────────────
+  const applyWatermark = () => {
+    if (!slots.length || (!wmText.trim() && !wmImageSrc)) return
+    setElements(prev => {
+      const next = [...prev]
+      for (const slot of slots) {
+        const el: WatermarkElement = {
+          id: uuidv4(), type: 'watermark',
+          x: 0, y: 0, width: slot.baseWidth, height: slot.baseHeight,
+          text: wmText.trim(), color: wmColor, opacity: wmOpacity,
+          fontSize: wmFontSize, rotation: wmRotation,
+          ...(wmImageSrc ? { imageSrc: wmImageSrc } : {}),
+          pageSlotId: slot.id,
+        }
+        next.push(el)
+      }
+      pushHistory(next)
+      return next
+    })
+    setShowWmPanel(false)
+  }
+
+  // ── Rotate all pages left (CCW) ───────────────────────────────────────────
+  const rotateAllPagesLeft = async () => {
+    const updated = await Promise.all(slots.map(async slot => {
+      const newRot = (((slot.rotation || 0) - 90 + 360) % 360) as 0 | 90 | 180 | 270
+      const u = { ...slot, rotation: newRot }
+      u.thumbUrl = await makeThumb(u, sources)
+      return u
+    }))
+    setSlots(updated)
+  }
+
+  // ── Rotate single page left ───────────────────────────────────────────────
+  const rotatePageLeft = async (idx: number) => {
+    const cur = slots[idx]
+    const newRot = (((cur.rotation || 0) - 90 + 360) % 360) as 0 | 90 | 180 | 270
+    const updated = { ...cur, rotation: newRot }
+    const thumb = await makeThumb(updated, sources)
+    setSlots(prev => prev.map((s, i) => i === idx ? { ...updated, thumbUrl: thumb } : s))
+  }
+
+  // ── Crop tool handlers ────────────────────────────────────────────────────
+  const handleCropStart = (e: React.MouseEvent<HTMLDivElement>, slotId: string) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / scale
+    const y = (e.clientY - rect.top) / scale
+    cropStart.current = { x, y }
+    setCropDraft({ x, y, w: 0, h: 0, slotId })
+    e.stopPropagation()
+  }
+
+  const handleCropMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cropStart.current || !cropDraft) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const cx = (e.clientX - rect.left) / scale
+    const cy = (e.clientY - rect.top) / scale
+    const x = Math.min(cx, cropStart.current.x)
+    const y = Math.min(cy, cropStart.current.y)
+    const w = Math.abs(cx - cropStart.current.x)
+    const h = Math.abs(cy - cropStart.current.y)
+    setCropDraft(prev => prev ? { ...prev, x, y, w, h } : null)
+  }
+
+  const handleCropEnd = async () => {
+    if (!cropDraft || cropDraft.w < 10 || cropDraft.h < 10) {
+      setCropDraft(null); cropStart.current = null; return
+    }
+    const { slotId, x, y, w, h } = cropDraft
+    setSlots(prev => prev.map(s => s.id === slotId ? { ...s, crop: { x, y, w, h } } : s))
+    setCropDraft(null); cropStart.current = null
+    setToolMode('select')
+  }
+
+  const clearCrop = (slotId: string) => {
+    setSlots(prev => prev.map(s => s.id === slotId ? { ...s, crop: undefined } : s))
+  }
+
+  // ── Fit current page to screen ────────────────────────────────────────────
+  const fitToScreen = () => {
+    const container = scrollRef.current
+    const slot = slots[slotIdx]
+    if (!container || !slot) return
+    const padding = 48
+    const availW = container.clientWidth - padding
+    const availH = container.clientHeight - padding
+    const rot = slot.rotation || 0
+    const sw = rot === 90 || rot === 270
+    const pw = sw ? slot.baseHeight : slot.baseWidth
+    const ph = sw ? slot.baseWidth : slot.baseHeight
+    const newScale = Math.min(availW / pw, availH / ph)
+    setScale(Math.max(0.4, Math.min(3.0, parseFloat(newScale.toFixed(2)))))
+  }
+
+  // ── Watermark image upload ────────────────────────────────────────────────
+  const handleWmImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return
+    const reader = new FileReader()
+    reader.onload = () => setWmImageSrc(reader.result as string)
+    reader.readAsDataURL(f); e.target.value = ''
+  }
+
+  // ── Element operations ────────────────────────────────────────────────────
+  const updateEl = useCallback((id: string, updates: Partial<PDFElement>) => {
+    setElements(prev => prev.map(e => e.id === id ? { ...e, ...updates } as PDFElement : e))
+  }, [])
+  const deleteEl = useCallback((id: string) => {
+    setElements(prev => {
+      const next = prev.filter(e => e.id !== id)
+      pushHistory(next)
+      return next
+    })
+    setSelectedId(null); setEditingId(null)
+  }, [pushHistory])
+  const clearPage = () => {
+    const slotId = slots[slotIdx]?.id
+    setElements(prev => prev.filter(e => e.pageSlotId !== slotId))
+    setSelectedId(null); setEditingId(null)
+  }
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setEditingId(null); setSelectedId(null); setShowDateMenu(false) }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId && !editingId)
+        deleteEl(selectedId)
+      const mod = e.ctrlKey || e.metaKey
+      if (mod && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo() }
+      if (mod && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [selectedId, editingId, deleteEl, undo, redo])
+
+  // ── Export ────────────────────────────────────────────────────────────────
+  const handleExport = async () => {
+    if (!slots.length) return
+    const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib')
+    const out = await PDFDocument.create()
+    const libDocs = await Promise.all(sources.map(s => PDFDocument.load(s.bytes)))
+
+    for (let si = 0; si < slots.length; si++) {
+      const slot = slots[si]
+      let libPage: any
+
+      if (slot.type === 'pdf') {
+        const srcIdx = sources.findIndex(s => s.id === slot.sourceId)
+        if (srcIdx < 0) continue
+        const [cp] = await out.copyPages(libDocs[srcIdx], [slot.pageNum! - 1])
+        out.addPage(cp); libPage = out.getPage(out.getPageCount() - 1)
+      } else if (slot.type === 'blank') {
+        libPage = out.addPage([slot.baseWidth, slot.baseHeight])
+        const ctx = libPage as any
+        ctx.drawRectangle?.({ x: 0, y: 0, width: slot.baseWidth, height: slot.baseHeight, color: rgb(1, 1, 1) })
+      } else if (slot.type === 'image') {
+        libPage = out.addPage([slot.baseWidth, slot.baseHeight])
+        const b64 = slot.imageSrc!.split(',')[1]
+        const imgBytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0))
+        const isPng = slot.imageSrc!.startsWith('data:image/png')
+        const emb = isPng ? await out.embedPng(imgBytes) : await out.embedJpg(imgBytes)
+        libPage.drawImage(emb, { x: 0, y: 0, width: slot.baseWidth, height: slot.baseHeight })
+      }
+      if (!libPage) continue
+
+      const { width: pW, height: pH } = libPage.getSize()
+      const xR = pW / slot.baseWidth, yR = pH / slot.baseHeight
+      const slotElems = elements.filter(e => e.pageSlotId === slot.id)
+
+      for (const el of slotElems) {
+        if (el.type === 'text') {
+          const fontName =
+            el.bold && el.italic ? StandardFonts.HelveticaBoldOblique :
+            el.bold ? StandardFonts.HelveticaBold :
+            el.italic ? StandardFonts.HelveticaOblique : StandardFonts.Helvetica
+          const font = await out.embedFont(fontName)
+          const hex = el.color.replace('#', '')
+          const r = parseInt(hex.slice(0, 2), 16) / 255
+          const g = parseInt(hex.slice(2, 4), 16) / 255
+          const b = parseInt(hex.slice(4, 6), 16) / 255
+          const fs = el.fontSize * xR
+          let dy = pH - el.y * yR - fs
+          for (const line of el.text.split('\n')) {
+            if (line.trim()) libPage.drawText(line, {
+              x: el.x * xR + 4, y: dy, size: fs, font, color: rgb(r, g, b),
+              maxWidth: el.width * xR - 8,
+            })
+            dy -= fs * 1.4
+          }
+        } else if (el.type === 'image' || el.type === 'signature') {
+          try {
+            const isPng = el.src.startsWith('data:image/png')
+            const imgBytes = Uint8Array.from(atob(el.src.split(',')[1]), c => c.charCodeAt(0))
+            const emb = isPng ? await out.embedPng(imgBytes) : await out.embedJpg(imgBytes)
+            libPage.drawImage(emb, {
+              x: el.x * xR, y: pH - (el.y + el.height) * yR,
+              width: el.width * xR, height: el.height * yR,
+            })
+          } catch { /* skip */ }
+        } else if (el.type === 'stamp') {
+          const c = el.color.startsWith('#') ? el.color : (STAMP_COLOR[el.color] || '#1d4ed8')
+          const h = c.replace('#', '')
+          const r = parseInt(h.slice(0, 2), 16) / 255
+          const g = parseInt(h.slice(2, 4), 16) / 255
+          const b = parseInt(h.slice(4, 6), 16) / 255
+          const font = await out.embedFont(StandardFonts.HelveticaBold)
+          const pX = el.x * xR, pY = pH - (el.y + el.height) * yR
+          const pW2 = el.width * xR, pH2 = el.height * yR
+          libPage.drawRectangle({ x: pX, y: pY, width: pW2, height: pH2, borderColor: rgb(r, g, b), borderWidth: 1.5, color: rgb(r, g, b), opacity: 0.05 })
+          const fs = Math.min(pH2 * 0.38, 13)
+          libPage.drawText(el.label, { x: pX + pW2 / 2 - el.label.length * fs * 0.28, y: pY + pH2 / 2 - fs / 2, size: fs, font, color: rgb(r, g, b) })
+        } else if (el.type === 'highlight') {
+          const h = el.color.replace('#', '')
+          const r = parseInt(h.slice(0, 2), 16) / 255
+          const g = parseInt(h.slice(2, 4), 16) / 255
+          const b = parseInt(h.slice(4, 6), 16) / 255
+          libPage.drawRectangle({
+            x: el.x * xR, y: pH - (el.y + el.height) * yR,
+            width: el.width * xR, height: el.height * yR,
+            color: rgb(r, g, b), opacity: el.opacity,
+          })
+        } else if (el.type === 'mark') {
+          const mh = el.color.replace('#', '')
+          const mr = parseInt(mh.slice(0,2),16)/255, mg = parseInt(mh.slice(2,4),16)/255, mb = parseInt(mh.slice(4,6),16)/255
+          const msw = Math.max(1, el.strokeWidth * Math.min(xR, yR))
+          const mx = el.x*xR, my = pH-(el.y+el.height)*yR, mw = el.width*xR, mhh = el.height*yR
+          if (el.markType === 'tick') {
+            libPage.drawLine({ start:{x:mx+mw*0.1,y:my+mhh*0.45}, end:{x:mx+mw*0.38,y:my+mhh*0.2}, thickness:msw, color:rgb(mr,mg,mb) })
+            libPage.drawLine({ start:{x:mx+mw*0.38,y:my+mhh*0.2}, end:{x:mx+mw*0.9,y:my+mhh*0.8}, thickness:msw, color:rgb(mr,mg,mb) })
+          } else {
+            libPage.drawLine({ start:{x:mx+mw*0.1,y:my+mhh*0.9}, end:{x:mx+mw*0.9,y:my+mhh*0.1}, thickness:msw, color:rgb(mr,mg,mb) })
+            libPage.drawLine({ start:{x:mx+mw*0.9,y:my+mhh*0.9}, end:{x:mx+mw*0.1,y:my+mhh*0.1}, thickness:msw, color:rgb(mr,mg,mb) })
+          }
+        } else if (el.type === 'annotation') {
+          const af = await out.embedFont(StandardFonts.Helvetica)
+          const ax=el.x*xR, ay=pH-(el.y+el.height)*yR, aw=el.width*xR, ah=el.height*yR
+          libPage.drawRectangle({x:ax,y:ay,width:aw,height:ah,color:rgb(1,0.976,0.765),borderColor:rgb(0.8,0.75,0.2),borderWidth:0.8})
+          const afs = Math.min(9*xR, 10)
+          const alines = el.text.split('\n'); let ady = ay+ah-afs*1.8
+          for (const ln of alines) { if (ady<ay) break; if(ln.trim()) libPage.drawText(ln,{x:ax+4,y:ady,size:afs,font:af,color:rgb(0.1,0.1,0.1),maxWidth:aw-8}); ady-=afs*1.4 }
+        } else if (el.type === 'shape') {
+          const sh=el.strokeColor.replace('#','')
+          const sr=parseInt(sh.slice(0,2),16)/255, sg=parseInt(sh.slice(2,4),16)/255, sb=parseInt(sh.slice(4,6),16)/255
+          const ssw=Math.max(0.5,el.strokeWidth*Math.min(xR,yR))
+          const spx=el.x*xR, spy=pH-(el.y+el.height)*yR, spw=el.width*xR, sph=el.height*yR
+          const hasFill=!!el.fillColor
+          const fhx=hasFill?el.fillColor.replace('#',''):'ffffff'
+          const fr=parseInt(fhx.slice(0,2),16)/255, fg=parseInt(fhx.slice(2,4),16)/255, fb=parseInt(fhx.slice(4,6),16)/255
+          if (el.shapeType==='rectangle') {
+            libPage.drawRectangle({x:spx,y:spy,width:spw,height:sph,borderColor:rgb(sr,sg,sb),borderWidth:ssw,...(hasFill?{color:rgb(fr,fg,fb)}:{color:rgb(1,1,1),opacity:0})})
+          } else if (el.shapeType==='ellipse') {
+            libPage.drawEllipse({x:spx+spw/2,y:spy+sph/2,xScale:spw/2,yScale:sph/2,borderColor:rgb(sr,sg,sb),borderWidth:ssw,...(hasFill?{color:rgb(fr,fg,fb)}:{color:rgb(1,1,1),opacity:0})})
+          } else if (el.shapeType==='line'||el.shapeType==='arrow') {
+            libPage.drawLine({start:{x:spx,y:spy},end:{x:spx+spw,y:spy+sph},thickness:ssw,color:rgb(sr,sg,sb)})
+            if (el.shapeType==='arrow') {
+              const ang2=Math.atan2(sph,spw), hs2=Math.min(spw,sph)*0.25+6
+              libPage.drawLine({start:{x:spx+spw,y:spy+sph},end:{x:spx+spw-hs2*Math.cos(ang2-0.45),y:spy+sph-hs2*Math.sin(ang2-0.45)},thickness:ssw,color:rgb(sr,sg,sb)})
+              libPage.drawLine({start:{x:spx+spw,y:spy+sph},end:{x:spx+spw-hs2*Math.cos(ang2+0.45),y:spy+sph-hs2*Math.sin(ang2+0.45)},thickness:ssw,color:rgb(sr,sg,sb)})
+            }
+          }
+        }
+      }
+    }
+
+    const bytes = await out.save()
+    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `${pdfName || sources[0]?.name?.replace(/\.pdf$/i,'') || 'document'}.pdf`; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // ── Derived ───────────────────────────────────────────────────────────────
+  const currentSlot = slots[slotIdx] ?? null
+  const pageElems = elements.filter(e => e.pageSlotId === currentSlot?.id)
+  const selectedEl = selectedId ? elements.find(e => e.id === selectedId) ?? null : null
+
+  const tbStyle = (active: boolean, isSign = false): React.CSSProperties => ({
+    width: 48, height: 48, borderRadius: 13, border: 'none', cursor: 'pointer', flexShrink: 0,
+    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+    transition: 'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+    background: active ? (isSign ? 'linear-gradient(135deg,#f59e0b,#d97706)' : 'linear-gradient(135deg,#6366f1,#818cf8)') : (isSign ? 'rgba(245,158,11,0.08)' : 'transparent'),
+    color: active ? '#fff' : (isSign ? '#f59e0b' : '#64748b'),
+    boxShadow: active ? (isSign ? '0 3px 12px rgba(245,158,11,0.4)' : '0 3px 12px rgba(99,102,241,0.4)') : 'none',
+  })
+  const tbVDiv: React.CSSProperties = { width: 1, height: 32, background: '#e2e8f0', margin: '0 3px', flexShrink: 0 }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', height: '100dvh',
+      background: '#f8faff', color: '#1e293b',
+      fontFamily: 'Inter, system-ui, sans-serif', overflow: 'hidden',
+    }}>
+      {/* Hidden file inputs */}
+      <input ref={pdfInput}      type="file" accept=".pdf"    onChange={handlePDFFile}    style={{ display: 'none' }} />
+      <input ref={imgInput}      type="file" accept="image/*" onChange={handleImageFile}  style={{ display: 'none' }} />
+      <input ref={mergeInput}    type="file" accept=".pdf"    onChange={handleMergeFile}  style={{ display: 'none' }} />
+      <input ref={imgPageInput}  type="file" accept="image/*" onChange={handleImagePage}  style={{ display: 'none' }} />
+      <input ref={wmImageInput}  type="file" accept="image/*" onChange={handleWmImageFile} style={{ display: 'none' }} />
+
+      {/* ── HEADER ───────────────────────────────────────────────── */}
+      <header style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: `0 ${isMobile ? 12 : 18}px`, height: 52, flexShrink: 0,
+        background: '#0c1220',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        gap: 10,
+      }}>
+        {/* Logo + file */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          {/* Mobile sidebar toggle */}
+          {isMobile && (
+            <button onClick={() => setShowSidebar(v => !v)}
+              style={mobileIconBtn}>☰</button>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{
+              width: 30, height: 30,
+              background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
+              borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(99,102,241,0.45)',
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            {!isMobile && (
+              <span style={{ fontWeight: 800, fontSize: 14.5, color: '#fff', fontFamily: 'Manrope, sans-serif', letterSpacing: '-0.03em' }}>
+                Lithograph
+              </span>
+            )}
+          </div>
+          {!isMobile && sources.length > 0 && (
+            editingName ? (
+              <input
+                autoFocus
+                value={pdfName}
+                onChange={e => setPdfName(e.target.value)}
+                onBlur={() => setEditingName(false)}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditingName(false) }}
+                style={{
+                  fontSize: 11.5, color: '#fff', background: 'rgba(255,255,255,0.15)',
+                  border: '1px solid rgba(255,255,255,0.4)', borderRadius: 5,
+                  padding: '2px 7px', outline: 'none', maxWidth: isTablet ? 130 : 220,
+                }}
+              />
+            ) : (
+              <button
+                onClick={() => setEditingName(true)}
+                title="Rename PDF"
+                style={{
+                  fontSize: 11.5, color: 'rgba(255,255,255,0.65)', background: 'transparent',
+                  border: '1px solid transparent', borderRadius: 5, padding: '2px 7px',
+                  cursor: 'text', maxWidth: isTablet ? 140 : 240,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent' }}
+              >
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {pdfName || sources[0]?.name || ''}
+                </span>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ opacity: 0.5, flexShrink: 0 }}>
+                  <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </button>
+            )
+          )}
+        </div>
+
+
+
+        {/* Action buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {!isMobile && (
+            <button onClick={() => pdfInput.current?.click()} style={{
+              display: 'flex', alignItems: 'center', gap: 5, padding: '6px 13px',
+              borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.8)',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.13)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Open PDF
+            </button>
+          )}
+          <button onClick={handleExport} disabled={!slots.length}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5, padding: '7px 15px',
+              borderRadius: 8, border: 'none',
+              background: slots.length ? 'linear-gradient(135deg,#6366f1,#818cf8)' : 'rgba(255,255,255,0.12)',
+              color: '#fff', fontSize: 12, fontWeight: 700,
+              cursor: slots.length ? 'pointer' : 'not-allowed',
+              opacity: slots.length ? 1 : 0.45,
+              boxShadow: slots.length ? '0 2px 10px rgba(99,102,241,0.4)' : 'none',
+              transition: 'all 0.15s',
+            }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            {isMobile ? 'Export' : 'Export PDF'}
+          </button>
+          {/* Mobile properties toggle */}
+          {isMobile && (
+            <button onClick={() => setShowPanel(v => !v)} style={{
+              width: 34, height: 34, borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.8)',
+              cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>⚙</button>
+          )}
+          {/* Tablet panel toggle */}
+          {isTablet && !isMobile && (
+            <button onClick={() => setShowPanel(v => !v)} style={{
+              width: 34, height: 34, borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
+              background: showPanel ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.07)',
+              color: 'rgba(255,255,255,0.8)', cursor: 'pointer', fontSize: 13,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {showPanel ? '✕' : '⚙'}
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* ── MAIN ─────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
+
+        {/* Page sidebar */}
+        {(showSidebar || !isMobile) && slots.length > 0 && (
+          <div style={isMobile ? {
+            position: 'absolute', top: 0, left: 0, bottom: 0, zIndex: 100,
+            boxShadow: '4px 0 20px rgba(0,0,0,0.15)',
+          } : { display: 'flex', height: '100%' }}>
+            <PageSidebar
+              pageSlots={slots}
+              currentSlotIdx={slotIdx}
+              onPageChange={i => { setSlotIdx(i); isMobile && setShowSidebar(false) }}
+              onDuplicate={duplicatePage}
+              onDelete={deletePage}
+              onMoveUp={i => movePage(i, 'up')}
+              onMoveDown={i => movePage(i, 'down')}
+              onRotate={rotatePage}
+              onRotateLeft={rotatePageLeft}
+              onAddBelow={addPageAfter}
+              onAddBlank={addBlankPage}
+              onAddImagePage={() => imgPageInput.current?.click()}
+              onMergePDF={() => mergeInput.current?.click()}
+              onOrganise={() => setShowOrganise(true)}
+            />
+          </div>
+        )}
+
+        {/* Canvas workspace */}
+        <main style={{
+          flex: 1, background: '#edf0f7',
+          display: 'flex', flexDirection: 'column',
+          overflow: 'hidden', position: 'relative',
+        }}>
+
+          {/* ── TOP HORIZONTAL TOOLBAR (desktop only) ── */}
+          {slots.length > 0 && !isMobile && (
+            <div style={{ position:'relative', zIndex:50 }}>
+              <div style={{
+                display:'flex', alignItems:'center', gap:2,
+                background:'#fff', borderBottom:'1px solid #e8ecf5',
+                padding:'4px 10px', overflowX:'auto',
+                boxShadow:'0 2px 8px rgba(0,0,0,0.06)',
+                flexShrink:0,
+              }}>
+                {/* Undo / Redo */}
+                <button title="Undo (Ctrl+Z)" onClick={undo} disabled={!canUndo}
+                  style={{...tbStyle(false),opacity:canUndo?1:0.35}}
+                  onMouseEnter={e=>{if(canUndo)(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M3 13A9 9 0 1021 12"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Undo</span>
+                </button>
+                <button title="Redo (Ctrl+Y)" onClick={redo} disabled={!canRedo}
+                  style={{...tbStyle(false),opacity:canRedo?1:0.35}}
+                  onMouseEnter={e=>{if(canRedo)(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6"/><path d="M21 13A9 9 0 113 12"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Redo</span>
+                </button>
+                <div style={tbVDiv}/>
+                {/* Select */}
+                <button title="Select" style={tbStyle(toolMode==='select')} onClick={()=>{setToolMode('select');setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='select')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='select')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3l14 9-7 1-3 7z"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Select</span>
+                </button>
+                {/* Pan */}
+                <button title="Pan" style={tbStyle(toolMode==='pan')} onClick={()=>{setToolMode('pan');setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='pan')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='pan')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M18 11V8a2 2 0 00-4 0v1M14 9V7a2 2 0 00-4 0v5M10 10V6a2 2 0 00-4 0v9a7 7 0 0014 0v-3a2 2 0 00-4 0"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Pan</span>
+                </button>
+                <div style={tbVDiv}/>
+                {/* Text */}
+                <button title="Text" style={tbStyle(toolMode==='text')} onClick={()=>{setToolMode('text');setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='text')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='text')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Text</span>
+                </button>
+                {/* Annotation */}
+                <button title="Sticky Note" style={tbStyle(toolMode==='annotation')} onClick={()=>{setToolMode('annotation');setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='annotation')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='annotation')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Note</span>
+                </button>
+                {/* Highlight */}
+                <button title="Highlight" style={tbStyle(toolMode==='highlight')} onClick={()=>{setToolMode('highlight');setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='highlight')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='highlight')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4z"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Highlight</span>
+                </button>
+                {/* Draw / Pencil */}
+                <button title="Draw / Pencil" style={{...tbStyle(toolMode==='draw'),position:'relative'}} onClick={()=>{setToolMode('draw');setShowDrawMenu(v=>!v);setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='draw')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='draw')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Draw</span>
+                </button>
+                <div style={tbVDiv}/>
+                {/* Mark */}
+                <button title="Tick / Cross" style={{...tbStyle(toolMode==='mark'),position:'relative'}} onClick={()=>{setToolMode('mark');setShowMarkMenu(v=>!v);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='mark')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='mark')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  {activeMarkType==='tick'
+                    ? <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    : <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Mark</span>
+                </button>
+                {/* Shapes */}
+                <button title="Shapes" style={{...tbStyle(toolMode==='shape'),position:'relative'}} onClick={()=>{setToolMode('shape');setShowShapeMenu(v=>!v);setShowMarkMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='shape')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='shape')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="17" r="4"/><line x1="3" y1="21" x2="9" y2="15"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Shape</span>
+                </button>
+                <div style={tbVDiv}/>
+                {/* Image */}
+                <button title="Image" style={tbStyle(toolMode==='image')} onClick={()=>{setToolMode('image');imgInput.current?.click();setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='image')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='image')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Image</span>
+                </button>
+                {/* Signature */}
+                <button title="Signature" style={tbStyle(false,true)} onClick={()=>{setShowSig(true);setToolMode('select');setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.background='rgba(245,158,11,0.18)'}} onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background='rgba(245,158,11,0.08)'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5z"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Sign</span>
+                </button>
+                <div style={tbVDiv}/>
+                {/* Stamp */}
+                <button title="Stamps" style={{...tbStyle(showStampMenu),position:'relative'}} onClick={()=>{setShowStampMenu(v=>!v);setShowMarkMenu(false);setShowShapeMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(!showStampMenu)(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(!showStampMenu)(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M5 22h14"/><path d="M19 10H5a2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2z"/><rect x="9" y="2" width="6" height="8" rx="1"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Stamp</span>
+                </button>
+                {/* Watermark */}
+                <button title="Watermark (all pages)" style={tbStyle(showWmPanel)} onClick={()=>{setShowWmPanel(v=>!v);setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false)}} onMouseEnter={e=>{if(!showWmPanel)(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(!showWmPanel)(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10l2 4 2-4 2 4 2-4 2 4"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Watermark</span>
+                </button>
+                {/* Date */}
+                <button title="Insert Date" style={tbStyle(showDateMenu)} onClick={()=>{setShowDateMenu(v=>!v);setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(!showDateMenu)(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(!showDateMenu)(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Date</span>
+                </button>
+                <div style={tbVDiv}/>
+                {/* Crop */}
+                <button title="Crop Page" style={tbStyle(toolMode==='crop')} onClick={()=>{setToolMode('crop');setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='crop')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='crop')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Crop</span>
+                </button>
+                {/* Rotate All Left */}
+                <button title="Rotate All Pages Left (CCW)" style={tbStyle(false)} onClick={rotateAllPagesLeft} onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Rot ←</span>
+                </button>
+                {/* Rotate All Right */}
+                <button title="Rotate All Pages Right (CW)" style={tbStyle(false)} onClick={rotateAllPages} onMouseEnter={e=>{(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Rot →</span>
+                </button>
+              </div>
+
+              {/* ── Sub-menus (drop-down from toolbar) ── */}
+              {/* Mark sub-menu */}
+              {toolMode==='mark' && showMarkMenu && (
+                <div style={{position:'absolute',top:'100%',left:0,zIndex:200,background:'#fff',borderRadius:'0 0 14px 14px',padding:'14px',boxShadow:'0 8px 32px rgba(0,0,0,0.15)',border:'1px solid #e8ecf5',minWidth:220,display:'flex',gap:16,flexWrap:'wrap'}}>
+                  <div>
+                    <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Type</p>
+                    <div style={{display:'flex',gap:7}}>
+                      {(['tick','cross'] as const).map(mt=>(
+                        <button key={mt} onClick={()=>setActiveMarkType(mt)} style={{width:44,height:36,borderRadius:9,border:`1.5px solid ${activeMarkType===mt?'#6366f1':'#e2e8f0'}`,background:activeMarkType===mt?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:activeMarkType===mt?'#fff':'#475569',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.15s'}}>
+                          {mt==='tick'?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
+                    <div style={{display:'flex',gap:5,flexWrap:'wrap',maxWidth:180}}>
+                      {['#16a34a','#dc2626','#1d4ed8','#7c3aed','#ea580c','#0e7490','#1e293b','#f59e0b'].map(c=>(
+                        <button key={c} onClick={()=>setMarkColor(c)} style={{width:22,height:22,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
+                      ))}
+                      <input type="color" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:22,height:22,border:'none',borderRadius:4,cursor:'pointer',padding:1}}/>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* Shape sub-menu */}
+              {toolMode==='shape' && showShapeMenu && (
+                <div style={{position:'absolute',top:'100%',left:0,zIndex:200,background:'#fff',borderRadius:'0 0 14px 14px',padding:'14px',boxShadow:'0 8px 32px rgba(0,0,0,0.15)',border:'1px solid #e8ecf5',display:'flex',gap:16,flexWrap:'wrap'}}>
+                  <div>
+                    <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Shape</p>
+                    <div style={{display:'flex',gap:5}}>
+                      {([{t:'rectangle' as const,icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="3" y="6" width="18" height="12" rx="2"/></svg>},{t:'ellipse' as const,icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><ellipse cx="12" cy="12" rx="10" ry="7"/></svg>},{t:'line' as const,icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="19" x2="19" y2="5"/></svg>},{t:'arrow' as const,icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>},{t:'polygon' as const,icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><polygon points="12,3 21,8.5 21,15.5 12,21 3,15.5 3,8.5"/></svg>}]).map(({t,icon})=>(
+                        <button key={t} title={t} onClick={()=>setActiveShapeType(t)} style={{width:38,height:38,borderRadius:9,border:`1.5px solid ${activeShapeType===t?'#6366f1':'#e2e8f0'}`,background:activeShapeType===t?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:activeShapeType===t?'#fff':'#475569',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.15s'}}>{icon}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{display:'flex',gap:12,alignItems:'flex-end'}}>
+                    <div>
+                      <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.06em',textTransform:'uppercase'}}>Stroke</p>
+                      <input type="color" value={shapeStroke} onChange={e=>setShapeStroke(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
+                    </div>
+                    <div>
+                      <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.06em',textTransform:'uppercase'}}>Fill</p>
+                      <div style={{display:'flex',alignItems:'center',gap:5}}>
+                        <input type="color" value={shapeFill||'#ffffff'} onChange={e=>setShapeFill(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
+                        <button onClick={()=>setShapeFill('')} style={{fontSize:10,color:shapeFill?'#475569':'#6366f1',border:'none',background:'transparent',cursor:'pointer',fontWeight:shapeFill?400:700,padding:'2px 4px'}}>None</button>
+                      </div>
+                    </div>
+                    <div>
+                      <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.06em',textTransform:'uppercase'}}>Width</p>
+                      <div style={{display:'flex',gap:4}}>
+                        {[1,2,4].map(w=><button key={w} onClick={()=>setShapeStrokeWidth(w)} style={{width:32,height:28,borderRadius:7,fontSize:11,fontWeight:700,border:`1.5px solid ${shapeStrokeWidth===w?'#6366f1':'#e2e8f0'}`,background:shapeStrokeWidth===w?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:shapeStrokeWidth===w?'#fff':'#475569',cursor:'pointer'}}>{w}px</button>)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* Draw sub-menu */}
+              {toolMode==='draw' && showDrawMenu && (
+                <div style={{position:'absolute',top:'100%',left:0,zIndex:200,background:'#fff',borderRadius:'0 0 14px 14px',padding:'14px',boxShadow:'0 8px 32px rgba(0,0,0,0.15)',border:'1px solid #e8ecf5',display:'flex',gap:14,alignItems:'flex-end',flexWrap:'wrap'}}>
+                  <div>
+                    <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
+                    <input type="color" value={drawColor} onChange={e=>setDrawColor(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
+                  </div>
+                  <div>
+                    <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Width</p>
+                    <div style={{display:'flex',gap:4}}>
+                      {[2,4,8].map(w=><button key={w} onClick={()=>setDrawStrokeWidth(w)} style={{width:34,height:28,borderRadius:7,fontSize:11,fontWeight:700,border:`1.5px solid ${drawStrokeWidth===w?'#6366f1':'#e2e8f0'}`,background:drawStrokeWidth===w?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:drawStrokeWidth===w?'#fff':'#475569',cursor:'pointer'}}>{w}px</button>)}
+                    </div>
+                  </div>
+                  <div style={{minWidth:110}}>
+                    <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Opacity {Math.round(drawOpacity*100)}%</p>
+                    <input type="range" min={0.1} max={1} step={0.05} value={drawOpacity} onChange={e=>setDrawOpacity(parseFloat(e.target.value))} style={{width:'100%'}}/>
+                  </div>
+                </div>
+              )}
+              {/* Stamp sub-menu */}
+              {showStampMenu && (
+                <div style={{position:'absolute',top:'100%',left:0,zIndex:200,background:'#fff',borderRadius:'0 0 14px 14px',padding:'14px',boxShadow:'0 8px 32px rgba(0,0,0,0.15)',border:'1px solid #e8ecf5',minWidth:320}}>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:5,marginBottom:10}}>
+                    {[{label:'APPROVED',color:'#16a34a'},{label:'REJECTED',color:'#dc2626'},{label:'DRAFT',color:'#1d4ed8'},{label:'CONFIDENTIAL',color:'#7c3aed'},{label:'URGENT',color:'#ea580c'},{label:'COMPLETED',color:'#0e7490'},{label:'VOID',color:'#64748b'},{label:'RECEIVED',color:'#0284c7'},{label:'PAID',color:'#16a34a'},{label:'REVIEWED',color:'#d97706'},{label:'NOT APPROVED',color:'#dc2626'},{label:'COPY',color:'#475569'}].map(({label,color})=>(
+                      <button key={label} onClick={()=>{handleAddStamp(label,color);setShowStampMenu(false)}} style={{padding:'4px 6px',borderRadius:6,border:`1.5px solid ${color}`,background:`${color}12`,color,fontSize:8,fontWeight:800,cursor:'pointer',letterSpacing:'0.04em',textAlign:'center'}}>{label}</button>
+                    ))}
+                  </div>
+                  <div style={{display:'flex',gap:6}}>
+                    <input value={customStampText} onChange={e=>setCustomStampText(e.target.value.toUpperCase())} placeholder="CUSTOM STAMP" maxLength={20} style={{flex:1,padding:'5px 8px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:11,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em'}}/>
+                    <button onClick={()=>{if(customStampText.trim()){handleAddStamp(customStampText.trim(),'#475569');setShowStampMenu(false);setCustomStampText('')}}} style={{padding:'5px 12px',borderRadius:7,border:'none',background:'linear-gradient(135deg,#6366f1,#818cf8)',color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>Add</button>
+                  </div>
+                </div>
+              )}
+              {/* Watermark panel */}
+              {showWmPanel && (
+                <div style={{position:'absolute',top:'100%',left:0,zIndex:200,background:'#fff',borderRadius:'0 0 14px 14px',padding:'14px',boxShadow:'0 8px 32px rgba(0,0,0,0.15)',border:'1px solid #e8ecf5',display:'flex',gap:14,alignItems:'flex-end',flexWrap:'wrap',minWidth:480}}>
+                  {/* Tabs: Text / Image */}
+                  <div style={{width:'100%',display:'flex',gap:6,marginBottom:2}}>
+                    <button onClick={()=>setWmImageSrc('')}
+                      style={{padding:'4px 12px',borderRadius:6,border:'none',fontSize:11,fontWeight:700,cursor:'pointer',background:!wmImageSrc?'linear-gradient(135deg,#6366f1,#818cf8)':'#f1f5f9',color:!wmImageSrc?'#fff':'#64748b'}}>
+                      Text Watermark
+                    </button>
+                    <button onClick={()=>wmImageInput.current?.click()}
+                      style={{padding:'4px 12px',borderRadius:6,border:'none',fontSize:11,fontWeight:700,cursor:'pointer',background:wmImageSrc?'linear-gradient(135deg,#6366f1,#818cf8)':'#f1f5f9',color:wmImageSrc?'#fff':'#64748b',display:'flex',alignItems:'center',gap:5}}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                      Image Watermark{wmImageSrc ? ' ✓' : ''}
+                    </button>
+                    {wmImageSrc && <button onClick={()=>setWmImageSrc('')} style={{padding:'4px 8px',borderRadius:6,border:'1px solid #fca5a5',background:'#fff1f2',color:'#dc2626',fontSize:10,fontWeight:700,cursor:'pointer'}}>Remove</button>}
+                  </div>
+                  {/* Preview */}
+                  {wmImageSrc && <div style={{width:'100%',height:48,display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
+                    <img src={wmImageSrc} alt="wm" style={{height:44,maxWidth:120,objectFit:'contain',borderRadius:4,border:'1px solid #e2e8f0',opacity:wmOpacity}} />
+                    <span style={{fontSize:10,color:'#94a3b8'}}>Image preview (opacity applied)</span>
+                  </div>}
+                  {/* Text (only if no image) */}
+                  {!wmImageSrc && <div>
+                    <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Text</p>
+                    <input value={wmText} onChange={e=>setWmText(e.target.value.toUpperCase())} placeholder="WATERMARK TEXT" maxLength={30} style={{padding:'5px 10px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:12,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em',width:160}}/>
+                  </div>}
+                  {!wmImageSrc && <div>
+                    <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
+                    <input type="color" value={wmColor} onChange={e=>setWmColor(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
+                  </div>}
+                  <div style={{minWidth:100}}>
+                    <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Opacity {Math.round(wmOpacity*100)}%</p>
+                    <input type="range" min={0.05} max={0.8} step={0.05} value={wmOpacity} onChange={e=>setWmOpacity(parseFloat(e.target.value))} style={{width:'100%'}}/>
+                  </div>
+                  {!wmImageSrc && <div style={{minWidth:90}}>
+                    <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Size {wmFontSize}pt</p>
+                    <input type="range" min={20} max={120} step={4} value={wmFontSize} onChange={e=>setWmFontSize(parseInt(e.target.value))} style={{width:'100%'}}/>
+                  </div>}
+                  <div style={{minWidth:90}}>
+                    <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Angle {wmRotation}°</p>
+                    <input type="range" min={-90} max={90} step={5} value={wmRotation} onChange={e=>setWmRotation(parseInt(e.target.value))} style={{width:'100%'}}/>
+                  </div>
+                  <button onClick={applyWatermark} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#6366f1,#818cf8)',color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>Apply to All Pages</button>
+                </div>
+              )}
+              {/* Date panel */}
+              {showDateMenu && <DatePickerPanel onInsert={insertDate} onClose={()=>setShowDateMenu(false)} isMobile={false} panelStyle={{position:'absolute',top:'100%',left:0,minWidth:290,zIndex:200}}/>}
+            </div>
+          )}
+
+          {!slots.length ? (
+            /* Drop zone / upload area */
+            <div
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: isMobile ? 16 : 32, position: 'relative',
+                background: uploading
+                  ? 'linear-gradient(135deg,#f0f4ff 0%,#f5f3ff 100%)'
+                  : isDragOver
+                  ? 'linear-gradient(135deg,#eff6ff 0%,#ede9fe 100%)'
+                  : '#edf0f7',
+                transition: 'background 0.3s',
+              }}
+              onDragOver={e => { if (!uploading) { e.preventDefault(); setIsDragOver(true) } }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={handleDrop}
+            >
+              {uploading ? (
+                /* ── Loading state ── */
+                <div style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 32,
+                  maxWidth: 360, width: '100%',
+                  background: '#fff', borderRadius: 28, padding: isMobile ? '36px 24px' : '52px 48px',
+                  boxShadow: '0 12px 48px rgba(99,102,241,0.18), 0 2px 8px rgba(0,0,0,0.04)',
+                }}>
+                  {/* Circular progress ring */}
+                  <div style={{ position: 'relative', width: 108, height: 108 }}>
+                    <svg width="108" height="108" viewBox="0 0 108 108" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+                      <circle cx="54" cy="54" r="46" stroke="#e2e8f0" strokeWidth="7" fill="none"/>
+                      <circle cx="54" cy="54" r="46" stroke="url(#uploadGrad)" strokeWidth="7" fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={`${2 * Math.PI * 46}`}
+                        strokeDashoffset={`${2 * Math.PI * 46 * (1 - uploadProgress / 100)}`}
+                        style={{ transition: 'stroke-dashoffset 0.28s ease' }}
+                      />
+                      <defs>
+                        <linearGradient id="uploadGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#6366f1"/><stop offset="100%" stopColor="#818cf8"/>
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div style={{
+                      position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center', gap: 1,
+                    }}>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: '#6366f1', fontFamily: 'Manrope, sans-serif', lineHeight: 1 }}>
+                        {uploadProgress}
+                      </span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8' }}>%</span>
+                    </div>
+                  </div>
+
+                  {/* Status + progress bar */}
+                  <div style={{ width: '100%' }}>
+                    <p style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700, color: '#1e293b', textAlign: 'center', fontFamily: 'Manrope, sans-serif' }}>
+                      {uploadProgress < 30 ? 'Reading file…'
+                        : uploadProgress < 65 ? 'Parsing document…'
+                        : uploadProgress < 97 ? 'Generating previews…'
+                        : 'Almost done!'}
+                    </p>
+                    <div style={{ height: 8, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${uploadProgress}%`,
+                        background: 'linear-gradient(90deg, #6366f1, #818cf8)',
+                        borderRadius: 999,
+                        transition: 'width 0.25s ease',
+                        boxShadow: '0 0 10px rgba(99,102,241,0.45)',
+                      }} />
+                    </div>
+                    <p style={{ margin: '8px 0 0', fontSize: 11, color: '#94a3b8', textAlign: 'center' }}>
+                      Please wait while we process your PDF
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* ── Drop zone UI ── */
+                <div
+                  onClick={() => pdfInput.current?.click()}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22,
+                    padding: isMobile ? '32px 24px' : '56px 64px',
+                    borderRadius: 28, cursor: 'pointer',
+                    maxWidth: 500, width: '100%', textAlign: 'center',
+                    background: isDragOver
+                      ? 'linear-gradient(135deg,rgba(99,102,241,0.07),rgba(139,92,246,0.07))'
+                      : 'rgba(255,255,255,0.95)',
+                    border: `2px dashed ${isDragOver ? '#6366f1' : '#c7d2fe'}`,
+                    boxShadow: isDragOver
+                      ? '0 0 0 4px rgba(99,102,241,0.1), 0 16px 48px rgba(99,102,241,0.18)'
+                      : '0 4px 28px rgba(0,0,0,0.07)',
+                    transition: 'all 0.22s cubic-bezier(0.4,0,0.2,1)',
+                    transform: isDragOver ? 'scale(1.02)' : 'scale(1)',
+                  }}
+                >
+                  {/* Icon */}
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      width: 84, height: 84,
+                      background: isDragOver
+                        ? 'linear-gradient(135deg, #6366f1, #818cf8)'
+                        : 'linear-gradient(135deg, #eef2ff, #ede9fe)',
+                      borderRadius: 24,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: isDragOver
+                        ? '0 10px 30px rgba(99,102,241,0.45)'
+                        : '0 4px 18px rgba(99,102,241,0.14)',
+                      transition: 'all 0.22s',
+                    }}>
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+                        stroke={isDragOver ? '#fff' : '#6366f1'}
+                        strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="12" x2="12" y2="18"/>
+                        <polyline points="9 15 12 18 15 15"/>
+                      </svg>
+                    </div>
+                    {isDragOver && (
+                      <div style={{
+                        position: 'absolute', top: -6, right: -6,
+                        width: 24, height: 24, borderRadius: '50%',
+                        background: '#22c55e', boxShadow: '0 2px 10px rgba(34,197,94,0.45)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Text */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    <p style={{ margin: 0, fontSize: isMobile ? 17 : 20, fontWeight: 800, color: '#0f172a', fontFamily: 'Manrope, sans-serif', letterSpacing: '-0.03em' }}>
+                      {isDragOver ? 'Drop to open!' : 'Open a PDF to edit'}
+                    </p>
+                    <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.55 }}>
+                      {isMobile ? 'Tap to browse your files' : 'Click to browse · or drag & drop here'}
+                    </p>
+                  </div>
+
+                  {/* Feature pills */}
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 360 }}>
+                    {[
+                      ['T', 'Text'], ['✏', 'Draw'], ['◻', 'Shapes'],
+                      ['▬', 'Highlight'], ['✍', 'Sign'], ['⊕', 'Stamp'], ['💧', 'Watermark'],
+                    ].map(([icon, label]) => (
+                      <span key={label} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        padding: '4px 11px', borderRadius: 20,
+                        background: 'rgba(99,102,241,0.07)',
+                        border: '1px solid rgba(99,102,241,0.18)',
+                        fontSize: 11.5, fontWeight: 600, color: '#6366f1',
+                      }}>{icon} {label}</span>
+                    ))}
+                  </div>
+
+                  <p style={{ margin: 0, fontSize: 11, color: '#94a3b8' }}>
+                    PDF files supported · max 50 MB
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Multi-page scroll area */
+            <div
+              ref={scrollRef}
+              style={{
+                flex: 1, overflow: 'auto', padding: isMobile ? '12px 8px' : '24px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
+                cursor: toolMode === 'pan' ? (panStart.current ? 'grabbing' : 'grab') : undefined,
+              }}
+              onMouseDown={handlePanDown}
+              onMouseMove={handlePanMove}
+              onMouseUp={handlePanUp}
+              onMouseLeave={handlePanUp}
+            >
+              {rendering && (
+                <div style={{
+                  position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)',
+                  padding: '7px 14px', background: '#fff', borderRadius: 20,
+                  fontSize: 12, color: '#1d4ed8', fontWeight: 600, zIndex: 60,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+                  display: 'flex', alignItems: 'center', gap: 7,
+                }}>
+                  <svg className="spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" strokeWidth="2.5">
+                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                  </svg>
+                  Loading…
+                </div>
+              )}
+
+              {slots.map((slot, idx) => {
+                const slotElems = elements.filter(e => e.pageSlotId === slot.id)
+                const isActive = idx === slotIdx
+                const isCropping = toolMode === 'crop'
+                // Only apply crop clipping when not actively cropping (so user sees full page while selecting)
+                const hasCrop = !!slot.crop && !isCropping
+                const drawCursor = ['text','highlight','mark','annotation','shape','crop','draw'].includes(toolMode) ? 'crosshair' : toolMode === 'pan' ? 'inherit' : 'default'
+                return (
+                  <div key={slot.id}
+                    style={{
+                      position: 'relative', display: 'inline-block', flexShrink: 0,
+                      overflow: hasCrop ? 'hidden' : 'visible',
+                      ...(hasCrop ? { width: slot.crop!.w * scale, height: slot.crop!.h * scale } : {}),
+                      boxShadow: isActive
+                        ? '0 0 0 3px #6366f1, 0 12px 48px rgba(99,102,241,0.22)'
+                        : '0 4px 24px rgba(0,0,0,0.14)',
+                      borderRadius: 2,
+                      cursor: drawCursor,
+                    }}
+                    onClick={() => { setSlotIdx(idx) }}
+                    onMouseEnter={() => setHoveredPageIdx(idx)}
+                    onMouseLeave={() => setHoveredPageIdx(null)}
+                  >
+                    {/* Inner content – offset when crop is applied */}
+                    <div style={{
+                      position: 'relative',
+                      ...(hasCrop ? { marginLeft: -slot.crop!.x * scale, marginTop: -slot.crop!.y * scale } : {}),
+                    }}>
+                      <canvas
+                        ref={el => {
+                          canvasRefsMap.current[slot.id] = el
+                          if (isActive) (canvasRef as React.MutableRefObject<HTMLCanvasElement|null>).current = el
+                        }}
+                        style={{ display: 'block' }}
+                      />
+                      {/* Elements overlay */}
+                      <div
+                        style={{ position: 'absolute', inset: 0, pointerEvents: toolMode === 'draw' ? 'auto' : 'none',
+                          cursor: toolMode === 'draw' ? 'crosshair' : undefined }}
+                        onMouseDown={toolMode === 'draw' ? (e => { handleDrawStart(e, slot.id) }) : undefined}
+                        onMouseMove={toolMode === 'draw' ? handleDrawMove : undefined}
+                        onMouseUp={toolMode === 'draw' ? (() => handleDrawEnd(slot.id)) : undefined}
+                        onMouseLeave={toolMode === 'draw' ? (() => { if (isDrawing.current) handleDrawEnd(slot.id) }) : undefined}
+                      >
+                        {slotElems.map(el => (
+                          <div key={el.id} style={{ position: 'absolute', pointerEvents: toolMode === 'pan' || toolMode === 'draw' ? 'none' : 'auto' }}>
+                            <DraggableElement
+                              element={el} isSelected={selectedId === el.id} scale={scale}
+                              onSelect={id => { setSelectedId(id); setEditingId(null); setSlotIdx(idx) }}
+                              onUpdate={updateEl} onDelete={deleteEl}
+                              editMode={editingId === el.id}
+                            >
+                              {el.type === 'text' && (
+                                <TextDisplay el={el} scale={scale} isEditing={editingId === el.id}
+                                  onChange={t => updateEl(el.id, { text: t } as Partial<PDFElement>)}
+                                  onDblClick={() => setEditingId(el.id)} />
+                              )}
+                              {(el.type === 'image' || el.type === 'signature') && (
+                                <img src={el.src} alt={el.type} draggable={false}
+                                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                              )}
+                              {el.type === 'stamp'      && <StampDisplay el={el} scale={scale} />}
+                              {el.type === 'highlight'  && <HighlightDisplay el={el} />}
+                              {el.type === 'mark'       && <MarkDisplay el={el} />}
+                              {el.type === 'annotation' && (
+                                <AnnotationDisplay el={el} isEditing={editingId === el.id}
+                                  onChange={t => updateEl(el.id, { text: t } as Partial<PDFElement>)}
+                                  onDblClick={() => setEditingId(el.id)} />
+                              )}
+                              {el.type === 'shape'      && <ShapeDisplay el={el} />}
+                              {el.type === 'draw'       && <DrawDisplay el={el} scale={scale} />}
+                              {el.type === 'watermark'  && <WatermarkDisplay el={el} scale={scale} />}
+                            </DraggableElement>
+                          </div>
+                        ))}
+                        {/* Live draw preview */}
+                        {toolMode === 'draw' && isActive && drawPreviewPts.length > 1 && (
+                          <svg style={{position:'absolute',inset:0,overflow:'visible',pointerEvents:'none'}} width="100%" height="100%">
+                            <polyline
+                              points={drawPreviewPts.map(p=>`${p.x*scale},${p.y*scale}`).join(' ')}
+                              fill="none" stroke={drawColor} strokeWidth={drawStrokeWidth}
+                              strokeLinecap="round" strokeLinejoin="round" opacity={drawOpacity}/>
+                          </svg>
+                        )}
+                      </div>
+                      {/* Crop mode: dim overlay + selection rect */}
+                      {isCropping && (
+                        <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.22)', pointerEvents:'none', zIndex:8 }} />
+                      )}
+                      {isCropping && cropDraft?.slotId === slot.id && cropDraft.w > 0 && (
+                        <div style={{
+                          position:'absolute',
+                          left: cropDraft.x * scale, top: cropDraft.y * scale,
+                          width: cropDraft.w * scale, height: cropDraft.h * scale,
+                          border: '2px dashed #f59e0b',
+                          background: 'rgba(245,158,11,0.08)',
+                          boxShadow: '0 0 0 9999px rgba(0,0,0,0.3)',
+                          pointerEvents: 'none', zIndex: 9,
+                        }} />
+                      )}
+                      {/* Ghost position marker for placement tools */}
+                      {['text','highlight','mark','annotation','shape'].includes(toolMode) && hoverPos?.slotId === slot.id && (
+                        <GhostMarker
+                          toolMode={toolMode} x={hoverPos.x * scale} y={hoverPos.y * scale}
+                          activeMarkType={activeMarkType} activeShapeType={activeShapeType} shapeStroke={shapeStroke}
+                        />
+                      )}
+                      {/* Interaction overlay: click-to-place or crop-drag */}
+                      {toolMode !== 'pan' && toolMode !== 'draw' && (
+                        <div
+                          style={{ position:'absolute', inset:0, zIndex:5 }}
+                          onClick={!isCropping ? e => { setSlotIdx(idx); handleOverlayClick(e, slot.id) } : undefined}
+                          onMouseDown={isCropping ? e => { setSlotIdx(idx); handleCropStart(e, slot.id) } : undefined}
+                          onMouseMove={e => {
+                            if (isCropping) { handleCropMove(e) }
+                            else if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
+                              const r = e.currentTarget.getBoundingClientRect()
+                              setHoverPos({ x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale, slotId: slot.id })
+                            }
+                          }}
+                          onMouseUp={isCropping ? handleCropEnd : undefined}
+                          onMouseLeave={() => { if (!isCropping) setHoverPos(null) }}
+                        />
+                      )}
+                    </div>
+                    {/* Page number badge – sits on top of crop window */}
+                    <div style={{
+                      position:'absolute', top:6, left:6, zIndex:15,
+                      background: isActive ? '#6366f1' : 'rgba(0,0,0,0.45)',
+                      color:'#fff', fontSize:9, fontWeight:700, borderRadius:4,
+                      padding:'2px 6px', pointerEvents:'none', letterSpacing:'0.04em',
+                    }}>P{idx+1}</div>
+                    {/* Clear crop badge */}
+                    {slot.crop && !isCropping && (
+                      <button
+                        onClick={e => { e.stopPropagation(); clearCrop(slot.id) }}
+                        style={{
+                          position:'absolute', bottom:6, right:6, zIndex:15,
+                          padding:'3px 8px', borderRadius:5,
+                          border:'1px solid rgba(245,158,11,0.5)',
+                          background:'rgba(245,158,11,0.15)', color:'#f59e0b',
+                          fontSize:9, fontWeight:700, cursor:'pointer',
+                        }}
+                      >✕ Clear Crop</button>
+                    )}
+                    {/* Per-page rotate overlay on hover */}
+                    {hoveredPageIdx === idx && toolMode !== 'crop' && (
+                      <div
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          position: 'absolute', bottom: 10, left: '50%',
+                          transform: 'translateX(-50%)',
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          zIndex: 20,
+                          background: 'rgba(10,12,28,0.76)',
+                          backdropFilter: 'blur(8px)',
+                          WebkitBackdropFilter: 'blur(8px)',
+                          border: '1px solid rgba(255,255,255,0.13)',
+                          borderRadius: 999,
+                          padding: '5px 10px',
+                          boxShadow: '0 4px 18px rgba(0,0,0,0.38)',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        <button
+                          onClick={() => rotatePageLeft(idx)}
+                          title="Rotate left 90°"
+                          style={{
+                            width: 26, height: 26, borderRadius: '50%',
+                            border: '1px solid rgba(165,180,252,0.3)',
+                            background: 'rgba(165,180,252,0.12)',
+                            color: '#a5b4fc', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'background 0.12s',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.4)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(165,180,252,0.12)')}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="1 4 1 10 7 10"/>
+                            <path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+                          </svg>
+                        </button>
+                        <span style={{ fontSize: 9.5, fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.04em', padding: '0 2px' }}>
+                          P{idx + 1}
+                        </span>
+                        <button
+                          onClick={() => rotatePage(idx)}
+                          title="Rotate right 90°"
+                          style={{
+                            width: 26, height: 26, borderRadius: '50%',
+                            border: '1px solid rgba(165,180,252,0.3)',
+                            background: 'rgba(165,180,252,0.12)',
+                            color: '#a5b4fc', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'background 0.12s',
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(99,102,241,0.4)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(165,180,252,0.12)')}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Floating zoom + fit + pan controls */}
+          {slots.length > 0 && (
+            <div className="glass-panel" style={{
+              position: 'absolute', bottom: isMobile ? 72 : 18,
+              left: '50%', transform: 'translateX(-50%)',
+              display: 'flex', alignItems: 'center', gap: 3,
+              border: '1px solid rgba(255,255,255,0.7)',
+              borderRadius: 999, padding: '5px 12px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.12)', zIndex: 30,
+              whiteSpace: 'nowrap',
+            }}>
+              {/* Zoom out */}
+              <FBtn title="Zoom out" onClick={() => setScale(s => Math.max(0.4, parseFloat((s - 0.2).toFixed(1))))}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>
+                </svg>
+              </FBtn>
+              {/* % label – click to reset 100% */}
+              <button title="Reset to 100%" onClick={() => setScale(1)} style={{
+                background:'transparent', border:'none', cursor:'pointer',
+                fontSize:11.5, fontWeight:700, minWidth:40, textAlign:'center', color:'#334155',
+                borderRadius:6, padding:'4px 2px',
+              }}
+              onMouseEnter={e=>(e.currentTarget.style.background='#e2e8f0')}
+              onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                {Math.round(scale * 100)}%
+              </button>
+              {/* Zoom in */}
+              <FBtn title="Zoom in" onClick={() => setScale(s => Math.min(3.0, parseFloat((s + 0.2).toFixed(1))))}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+                </svg>
+              </FBtn>
+
+              <div style={{ width: 1, height: 16, background: '#c8d4e8', margin: '0 3px' }} />
+
+              {/* Fit to screen */}
+              <FBtn title="Fit page to screen" onClick={fitToScreen}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
+                </svg>
+              </FBtn>
+
+              {/* Pan toggle */}
+              <FBtn
+                title={toolMode === 'pan' ? 'Exit pan mode (active)' : 'Pan mode – drag to scroll'}
+                onClick={() => setToolMode(toolMode === 'pan' ? 'select' : 'pan')}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke={toolMode === 'pan' ? '#6366f1' : 'currentColor'}
+                  strokeWidth={toolMode === 'pan' ? '2.5' : '1.75'} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 11V8a2 2 0 00-4 0v1M14 9V7a2 2 0 00-4 0v5M10 10V6a2 2 0 00-4 0v9a7 7 0 0014 0v-3a2 2 0 00-4 0"/>
+                </svg>
+              </FBtn>
+
+              <div style={{ width: 1, height: 16, background: '#c8d4e8', margin: '0 3px' }} />
+
+              {/* Page counter */}
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', padding: '0 2px' }}>
+                {slotIdx + 1} / {slots.length}
+              </span>
+            </div>
+          )}
+        </main>
+
+        {/* Properties panel */}
+        {showPanel && slots.length > 0 && (
+          <div style={isMobile || isTablet ? {
+            position: 'absolute', top: 0, right: 0, bottom: 0, zIndex: 100,
+            boxShadow: '-4px 0 20px rgba(0,0,0,0.12)',
+          } : {}}>
+            <PropertiesPanel
+              selected={selectedEl}
+              currentPage={slotIdx + 1}
+              totalPages={slots.length}
+              pageBoxCount={pageElems.length}
+              onUpdate={updateEl}
+              onDelete={deleteEl}
+              onClearPage={clearPage}
+              onAddStamp={handleAddStamp}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ── MOBILE BOTTOM TOOLBAR ────────────────────────────────── */}
+      {isMobile && slots.length > 0 && (
+        <nav style={{
+          display: 'flex', alignItems: 'center',
+          height: 72, flexShrink: 0, paddingBottom: 4,
+          background: 'linear-gradient(180deg,#0d1526 0%,#090e1a 100%)',
+          borderTop: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.45)',
+          overflowX: 'auto', gap: 2, padding: '0 6px 4px',
+        }}>
+          {([
+            { mode:'select' as ToolMode, label:'Select', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3l14 9-7 1-3 7z"/></svg> },
+            { mode:'text' as ToolMode, label:'Text', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg> },
+            { mode:'annotation' as ToolMode, label:'Note', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> },
+            { mode:'highlight' as ToolMode, label:'Highlight', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4z"/></svg> },
+            { mode:'mark' as ToolMode, label:'Mark', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> },
+            { mode:'shape' as ToolMode, label:'Shape', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="17" r="4"/></svg> },
+            { mode:'image' as ToolMode, label:'Image', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> },
+            { mode:'signature' as ToolMode, label:'Sign', isSign:true,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5z"/></svg> },
+          ]).map(t => {
+            const active = toolMode === t.mode
+            return (
+              <button key={t.mode}
+                onClick={() => {
+                  if (t.mode === 'image') { setToolMode('image'); imgInput.current?.click() }
+                  else if (t.mode === 'signature') { setShowSig(true); setToolMode('select') }
+                  else setToolMode(t.mode)
+                }}
+                style={{
+                  display:'flex', flexDirection:'column', alignItems:'center', gap:4,
+                  border:'none', cursor:'pointer', minWidth:50, padding:'6px 4px 4px',
+                  borderRadius:14, flexShrink:0,
+                  background: active ? (t.isSign ? 'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(217,119,6,0.15))' : 'rgba(99,102,241,0.18)') : 'transparent',
+                  transition:'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+                }}>
+                <span style={{
+                  width:36, height:36, borderRadius:11,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  background: active ? (t.isSign ? 'linear-gradient(135deg,#f59e0b,#d97706)' : 'linear-gradient(135deg,#6366f1,#818cf8)') : (t.isSign ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.06)'),
+                  boxShadow: active ? (t.isSign ? '0 4px 14px rgba(245,158,11,0.45)' : '0 4px 14px rgba(99,102,241,0.45)') : 'none',
+                  color: active ? '#fff' : (t.isSign ? '#fbbf24' : 'rgba(255,255,255,0.45)'),
+                  transition:'all 0.18s cubic-bezier(0.4,0,0.2,1)',
+                }}>{t.icon}</span>
+                <span style={{
+                  fontSize:9, letterSpacing:'0.03em', fontFamily:'Inter,system-ui,sans-serif',
+                  fontWeight: active ? 700 : 400,
+                  color: active ? (t.isSign ? '#fbbf24' : '#818cf8') : (t.isSign ? 'rgba(251,191,36,0.55)' : 'rgba(255,255,255,0.35)'),
+                  transition:'color 0.18s', whiteSpace:'nowrap',
+                }}>{t.label}</span>
+              </button>
+            )
+          })}
+          {/* Stamp */}
+          <button onClick={()=>setShowStampMenu(v=>!v)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:'pointer',minWidth:50,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:showStampMenu?'rgba(99,102,241,0.18)':'transparent',transition:'all 0.18s'}}>
+            <span style={{width:36,height:36,borderRadius:11,display:'flex',alignItems:'center',justifyContent:'center',background:showStampMenu?'linear-gradient(135deg,#6366f1,#818cf8)':'rgba(255,255,255,0.06)',color:showStampMenu?'#fff':'rgba(255,255,255,0.45)',transition:'all 0.18s'}}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M5 22h14"/><path d="M19 10H5a2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2z"/><rect x="9" y="2" width="6" height="8" rx="1"/></svg>
+            </span>
+            <span style={{fontSize:9,color:showStampMenu?'#818cf8':'rgba(255,255,255,0.35)',fontWeight:showStampMenu?700:400,transition:'color 0.18s'}}>Stamp</span>
+          </button>
+          {/* Date */}
+          <button onClick={()=>setShowDateMenu(v=>!v)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:'pointer',minWidth:50,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:showDateMenu?'rgba(99,102,241,0.18)':'transparent',transition:'all 0.18s'}}>
+            <span style={{width:36,height:36,borderRadius:11,display:'flex',alignItems:'center',justifyContent:'center',background:showDateMenu?'linear-gradient(135deg,#6366f1,#818cf8)':'rgba(255,255,255,0.06)',color:showDateMenu?'#fff':'rgba(255,255,255,0.45)',transition:'all 0.18s'}}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </span>
+            <span style={{fontSize:9,color:showDateMenu?'#818cf8':'rgba(255,255,255,0.35)',fontWeight:showDateMenu?700:400,transition:'color 0.18s'}}>Date</span>
+          </button>
+        </nav>
+      )}
+
+      {/* Mobile date panel */}
+      {isMobile && showDateMenu && (
+        <DatePickerPanel
+          onInsert={insertDate}
+          onClose={() => setShowDateMenu(false)}
+          isMobile
+        />
+      )}
+
+      {/* Signature modal */}
+      {showSig && <SignatureModal onApply={handleSignatureApply} onClose={() => setShowSig(false)} savedSignature={savedSignature} />}
+
+      {/* Organise Pages modal */}
+      {showOrganise && (
+        <OrganisePages
+          pageSlots={slots}
+          currentSlotIdx={slotIdx}
+          onApply={handleReorder}
+          onClose={() => setShowOrganise(false)}
+        />
+      )}
+
+      {/* Backdrop for mobile sidebars */}
+      {isMobile && (showSidebar || showPanel) && slots.length > 0 && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 90 }}
+          onClick={() => { setShowSidebar(false); setShowPanel(false) }}
+        />
+      )}
+    </div>
+  )
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function FBtn({ onClick, children, title }: { onClick: () => void; children: React.ReactNode; title?: string }) {
+  return (
+    <button onClick={onClick} title={title} style={{
+      background: 'transparent', border: 'none', cursor: 'pointer',
+      padding: '4px 6px', borderRadius: 6, color: '#475569',
+      display: 'flex', alignItems: 'center',
+    }}
+    onMouseEnter={e => (e.currentTarget.style.background = '#e2e8f0')}
+    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+      {children}
+    </button>
+  )
+}
+
+const mobileIconBtn: React.CSSProperties = {
+  background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 7,
+  color: '#fff', cursor: 'pointer', width: 34, height: 34,
+  fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+}
+
