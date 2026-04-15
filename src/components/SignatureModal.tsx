@@ -132,6 +132,7 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
         background: '#fff', borderRadius: 20, padding: '24px 26px',
         width: '100%', maxWidth: 500,
         boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
+        maxHeight: '92vh', overflowY: 'auto',
       }}>
 
         {/* ── Header ─────────────────────────────────────────────── */}
