@@ -180,10 +180,11 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
         {tab === 'draw' && (
           <>
             {/* Pen options */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+              {/* Ink colors */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Ink</span>
-                <div style={{ display: 'flex', gap: 5 }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>Ink</span>
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                   {['#1b1c1c', '#1d4ed8', '#dc2626', '#7c3aed', '#047857'].map(c => (
                     <button key={c} onClick={() => setPenColor(c)} style={{
                       width: 22, height: 22, borderRadius: '50%', background: c,
@@ -197,12 +198,13 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
                     style={{ width: 22, height: 22, border: 'none', borderRadius: 5, cursor: 'pointer', padding: 1 }} />
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 140 }}>
+              {/* Thickness */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>Thickness {penSize}px</span>
                 <input
                   type="range" min={1} max={10} step={1} value={penSize}
                   onChange={e => setPenSize(parseInt(e.target.value))}
-                  style={{ flex: 1, accentColor: '#6366f1', cursor: 'pointer' }}
+                  style={{ flex: 1, minWidth: 0, accentColor: '#6366f1', cursor: 'pointer' }}
                 />
               </div>
             </div>

@@ -573,7 +573,6 @@ export default function PDFEditor() {
       setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
       setSelectedId(el.id)
       setToolMode('select')
-      setShowPanel(true)
     }
     reader.readAsDataURL(f); e.target.value = ''
   }
@@ -2437,6 +2436,35 @@ export default function PDFEditor() {
             </div>
           </div>
           <button onClick={()=>{applyWatermark();setShowWmPanel(false)}} style={{padding:'9px 16px',borderRadius:9,border:'none',background:'linear-gradient(135deg,#6366f1,#818cf8)',color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Apply to All Pages</button>
+        </div>
+      )}
+
+      {/* Mobile image / signature opacity bottom sheet */}
+      {isMobile && selectedEl && (selectedEl.type === 'image' || selectedEl.type === 'signature') && toolMode === 'select' && (
+        <div style={{
+          position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
+          background: '#fff', borderTop: '1px solid #e8ecf5',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+          borderRadius: '14px 14px 0 0',
+          padding: '14px 16px 18px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {selectedEl.type === 'signature' ? 'Signature' : 'Image'} · {Math.round(selectedEl.width)}×{Math.round(selectedEl.height)} px
+            </p>
+            <button onClick={() => setSelectedId(null)} style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 4px' }}>×</button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 12, color: '#475569', fontWeight: 600, whiteSpace: 'nowrap' }}>
+              Opacity {Math.round((selectedEl.opacity ?? 1) * 100)}%
+            </span>
+            <input
+              type="range" min={10} max={100} step={5}
+              value={Math.round((selectedEl.opacity ?? 1) * 100)}
+              onChange={e => updateEl(selectedEl.id, { opacity: parseInt(e.target.value) / 100 } as Partial<PDFElement>)}
+              style={{ flex: 1, minWidth: 0, accentColor: '#6366f1', cursor: 'pointer' }}
+            />
+          </div>
         </div>
       )}
 
