@@ -360,6 +360,7 @@ export default function PDFEditor() {
   const [drawStrokeWidth, setDrawStrokeWidth] = useState(3)
   const [drawOpacity, setDrawOpacity]       = useState(1)
   const [showDrawMenu, setShowDrawMenu]     = useState(false)
+  const [showRotateMenu, setShowRotateMenu] = useState(false)
   const isDrawing   = useRef(false)
   const drawPoints  = useRef<{ x: number; y: number }[]>([])
   const liveDrawEl  = useRef<DrawElement | null>(null)
@@ -987,6 +988,30 @@ export default function PDFEditor() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [selectedId, editingId, deleteEl, undo, redo])
+
+  // ── Auto fit-to-screen when a PDF first loads ────────────────────────────
+  const prevSlotsLen = useRef(0)
+  useEffect(() => {
+    const wasEmpty = prevSlotsLen.current === 0
+    prevSlotsLen.current = slots.length
+    if (!wasEmpty || slots.length === 0) return
+    // Wait one animation frame so the scroll container is laid out
+    requestAnimationFrame(() => {
+      const slot = slots[0]
+      const container = scrollRef.current
+      if (!container || !slot) return
+      const padding = 48
+      const availW = container.clientWidth  - padding
+      const availH = container.clientHeight - padding
+      if (availW <= 0 || availH <= 0) return
+      const rot = slot.rotation || 0
+      const sw  = rot === 90 || rot === 270
+      const pw  = sw ? slot.baseHeight : slot.baseWidth
+      const ph  = sw ? slot.baseWidth  : slot.baseHeight
+      const fitScale = Math.min(availW / pw, availH / ph)
+      setScale(Math.max(0.4, Math.min(3.0, parseFloat(fitScale.toFixed(2)))))
+    })
+  }, [slots]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Crop: auto-initialize to full page when entering crop mode ────────────
   useEffect(() => {
@@ -1930,32 +1955,29 @@ export default function PDFEditor() {
                             border: '2px solid #f59e0b',
                             background: 'rgba(245,158,11,0.06)',
                             boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)',
-                            boxSizing: 'border-box', zIndex: 9,
+                            boxSizing: 'border-box', zIndex: 9, overflow: 'visible',
                           }}>
-                            {/* 8 resize handles */}
+                            {/* 8 resize handles — centered ON the border via transform so half sits inside the rect */}
                             {([
-                              ['nw', {top:-6,left:-6,cursor:'nw-resize'}],
-                              ['n',  {top:-6,left:'50%',transform:'translateX(-50%)',cursor:'n-resize'}],
-                              ['ne', {top:-6,right:-6,cursor:'ne-resize'}],
-                              ['e',  {right:-6,top:'50%',transform:'translateY(-50%)',cursor:'e-resize'}],
-                              ['se', {bottom:-6,right:-6,cursor:'se-resize'}],
-                              ['s',  {bottom:-6,left:'50%',transform:'translateX(-50%)',cursor:'s-resize'}],
-                              ['sw', {bottom:-6,left:-6,cursor:'sw-resize'}],
-                              ['w',  {left:-6,top:'50%',transform:'translateY(-50%)',cursor:'w-resize'}],
+                              ['nw', {top:0,  left:0,      transform:'translate(-50%,-50%)', cursor:'nw-resize'}],
+                              ['n',  {top:0,  left:'50%',  transform:'translate(-50%,-50%)', cursor:'n-resize'}],
+                              ['ne', {top:0,  right:0,     transform:'translate(50%,-50%)',  cursor:'ne-resize'}],
+                              ['e',  {top:'50%', right:0,  transform:'translate(50%,-50%)',  cursor:'e-resize'}],
+                              ['se', {bottom:0, right:0,   transform:'translate(50%,50%)',   cursor:'se-resize'}],
+                              ['s',  {bottom:0, left:'50%',transform:'translate(-50%,50%)',  cursor:'s-resize'}],
+                              ['sw', {bottom:0, left:0,    transform:'translate(-50%,50%)',  cursor:'sw-resize'}],
+                              ['w',  {top:'50%', left:0,   transform:'translate(-50%,-50%)', cursor:'w-resize'}],
                             ] as [string, React.CSSProperties][]).map(([hdl, pos]) => (
-                              <div key={hdl} style={{
-                                position:'absolute', width:12, height:12,
-                                background:'#fff', border:'1.5px solid #f59e0b',
-                                borderRadius:2, zIndex:50, touchAction:'none',
-                                ...pos,
-                              }}
+                              <div key={hdl}
+                                className="resize-handle"
+                                style={{ border:'1.5px solid #f59e0b', zIndex:50, touchAction:'none', ...pos }}
                                 onMouseDown={e => {
                                   e.stopPropagation(); e.preventDefault()
                                   cropResizing.current = hdl
                                   cropResizeStart.current = { cx:e.clientX, cy:e.clientY, ox:cropDraft.x, oy:cropDraft.y, ow:cropDraft.w, oh:cropDraft.h }
                                 }}
                                 onTouchStart={e => {
-                                  e.stopPropagation(); e.preventDefault()
+                                  e.stopPropagation()
                                   const t = e.touches[0]
                                   cropResizing.current = hdl
                                   cropResizeStart.current = { cx:t.clientX, cy:t.clientY, ox:cropDraft.x, oy:cropDraft.y, ow:cropDraft.w, oh:cropDraft.h }
@@ -1963,11 +1985,11 @@ export default function PDFEditor() {
                               />
                             ))}
                             {/* Apply / Cancel */}
-                            <div style={{ position:'absolute', bottom:-36, left:'50%', transform:'translateX(-50%)', display:'flex', gap:6, zIndex:20, whiteSpace:'nowrap' }}>
+                            <div style={{ position:'absolute', bottom:-42, left:'50%', transform:'translateX(-50%)', display:'flex', gap:5, zIndex:20, whiteSpace:'nowrap' }}>
                               <button
                                 onMouseDown={e => e.stopPropagation()}
                                 onClick={e => { e.stopPropagation(); setCropDraft(null); cropResizing.current=null; setToolMode('select') }}
-                                style={{ padding:'5px 12px', borderRadius:6, border:'1px solid rgba(255,255,255,0.25)', background:'rgba(15,18,35,0.85)', color:'#fff', fontSize:11, fontWeight:700, cursor:'pointer' }}
+                                style={{ padding:'5px 10px', borderRadius:6, border:'1px solid rgba(255,255,255,0.25)', background:'rgba(15,18,35,0.85)', color:'#fff', fontSize:10, fontWeight:700, cursor:'pointer' }}
                               >Cancel</button>
                               <button
                                 onMouseDown={e => e.stopPropagation()}
@@ -1977,8 +1999,27 @@ export default function PDFEditor() {
                                   setSlots(prev => prev.map(s => s.id === slotId ? { ...s, crop: { x, y, w, h } } : s))
                                   setCropDraft(null); cropResizing.current=null; setToolMode('select')
                                 }}
-                                style={{ padding:'5px 14px', borderRadius:6, border:'none', background:'linear-gradient(135deg,#f59e0b,#d97706)', color:'#fff', fontSize:11, fontWeight:700, cursor:'pointer' }}
-                              >Apply Crop</button>
+                                style={{ padding:'5px 10px', borderRadius:6, border:'none', background:'linear-gradient(135deg,#f59e0b,#d97706)', color:'#fff', fontSize:10, fontWeight:700, cursor:'pointer' }}
+                              >This Page</button>
+                              <button
+                                onMouseDown={e => e.stopPropagation()}
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  const { x, y, w, h } = cropDraft
+                                  setSlots(prev => prev.map(s => {
+                                    const rot = s.rotation || 0
+                                    const sw2 = rot===90||rot===270 ? s.baseHeight : s.baseWidth
+                                    const sh  = rot===90||rot===270 ? s.baseWidth  : s.baseHeight
+                                    const cx = Math.min(x, Math.max(0, sw2 - 10))
+                                    const cy = Math.min(y, Math.max(0, sh  - 10))
+                                    const cw = Math.min(w, sw2 - cx)
+                                    const ch = Math.min(h, sh  - cy)
+                                    return (cw >= 10 && ch >= 10) ? { ...s, crop: { x: cx, y: cy, w: cw, h: ch } } : s
+                                  }))
+                                  setCropDraft(null); cropResizing.current=null; setToolMode('select')
+                                }}
+                                style={{ padding:'5px 10px', borderRadius:6, border:'none', background:'linear-gradient(135deg,#6366f1,#818cf8)', color:'#fff', fontSize:10, fontWeight:700, cursor:'pointer' }}
+                              >All Pages</button>
                             </div>
                           </div>
                         </>
@@ -2218,18 +2259,13 @@ export default function PDFEditor() {
           ))}
           {/* Divider */}
           <div style={{width:1,height:40,background:'rgba(255,255,255,0.08)',alignSelf:'center',flexShrink:0,margin:'0 2px'}}/>
-          {/* Rotate current page */}
-          {[
-            { label:'Rot ↺', action:()=>rotatePageLeft(slotIdx),
-              icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg> },
-            { label:'Rot ↻', action:()=>rotatePage(slotIdx),
-              icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.13-9.36L23 10"/></svg> },
-          ].map(({label,action,icon})=>(
-            <button key={label} onClick={action} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:'pointer',minWidth:44,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:'transparent',transition:'all 0.18s'}}>
-              <span style={{width:34,height:34,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.6)',transition:'all 0.18s'}}>{icon}</span>
-              <span style={{fontSize:9,color:'rgba(255,255,255,0.35)',fontWeight:400,whiteSpace:'nowrap'}}>{label}</span>
-            </button>
-          ))}
+          {/* Rotate button → opens bottom sheet */}
+          <button onClick={()=>setShowRotateMenu(v=>!v)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:'pointer',minWidth:50,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:showRotateMenu?'rgba(99,102,241,0.18)':'transparent',transition:'all 0.18s'}}>
+            <span style={{width:36,height:36,borderRadius:11,display:'flex',alignItems:'center',justifyContent:'center',background:showRotateMenu?'linear-gradient(135deg,#6366f1,#818cf8)':'rgba(255,255,255,0.06)',color:showRotateMenu?'#fff':'rgba(255,255,255,0.45)',transition:'all 0.18s'}}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.13-9.36L23 10"/></svg>
+            </span>
+            <span style={{fontSize:9,color:showRotateMenu?'#818cf8':'rgba(255,255,255,0.35)',fontWeight:showRotateMenu?700:400,transition:'color 0.18s'}}>Rotate</span>
+          </button>
           {/* Divider */}
           <div style={{width:1,height:40,background:'rgba(255,255,255,0.08)',alignSelf:'center',flexShrink:0,margin:'0 2px'}}/>
           {([
@@ -2311,6 +2347,51 @@ export default function PDFEditor() {
             <span style={{fontSize:9,color:showDateMenu?'#818cf8':'rgba(255,255,255,0.35)',fontWeight:showDateMenu?700:400,transition:'color 0.18s'}}>Date</span>
           </button>
         </nav>
+      )}
+
+      {/* Mobile rotate panel */}
+      {isMobile && showRotateMenu && (
+        <div style={{
+          position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
+          background: '#fff', borderTop: '1px solid #e8ecf5',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+          borderRadius: '14px 14px 0 0',
+          padding: '16px 16px 20px',
+        }}>
+          <p style={{margin:'0 0 14px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Rotate</p>
+          <div style={{display:'flex',gap:10}}>
+            {/* This page */}
+            <div style={{flex:1}}>
+              <p style={{margin:'0 0 8px',fontSize:11,fontWeight:700,color:'#475569'}}>This page (P{slotIdx+1})</p>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>{rotatePageLeft(slotIdx);setShowRotateMenu(false)}} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:6,padding:'12px 8px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8faff',cursor:'pointer'}}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                  <span style={{fontSize:10,fontWeight:700,color:'#475569'}}>↺ Left</span>
+                </button>
+                <button onClick={()=>{rotatePage(slotIdx);setShowRotateMenu(false)}} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:6,padding:'12px 8px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8faff',cursor:'pointer'}}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.13-9.36L23 10"/></svg>
+                  <span style={{fontSize:10,fontWeight:700,color:'#475569'}}>↻ Right</span>
+                </button>
+              </div>
+            </div>
+            {/* Divider */}
+            <div style={{width:1,background:'#e8ecf5',alignSelf:'stretch'}}/>
+            {/* All pages */}
+            <div style={{flex:1}}>
+              <p style={{margin:'0 0 8px',fontSize:11,fontWeight:700,color:'#475569'}}>All pages ({slots.length})</p>
+              <div style={{display:'flex',gap:8}}>
+                <button onClick={()=>{rotateAllPagesLeft();setShowRotateMenu(false)}} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:6,padding:'12px 8px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8faff',cursor:'pointer'}}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                  <span style={{fontSize:10,fontWeight:700,color:'#475569'}}>↺ Left</span>
+                </button>
+                <button onClick={()=>{rotateAllPages();setShowRotateMenu(false)}} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:6,padding:'12px 8px',borderRadius:12,border:'1.5px solid #e2e8f0',background:'#f8faff',cursor:'pointer'}}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.13-9.36L23 10"/></svg>
+                  <span style={{fontSize:10,fontWeight:700,color:'#475569'}}>↻ Right</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Mobile date panel */}
