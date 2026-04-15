@@ -378,6 +378,8 @@ export default function PDFEditor() {
   // Crop tool
   const cropStart = useRef<{ x: number; y: number } | null>(null)
   const [cropDraft, setCropDraft] = useState<{ x: number; y: number; w: number; h: number; slotId: string } | null>(null)
+  const cropResizing = useRef<string | null>(null)
+  const cropResizeStart = useRef<{ cx: number; cy: number; ox: number; oy: number; ow: number; oh: number } | null>(null)
 
   // Suppress synthesized click that fires ~300ms after touchend on mobile
   const touchFiredRef = useRef(false)
@@ -985,6 +987,52 @@ export default function PDFEditor() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [selectedId, editingId, deleteEl, undo, redo])
+
+  // ── Crop: auto-initialize to full page when entering crop mode ────────────
+  useEffect(() => {
+    if (toolMode === 'crop' && slots[slotIdx]) {
+      const slot = slots[slotIdx]
+      const canvas = canvasRefsMap.current[slot.id]
+      const w = canvas ? Math.round(canvas.width  / scale) : slot.baseWidth
+      const h = canvas ? Math.round(canvas.height / scale) : slot.baseHeight
+      setCropDraft({ x: 0, y: 0, w, h, slotId: slot.id })
+    } else {
+      setCropDraft(null)
+      cropResizing.current = null
+    }
+  }, [toolMode, slotIdx]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Crop: document-level resize listeners ─────────────────────────────────
+  useEffect(() => {
+    if (toolMode !== 'crop') return
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      if (!cropResizing.current || !cropResizeStart.current) return
+      if ('preventDefault' in e) e.preventDefault()
+      const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
+      const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+      const { cx: sx, cy: sy, ox, oy, ow, oh } = cropResizeStart.current
+      const dx = (clientX - sx) / scale
+      const dy = (clientY - sy) / scale
+      const hdl = cropResizing.current
+      let x = ox, y = oy, w = ow, h = oh
+      if (hdl.includes('e')) w = Math.max(10, ow + dx)
+      if (hdl.includes('s')) h = Math.max(10, oh + dy)
+      if (hdl.includes('w')) { x = ox + dx; w = Math.max(10, ow - dx) }
+      if (hdl.includes('n')) { y = oy + dy; h = Math.max(10, oh - dy) }
+      setCropDraft(prev => prev ? { ...prev, x, y, w, h } : null)
+    }
+    const onUp = () => { cropResizing.current = null; cropResizeStart.current = null }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup',   onUp)
+    document.addEventListener('touchmove', onMove as EventListener, { passive: false })
+    document.addEventListener('touchend',  onUp)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup',   onUp)
+      document.removeEventListener('touchmove', onMove as EventListener)
+      document.removeEventListener('touchend',  onUp)
+    }
+  }, [toolMode, scale])
 
   // ── Export ────────────────────────────────────────────────────────────────
   const handleExport = async () => {
@@ -1869,20 +1917,71 @@ export default function PDFEditor() {
                           </svg>
                         )}
                       </div>
-                      {/* Crop mode: dim overlay + selection rect */}
-                      {isCropping && (
-                        <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.22)', pointerEvents:'none', zIndex:8 }} />
-                      )}
-                      {isCropping && cropDraft?.slotId === slot.id && cropDraft.w > 0 && (
-                        <div style={{
-                          position:'absolute',
-                          left: cropDraft.x * scale, top: cropDraft.y * scale,
-                          width: cropDraft.w * scale, height: cropDraft.h * scale,
-                          border: '2px dashed #f59e0b',
-                          background: 'rgba(245,158,11,0.08)',
-                          boxShadow: '0 0 0 9999px rgba(0,0,0,0.3)',
-                          pointerEvents: 'none', zIndex: 9,
-                        }} />
+                      {/* Crop mode: dim overlay + interactive handle rect */}
+                      {isCropping && cropDraft?.slotId === slot.id && (
+                        <>
+                          {/* Darkens the area outside the crop rect */}
+                          <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.45)', pointerEvents:'none', zIndex:8 }} />
+                          {/* Crop rect with resize handles */}
+                          <div style={{
+                            position: 'absolute',
+                            left: cropDraft.x * scale, top: cropDraft.y * scale,
+                            width: cropDraft.w * scale, height: cropDraft.h * scale,
+                            border: '2px solid #f59e0b',
+                            background: 'rgba(245,158,11,0.06)',
+                            boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)',
+                            boxSizing: 'border-box', zIndex: 9,
+                          }}>
+                            {/* 8 resize handles */}
+                            {([
+                              ['nw', {top:-6,left:-6,cursor:'nw-resize'}],
+                              ['n',  {top:-6,left:'50%',transform:'translateX(-50%)',cursor:'n-resize'}],
+                              ['ne', {top:-6,right:-6,cursor:'ne-resize'}],
+                              ['e',  {right:-6,top:'50%',transform:'translateY(-50%)',cursor:'e-resize'}],
+                              ['se', {bottom:-6,right:-6,cursor:'se-resize'}],
+                              ['s',  {bottom:-6,left:'50%',transform:'translateX(-50%)',cursor:'s-resize'}],
+                              ['sw', {bottom:-6,left:-6,cursor:'sw-resize'}],
+                              ['w',  {left:-6,top:'50%',transform:'translateY(-50%)',cursor:'w-resize'}],
+                            ] as [string, React.CSSProperties][]).map(([hdl, pos]) => (
+                              <div key={hdl} style={{
+                                position:'absolute', width:12, height:12,
+                                background:'#fff', border:'1.5px solid #f59e0b',
+                                borderRadius:2, zIndex:50, touchAction:'none',
+                                ...pos,
+                              }}
+                                onMouseDown={e => {
+                                  e.stopPropagation(); e.preventDefault()
+                                  cropResizing.current = hdl
+                                  cropResizeStart.current = { cx:e.clientX, cy:e.clientY, ox:cropDraft.x, oy:cropDraft.y, ow:cropDraft.w, oh:cropDraft.h }
+                                }}
+                                onTouchStart={e => {
+                                  e.stopPropagation(); e.preventDefault()
+                                  const t = e.touches[0]
+                                  cropResizing.current = hdl
+                                  cropResizeStart.current = { cx:t.clientX, cy:t.clientY, ox:cropDraft.x, oy:cropDraft.y, ow:cropDraft.w, oh:cropDraft.h }
+                                }}
+                              />
+                            ))}
+                            {/* Apply / Cancel */}
+                            <div style={{ position:'absolute', bottom:-36, left:'50%', transform:'translateX(-50%)', display:'flex', gap:6, zIndex:20, whiteSpace:'nowrap' }}>
+                              <button
+                                onMouseDown={e => e.stopPropagation()}
+                                onClick={e => { e.stopPropagation(); setCropDraft(null); cropResizing.current=null; setToolMode('select') }}
+                                style={{ padding:'5px 12px', borderRadius:6, border:'1px solid rgba(255,255,255,0.25)', background:'rgba(15,18,35,0.85)', color:'#fff', fontSize:11, fontWeight:700, cursor:'pointer' }}
+                              >Cancel</button>
+                              <button
+                                onMouseDown={e => e.stopPropagation()}
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  const { slotId, x, y, w, h } = cropDraft
+                                  setSlots(prev => prev.map(s => s.id === slotId ? { ...s, crop: { x, y, w, h } } : s))
+                                  setCropDraft(null); cropResizing.current=null; setToolMode('select')
+                                }}
+                                style={{ padding:'5px 14px', borderRadius:6, border:'none', background:'linear-gradient(135deg,#f59e0b,#d97706)', color:'#fff', fontSize:11, fontWeight:700, cursor:'pointer' }}
+                              >Apply Crop</button>
+                            </div>
+                          </div>
+                        </>
                       )}
                       {/* Ghost position marker for placement tools */}
                       {['text','highlight','mark','annotation','shape'].includes(toolMode) && hoverPos?.slotId === slot.id && (
@@ -1891,75 +1990,35 @@ export default function PDFEditor() {
                           activeMarkType={activeMarkType} activeShapeType={activeShapeType} shapeStroke={shapeStroke}
                         />
                       )}
-                      {/* Interaction overlay: click-to-place or crop-drag */}
-                      {toolMode !== 'pan' && toolMode !== 'draw' && (
+                      {/* Interaction overlay: click-to-place (not active during crop — handles manage that) */}
+                      {toolMode !== 'pan' && toolMode !== 'draw' && !isCropping && (
                         <div
                           style={{
                             position:'absolute', inset:0, zIndex:5,
                             cursor: 'pointer',
-                            touchAction: ['text','highlight','mark','annotation','shape','crop'].includes(toolMode) ? 'none' : 'auto',
+                            touchAction: ['text','highlight','mark','annotation','shape'].includes(toolMode) ? 'none' : 'auto',
                           }}
-                          onClick={!isCropping ? e => { if (touchFiredRef.current) return; setSlotIdx(idx); handleOverlayClick(e, slot.id) } : undefined}
-                          onTouchStart={isCropping ? e => {
-                            e.preventDefault()
-                            const t = e.touches[0]
-                            const rect = e.currentTarget.getBoundingClientRect()
-                            const x = (t.clientX - rect.left) / scale
-                            const y = (t.clientY - rect.top) / scale
-                            cropStart.current = { x, y }
-                            setCropDraft({ x, y, w: 0, h: 0, slotId: slot.id })
-                            setSlotIdx(idx)
-                          } : undefined}
+                          onClick={e => { if (touchFiredRef.current) return; setSlotIdx(idx); handleOverlayClick(e, slot.id) }}
                           onTouchMove={e => {
-                            if (isCropping) {
-                              if (!cropStart.current) return
-                              e.preventDefault()
-                              const t = e.touches[0]
-                              const rect = e.currentTarget.getBoundingClientRect()
-                              const cx = (t.clientX - rect.left) / scale
-                              const cy = (t.clientY - rect.top) / scale
-                              const x = Math.min(cx, cropStart.current.x)
-                              const y = Math.min(cy, cropStart.current.y)
-                              const w = Math.abs(cx - cropStart.current.x)
-                              const h = Math.abs(cy - cropStart.current.y)
-                              setCropDraft(prev => prev ? { ...prev, x, y, w, h } : null)
-                            } else if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
+                            if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
                               const t = e.touches[0]
                               const r = e.currentTarget.getBoundingClientRect()
                               setHoverPos({ x: (t.clientX - r.left) / scale, y: (t.clientY - r.top) / scale, slotId: slot.id })
                             }
                           }}
                           onTouchEnd={e => {
-                            if (isCropping) {
-                              const touch = e.changedTouches[0]
-                              if (!touch || !cropStart.current) { setCropDraft(null); cropStart.current = null; return }
-                              const rect = e.currentTarget.getBoundingClientRect()
-                              const cx = (touch.clientX - rect.left) / scale
-                              const cy = (touch.clientY - rect.top) / scale
-                              const x = Math.min(cx, cropStart.current.x)
-                              const y = Math.min(cy, cropStart.current.y)
-                              const w = Math.abs(cx - cropStart.current.x)
-                              const h = Math.abs(cy - cropStart.current.y)
-                              if (w < 10 || h < 10) { setCropDraft(null); cropStart.current = null; return }
-                              setSlots(prev => prev.map(s => s.id === slot.id ? { ...s, crop: { x, y, w, h } } : s))
-                              setCropDraft(null); cropStart.current = null; setToolMode('select')
-                            } else {
-                              touchFiredRef.current = true
-                              setTimeout(() => { touchFiredRef.current = false }, 600)
-                              setSlotIdx(idx)
-                              handleOverlayTouchEnd(e, slot.id)
-                            }
+                            touchFiredRef.current = true
+                            setTimeout(() => { touchFiredRef.current = false }, 600)
+                            setSlotIdx(idx)
+                            handleOverlayTouchEnd(e, slot.id)
                           }}
-                          onMouseDown={isCropping ? e => { setSlotIdx(idx); handleCropStart(e, slot.id) } : undefined}
                           onMouseMove={e => {
-                            if (isCropping) { handleCropMove(e) }
-                            else if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
+                            if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
                               const r = e.currentTarget.getBoundingClientRect()
                               setHoverPos({ x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale, slotId: slot.id })
                             }
                           }}
-                          onMouseUp={isCropping ? handleCropEnd : undefined}
-                          onMouseLeave={() => { if (!isCropping) setHoverPos(null) }}
+                          onMouseLeave={() => setHoverPos(null)}
                         />
                       )}
                     </div>
@@ -2153,6 +2212,20 @@ export default function PDFEditor() {
             { label:'Redo', can:canRedo, action:redo, icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.65"/></svg> },
           ].map(({label,can,action,icon})=>(
             <button key={label} onClick={action} disabled={!can} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:can?'pointer':'default',minWidth:44,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:'transparent',opacity:can?1:0.3,transition:'all 0.18s'}}>
+              <span style={{width:34,height:34,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.6)',transition:'all 0.18s'}}>{icon}</span>
+              <span style={{fontSize:9,color:'rgba(255,255,255,0.35)',fontWeight:400,whiteSpace:'nowrap'}}>{label}</span>
+            </button>
+          ))}
+          {/* Divider */}
+          <div style={{width:1,height:40,background:'rgba(255,255,255,0.08)',alignSelf:'center',flexShrink:0,margin:'0 2px'}}/>
+          {/* Rotate current page */}
+          {[
+            { label:'Rot ↺', action:()=>rotatePageLeft(slotIdx),
+              icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg> },
+            { label:'Rot ↻', action:()=>rotatePage(slotIdx),
+              icon:<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.13-9.36L23 10"/></svg> },
+          ].map(({label,action,icon})=>(
+            <button key={label} onClick={action} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:'pointer',minWidth:44,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:'transparent',transition:'all 0.18s'}}>
               <span style={{width:34,height:34,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.6)',transition:'all 0.18s'}}>{icon}</span>
               <span style={{fontSize:9,color:'rgba(255,255,255,0.35)',fontWeight:400,whiteSpace:'nowrap'}}>{label}</span>
             </button>
