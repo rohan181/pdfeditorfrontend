@@ -616,6 +616,29 @@ export default function PDFEditor() {
     drawPoints.current = []
   }, [toolMode, drawColor, drawStrokeWidth, drawOpacity, pushHistory])
 
+  const handleDrawTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>, slotId: string) => {
+    if (toolMode !== 'draw') return
+    e.stopPropagation()
+    const t = e.touches[0]
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (t.clientX - rect.left) / scale
+    const y = (t.clientY - rect.top) / scale
+    isDrawing.current = true
+    drawPoints.current = [{ x, y }]
+    setDrawPreviewPts([{ x, y }])
+  }, [toolMode, scale])
+
+  const handleDrawTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    if (!isDrawing.current || toolMode !== 'draw') return
+    e.preventDefault()
+    const t = e.touches[0]
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (t.clientX - rect.left) / scale
+    const y = (t.clientY - rect.top) / scale
+    drawPoints.current = [...drawPoints.current, { x, y }]
+    setDrawPreviewPts([...drawPoints.current])
+  }, [toolMode, scale])
+
   // ── Add image as new page ────────────────────────────────────────────────
   const handleImagePage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f) return
@@ -734,15 +757,7 @@ export default function PDFEditor() {
   const handlePanUp = () => { panStart.current = null }
 
   // ── Canvas click → place element ─────────────────────────────────────────
-  const handleOverlayClick = useCallback((e: React.MouseEvent<HTMLDivElement>, slotId: string) => {
-    if (!slots.length) return
-    const target = e.target as HTMLElement
-    if (target.tagName !== 'CANVAS' && target !== e.currentTarget) return
-
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / scale
-    const y = (e.clientY - rect.top) / scale
-
+  const handlePlaceAtCoords = useCallback((x: number, y: number, slotId: string) => {
     if (toolMode === 'text') {
       const el: TextElement = {
         id: uuidv4(), type: 'text', x, y, width: 220, height: 50,
@@ -786,7 +801,24 @@ export default function PDFEditor() {
     } else {
       setSelectedId(null); setEditingId(null)
     }
-  }, [slots, scale, toolMode, activeMarkType, markColor, activeShapeType, shapeStroke, shapeFill, shapeStrokeWidth, pushHistory])
+  }, [toolMode, activeMarkType, markColor, activeShapeType, shapeStroke, shapeFill, shapeStrokeWidth, pushHistory])
+
+  const handleOverlayClick = useCallback((e: React.MouseEvent<HTMLDivElement>, slotId: string) => {
+    if (!slots.length) return
+    const target = e.target as HTMLElement
+    if (target.tagName !== 'CANVAS' && target !== e.currentTarget) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    handlePlaceAtCoords((e.clientX - rect.left) / scale, (e.clientY - rect.top) / scale, slotId)
+  }, [slots, scale, handlePlaceAtCoords])
+
+  const handleOverlayTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>, slotId: string) => {
+    if (!slots.length) return
+    const t = e.changedTouches[0]
+    if (!t) return
+    e.preventDefault()
+    const rect = e.currentTarget.getBoundingClientRect()
+    handlePlaceAtCoords((t.clientX - rect.left) / scale, (t.clientY - rect.top) / scale, slotId)
+  }, [slots, scale, handlePlaceAtCoords])
 
   // ── Date insertion ────────────────────────────────────────────────────────
   const insertDate = (text: string) => {
@@ -1764,11 +1796,15 @@ export default function PDFEditor() {
                       {/* Elements overlay */}
                       <div
                         style={{ position: 'absolute', inset: 0, pointerEvents: toolMode === 'draw' ? 'auto' : 'none',
-                          cursor: toolMode === 'draw' ? 'crosshair' : undefined }}
+                          cursor: toolMode === 'draw' ? 'crosshair' : undefined,
+                          touchAction: toolMode === 'draw' ? 'none' : undefined }}
                         onMouseDown={toolMode === 'draw' ? (e => { handleDrawStart(e, slot.id) }) : undefined}
                         onMouseMove={toolMode === 'draw' ? handleDrawMove : undefined}
                         onMouseUp={toolMode === 'draw' ? (() => handleDrawEnd(slot.id)) : undefined}
                         onMouseLeave={toolMode === 'draw' ? (() => { if (isDrawing.current) handleDrawEnd(slot.id) }) : undefined}
+                        onTouchStart={toolMode === 'draw' ? (e => { handleDrawTouchStart(e, slot.id) }) : undefined}
+                        onTouchMove={toolMode === 'draw' ? handleDrawTouchMove : undefined}
+                        onTouchEnd={toolMode === 'draw' ? (() => handleDrawEnd(slot.id)) : undefined}
                       >
                         {slotElems.map(el => (
                           <div key={el.id} style={{ position: 'absolute', pointerEvents: toolMode === 'pan' || toolMode === 'draw' ? 'none' : 'auto' }}>
@@ -1836,8 +1872,20 @@ export default function PDFEditor() {
                       {/* Interaction overlay: click-to-place or crop-drag */}
                       {toolMode !== 'pan' && toolMode !== 'draw' && (
                         <div
-                          style={{ position:'absolute', inset:0, zIndex:5 }}
+                          style={{
+                            position:'absolute', inset:0, zIndex:5,
+                            cursor: 'pointer',
+                            touchAction: ['text','highlight','mark','annotation','shape'].includes(toolMode) ? 'none' : 'auto',
+                          }}
                           onClick={!isCropping ? e => { setSlotIdx(idx); handleOverlayClick(e, slot.id) } : undefined}
+                          onTouchEnd={!isCropping ? e => { setSlotIdx(idx); handleOverlayTouchEnd(e, slot.id) } : undefined}
+                          onTouchMove={!isCropping ? e => {
+                            if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
+                              const t = e.touches[0]
+                              const r = e.currentTarget.getBoundingClientRect()
+                              setHoverPos({ x: (t.clientX - r.left) / scale, y: (t.clientY - r.top) / scale, slotId: slot.id })
+                            }
+                          } : undefined}
                           onMouseDown={isCropping ? e => { setSlotIdx(idx); handleCropStart(e, slot.id) } : undefined}
                           onMouseMove={e => {
                             if (isCropping) { handleCropMove(e) }
@@ -2059,6 +2107,7 @@ export default function PDFEditor() {
                 onClick={() => {
                   if (t.mode === 'image') { setToolMode('image'); imgInput.current?.click() }
                   else if (t.mode === 'signature') { setShowSig(true); setToolMode('select') }
+                  else if (t.mode === 'shape') { setToolMode('shape'); setShowShapeMenu(v => !v); setShowMarkMenu(false); setShowStampMenu(false); setShowDrawMenu(false) }
                   else setToolMode(t.mode)
                 }}
                 style={{
@@ -2109,6 +2158,52 @@ export default function PDFEditor() {
           onClose={() => setShowDateMenu(false)}
           isMobile
         />
+      )}
+
+      {/* Mobile shape picker */}
+      {isMobile && toolMode === 'shape' && showShapeMenu && (
+        <div style={{
+          position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
+          background: '#fff', borderTop: '1px solid #e8ecf5',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+          borderRadius: '14px 14px 0 0',
+          padding: '14px 16px',
+          display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start',
+        }}>
+          <div>
+            <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Shape</p>
+            <div style={{display:'flex',gap:6}}>
+              {([
+                {t:'rectangle' as const,icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="3" y="6" width="18" height="12" rx="2"/></svg>},
+                {t:'ellipse' as const,icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><ellipse cx="12" cy="12" rx="10" ry="7"/></svg>},
+                {t:'line' as const,icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="19" x2="19" y2="5"/></svg>},
+                {t:'arrow' as const,icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>},
+                {t:'polygon' as const,icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><polygon points="12,3 21,8.5 21,15.5 12,21 3,15.5 3,8.5"/></svg>},
+              ]).map(({t,icon})=>(
+                <button key={t} title={t} onClick={()=>setActiveShapeType(t)} style={{width:42,height:42,borderRadius:10,border:`1.5px solid ${activeShapeType===t?'#6366f1':'#e2e8f0'}`,background:activeShapeType===t?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:activeShapeType===t?'#fff':'#475569',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}>{icon}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{display:'flex',gap:12,alignItems:'flex-end',flexWrap:'wrap'}}>
+            <div>
+              <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.06em',textTransform:'uppercase'}}>Stroke</p>
+              <input type="color" value={shapeStroke} onChange={e=>setShapeStroke(e.target.value)} style={{width:44,height:36,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
+            </div>
+            <div>
+              <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.06em',textTransform:'uppercase'}}>Fill</p>
+              <div style={{display:'flex',alignItems:'center',gap:5}}>
+                <input type="color" value={shapeFill||'#ffffff'} onChange={e=>setShapeFill(e.target.value)} style={{width:44,height:36,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
+                <button onClick={()=>setShapeFill('')} style={{fontSize:10,color:shapeFill?'#475569':'#6366f1',border:'none',background:'transparent',cursor:'pointer',fontWeight:shapeFill?400:700,padding:'4px 6px'}}>None</button>
+              </div>
+            </div>
+            <div>
+              <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.06em',textTransform:'uppercase'}}>Width</p>
+              <div style={{display:'flex',gap:4}}>
+                {[1,2,4].map(w=><button key={w} onClick={()=>setShapeStrokeWidth(w)} style={{width:36,height:36,borderRadius:8,fontSize:11,fontWeight:700,border:`1.5px solid ${shapeStrokeWidth===w?'#6366f1':'#e2e8f0'}`,background:shapeStrokeWidth===w?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:shapeStrokeWidth===w?'#fff':'#475569',cursor:'pointer'}}>{w}px</button>)}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Signature modal */}

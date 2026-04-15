@@ -3,14 +3,14 @@ import { useEffect, useRef } from 'react'
 import type { PDFElement } from '@/types'
 
 const HANDLES: Record<string, React.CSSProperties> = {
-  n:  { top: -5, left: '50%', transform: 'translateX(-50%)', cursor: 'n-resize' },
-  ne: { top: -5, right: -5, cursor: 'ne-resize' },
-  e:  { right: -5, top: '50%', transform: 'translateY(-50%)', cursor: 'e-resize' },
-  se: { bottom: -5, right: -5, cursor: 'se-resize' },
-  s:  { bottom: -5, left: '50%', transform: 'translateX(-50%)', cursor: 's-resize' },
-  sw: { bottom: -5, left: -5, cursor: 'sw-resize' },
-  w:  { left: -5, top: '50%', transform: 'translateY(-50%)', cursor: 'w-resize' },
-  nw: { top: -5, left: -5, cursor: 'nw-resize' },
+  n:  { top: -6, left: '50%', transform: 'translateX(-50%)', cursor: 'n-resize' },
+  ne: { top: -6, right: -6, cursor: 'ne-resize' },
+  e:  { right: -6, top: '50%', transform: 'translateY(-50%)', cursor: 'e-resize' },
+  se: { bottom: -6, right: -6, cursor: 'se-resize' },
+  s:  { bottom: -6, left: '50%', transform: 'translateX(-50%)', cursor: 's-resize' },
+  sw: { bottom: -6, left: -6, cursor: 'sw-resize' },
+  w:  { left: -6, top: '50%', transform: 'translateY(-50%)', cursor: 'w-resize' },
+  nw: { top: -6, left: -6, cursor: 'nw-resize' },
 }
 
 interface Props {
@@ -159,6 +159,12 @@ export default function DraggableElement({
           className="resize-handle"
           style={pos}
           onMouseDown={e => handleResizeMouseDown(e, h)}
+          onTouchStart={e => {
+            e.stopPropagation()
+            e.preventDefault()
+            const t = e.touches[0]
+            startResize(t.clientX, t.clientY, h)
+          }}
         />
       ))}
     </div>

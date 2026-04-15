@@ -19,11 +19,18 @@ body { overflow: hidden; }
 /* ── Resize handles ────────────────────────────────────────────────────────── */
 .resize-handle {
   position: absolute;
-  width: 8px; height: 8px;
+  width: 12px; height: 12px;
   background: #fff;
   border: 1.5px solid #4f6ef7;
   border-radius: 2px;
   z-index: 50;
+  touch-action: none;
+}
+/* Larger invisible hit area for touch */
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────────────────── */
