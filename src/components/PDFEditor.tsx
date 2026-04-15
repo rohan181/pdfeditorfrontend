@@ -312,7 +312,7 @@ export default function PDFEditor() {
   const [vw, setVw]                   = useState(1280)
   // New tool options
   const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'>('tick')
-  const [markColor, setMarkColor]           = useState('#16a34a')
+  const [markColor, setMarkColor]           = useState('#1e293b')
   const [markStrokeWidth, setMarkStrokeWidth] = useState(0.5)
   const [activeShapeType, setActiveShapeType] = useState<'rectangle'|'ellipse'|'line'|'arrow'|'polygon'>('rectangle')
   const [shapeStroke, setShapeStroke]       = useState('#1d4ed8')
@@ -331,6 +331,9 @@ export default function PDFEditor() {
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
+  // Keep a stable ref to slots so undo/redo can navigate without deps
+  const slotsRef = useRef<PageSlot[]>([])
+
   const pushHistory = useCallback((els: PDFElement[]) => {
     const h = historyRef.current.slice(0, histIdxRef.current + 1)
     h.push([...els])
@@ -340,23 +343,63 @@ export default function PDFEditor() {
     setCanRedo(false)
   }, [])
 
+  // Navigate the main canvas + sidebar to the page that changed between two element snapshots
+  const navigateToAffectedPage = useCallback((before: PDFElement[], after: PDFElement[]) => {
+    const slots = slotsRef.current
+    if (!slots.length) return
+    const beforeMap = new Map(before.map(e => [e.id, e]))
+    const afterMap  = new Map(after.map(e => [e.id, e]))
+    // Prefer element that was added or removed; fall back to first moved/resized element
+    let slotId: string | null = null
+    for (const e of before) { if (!afterMap.has(e.id)) { slotId = e.pageSlotId; break } }
+    if (!slotId) {
+      for (const e of after) { if (!beforeMap.has(e.id)) { slotId = e.pageSlotId; break } }
+    }
+    if (!slotId) {
+      for (const e of after) {
+        const be = beforeMap.get(e.id)
+        if (be && (e.x !== be.x || e.y !== be.y || (e as any).width !== (be as any).width)) {
+          slotId = e.pageSlotId; break
+        }
+      }
+    }
+    if (!slotId) return
+    const idx = slots.findIndex(s => s.id === slotId)
+    if (idx < 0) return
+    setSlotIdx(idx)
+    // Scroll main canvas to that page
+    const pageEl = pageRefsMap.current[slots[idx].id]
+    if (pageEl) pageEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    // Scroll sidebar to match
+    requestAnimationFrame(() => {
+      const list = sidebarListRef.current
+      if (!list) return
+      const item = list.querySelector(`[data-slot-idx="${idx}"]`) as HTMLElement | null
+      if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    })
+  }, [])
+
   const undo = useCallback(() => {
     if (histIdxRef.current <= 0) return
+    const before = historyRef.current[histIdxRef.current]
     histIdxRef.current--
-    const els = historyRef.current[histIdxRef.current]
-    setElements([...els])
+    const after = historyRef.current[histIdxRef.current]
+    setElements([...after])
     setCanUndo(histIdxRef.current > 0)
     setCanRedo(true)
-  }, [])
+    navigateToAffectedPage(before, after)
+  }, [navigateToAffectedPage])
 
   const redo = useCallback(() => {
     if (histIdxRef.current >= historyRef.current.length - 1) return
+    const before = historyRef.current[histIdxRef.current]
     histIdxRef.current++
-    const els = historyRef.current[histIdxRef.current]
-    setElements([...els])
+    const after = historyRef.current[histIdxRef.current]
+    setElements([...after])
     setCanUndo(true)
     setCanRedo(histIdxRef.current < historyRef.current.length - 1)
-  }, [])
+    navigateToAffectedPage(before, after)
+  }, [navigateToAffectedPage])
 
   // Draw tool
   const [drawColor, setDrawColor]           = useState('#1e293b')
@@ -429,35 +472,52 @@ export default function PDFEditor() {
     const ctx = c.getContext('2d')!
     const rot = slot.rotation || 0
     const sw  = rot === 90 || rot === 270
+    // Use device pixel ratio (capped at 3) for crisp rendering on mobile/retina
+    const dpr = Math.min(window.devicePixelRatio || 1, 3)
     try {
       if (slot.type === 'pdf') {
         const src = srcs.find(s => s.id === slot.sourceId)
         if (!src) return
         const page = await src.doc.getPage(slot.pageNum!)
-        const vp = page.getViewport({ scale: sc, rotation: rot })
+        // Render at sc*dpr for crisp physical pixels, then constrain CSS size to sc
+        const vp = page.getViewport({ scale: sc * dpr, rotation: rot })
         c.width = vp.width; c.height = vp.height
+        c.style.width  = (vp.width  / dpr) + 'px'
+        c.style.height = (vp.height / dpr) + 'px'
         ctx.clearRect(0, 0, c.width, c.height)
         await page.render({ canvasContext: ctx, viewport: vp }).promise
       } else if (slot.type === 'blank') {
-        c.width  = slot.baseWidth  * sc
-        c.height = slot.baseHeight * sc
+        const cssW = slot.baseWidth  * sc
+        const cssH = slot.baseHeight * sc
+        c.width  = cssW * dpr
+        c.height = cssH * dpr
+        c.style.width  = cssW + 'px'
+        c.style.height = cssH + 'px'
+        ctx.scale(dpr, dpr)
         ctx.fillStyle = '#fff'
-        ctx.fillRect(0, 0, c.width, c.height)
+        ctx.fillRect(0, 0, cssW, cssH)
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
       } else if (slot.type === 'image') {
         await new Promise<void>(res => {
           const img = new Image(); img.onload = () => {
-            c.width  = (sw ? slot.baseHeight : slot.baseWidth)  * sc
-            c.height = (sw ? slot.baseWidth  : slot.baseHeight) * sc
-            ctx.clearRect(0, 0, c.width, c.height)
+            const cssW = (sw ? slot.baseHeight : slot.baseWidth)  * sc
+            const cssH = (sw ? slot.baseWidth  : slot.baseHeight) * sc
+            c.width  = cssW * dpr
+            c.height = cssH * dpr
+            c.style.width  = cssW + 'px'
+            c.style.height = cssH + 'px'
+            ctx.scale(dpr, dpr)
+            ctx.clearRect(0, 0, cssW, cssH)
             if (rot) {
               ctx.save()
-              ctx.translate(c.width / 2, c.height / 2)
+              ctx.translate(cssW / 2, cssH / 2)
               ctx.rotate(rot * Math.PI / 180)
               ctx.drawImage(img, -slot.baseWidth * sc / 2, -slot.baseHeight * sc / 2, slot.baseWidth * sc, slot.baseHeight * sc)
               ctx.restore()
             } else {
-              ctx.drawImage(img, 0, 0, c.width, c.height)
+              ctx.drawImage(img, 0, 0, cssW, cssH)
             }
+            ctx.setTransform(1, 0, 0, 1, 0, 0)
             res()
           }; img.src = slot.imageSrc!
         })
@@ -568,9 +628,9 @@ export default function PDFEditor() {
     const reader = new FileReader()
     reader.onload = () => {
       const src = reader.result as string
-      const canvas = canvasRefsMap.current[slots[slotIdx]?.id]
-      const cx = canvas ? canvas.width / scale / 2 - 100 : 100
-      const cy = canvas ? canvas.height / scale / 2 - 75 : 100
+      const slot0 = slots[slotIdx]
+      const cx = slot0 ? slot0.baseWidth  / 2 - 100 : 100
+      const cy = slot0 ? slot0.baseHeight / 2 - 75  : 100
       const el: ImageElement = {
         id: uuidv4(), type: 'image',
         x: Math.max(0, cx), y: Math.max(0, cy), width: 200, height: 150,
@@ -673,9 +733,9 @@ export default function PDFEditor() {
 
   // ── Signature ────────────────────────────────────────────────────────────
   const handleSignatureApply = (dataUrl: string) => {
-    const canvas = canvasRefsMap.current[slots[slotIdx]?.id]
-    const cx = canvas ? canvas.width / scale / 2 - 100 : 100
-    const cy = canvas ? canvas.height / scale / 2 - 40 : 100
+    const slot0 = slots[slotIdx]
+    const cx = slot0 ? slot0.baseWidth  / 2 - 100 : 100
+    const cy = slot0 ? slot0.baseHeight / 2 - 40  : 100
     const el: SignatureElement = {
       id: uuidv4(), type: 'signature',
       x: Math.max(0, cx), y: Math.max(0, cy), width: 200, height: 80,
@@ -833,9 +893,9 @@ export default function PDFEditor() {
 
   // ── Date insertion ────────────────────────────────────────────────────────
   const insertDate = (text: string) => {
-    const canvas = canvasRefsMap.current[slots[slotIdx]?.id]
-    const cx = canvas ? canvas.width / scale / 2 - 80 : 100
-    const cy = canvas ? canvas.height / scale / 2 - 12 : 100
+    const slot0 = slots[slotIdx]
+    const cx = slot0 ? slot0.baseWidth  / 2 - 80 : 100
+    const cy = slot0 ? slot0.baseHeight / 2 - 12 : 100
     const el: TextElement = {
       id: uuidv4(), type: 'text', x: Math.max(0, cx), y: Math.max(0, cy),
       width: 220, height: 28, text,
@@ -847,9 +907,9 @@ export default function PDFEditor() {
   }
 
   const handleAddStamp = (label: string, color: string) => {
-    const canvas = canvasRefsMap.current[slots[slotIdx]?.id]
-    const cx = canvas ? canvas.width / scale / 2 - 60 : 100
-    const cy = canvas ? canvas.height / scale / 2 - 24 : 100
+    const slot0 = slots[slotIdx]
+    const cx = slot0 ? slot0.baseWidth  / 2 - 60 : 100
+    const cy = slot0 ? slot0.baseHeight / 2 - 24 : 100
     const el: StampElement = {
       id: uuidv4(), type: 'stamp', x: Math.max(0, cx), y: Math.max(0, cy),
       width: 120, height: 48, label, color, opacity: 1, pageSlotId: slots[slotIdx]?.id ?? '',
@@ -1024,13 +1084,24 @@ export default function PDFEditor() {
     return () => window.removeEventListener('keydown', onKey)
   }, [selectedId, editingId, deleteEl, undo, redo])
 
-  // ── Scroll sidebar to active page when slotIdx changes ───────────────────
-  useEffect(() => {
+  // ── Scroll sidebar to active page when slotIdx changes or sidebar opens ─────
+  const scrollSidebarToSlot = useCallback((idx: number) => {
     const list = sidebarListRef.current
     if (!list) return
-    const item = list.querySelector(`[data-slot-idx="${slotIdx}"]`) as HTMLElement | null
+    const item = list.querySelector(`[data-slot-idx="${idx}"]`) as HTMLElement | null
     if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-  }, [slotIdx])
+  }, [])
+
+  useEffect(() => { scrollSidebarToSlot(slotIdx) }, [slotIdx, scrollSidebarToSlot])
+
+  // When mobile sidebar is opened, scroll it to show the current thumbnail
+  useEffect(() => {
+    if (!showSidebar) return
+    requestAnimationFrame(() => scrollSidebarToSlot(slotIdx))
+  }, [showSidebar]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep slotsRef in sync so undo/redo navigation always has latest slots
+  useEffect(() => { slotsRef.current = slots }, [slots])
 
   // ── Auto fit-to-screen when a PDF first loads ────────────────────────────
   const prevSlotsLen = useRef(0)
@@ -1060,9 +1131,10 @@ export default function PDFEditor() {
   useEffect(() => {
     if (toolMode === 'crop' && slots[slotIdx]) {
       const slot = slots[slotIdx]
-      const canvas = canvasRefsMap.current[slot.id]
-      const w = canvas ? Math.round(canvas.width  / scale) : slot.baseWidth
-      const h = canvas ? Math.round(canvas.height / scale) : slot.baseHeight
+      const rot = slot.rotation || 0
+      const sw  = rot === 90 || rot === 270
+      const w = sw ? slot.baseHeight : slot.baseWidth
+      const h = sw ? slot.baseWidth  : slot.baseHeight
       setCropDraft({ x: 0, y: 0, w, h, slotId: slot.id })
     } else {
       setCropDraft(null)
