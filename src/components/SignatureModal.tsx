@@ -196,15 +196,13 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
                     style={{ width: 22, height: 22, border: 'none', borderRadius: 5, cursor: 'pointer', padding: 1 }} />
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>Size</span>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {([1, 2, 4] as const).map(s => (
-                    <button key={s} onClick={() => setPenSize(s)} style={pill(penSize === s)}>
-                      {s === 1 ? 'S' : s === 2 ? 'M' : 'L'}
-                    </button>
-                  ))}
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 140 }}>
+                <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>Thickness {penSize}px</span>
+                <input
+                  type="range" min={1} max={10} step={1} value={penSize}
+                  onChange={e => setPenSize(parseInt(e.target.value))}
+                  style={{ flex: 1, accentColor: '#6366f1', cursor: 'pointer' }}
+                />
               </div>
             </div>
 

@@ -297,7 +297,7 @@ export default function PDFEditor() {
   const [elements, setElements]   = useState<PDFElement[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [editingId, setEditingId]   = useState<string | null>(null)
-  const [toolMode, setToolMode]     = useState<ToolMode>('text')
+  const [toolMode, setToolMode]     = useState<ToolMode>('select')
 
   // UI
   const [isDragOver, setIsDragOver]   = useState(false)
@@ -766,14 +766,14 @@ export default function PDFEditor() {
         pageSlotId: slotId,
       }
       setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
-      setSelectedId(el.id); setEditingId(el.id)
+      setSelectedId(el.id); setEditingId(el.id); setToolMode('select')
     } else if (toolMode === 'highlight') {
       const el: HighlightElement = {
         id: uuidv4(), type: 'highlight', x, y, width: 200, height: 22,
         color: '#fef08a', opacity: 0.5, pageSlotId: slotId,
       }
       setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
-      setSelectedId(el.id)
+      setSelectedId(el.id); setToolMode('select')
     } else if (toolMode === 'mark') {
       const el: MarkElement = {
         id: uuidv4(), type: 'mark', x, y, width: 52, height: 52,
@@ -781,14 +781,14 @@ export default function PDFEditor() {
         pageSlotId: slotId,
       }
       setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
-      setSelectedId(el.id)
+      setSelectedId(el.id); setToolMode('select')
     } else if (toolMode === 'annotation') {
       const el: AnnotationElement = {
         id: uuidv4(), type: 'annotation', x, y, width: 160, height: 90,
         text: '', color: '#fef9c3', pageSlotId: slotId,
       }
       setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
-      setSelectedId(el.id); setEditingId(el.id)
+      setSelectedId(el.id); setEditingId(el.id); setToolMode('select')
     } else if (toolMode === 'shape') {
       const el: ShapeElement = {
         id: uuidv4(), type: 'shape', x, y, width: 150, height: 100,
@@ -797,7 +797,7 @@ export default function PDFEditor() {
         pageSlotId: slotId,
       }
       setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
-      setSelectedId(el.id)
+      setSelectedId(el.id); setToolMode('select')
     } else {
       setSelectedId(null); setEditingId(null)
     }
@@ -1807,7 +1807,7 @@ export default function PDFEditor() {
                         onTouchEnd={toolMode === 'draw' ? (() => handleDrawEnd(slot.id)) : undefined}
                       >
                         {slotElems.map(el => (
-                          <div key={el.id} style={{ position: 'absolute', pointerEvents: toolMode === 'pan' || toolMode === 'draw' ? 'none' : 'auto' }}>
+                          <div key={el.id} style={{ position: 'absolute', pointerEvents: toolMode === 'pan' || toolMode === 'draw' || toolMode === 'crop' ? 'none' : 'auto' }}>
                             <DraggableElement
                               element={el} isSelected={selectedId === el.id} scale={scale}
                               onSelect={id => { setSelectedId(id); setEditingId(null); setSlotIdx(idx) }}
@@ -1821,7 +1821,7 @@ export default function PDFEditor() {
                               )}
                               {(el.type === 'image' || el.type === 'signature') && (
                                 <img src={el.src} alt={el.type} draggable={false}
-                                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+                                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: el.opacity ?? 1 }} />
                               )}
                               {el.type === 'stamp'      && <StampDisplay el={el} scale={scale} />}
                               {el.type === 'highlight'  && <HighlightDisplay el={el} />}
@@ -1875,17 +1875,57 @@ export default function PDFEditor() {
                           style={{
                             position:'absolute', inset:0, zIndex:5,
                             cursor: 'pointer',
-                            touchAction: ['text','highlight','mark','annotation','shape'].includes(toolMode) ? 'none' : 'auto',
+                            touchAction: ['text','highlight','mark','annotation','shape','crop'].includes(toolMode) ? 'none' : 'auto',
                           }}
                           onClick={!isCropping ? e => { setSlotIdx(idx); handleOverlayClick(e, slot.id) } : undefined}
-                          onTouchEnd={!isCropping ? e => { setSlotIdx(idx); handleOverlayTouchEnd(e, slot.id) } : undefined}
-                          onTouchMove={!isCropping ? e => {
-                            if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
+                          onTouchStart={isCropping ? e => {
+                            e.preventDefault()
+                            const t = e.touches[0]
+                            const rect = e.currentTarget.getBoundingClientRect()
+                            const x = (t.clientX - rect.left) / scale
+                            const y = (t.clientY - rect.top) / scale
+                            cropStart.current = { x, y }
+                            setCropDraft({ x, y, w: 0, h: 0, slotId: slot.id })
+                            setSlotIdx(idx)
+                          } : undefined}
+                          onTouchMove={e => {
+                            if (isCropping) {
+                              if (!cropStart.current) return
+                              e.preventDefault()
+                              const t = e.touches[0]
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              const cx = (t.clientX - rect.left) / scale
+                              const cy = (t.clientY - rect.top) / scale
+                              const x = Math.min(cx, cropStart.current.x)
+                              const y = Math.min(cy, cropStart.current.y)
+                              const w = Math.abs(cx - cropStart.current.x)
+                              const h = Math.abs(cy - cropStart.current.y)
+                              setCropDraft(prev => prev ? { ...prev, x, y, w, h } : null)
+                            } else if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
                               const t = e.touches[0]
                               const r = e.currentTarget.getBoundingClientRect()
                               setHoverPos({ x: (t.clientX - r.left) / scale, y: (t.clientY - r.top) / scale, slotId: slot.id })
                             }
-                          } : undefined}
+                          }}
+                          onTouchEnd={e => {
+                            if (isCropping) {
+                              const touch = e.changedTouches[0]
+                              if (!touch || !cropStart.current) { setCropDraft(null); cropStart.current = null; return }
+                              const rect = e.currentTarget.getBoundingClientRect()
+                              const cx = (touch.clientX - rect.left) / scale
+                              const cy = (touch.clientY - rect.top) / scale
+                              const x = Math.min(cx, cropStart.current.x)
+                              const y = Math.min(cy, cropStart.current.y)
+                              const w = Math.abs(cx - cropStart.current.x)
+                              const h = Math.abs(cy - cropStart.current.y)
+                              if (w < 10 || h < 10) { setCropDraft(null); cropStart.current = null; return }
+                              setSlots(prev => prev.map(s => s.id === slot.id ? { ...s, crop: { x, y, w, h } } : s))
+                              setCropDraft(null); cropStart.current = null; setToolMode('select')
+                            } else {
+                              setSlotIdx(idx)
+                              handleOverlayTouchEnd(e, slot.id)
+                            }
+                          }}
                           onMouseDown={isCropping ? e => { setSlotIdx(idx); handleCropStart(e, slot.id) } : undefined}
                           onMouseMove={e => {
                             if (isCropping) { handleCropMove(e) }
@@ -2083,6 +2123,18 @@ export default function PDFEditor() {
           boxShadow: '0 -8px 32px rgba(0,0,0,0.45)',
           overflowX: 'auto', gap: 2, padding: '0 6px 4px',
         }}>
+          {/* Undo / Redo */}
+          {[
+            { label:'Undo', can:canUndo, action:undo, icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M3 13A9 9 0 1021 12"/></svg> },
+            { label:'Redo', can:canRedo, action:redo, icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6"/><path d="M21 13A9 9 0 113 12"/></svg> },
+          ].map(({label,can,action,icon})=>(
+            <button key={label} onClick={action} disabled={!can} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:can?'pointer':'default',minWidth:44,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:'transparent',opacity:can?1:0.3,transition:'all 0.18s'}}>
+              <span style={{width:34,height:34,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(255,255,255,0.06)',color:'rgba(255,255,255,0.6)',transition:'all 0.18s'}}>{icon}</span>
+              <span style={{fontSize:9,color:'rgba(255,255,255,0.35)',fontWeight:400,whiteSpace:'nowrap'}}>{label}</span>
+            </button>
+          ))}
+          {/* Divider */}
+          <div style={{width:1,height:40,background:'rgba(255,255,255,0.08)',alignSelf:'center',flexShrink:0,margin:'0 2px'}}/>
           {([
             { mode:'select' as ToolMode, label:'Select', isSign:false,
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3l14 9-7 1-3 7z"/></svg> },
@@ -2094,12 +2146,16 @@ export default function PDFEditor() {
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4z"/></svg> },
             { mode:'mark' as ToolMode, label:'Mark', isSign:false,
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> },
+            { mode:'draw' as ToolMode, label:'Draw', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg> },
             { mode:'shape' as ToolMode, label:'Shape', isSign:false,
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="17" r="4"/></svg> },
             { mode:'image' as ToolMode, label:'Image', isSign:false,
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> },
             { mode:'signature' as ToolMode, label:'Sign', isSign:true,
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5z"/></svg> },
+            { mode:'crop' as ToolMode, label:'Crop', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/></svg> },
           ]).map(t => {
             const active = toolMode === t.mode
             return (
@@ -2107,8 +2163,9 @@ export default function PDFEditor() {
                 onClick={() => {
                   if (t.mode === 'image') { setToolMode('image'); imgInput.current?.click() }
                   else if (t.mode === 'signature') { setShowSig(true); setToolMode('select') }
-                  else if (t.mode === 'shape') { setToolMode('shape'); setShowShapeMenu(v => !v); setShowMarkMenu(false); setShowStampMenu(false); setShowDrawMenu(false) }
-                  else setToolMode(t.mode)
+                  else if (t.mode === 'shape') { setToolMode('shape'); setShowShapeMenu(v => !v); setShowMarkMenu(false); setShowStampMenu(false); setShowDrawMenu(false); setShowWmPanel(false) }
+                  else if (t.mode === 'draw') { setToolMode('draw'); setShowDrawMenu(v => !v); setShowShapeMenu(false); setShowMarkMenu(false); setShowStampMenu(false); setShowWmPanel(false) }
+                  else { setToolMode(t.mode); setShowShapeMenu(false); setShowDrawMenu(false) }
                 }}
                 style={{
                   display:'flex', flexDirection:'column', alignItems:'center', gap:4,
@@ -2135,11 +2192,18 @@ export default function PDFEditor() {
             )
           })}
           {/* Stamp */}
-          <button onClick={()=>setShowStampMenu(v=>!v)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:'pointer',minWidth:50,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:showStampMenu?'rgba(99,102,241,0.18)':'transparent',transition:'all 0.18s'}}>
+          <button onClick={()=>{setShowStampMenu(v=>!v);setShowDrawMenu(false);setShowShapeMenu(false);setShowWmPanel(false)}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:'pointer',minWidth:50,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:showStampMenu?'rgba(99,102,241,0.18)':'transparent',transition:'all 0.18s'}}>
             <span style={{width:36,height:36,borderRadius:11,display:'flex',alignItems:'center',justifyContent:'center',background:showStampMenu?'linear-gradient(135deg,#6366f1,#818cf8)':'rgba(255,255,255,0.06)',color:showStampMenu?'#fff':'rgba(255,255,255,0.45)',transition:'all 0.18s'}}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M5 22h14"/><path d="M19 10H5a2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 00-2-2z"/><rect x="9" y="2" width="6" height="8" rx="1"/></svg>
             </span>
             <span style={{fontSize:9,color:showStampMenu?'#818cf8':'rgba(255,255,255,0.35)',fontWeight:showStampMenu?700:400,transition:'color 0.18s'}}>Stamp</span>
+          </button>
+          {/* Watermark */}
+          <button onClick={()=>{setShowWmPanel(v=>!v);setShowStampMenu(false);setShowDrawMenu(false);setShowShapeMenu(false)}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:'pointer',minWidth:50,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:showWmPanel?'rgba(99,102,241,0.18)':'transparent',transition:'all 0.18s'}}>
+            <span style={{width:36,height:36,borderRadius:11,display:'flex',alignItems:'center',justifyContent:'center',background:showWmPanel?'linear-gradient(135deg,#6366f1,#818cf8)':'rgba(255,255,255,0.06)',color:showWmPanel?'#fff':'rgba(255,255,255,0.45)',transition:'all 0.18s'}}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </span>
+            <span style={{fontSize:9,color:showWmPanel?'#818cf8':'rgba(255,255,255,0.35)',fontWeight:showWmPanel?700:400,transition:'color 0.18s'}}>Wmark</span>
           </button>
           {/* Date */}
           <button onClick={()=>setShowDateMenu(v=>!v)} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,border:'none',cursor:'pointer',minWidth:50,padding:'6px 4px 4px',borderRadius:14,flexShrink:0,background:showDateMenu?'rgba(99,102,241,0.18)':'transparent',transition:'all 0.18s'}}>
@@ -2203,6 +2267,103 @@ export default function PDFEditor() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Mobile stamp panel */}
+      {isMobile && showStampMenu && (
+        <div style={{
+          position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
+          background: '#fff', borderTop: '1px solid #e8ecf5',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+          borderRadius: '14px 14px 0 0',
+          padding: '14px 16px',
+        }}>
+          <p style={{margin:'0 0 8px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Stamps</p>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:6,marginBottom:10}}>
+            {[{label:'APPROVED',color:'#16a34a'},{label:'REJECTED',color:'#dc2626'},{label:'DRAFT',color:'#1d4ed8'},{label:'CONFIDENTIAL',color:'#7c3aed'},{label:'URGENT',color:'#ea580c'},{label:'COMPLETED',color:'#0e7490'},{label:'VOID',color:'#64748b'},{label:'RECEIVED',color:'#0284c7'},{label:'PAID',color:'#16a34a'},{label:'REVIEWED',color:'#d97706'},{label:'NOT APPROVED',color:'#dc2626'},{label:'COPY',color:'#475569'}].map(({label,color})=>(
+              <button key={label} onClick={()=>{handleAddStamp(label,color);setShowStampMenu(false)}} style={{padding:'5px 4px',borderRadius:7,border:`1.5px solid ${color}`,background:`${color}12`,color,fontSize:8,fontWeight:800,cursor:'pointer',letterSpacing:'0.04em',textAlign:'center'}}>{label}</button>
+            ))}
+          </div>
+          <div style={{display:'flex',gap:6}}>
+            <input value={customStampText} onChange={e=>setCustomStampText(e.target.value.toUpperCase())} placeholder="CUSTOM STAMP" maxLength={20} style={{flex:1,padding:'6px 10px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:12,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em'}}/>
+            <button onClick={()=>{if(customStampText.trim()){handleAddStamp(customStampText.trim(),'#475569');setShowStampMenu(false);setCustomStampText('')}}} style={{padding:'6px 14px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#6366f1,#818cf8)',color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}}>Add</button>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile draw options panel */}
+      {isMobile && toolMode === 'draw' && showDrawMenu && (
+        <div style={{
+          position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
+          background: '#fff', borderTop: '1px solid #e8ecf5',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+          borderRadius: '14px 14px 0 0',
+          padding: '14px 16px',
+          display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start',
+        }}>
+          <div>
+            <p style={{margin:'0 0 6px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
+            <input type="color" value={drawColor} onChange={e=>setDrawColor(e.target.value)} style={{width:48,height:38,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
+          </div>
+          <div>
+            <p style={{margin:'0 0 6px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Width</p>
+            <div style={{display:'flex',gap:5}}>
+              {[2,4,8].map(w=><button key={w} onClick={()=>setDrawStrokeWidth(w)} style={{width:40,height:38,borderRadius:8,fontSize:12,fontWeight:700,border:`1.5px solid ${drawStrokeWidth===w?'#6366f1':'#e2e8f0'}`,background:drawStrokeWidth===w?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:drawStrokeWidth===w?'#fff':'#475569',cursor:'pointer'}}>{w}px</button>)}
+            </div>
+          </div>
+          <div style={{flex:1,minWidth:140}}>
+            <p style={{margin:'0 0 6px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Opacity {Math.round(drawOpacity*100)}%</p>
+            <input type="range" min={0.1} max={1} step={0.05} value={drawOpacity} onChange={e=>setDrawOpacity(parseFloat(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile watermark panel */}
+      {isMobile && showWmPanel && (
+        <div style={{
+          position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
+          background: '#fff', borderTop: '1px solid #e8ecf5',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+          borderRadius: '14px 14px 0 0',
+          padding: '14px 16px',
+          display: 'flex', flexDirection: 'column', gap: 12,
+          maxHeight: '60vh', overflowY: 'auto',
+        }}>
+          <p style={{margin:0,fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Watermark</p>
+          <div style={{display:'flex',gap:6,marginBottom:2}}>
+            <button onClick={()=>setWmImageSrc('')} style={{padding:'5px 12px',borderRadius:6,border:'none',fontSize:12,fontWeight:700,cursor:'pointer',background:!wmImageSrc?'linear-gradient(135deg,#6366f1,#818cf8)':'#f1f5f9',color:!wmImageSrc?'#fff':'#64748b'}}>Text</button>
+            <button onClick={()=>wmImageInput.current?.click()} style={{padding:'5px 12px',borderRadius:6,border:'none',fontSize:12,fontWeight:700,cursor:'pointer',background:wmImageSrc?'linear-gradient(135deg,#6366f1,#818cf8)':'#f1f5f9',color:wmImageSrc?'#fff':'#64748b'}}>Image{wmImageSrc?' ✓':''}</button>
+            {wmImageSrc && <button onClick={()=>setWmImageSrc('')} style={{padding:'5px 8px',borderRadius:6,border:'1px solid #fca5a5',background:'#fff1f2',color:'#dc2626',fontSize:11,fontWeight:700,cursor:'pointer'}}>Remove</button>}
+          </div>
+          {wmImageSrc && <img src={wmImageSrc} alt="wm" style={{height:44,maxWidth:120,objectFit:'contain',borderRadius:4,border:'1px solid #e2e8f0',opacity:wmOpacity}} />}
+          {!wmImageSrc && (
+            <div style={{display:'flex',gap:10,flexWrap:'wrap',alignItems:'flex-end'}}>
+              <div style={{flex:1,minWidth:140}}>
+                <p style={{margin:'0 0 4px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase'}}>Text</p>
+                <input value={wmText} onChange={e=>setWmText(e.target.value.toUpperCase())} placeholder="WATERMARK" maxLength={30} style={{width:'100%',padding:'6px 10px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em'}}/>
+              </div>
+              <div>
+                <p style={{margin:'0 0 4px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase'}}>Color</p>
+                <input type="color" value={wmColor} onChange={e=>setWmColor(e.target.value)} style={{width:44,height:36,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
+              </div>
+            </div>
+          )}
+          <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+            <div style={{flex:1,minWidth:120}}>
+              <p style={{margin:'0 0 4px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase'}}>Opacity {Math.round(wmOpacity*100)}%</p>
+              <input type="range" min={0.05} max={0.8} step={0.05} value={wmOpacity} onChange={e=>setWmOpacity(parseFloat(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
+            </div>
+            {!wmImageSrc && <div style={{flex:1,minWidth:120}}>
+              <p style={{margin:'0 0 4px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase'}}>Size {wmFontSize}pt</p>
+              <input type="range" min={20} max={120} step={4} value={wmFontSize} onChange={e=>setWmFontSize(parseInt(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
+            </div>}
+            <div style={{flex:1,minWidth:120}}>
+              <p style={{margin:'0 0 4px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase'}}>Angle {wmRotation}°</p>
+              <input type="range" min={-90} max={90} step={5} value={wmRotation} onChange={e=>setWmRotation(parseInt(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
+            </div>
+          </div>
+          <button onClick={()=>{applyWatermark();setShowWmPanel(false)}} style={{padding:'9px 16px',borderRadius:9,border:'none',background:'linear-gradient(135deg,#6366f1,#818cf8)',color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Apply to All Pages</button>
         </div>
       )}
 

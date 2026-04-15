@@ -256,12 +256,18 @@ export default function PropertiesPanel({
 
         {/* ── IMAGE / SIGNATURE ─────────────────── */}
         {selected && (selected.type === 'image' || selected.type === 'signature') && (
-          <Card title="Element">
-            <div style={{ fontSize: 11.5, color: '#475569', lineHeight: 1.8 }}>
-              <div>Type: <b style={{ textTransform: 'capitalize' }}>{selected.type}</b></div>
-              <div>W: <b>{Math.round(selected.width)} px</b></div>
-              <div>H: <b>{Math.round(selected.height)} px</b></div>
+          <Card title={selected.type === 'signature' ? 'Signature' : 'Image'}>
+            <div style={{ fontSize: 11.5, color: '#475569', lineHeight: 1.8, marginBottom: 8 }}>
+              <div>W: <b>{Math.round(selected.width)} px</b> &nbsp; H: <b>{Math.round(selected.height)} px</b></div>
             </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 11, color: '#64748b' }}>Opacity</span>
+              <span style={{ fontSize: 11, fontWeight: 700 }}>{Math.round((selected.opacity ?? 1) * 100)}%</span>
+            </div>
+            <input type="range" min={10} max={100} step={5}
+              value={Math.round((selected.opacity ?? 1) * 100)}
+              onChange={e => onUpdate(selected.id, { opacity: parseInt(e.target.value) / 100 } as Partial<PDFElement>)}
+              style={{ width: '100%', accentColor: '#4f6ef7' }} />
           </Card>
         )}
 
@@ -320,8 +326,8 @@ export default function PropertiesPanel({
           </Card>
         )}
 
-        {/* ── GENERAL OPACITY (for any selected element) ── */}
-        {selected && !hl && !stmp && !drw && !wm && selected.opacity !== undefined && (
+        {/* ── GENERAL OPACITY (for any selected element without dedicated section) ── */}
+        {selected && !hl && !stmp && !drw && !wm && selected.type !== 'image' && selected.type !== 'signature' && selected.opacity !== undefined && (
           <Card title="Opacity">
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
               <span style={{ fontSize:11, color:'#64748b' }}>Opacity</span>
