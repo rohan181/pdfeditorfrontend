@@ -190,12 +190,10 @@ export default function PropertiesPanel({
               <span style={{ fontSize:11, color:'#64748b' }}>Custom</span>
               <input type="color" value={mk.color} onChange={e => onUpdate(mk.id, { color: e.target.value } as Partial<PDFElement>)} style={{ width:28, height:22, border:'none', borderRadius:4, cursor:'pointer', padding:1 }}/>
             </div>
-            <p style={{ margin:'0 0 5px', fontSize:10, fontWeight:700, color:'#94a3b8', letterSpacing:'0.06em', textTransform:'uppercase' }}>Size</p>
-            <div style={{ display:'flex', gap:5 }}>
-              {([{w:2,l:'S'},{w:3,l:'M'},{w:5,l:'L'}]).map(({w,l}) => (
-                <button key={w} onClick={() => onUpdate(mk.id, { strokeWidth: w } as Partial<PDFElement>)} style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:11, fontWeight:700, border:`1.5px solid ${mk.strokeWidth===w?'#4f6ef7':'#e2e8f0'}`, background:mk.strokeWidth===w?'#4f6ef7':'#f8faff', color:mk.strokeWidth===w?'#fff':'#475569', cursor:'pointer' }}>{l}</button>
-              ))}
-            </div>
+            <p style={{ margin:'0 0 5px', fontSize:10, fontWeight:700, color:'#94a3b8', letterSpacing:'0.06em', textTransform:'uppercase' }}>Thickness {mk.strokeWidth}px</p>
+            <input type="range" min={0.5} max={20} step={0.5} value={mk.strokeWidth}
+              onChange={e => onUpdate(mk.id, { strokeWidth: parseFloat(e.target.value) } as Partial<PDFElement>)}
+              style={{ width:'100%', minWidth:0, accentColor:'#4f6ef7', cursor:'pointer' }}/>
           </Card>
         )}
 

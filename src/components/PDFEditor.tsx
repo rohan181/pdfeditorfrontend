@@ -310,7 +310,7 @@ export default function PDFEditor() {
   // New tool options
   const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'>('tick')
   const [markColor, setMarkColor]           = useState('#16a34a')
-  const [markStrokeWidth, setMarkStrokeWidth] = useState(3)
+  const [markStrokeWidth, setMarkStrokeWidth] = useState(0.5)
   const [activeShapeType, setActiveShapeType] = useState<'rectangle'|'ellipse'|'line'|'arrow'|'polygon'>('rectangle')
   const [shapeStroke, setShapeStroke]       = useState('#1d4ed8')
   const [shapeFill, setShapeFill]           = useState('')
@@ -1464,13 +1464,11 @@ export default function PDFEditor() {
                       <input type="color" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:22,height:22,border:'none',borderRadius:4,cursor:'pointer',padding:1}}/>
                     </div>
                   </div>
-                  <div>
-                    <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Thickness</p>
-                    <div style={{display:'flex',gap:4}}>
-                      {[2,3,5,8].map(w=>(
-                        <button key={w} onClick={()=>setMarkStrokeWidth(w)} style={{width:36,height:28,borderRadius:7,fontSize:11,fontWeight:700,border:`1.5px solid ${markStrokeWidth===w?'#6366f1':'#e2e8f0'}`,background:markStrokeWidth===w?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:markStrokeWidth===w?'#fff':'#475569',cursor:'pointer'}}>{w}px</button>
-                      ))}
-                    </div>
+                  <div style={{minWidth:160}}>
+                    <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Thickness {markStrokeWidth}px</p>
+                    <input type="range" min={0.5} max={20} step={0.5} value={markStrokeWidth}
+                      onChange={e=>setMarkStrokeWidth(parseFloat(e.target.value))}
+                      style={{width:'100%',minWidth:0,accentColor:'#6366f1',cursor:'pointer'}}/>
                   </div>
                 </div>
               )}
@@ -2321,13 +2319,11 @@ export default function PDFEditor() {
             </div>
           </div>
           {/* Thickness */}
-          <div>
-            <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Thickness</p>
-            <div style={{display:'flex',gap:5}}>
-              {[2,3,5,8].map(w=>(
-                <button key={w} onClick={()=>setMarkStrokeWidth(w)} style={{width:42,height:40,borderRadius:9,fontSize:12,fontWeight:700,border:`1.5px solid ${markStrokeWidth===w?'#6366f1':'#e2e8f0'}`,background:markStrokeWidth===w?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:markStrokeWidth===w?'#fff':'#475569',cursor:'pointer'}}>{w}px</button>
-              ))}
-            </div>
+          <div style={{flex:1,minWidth:140}}>
+            <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Thickness {markStrokeWidth}px</p>
+            <input type="range" min={0.5} max={20} step={0.5} value={markStrokeWidth}
+              onChange={e=>setMarkStrokeWidth(parseFloat(e.target.value))}
+              style={{width:'100%',minWidth:0,accentColor:'#6366f1',cursor:'pointer'}}/>
           </div>
           {/* Color */}
           <div>
