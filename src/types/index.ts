@@ -1,7 +1,7 @@
 export type ToolMode =
   | 'select' | 'text' | 'image' | 'signature' | 'stamp'
   | 'highlight' | 'pan' | 'mark' | 'annotation' | 'shape'
-  | 'crop' | 'draw' | 'watermark'
+  | 'crop' | 'draw' | 'watermark' | 'eraser'
 
 export interface PDFSource {
   id: string

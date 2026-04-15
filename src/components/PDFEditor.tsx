@@ -1572,6 +1572,11 @@ export default function PDFEditor() {
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
                   <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Draw</span>
                 </button>
+                {/* Eraser */}
+                <button title="Eraser – tap any element to delete it" style={{...tbStyle(toolMode==='eraser'),color:toolMode==='eraser'?'#dc2626':'inherit'}} onClick={()=>{setToolMode(toolMode==='eraser'?'select':'eraser');setShowMarkMenu(false);setShowShapeMenu(false);setShowDrawMenu(false);setShowStampMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='eraser')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='eraser')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H7L3 16l10-10 7 7-3.5 3.5"/><path d="M6.5 17.5l4-4"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Erase</span>
+                </button>
                 <div style={tbVDiv}/>
                 {/* Mark */}
                 <button title="Tick / Cross" style={{...tbStyle(toolMode==='mark'),position:'relative'}} onClick={()=>{setToolMode('mark');setShowMarkMenu(v=>!v);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='mark')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='mark')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
@@ -1976,7 +1981,7 @@ export default function PDFEditor() {
                 const isCropping = toolMode === 'crop'
                 // Only apply crop clipping when not actively cropping (so user sees full page while selecting)
                 const hasCrop = !!slot.crop && !isCropping
-                const drawCursor = ['text','highlight','mark','annotation','shape','crop','draw'].includes(toolMode) ? 'crosshair' : toolMode === 'pan' ? 'inherit' : 'default'
+                const drawCursor = toolMode === 'eraser' ? 'cell' : ['text','highlight','mark','annotation','shape','crop','draw'].includes(toolMode) ? 'crosshair' : toolMode === 'pan' ? 'inherit' : 'default'
                 return (
                   <div key={slot.id}
                     ref={el => { pageRefsMap.current[slot.id] = el }}
@@ -2020,10 +2025,14 @@ export default function PDFEditor() {
                         onTouchEnd={toolMode === 'draw' ? (() => handleDrawEnd(slot.id)) : undefined}
                       >
                         {slotElems.map(el => (
-                          <div key={el.id} style={{ position: 'absolute', pointerEvents: ['pan','draw','crop','text','highlight','mark','annotation','shape'].includes(toolMode) ? 'none' : 'auto' }}>
+                          <div key={el.id} style={{ position: 'absolute', pointerEvents: ['pan','draw','crop','text','highlight','mark','annotation','shape'].includes(toolMode) ? 'none' : 'auto',
+                            cursor: toolMode === 'eraser' ? 'cell' : undefined }}>
                             <DraggableElement
                               element={el} isSelected={selectedId === el.id} scale={scale}
-                              onSelect={id => { setSelectedId(id); setEditingId(null); setSlotIdx(idx) }}
+                              onSelect={id => {
+                                if (toolMode === 'eraser') { deleteEl(id); return }
+                                setSelectedId(id); setEditingId(null); setSlotIdx(idx)
+                              }}
                               onUpdate={updateEl} onDelete={deleteEl}
                               editMode={editingId === el.id}
                             >
@@ -2399,6 +2408,8 @@ export default function PDFEditor() {
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> },
             { mode:'draw' as ToolMode, label:'Draw', isSign:false,
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg> },
+            { mode:'eraser' as ToolMode, label:'Erase', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H7L3 16l10-10 7 7-3.5 3.5"/><path d="M6.5 17.5l4-4"/></svg> },
             { mode:'shape' as ToolMode, label:'Shape', isSign:false,
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="17" r="4"/></svg> },
             { mode:'image' as ToolMode, label:'Image', isSign:false,
@@ -2417,27 +2428,28 @@ export default function PDFEditor() {
                   else if (t.mode === 'mark') { setToolMode('mark'); setShowMarkMenu(v => !v); setShowShapeMenu(false); setShowDrawMenu(false); setShowStampMenu(false); setShowWmPanel(false); setShowDateMenu(false) }
                   else if (t.mode === 'shape') { setToolMode('shape'); setShowShapeMenu(v => !v); setShowMarkMenu(false); setShowStampMenu(false); setShowDrawMenu(false); setShowWmPanel(false) }
                   else if (t.mode === 'draw') { setToolMode('draw'); setShowDrawMenu(v => !v); setShowShapeMenu(false); setShowMarkMenu(false); setShowStampMenu(false); setShowWmPanel(false) }
+                  else if (t.mode === 'eraser') { setToolMode(toolMode === 'eraser' ? 'select' : 'eraser'); setShowShapeMenu(false); setShowDrawMenu(false); setShowMarkMenu(false); setShowStampMenu(false); setShowWmPanel(false); setShowDateMenu(false) }
                   else { setToolMode(t.mode); setShowShapeMenu(false); setShowDrawMenu(false); setShowMarkMenu(false); setShowStampMenu(false); setShowWmPanel(false); setShowDateMenu(false) }
                 }}
                 style={{
                   display:'flex', flexDirection:'column', alignItems:'center', gap:4,
                   border:'none', cursor:'pointer', minWidth:50, padding:'6px 4px 4px',
                   borderRadius:14, flexShrink:0,
-                  background: active ? (t.isSign ? 'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(217,119,6,0.15))' : 'rgba(99,102,241,0.18)') : 'transparent',
+                  background: active ? (t.isSign ? 'linear-gradient(135deg,rgba(245,158,11,0.2),rgba(217,119,6,0.15))' : t.mode==='eraser' ? 'rgba(220,38,38,0.18)' : 'rgba(99,102,241,0.18)') : 'transparent',
                   transition:'all 0.18s cubic-bezier(0.4,0,0.2,1)',
                 }}>
                 <span style={{
                   width:36, height:36, borderRadius:11,
                   display:'flex', alignItems:'center', justifyContent:'center',
-                  background: active ? (t.isSign ? 'linear-gradient(135deg,#f59e0b,#d97706)' : 'linear-gradient(135deg,#6366f1,#818cf8)') : (t.isSign ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.06)'),
-                  boxShadow: active ? (t.isSign ? '0 4px 14px rgba(245,158,11,0.45)' : '0 4px 14px rgba(99,102,241,0.45)') : 'none',
-                  color: active ? '#fff' : (t.isSign ? '#fbbf24' : 'rgba(255,255,255,0.45)'),
+                  background: active ? (t.isSign ? 'linear-gradient(135deg,#f59e0b,#d97706)' : t.mode==='eraser' ? 'linear-gradient(135deg,#dc2626,#ef4444)' : 'linear-gradient(135deg,#6366f1,#818cf8)') : (t.isSign ? 'rgba(245,158,11,0.12)' : t.mode==='eraser' ? 'rgba(220,38,38,0.10)' : 'rgba(255,255,255,0.06)'),
+                  boxShadow: active ? (t.isSign ? '0 4px 14px rgba(245,158,11,0.45)' : t.mode==='eraser' ? '0 4px 14px rgba(220,38,38,0.45)' : '0 4px 14px rgba(99,102,241,0.45)') : 'none',
+                  color: active ? '#fff' : (t.isSign ? '#fbbf24' : t.mode==='eraser' ? 'rgba(248,113,113,0.7)' : 'rgba(255,255,255,0.45)'),
                   transition:'all 0.18s cubic-bezier(0.4,0,0.2,1)',
                 }}>{t.icon}</span>
                 <span style={{
                   fontSize:9, letterSpacing:'0.03em', fontFamily:'Inter,system-ui,sans-serif',
                   fontWeight: active ? 700 : 400,
-                  color: active ? (t.isSign ? '#fbbf24' : '#818cf8') : (t.isSign ? 'rgba(251,191,36,0.55)' : 'rgba(255,255,255,0.35)'),
+                  color: active ? (t.isSign ? '#fbbf24' : t.mode==='eraser' ? '#f87171' : '#818cf8') : (t.isSign ? 'rgba(251,191,36,0.55)' : t.mode==='eraser' ? 'rgba(248,113,113,0.5)' : 'rgba(255,255,255,0.35)'),
                   transition:'color 0.18s', whiteSpace:'nowrap',
                 }}>{t.label}</span>
               </button>
