@@ -283,6 +283,9 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
 export default function PDFEditor() {
   const canvasRef = useRef<HTMLCanvasElement>(null)  // kept for compat; primary: canvasRefsMap
   const canvasRefsMap = useRef<Record<string, HTMLCanvasElement | null>>({})
+  const pageRefsMap   = useRef<Record<string, HTMLDivElement | null>>({})
+  const sidebarListRef = useRef<HTMLDivElement>(null)
+  const scrollingSidebar = useRef(false) // guard against feedback loops
 
   // PDF sources + page slots
   const [sources, setSources]     = useState<PDFSource[]>([])
@@ -933,6 +936,38 @@ export default function PDFEditor() {
     setSlots(prev => prev.map(s => s.id === slotId ? { ...s, crop: undefined } : s))
   }
 
+  // ── Scroll main canvas to a page and scroll sidebar in sync ───────────────
+  const scrollToPage = useCallback((idx: number) => {
+    const slot = slots[idx]
+    if (!slot) return
+    const el = pageRefsMap.current[slot.id]
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [slots])
+
+  // ── Detect current page from main canvas scroll ───────────────────────────
+  const handleMainScroll = useCallback(() => {
+    const container = scrollRef.current
+    if (!container || slots.length === 0) return
+    const cRect = container.getBoundingClientRect()
+    const mid = cRect.top + cRect.height / 2
+    let bestIdx = 0
+    let bestDist = Infinity
+    slots.forEach((slot, idx) => {
+      const el = pageRefsMap.current[slot.id]
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      const pageMid = (r.top + r.bottom) / 2
+      const dist = Math.abs(pageMid - mid)
+      if (dist < bestDist) { bestDist = dist; bestIdx = idx }
+    })
+    if (bestIdx !== slotIdx) {
+      scrollingSidebar.current = true
+      setSlotIdx(bestIdx)
+      setTimeout(() => { scrollingSidebar.current = false }, 400)
+    }
+  }, [slots, slotIdx])
+
   // ── Fit current page to screen ────────────────────────────────────────────
   const fitToScreen = () => {
     const container = scrollRef.current
@@ -988,6 +1023,14 @@ export default function PDFEditor() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [selectedId, editingId, deleteEl, undo, redo])
+
+  // ── Scroll sidebar to active page when slotIdx changes ───────────────────
+  useEffect(() => {
+    const list = sidebarListRef.current
+    if (!list) return
+    const item = list.querySelector(`[data-slot-idx="${slotIdx}"]`) as HTMLElement | null
+    if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [slotIdx])
 
   // ── Auto fit-to-screen when a PDF first loads ────────────────────────────
   const prevSlotsLen = useRef(0)
@@ -1378,7 +1421,8 @@ export default function PDFEditor() {
             <PageSidebar
               pageSlots={slots}
               currentSlotIdx={slotIdx}
-              onPageChange={i => { setSlotIdx(i); isMobile && setShowSidebar(false) }}
+              onPageChange={i => { setSlotIdx(i); scrollToPage(i); isMobile && setShowSidebar(false) }}
+              sidebarListRef={sidebarListRef}
               onDuplicate={duplicatePage}
               onDelete={deletePage}
               onMoveUp={i => movePage(i, 'up')}
@@ -1833,6 +1877,7 @@ export default function PDFEditor() {
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
                 cursor: toolMode === 'pan' ? (panStart.current ? 'grabbing' : 'grab') : undefined,
               }}
+              onScroll={handleMainScroll}
               onMouseDown={handlePanDown}
               onMouseMove={handlePanMove}
               onMouseUp={handlePanUp}
@@ -1862,6 +1907,7 @@ export default function PDFEditor() {
                 const drawCursor = ['text','highlight','mark','annotation','shape','crop','draw'].includes(toolMode) ? 'crosshair' : toolMode === 'pan' ? 'inherit' : 'default'
                 return (
                   <div key={slot.id}
+                    ref={el => { pageRefsMap.current[slot.id] = el }}
                     style={{
                       position: 'relative', display: 'inline-block', flexShrink: 0,
                       overflow: hasCrop ? 'hidden' : 'visible',

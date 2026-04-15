@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import type React from 'react'
 import type { PageSlot } from '@/types'
 
 interface Props {
@@ -17,6 +18,7 @@ interface Props {
   onAddImagePage: () => void
   onMergePDF: () => void
   onOrganise: () => void
+  sidebarListRef?: React.RefObject<HTMLDivElement>
 }
 
 export default function PageSidebar({
@@ -24,6 +26,7 @@ export default function PageSidebar({
   onDuplicate, onDelete, onMoveUp, onMoveDown,
   onRotate, onRotateLeft, onAddBelow,
   onAddBlank, onAddImagePage, onMergePDF, onOrganise,
+  sidebarListRef,
 }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [dragIdx, setDragIdx] = useState<number | null>(null)
@@ -106,6 +109,7 @@ export default function PageSidebar({
 
       {/* Thumbnail list */}
       <div
+        ref={sidebarListRef}
         className="thin-scroll"
         style={{ flex: 1, overflowY: 'auto', padding: '10px 8px 6px', display: 'flex', flexDirection: 'column', gap: 2 }}
       >
@@ -117,7 +121,7 @@ export default function PageSidebar({
           const ar = slot.baseWidth && slot.baseHeight ? slot.baseWidth / slot.baseHeight : 0.707
 
           return (
-            <div key={slot.id} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <div key={slot.id} data-slot-idx={idx} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
               {/* Drop indicator above */}
               {isOver && dragIdx! > idx && (
                 <div style={{ height: 3, borderRadius: 2, background: '#4f6ef7', margin: '2px 4px' }} />
