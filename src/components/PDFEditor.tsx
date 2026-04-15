@@ -540,26 +540,67 @@ export default function PDFEditor() {
     } catch { /* ignore render errors */ }
   }, [])
 
-  // Render all slots whenever scale/slots/sources changes
-  // – Adaptive DPR: large docs get lower DPR to stay within mobile canvas memory limits
-  // – Sequential batches of 3: avoids simultaneous memory spikes that crash mobile browsers
+  // ── Lazy rendering via IntersectionObserver ──────────────────────────────
+  // Only pages near the viewport are rendered at full DPR (max 2×).
+  // Off-screen pages are rendered lazily as the user scrolls to them.
+  // This keeps quality high on mobile without blowing up canvas memory.
+  const lazyObserverRef = useRef<IntersectionObserver | null>(null)
+
   useEffect(() => {
-    if (!slots.length) return
-    setRendering(true)
-    const n = slots.length
-    // Cap DPR: >15 pages → 1×, >5 pages → 1.5×, otherwise device DPR (max 2×)
-    const effectiveDpr = n > 15 ? 1 : n > 5 ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(window.devicePixelRatio || 1, 2)
-    const BATCH = 3
-    const renderAll = async () => {
-      for (let i = 0; i < slots.length; i += BATCH) {
-        const batch = slots.slice(i, i + BATCH)
-        await Promise.all(batch.map(slot => {
-          const cv = canvasRefsMap.current[slot.id]
-          return cv ? renderSlot(slot, scale, sources, cv, effectiveDpr) : Promise.resolve()
-        }))
-      }
+    if (!slots.length || !sources.length) return
+
+    // Full quality for ALL screen sizes — cap at 2× so we never exceed iOS ~50MB canvas limit
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+
+    const renderPage = (slotId: string) => {
+      const slot = slots.find(s => s.id === slotId)
+      const cv   = canvasRefsMap.current[slotId]
+      if (slot && cv) renderSlot(slot, scale, sources, cv, dpr)
     }
-    renderAll().finally(() => setRendering(false))
+
+    // Disconnect any previous observer (scale/slots/sources changed)
+    lazyObserverRef.current?.disconnect()
+
+    setRendering(true)
+    let pendingCount = slots.length
+
+    const onRendered = () => {
+      pendingCount--
+      if (pendingCount <= 0) setRendering(false)
+    }
+
+    lazyObserverRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          const slotId = (entry.target as HTMLElement).dataset.slotId
+          if (!slotId) return
+          if (entry.isIntersecting) {
+            const slot = slots.find(s => s.id === slotId)
+            const cv   = canvasRefsMap.current[slotId]
+            if (slot && cv) {
+              renderSlot(slot, scale, sources, cv, dpr).then(onRendered)
+            } else {
+              onRendered()
+            }
+          }
+        })
+      },
+      {
+        // Pre-render 600px above and below the visible area so scrolling feels instant
+        root: scrollRef.current,
+        rootMargin: '600px 0px',
+        threshold: 0,
+      },
+    )
+
+    // Observe every page div — the observer fires immediately for visible ones
+    slots.forEach(slot => {
+      const el = pageRefsMap.current[slot.id]
+      if (el) lazyObserverRef.current!.observe(el)
+      else onRendered() // element not yet in DOM, skip count
+    })
+
+    return () => lazyObserverRef.current?.disconnect()
   }, [slots, scale, sources, renderSlot])
 
   // When slotIdx changes clear selection
@@ -2024,6 +2065,7 @@ export default function PDFEditor() {
                 return (
                   <div key={slot.id}
                     ref={el => { pageRefsMap.current[slot.id] = el }}
+                    data-slot-id={slot.id}
                     style={{
                       position: 'relative', display: 'inline-block', flexShrink: 0,
                       overflow: hasCrop ? 'hidden' : 'visible',
