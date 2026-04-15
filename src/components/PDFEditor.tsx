@@ -481,31 +481,39 @@ export default function PDFEditor() {
   const isTablet = vw < 1024
 
   // ── Render current slot ──────────────────────────────────────────────────
-  const renderSlot = useCallback(async (slot: PageSlot, sc: number, srcs: PDFSource[], canvas?: HTMLCanvasElement | null, dprOverride?: number) => {
+  const renderSlot = useCallback(async (slot: PageSlot, sc: number, srcs: PDFSource[], canvas?: HTMLCanvasElement | null) => {
     const c = canvas ?? canvasRef.current
     if (!c) return
     const ctx = c.getContext('2d')!
     const rot = slot.rotation || 0
     const sw  = rot === 90 || rot === 270
-    // Use device pixel ratio for crisp rendering; caller can override for large docs
-    const dpr = dprOverride ?? Math.min(window.devicePixelRatio || 1, 3)
+
+    // Size-aware DPR: use full device DPR when the canvas is small (e.g. fit-to-screen
+    // on mobile), but clamp so the total canvas pixel count stays under 3 MP —
+    // the safe per-canvas limit on iOS Safari.
+    const rawDpr = window.devicePixelRatio || 1
+    const cssW = (sw ? slot.baseHeight : slot.baseWidth)  * sc
+    const cssH = (sw ? slot.baseWidth  : slot.baseHeight) * sc
+    const MAX_PX = 3_000_000
+    const dpr = cssW * cssH * rawDpr * rawDpr > MAX_PX
+      ? Math.max(1, Math.sqrt(MAX_PX / (cssW * cssH)))
+      : rawDpr
+
     try {
       if (slot.type === 'pdf') {
         const src = srcs.find(s => s.id === slot.sourceId)
         if (!src) return
         const page = await src.doc.getPage(slot.pageNum!)
-        // Render at sc*dpr for crisp physical pixels, then constrain CSS size to sc
         const vp = page.getViewport({ scale: sc * dpr, rotation: rot })
-        c.width = vp.width; c.height = vp.height
-        c.style.width  = (vp.width  / dpr) + 'px'
-        c.style.height = (vp.height / dpr) + 'px'
+        c.width  = Math.round(vp.width)
+        c.height = Math.round(vp.height)
+        c.style.width  = cssW + 'px'
+        c.style.height = cssH + 'px'
         ctx.clearRect(0, 0, c.width, c.height)
         await page.render({ canvasContext: ctx, viewport: vp }).promise
       } else if (slot.type === 'blank') {
-        const cssW = slot.baseWidth  * sc
-        const cssH = slot.baseHeight * sc
-        c.width  = cssW * dpr
-        c.height = cssH * dpr
+        c.width  = Math.round(cssW * dpr)
+        c.height = Math.round(cssH * dpr)
         c.style.width  = cssW + 'px'
         c.style.height = cssH + 'px'
         ctx.scale(dpr, dpr)
@@ -515,10 +523,8 @@ export default function PDFEditor() {
       } else if (slot.type === 'image') {
         await new Promise<void>(res => {
           const img = new Image(); img.onload = () => {
-            const cssW = (sw ? slot.baseHeight : slot.baseWidth)  * sc
-            const cssH = (sw ? slot.baseWidth  : slot.baseHeight) * sc
-            c.width  = cssW * dpr
-            c.height = cssH * dpr
+            c.width  = Math.round(cssW * dpr)
+            c.height = Math.round(cssH * dpr)
             c.style.width  = cssW + 'px'
             c.style.height = cssH + 'px'
             ctx.scale(dpr, dpr)
@@ -549,15 +555,6 @@ export default function PDFEditor() {
   useEffect(() => {
     if (!slots.length || !sources.length) return
 
-    // Full quality for ALL screen sizes — cap at 2× so we never exceed iOS ~50MB canvas limit
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
-
-    const renderPage = (slotId: string) => {
-      const slot = slots.find(s => s.id === slotId)
-      const cv   = canvasRefsMap.current[slotId]
-      if (slot && cv) renderSlot(slot, scale, sources, cv, dpr)
-    }
-
     // Disconnect any previous observer (scale/slots/sources changed)
     lazyObserverRef.current?.disconnect()
 
@@ -578,7 +575,7 @@ export default function PDFEditor() {
             const slot = slots.find(s => s.id === slotId)
             const cv   = canvasRefsMap.current[slotId]
             if (slot && cv) {
-              renderSlot(slot, scale, sources, cv, dpr).then(onRendered)
+              renderSlot(slot, scale, sources, cv).then(onRendered)
             } else {
               onRendered()
             }
@@ -1586,6 +1583,8 @@ export default function PDFEditor() {
               onAddImagePage={() => imgPageInput.current?.click()}
               onMergePDF={() => mergeInput.current?.click()}
               onOrganise={() => setShowOrganise(true)}
+              onGoToFirst={() => { setSlotIdx(0); scrollToPage(0) }}
+              onGoToLast={() => { const last = slots.length - 1; setSlotIdx(last); scrollToPage(last) }}
             />
           </div>
         )}

@@ -19,6 +19,8 @@ interface Props {
   onMergePDF: () => void
   onOrganise: () => void
   sidebarListRef?: React.RefObject<HTMLDivElement>
+  onGoToFirst: () => void
+  onGoToLast: () => void
 }
 
 export default function PageSidebar({
@@ -26,7 +28,7 @@ export default function PageSidebar({
   onDuplicate, onDelete, onMoveUp, onMoveDown,
   onRotate, onRotateLeft, onAddBelow,
   onAddBlank, onAddImagePage, onMergePDF, onOrganise,
-  sidebarListRef,
+  sidebarListRef, onGoToFirst, onGoToLast,
 }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [dragIdx, setDragIdx] = useState<number | null>(null)
@@ -73,6 +75,7 @@ export default function PageSidebar({
         background: 'rgba(255,255,255,0.7)',
         display: 'flex', flexDirection: 'column', gap: 6,
       }}>
+        {/* Title row */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{
@@ -87,7 +90,60 @@ export default function PageSidebar({
               <p style={{ margin: 0, fontSize: 9.5, color: '#94a3b8' }}>{pageSlots.length} total</p>
             </div>
           </div>
+          {/* Page counter badge */}
+          <div style={{
+            background: 'linear-gradient(135deg,#6366f1,#818cf8)',
+            color: '#fff', borderRadius: 20, padding: '2px 8px',
+            fontSize: 9.5, fontWeight: 700, letterSpacing: '0.03em',
+          }}>
+            {currentSlotIdx + 1} / {pageSlots.length}
+          </div>
         </div>
+
+        {/* Top / Bottom navigation */}
+        <div style={{ display: 'flex', gap: 5 }}>
+          <button
+            onClick={onGoToFirst}
+            disabled={currentSlotIdx === 0}
+            title="Go to first page"
+            style={{
+              flex: 1, padding: '5px 4px', borderRadius: 7,
+              border: '1.5px solid #dde3f0',
+              background: currentSlotIdx === 0 ? '#f8faff' : 'rgba(79,110,247,0.06)',
+              color: currentSlotIdx === 0 ? '#c8d3e8' : '#4f6ef7',
+              fontSize: 10, fontWeight: 700,
+              cursor: currentSlotIdx === 0 ? 'default' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => { if (currentSlotIdx !== 0) e.currentTarget.style.background = 'rgba(79,110,247,0.14)' }}
+            onMouseLeave={e => { if (currentSlotIdx !== 0) e.currentTarget.style.background = 'rgba(79,110,247,0.06)' }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+            First
+          </button>
+          <button
+            onClick={onGoToLast}
+            disabled={currentSlotIdx === pageSlots.length - 1}
+            title="Go to last page"
+            style={{
+              flex: 1, padding: '5px 4px', borderRadius: 7,
+              border: '1.5px solid #dde3f0',
+              background: currentSlotIdx === pageSlots.length - 1 ? '#f8faff' : 'rgba(79,110,247,0.06)',
+              color: currentSlotIdx === pageSlots.length - 1 ? '#c8d3e8' : '#4f6ef7',
+              fontSize: 10, fontWeight: 700,
+              cursor: currentSlotIdx === pageSlots.length - 1 ? 'default' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => { if (currentSlotIdx !== pageSlots.length - 1) e.currentTarget.style.background = 'rgba(79,110,247,0.14)' }}
+            onMouseLeave={e => { if (currentSlotIdx !== pageSlots.length - 1) e.currentTarget.style.background = 'rgba(79,110,247,0.06)' }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>
+            Last
+          </button>
+        </div>
+
         {/* Organise button */}
         <button
           onClick={onOrganise}
