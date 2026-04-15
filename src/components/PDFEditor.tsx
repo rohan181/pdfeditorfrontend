@@ -310,6 +310,7 @@ export default function PDFEditor() {
   // New tool options
   const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'>('tick')
   const [markColor, setMarkColor]           = useState('#16a34a')
+  const [markStrokeWidth, setMarkStrokeWidth] = useState(3)
   const [activeShapeType, setActiveShapeType] = useState<'rectangle'|'ellipse'|'line'|'arrow'|'polygon'>('rectangle')
   const [shapeStroke, setShapeStroke]       = useState('#1d4ed8')
   const [shapeFill, setShapeFill]           = useState('')
@@ -571,6 +572,8 @@ export default function PDFEditor() {
       }
       setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
       setSelectedId(el.id)
+      setToolMode('select')
+      setShowPanel(true)
     }
     reader.readAsDataURL(f); e.target.value = ''
   }
@@ -780,7 +783,7 @@ export default function PDFEditor() {
     } else if (toolMode === 'mark') {
       const el: MarkElement = {
         id: uuidv4(), type: 'mark', x, y, width: 52, height: 52,
-        markType: activeMarkType, color: markColor, strokeWidth: 3,
+        markType: activeMarkType, color: markColor, strokeWidth: markStrokeWidth,
         pageSlotId: slotId,
       }
       setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
@@ -804,7 +807,7 @@ export default function PDFEditor() {
     } else {
       setSelectedId(null); setEditingId(null)
     }
-  }, [toolMode, activeMarkType, markColor, activeShapeType, shapeStroke, shapeFill, shapeStrokeWidth, pushHistory])
+  }, [toolMode, activeMarkType, markColor, markStrokeWidth, activeShapeType, shapeStroke, shapeFill, shapeStrokeWidth, pushHistory])
 
   const handleOverlayClick = useCallback((e: React.MouseEvent<HTMLDivElement>, slotId: string) => {
     if (!slots.length) return
@@ -1188,7 +1191,7 @@ export default function PDFEditor() {
               </span>
             )}
           </div>
-          {!isMobile && sources.length > 0 && (
+          {sources.length > 0 && (
             editingName ? (
               <input
                 autoFocus
@@ -1197,9 +1200,12 @@ export default function PDFEditor() {
                 onBlur={() => setEditingName(false)}
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') setEditingName(false) }}
                 style={{
-                  fontSize: 11.5, color: '#fff', background: 'rgba(255,255,255,0.15)',
-                  border: '1px solid rgba(255,255,255,0.4)', borderRadius: 5,
-                  padding: '2px 7px', outline: 'none', maxWidth: isTablet ? 130 : 220,
+                  fontSize: isMobile ? 12 : 11.5, color: '#fff',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: '1px solid rgba(255,255,255,0.4)', borderRadius: 6,
+                  padding: '3px 8px', outline: 'none',
+                  maxWidth: isMobile ? 140 : isTablet ? 130 : 220,
+                  fontFamily: 'Inter, sans-serif',
                 }}
               />
             ) : (
@@ -1207,9 +1213,12 @@ export default function PDFEditor() {
                 onClick={() => setEditingName(true)}
                 title="Rename PDF"
                 style={{
-                  fontSize: 11.5, color: 'rgba(255,255,255,0.65)', background: 'transparent',
-                  border: '1px solid transparent', borderRadius: 5, padding: '2px 7px',
-                  cursor: 'text', maxWidth: isTablet ? 140 : 240,
+                  fontSize: isMobile ? 12 : 11.5,
+                  color: 'rgba(255,255,255,0.65)', background: 'transparent',
+                  border: '1px solid transparent', borderRadius: 6,
+                  padding: isMobile ? '4px 8px' : '2px 7px',
+                  cursor: 'pointer',
+                  maxWidth: isMobile ? 140 : isTablet ? 140 : 240,
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   display: 'flex', alignItems: 'center', gap: 4,
                 }}
@@ -1454,6 +1463,14 @@ export default function PDFEditor() {
                         <button key={c} onClick={()=>setMarkColor(c)} style={{width:22,height:22,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
                       ))}
                       <input type="color" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:22,height:22,border:'none',borderRadius:4,cursor:'pointer',padding:1}}/>
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Thickness</p>
+                    <div style={{display:'flex',gap:4}}>
+                      {[2,3,5,8].map(w=>(
+                        <button key={w} onClick={()=>setMarkStrokeWidth(w)} style={{width:36,height:28,borderRadius:7,fontSize:11,fontWeight:700,border:`1.5px solid ${markStrokeWidth===w?'#6366f1':'#e2e8f0'}`,background:markStrokeWidth===w?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:markStrokeWidth===w?'#fff':'#475569',cursor:'pointer'}}>{w}px</button>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -2173,9 +2190,10 @@ export default function PDFEditor() {
                 onClick={() => {
                   if (t.mode === 'image') { setToolMode('image'); imgInput.current?.click() }
                   else if (t.mode === 'signature') { setShowSig(true); setToolMode('select') }
+                  else if (t.mode === 'mark') { setToolMode('mark'); setShowMarkMenu(v => !v); setShowShapeMenu(false); setShowDrawMenu(false); setShowStampMenu(false); setShowWmPanel(false); setShowDateMenu(false) }
                   else if (t.mode === 'shape') { setToolMode('shape'); setShowShapeMenu(v => !v); setShowMarkMenu(false); setShowStampMenu(false); setShowDrawMenu(false); setShowWmPanel(false) }
                   else if (t.mode === 'draw') { setToolMode('draw'); setShowDrawMenu(v => !v); setShowShapeMenu(false); setShowMarkMenu(false); setShowStampMenu(false); setShowWmPanel(false) }
-                  else { setToolMode(t.mode); setShowShapeMenu(false); setShowDrawMenu(false); setShowStampMenu(false); setShowWmPanel(false); setShowDateMenu(false) }
+                  else { setToolMode(t.mode); setShowShapeMenu(false); setShowDrawMenu(false); setShowMarkMenu(false); setShowStampMenu(false); setShowWmPanel(false); setShowDateMenu(false) }
                 }}
                 style={{
                   display:'flex', flexDirection:'column', alignItems:'center', gap:4,
@@ -2275,6 +2293,51 @@ export default function PDFEditor() {
               <div style={{display:'flex',gap:4}}>
                 {[1,2,4].map(w=><button key={w} onClick={()=>setShapeStrokeWidth(w)} style={{width:36,height:36,borderRadius:8,fontSize:11,fontWeight:700,border:`1.5px solid ${shapeStrokeWidth===w?'#6366f1':'#e2e8f0'}`,background:shapeStrokeWidth===w?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:shapeStrokeWidth===w?'#fff':'#475569',cursor:'pointer'}}>{w}px</button>)}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile mark options panel */}
+      {isMobile && toolMode === 'mark' && showMarkMenu && (
+        <div style={{
+          position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
+          background: '#fff', borderTop: '1px solid #e8ecf5',
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
+          borderRadius: '14px 14px 0 0',
+          padding: '14px 16px',
+          display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'flex-start',
+        }}>
+          {/* Type */}
+          <div>
+            <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Type</p>
+            <div style={{display:'flex',gap:7}}>
+              {(['tick','cross'] as const).map(mt=>(
+                <button key={mt} onClick={()=>setActiveMarkType(mt)} style={{width:48,height:40,borderRadius:10,border:`1.5px solid ${activeMarkType===mt?'#6366f1':'#e2e8f0'}`,background:activeMarkType===mt?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:activeMarkType===mt?'#fff':'#475569',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}>
+                  {mt==='tick'
+                    ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Thickness */}
+          <div>
+            <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Thickness</p>
+            <div style={{display:'flex',gap:5}}>
+              {[2,3,5,8].map(w=>(
+                <button key={w} onClick={()=>setMarkStrokeWidth(w)} style={{width:42,height:40,borderRadius:9,fontSize:12,fontWeight:700,border:`1.5px solid ${markStrokeWidth===w?'#6366f1':'#e2e8f0'}`,background:markStrokeWidth===w?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:markStrokeWidth===w?'#fff':'#475569',cursor:'pointer'}}>{w}px</button>
+              ))}
+            </div>
+          </div>
+          {/* Color */}
+          <div>
+            <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap',maxWidth:220}}>
+              {['#16a34a','#dc2626','#1d4ed8','#7c3aed','#ea580c','#0e7490','#1e293b','#f59e0b'].map(c=>(
+                <button key={c} onClick={()=>setMarkColor(c)} style={{width:26,height:26,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
+              ))}
+              <input type="color" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:26,height:26,border:'none',borderRadius:6,cursor:'pointer',padding:1}}/>
             </div>
           </div>
         </div>
