@@ -286,6 +286,7 @@ export default function PDFEditor() {
   const pageRefsMap   = useRef<Record<string, HTMLDivElement | null>>({})
   const sidebarListRef = useRef<HTMLDivElement>(null)
   const scrollingSidebar = useRef(false) // guard against feedback loops
+  const slotIdxRef = useRef(0)           // stable ref so undo/redo can read current page
 
   // PDF sources + page slots
   const [sources, setSources]     = useState<PDFSource[]>([])
@@ -343,13 +344,18 @@ export default function PDFEditor() {
     setCanRedo(false)
   }, [])
 
-  // Navigate the main canvas + sidebar to the page that changed between two element snapshots
-  const navigateToAffectedPage = useCallback((before: PDFElement[], after: PDFElement[]) => {
+  // Navigate to the page affected by an undo/redo, then call onApply once scroll is done
+  // If already on the right page, onApply fires immediately with no delay
+  const navigateToAffectedPage = useCallback((
+    before: PDFElement[],
+    after: PDFElement[],
+    onApply: () => void,
+  ) => {
     const slots = slotsRef.current
-    if (!slots.length) return
+    if (!slots.length) { onApply(); return }
     const beforeMap = new Map(before.map(e => [e.id, e]))
     const afterMap  = new Map(after.map(e => [e.id, e]))
-    // Prefer element that was added or removed; fall back to first moved/resized element
+    // Find which page changed: removed > added > moved/resized
     let slotId: string | null = null
     for (const e of before) { if (!afterMap.has(e.id)) { slotId = e.pageSlotId; break } }
     if (!slotId) {
@@ -363,42 +369,51 @@ export default function PDFEditor() {
         }
       }
     }
-    if (!slotId) return
+    if (!slotId) { onApply(); return }
     const idx = slots.findIndex(s => s.id === slotId)
-    if (idx < 0) return
+    if (idx < 0) { onApply(); return }
+
+    const alreadyThere = idx === slotIdxRef.current
+    if (alreadyThere) {
+      // Same page — apply immediately, no navigation delay needed
+      onApply()
+      return
+    }
+
+    // Different page — navigate first, wait for scroll animation (~350ms), then apply
     setSlotIdx(idx)
-    // Scroll main canvas to that page
     const pageEl = pageRefsMap.current[slots[idx].id]
     if (pageEl) pageEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    // Scroll sidebar to match
     requestAnimationFrame(() => {
       const list = sidebarListRef.current
       if (!list) return
       const item = list.querySelector(`[data-slot-idx="${idx}"]`) as HTMLElement | null
       if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     })
+    // Apply the element change after scroll has had time to settle
+    setTimeout(onApply, 380)
   }, [])
 
   const undo = useCallback(() => {
     if (histIdxRef.current <= 0) return
     const before = historyRef.current[histIdxRef.current]
     histIdxRef.current--
-    const after = historyRef.current[histIdxRef.current]
-    setElements([...after])
+    const after  = historyRef.current[histIdxRef.current]
     setCanUndo(histIdxRef.current > 0)
     setCanRedo(true)
-    navigateToAffectedPage(before, after)
+    // Navigate to affected page first, then apply the element removal/change
+    navigateToAffectedPage(before, after, () => setElements([...after]))
   }, [navigateToAffectedPage])
 
   const redo = useCallback(() => {
     if (histIdxRef.current >= historyRef.current.length - 1) return
     const before = historyRef.current[histIdxRef.current]
     histIdxRef.current++
-    const after = historyRef.current[histIdxRef.current]
-    setElements([...after])
+    const after  = historyRef.current[histIdxRef.current]
     setCanUndo(true)
     setCanRedo(histIdxRef.current < historyRef.current.length - 1)
-    navigateToAffectedPage(before, after)
+    // Navigate to affected page first, then apply the element change
+    navigateToAffectedPage(before, after, () => setElements([...after]))
   }, [navigateToAffectedPage])
 
   // Draw tool
@@ -466,14 +481,14 @@ export default function PDFEditor() {
   const isTablet = vw < 1024
 
   // ── Render current slot ──────────────────────────────────────────────────
-  const renderSlot = useCallback(async (slot: PageSlot, sc: number, srcs: PDFSource[], canvas?: HTMLCanvasElement | null) => {
+  const renderSlot = useCallback(async (slot: PageSlot, sc: number, srcs: PDFSource[], canvas?: HTMLCanvasElement | null, dprOverride?: number) => {
     const c = canvas ?? canvasRef.current
     if (!c) return
     const ctx = c.getContext('2d')!
     const rot = slot.rotation || 0
     const sw  = rot === 90 || rot === 270
-    // Use device pixel ratio (capped at 3) for crisp rendering on mobile/retina
-    const dpr = Math.min(window.devicePixelRatio || 1, 3)
+    // Use device pixel ratio for crisp rendering; caller can override for large docs
+    const dpr = dprOverride ?? Math.min(window.devicePixelRatio || 1, 3)
     try {
       if (slot.type === 'pdf') {
         const src = srcs.find(s => s.id === slot.sourceId)
@@ -526,14 +541,25 @@ export default function PDFEditor() {
   }, [])
 
   // Render all slots whenever scale/slots/sources changes
+  // – Adaptive DPR: large docs get lower DPR to stay within mobile canvas memory limits
+  // – Sequential batches of 3: avoids simultaneous memory spikes that crash mobile browsers
   useEffect(() => {
     if (!slots.length) return
     setRendering(true)
-    Promise.all(slots.map(slot => {
-      const cv = canvasRefsMap.current[slot.id]
-      if (cv) return renderSlot(slot, scale, sources, cv)
-      return Promise.resolve()
-    })).finally(() => setRendering(false))
+    const n = slots.length
+    // Cap DPR: >15 pages → 1×, >5 pages → 1.5×, otherwise device DPR (max 2×)
+    const effectiveDpr = n > 15 ? 1 : n > 5 ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(window.devicePixelRatio || 1, 2)
+    const BATCH = 3
+    const renderAll = async () => {
+      for (let i = 0; i < slots.length; i += BATCH) {
+        const batch = slots.slice(i, i + BATCH)
+        await Promise.all(batch.map(slot => {
+          const cv = canvasRefsMap.current[slot.id]
+          return cv ? renderSlot(slot, scale, sources, cv, effectiveDpr) : Promise.resolve()
+        }))
+      }
+    }
+    renderAll().finally(() => setRendering(false))
   }, [slots, scale, sources, renderSlot])
 
   // When slotIdx changes clear selection
@@ -1030,18 +1056,28 @@ export default function PDFEditor() {
 
   // ── Fit current page to screen ────────────────────────────────────────────
   const fitToScreen = () => {
-    const container = scrollRef.current
-    const slot = slots[slotIdx]
-    if (!container || !slot) return
-    const padding = 48
-    const availW = container.clientWidth - padding
-    const availH = container.clientHeight - padding
-    const rot = slot.rotation || 0
-    const sw = rot === 90 || rot === 270
-    const pw = sw ? slot.baseHeight : slot.baseWidth
-    const ph = sw ? slot.baseWidth : slot.baseHeight
-    const newScale = Math.min(availW / pw, availH / ph)
-    setScale(Math.max(0.4, Math.min(3.0, parseFloat(newScale.toFixed(2)))))
+    // Use rAF so dimensions are always post-layout (avoids stale reads on mobile)
+    requestAnimationFrame(() => {
+      const container = scrollRef.current
+      const slot = slots[slotIdx]
+      if (!container || !slot) return
+
+      // Scroll container padding: mobile = 8px L/R, 12px T/B; desktop = 24px all
+      // Floating zoom bar: bottom:72 on mobile (bottom:18 desktop), ~44px tall
+      // So the bar blocks the bottom (72+44)=116px on mobile, (18+44)=62px on desktop
+      const hPad = isMobile ? 20  : 56   // horizontal clearance (both sides)
+      const vPad = isMobile ? 130 : 90   // top padding + floating bar clearance
+
+      const availW = Math.max(1, container.clientWidth  - hPad)
+      const availH = Math.max(1, container.clientHeight - vPad)
+
+      const rot = slot.rotation || 0
+      const sw  = rot === 90 || rot === 270
+      const pw  = sw ? slot.baseHeight : slot.baseWidth
+      const ph  = sw ? slot.baseWidth  : slot.baseHeight
+      const newScale = Math.min(availW / pw, availH / ph)
+      setScale(Math.max(0.3, Math.min(3.0, parseFloat(newScale.toFixed(2)))))
+    })
   }
 
   // ── Watermark image upload ────────────────────────────────────────────────
@@ -1100,8 +1136,9 @@ export default function PDFEditor() {
     requestAnimationFrame(() => scrollSidebarToSlot(slotIdx))
   }, [showSidebar]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keep slotsRef in sync so undo/redo navigation always has latest slots
-  useEffect(() => { slotsRef.current = slots }, [slots])
+  // Keep stable refs in sync so undo/redo navigation always has latest values
+  useEffect(() => { slotsRef.current  = slots   }, [slots])
+  useEffect(() => { slotIdxRef.current = slotIdx }, [slotIdx])
 
   // ── Auto fit-to-screen when a PDF first loads ────────────────────────────
   const prevSlotsLen = useRef(0)
@@ -1114,16 +1151,18 @@ export default function PDFEditor() {
       const slot = slots[0]
       const container = scrollRef.current
       if (!container || !slot) return
-      const padding = 48
-      const availW = container.clientWidth  - padding
-      const availH = container.clientHeight - padding
-      if (availW <= 0 || availH <= 0) return
+      // Same clearance logic as fitToScreen()
+      const mobile = container.clientWidth < 640
+      const hPad = mobile ? 20  : 56
+      const vPad = mobile ? 130 : 90
+      const availW = Math.max(1, container.clientWidth  - hPad)
+      const availH = Math.max(1, container.clientHeight - vPad)
       const rot = slot.rotation || 0
       const sw  = rot === 90 || rot === 270
       const pw  = sw ? slot.baseHeight : slot.baseWidth
       const ph  = sw ? slot.baseWidth  : slot.baseHeight
       const fitScale = Math.min(availW / pw, availH / ph)
-      setScale(Math.max(0.4, Math.min(3.0, parseFloat(fitScale.toFixed(2)))))
+      setScale(Math.max(0.3, Math.min(3.0, parseFloat(fitScale.toFixed(2)))))
     })
   }, [slots]) // eslint-disable-line react-hooks/exhaustive-deps
 

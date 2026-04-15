@@ -57,7 +57,7 @@ export default function PageSidebar({
 
   return (
     <aside style={{
-      width: 168,
+      width: 176,
       height: '100%',
       background: 'linear-gradient(180deg, #f5f7ff 0%, #eef1f8 100%)',
       borderRight: '1px solid #dde3f0',
@@ -198,7 +198,8 @@ export default function PageSidebar({
                   {/* Hover action bar */}
                   {hovered && (
                     <div style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexWrap: 'wrap', gap: 2,
                       padding: '5px 4px',
                       background: 'rgba(248,250,255,0.98)',
                       borderTop: '1px solid #eef1f8',
@@ -318,7 +319,7 @@ function ActionBtn({ title, onClick, children, danger }: {
       title={title}
       onClick={onClick}
       style={{
-        width: 26, height: 26, borderRadius: 6,
+        width: 24, height: 24, borderRadius: 6,
         border: `1px solid ${danger ? '#fca5a5' : '#e2e8f0'}`,
         background: danger ? '#fff1f2' : '#fff',
         color: danger ? '#dc2626' : '#4f6ef7',
