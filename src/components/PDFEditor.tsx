@@ -1178,7 +1178,16 @@ export default function PDFEditor() {
 
   // ── Element operations ────────────────────────────────────────────────────
   const updateEl = useCallback((id: string, updates: Partial<PDFElement>) => {
-    setElements(prev => prev.map(e => e.id === id ? { ...e, ...updates } as PDFElement : e))
+    setElements(prev => prev.map(e => {
+      if (e.id !== id) return e
+      // For draw elements, translate all points when x/y changes (points are stored as absolute coords)
+      if (e.type === 'draw' && (updates.x !== undefined || updates.y !== undefined)) {
+        const dx = (updates.x ?? e.x) - e.x
+        const dy = (updates.y ?? e.y) - e.y
+        return { ...e, ...updates, points: (e as import('@/types').DrawElement).points.map(p => ({ x: p.x + dx, y: p.y + dy })) } as PDFElement
+      }
+      return { ...e, ...updates } as PDFElement
+    }))
   }, [])
   const deleteEl = useCallback((id: string) => {
     setElements(prev => {
