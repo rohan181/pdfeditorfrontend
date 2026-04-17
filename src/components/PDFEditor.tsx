@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import DraggableElement from './DraggableElement'
 import PageSidebar from './PageSidebar'
@@ -344,54 +344,68 @@ export default function PDFEditor() {
     setCanRedo(false)
   }, [])
 
-  // Navigate to the page affected by an undo/redo, then call onApply once scroll is done
-  // If already on the right page, onApply fires immediately with no delay
-  const navigateToAffectedPage = useCallback((
+  // Find which page slot an undo/redo diff affects, navigate to it, then call onApply
+  const applyWithNavigation = useCallback((
     before: PDFElement[],
     after: PDFElement[],
     onApply: () => void,
   ) => {
-    const slots = slotsRef.current
-    if (!slots.length) { onApply(); return }
-    const beforeMap = new Map(before.map(e => [e.id, e]))
-    const afterMap  = new Map(after.map(e => [e.id, e]))
-    // Find which page changed: removed > added > moved/resized
-    let slotId: string | null = null
-    for (const e of before) { if (!afterMap.has(e.id)) { slotId = e.pageSlotId; break } }
-    if (!slotId) {
-      for (const e of after) { if (!beforeMap.has(e.id)) { slotId = e.pageSlotId; break } }
+    const allSlots = slotsRef.current
+    if (!allSlots.length) { onApply(); return }
+
+    // Find the slot that changed: element removed, added, or any property change
+    const afterMap = new Map(after.map(e => [e.id, e]))
+    const beforeIds = new Set(before.map(e => e.id))
+    let targetSlotId: string | null = null
+
+    // 1. Element removed (in before, not in after)
+    for (const e of before) {
+      if (!afterMap.has(e.id)) { targetSlotId = e.pageSlotId; break }
     }
-    if (!slotId) {
+    // 2. Element added (in after, not in before)
+    if (!targetSlotId) {
+      const beforeMap = new Map(before.map(e => [e.id, e]))
+      for (const e of after) {
+        if (!beforeIds.has(e.id)) { targetSlotId = e.pageSlotId; break }
+      }
+    }
+    // 3. Any property change on an existing element
+    if (!targetSlotId) {
+      const beforeMap = new Map(before.map(e => [e.id, e]))
       for (const e of after) {
         const be = beforeMap.get(e.id)
-        if (be && (e.x !== be.x || e.y !== be.y || (e as any).width !== (be as any).width)) {
-          slotId = e.pageSlotId; break
+        if (be && JSON.stringify(e) !== JSON.stringify(be)) {
+          targetSlotId = e.pageSlotId; break
         }
       }
     }
-    if (!slotId) { onApply(); return }
-    const idx = slots.findIndex(s => s.id === slotId)
-    if (idx < 0) { onApply(); return }
 
-    const alreadyThere = idx === slotIdxRef.current
-    if (alreadyThere) {
-      // Same page — apply immediately, no navigation delay needed
+    if (!targetSlotId) { onApply(); return }
+    const targetIdx = allSlots.findIndex(s => s.id === targetSlotId)
+    if (targetIdx < 0) { onApply(); return }
+
+    const currentIdx = slotIdxRef.current
+
+    if (targetIdx === currentIdx) {
+      // Already on the right page — apply immediately
       onApply()
       return
     }
 
-    // Different page — navigate first, wait for scroll animation (~350ms), then apply
-    setSlotIdx(idx)
-    const pageEl = pageRefsMap.current[slots[idx].id]
+    // Navigate to the affected page first, then apply after scroll settles
+    slotIdxRef.current = targetIdx  // update synchronously to prevent double-navigation
+    setSlotIdx(targetIdx)
+    const pageEl = pageRefsMap.current[allSlots[targetIdx].id]
     if (pageEl) pageEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    // Also sync sidebar
     requestAnimationFrame(() => {
       const list = sidebarListRef.current
       if (!list) return
-      const item = list.querySelector(`[data-slot-idx="${idx}"]`) as HTMLElement | null
+      const item = list.querySelector(`[data-slot-idx="${targetIdx}"]`) as HTMLElement | null
       if (item) item.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     })
-    // Apply the element change after scroll has had time to settle
-    setTimeout(onApply, 380)
+    // Apply element change once scroll animation has had time to complete
+    setTimeout(onApply, 480)
   }, [])
 
   const undo = useCallback(() => {
@@ -401,9 +415,8 @@ export default function PDFEditor() {
     const after  = historyRef.current[histIdxRef.current]
     setCanUndo(histIdxRef.current > 0)
     setCanRedo(true)
-    // Navigate to affected page first, then apply the element removal/change
-    navigateToAffectedPage(before, after, () => setElements([...after]))
-  }, [navigateToAffectedPage])
+    applyWithNavigation(before, after, () => setElements([...after]))
+  }, [applyWithNavigation])
 
   const redo = useCallback(() => {
     if (histIdxRef.current >= historyRef.current.length - 1) return
@@ -412,9 +425,8 @@ export default function PDFEditor() {
     const after  = historyRef.current[histIdxRef.current]
     setCanUndo(true)
     setCanRedo(histIdxRef.current < historyRef.current.length - 1)
-    // Navigate to affected page first, then apply the element change
-    navigateToAffectedPage(before, after, () => setElements([...after]))
-  }, [navigateToAffectedPage])
+    applyWithNavigation(before, after, () => setElements([...after]))
+  }, [applyWithNavigation])
 
   // Draw tool
   const [drawColor, setDrawColor]           = useState('#1e293b')
@@ -868,6 +880,27 @@ export default function PDFEditor() {
     s.thumbUrl = await makeThumb(s, sources)
     setSlots(prev => { const n = [...prev]; n.splice(idx + 1, 0, s); return n })
     setSlotIdx(idx + 1)
+  }
+
+  const addPageAtStart = async () => {
+    const s: PageSlot = { id: uuidv4(), type: 'blank', baseWidth: 595, baseHeight: 842, thumbUrl: '' }
+    s.thumbUrl = await makeThumb(s, sources)
+    setSlots(prev => [s, ...prev])
+    setSlotIdx(0)
+  }
+
+  const addPageBefore = async (idx: number) => {
+    if (idx === 0) { addPageAtStart(); return }
+    const s: PageSlot = { id: uuidv4(), type: 'blank', baseWidth: 595, baseHeight: 842, thumbUrl: '' }
+    s.thumbUrl = await makeThumb(s, sources)
+    setSlots(prev => { const n = [...prev]; n.splice(idx, 0, s); return n })
+    setSlotIdx(idx)
+  }
+
+  const addPageAtEnd = async () => {
+    const s: PageSlot = { id: uuidv4(), type: 'blank', baseWidth: 595, baseHeight: 842, thumbUrl: '' }
+    s.thumbUrl = await makeThumb(s, sources)
+    setSlots(prev => { const n = [...prev, s]; setSlotIdx(n.length - 1); return n })
   }
 
   const handleReorder = (newSlots: PageSlot[], newIdx: number) => {
@@ -1585,6 +1618,8 @@ export default function PDFEditor() {
               onOrganise={() => setShowOrganise(true)}
               onGoToFirst={() => { setSlotIdx(0); scrollToPage(0) }}
               onGoToLast={() => { const last = slots.length - 1; setSlotIdx(last); scrollToPage(last) }}
+              onAddAtStart={addPageAtStart}
+              onAddAtEnd={addPageAtEnd}
             />
           </div>
         )}
@@ -2030,7 +2065,7 @@ export default function PDFEditor() {
               ref={scrollRef}
               style={{
                 flex: 1, overflow: 'auto', padding: isMobile ? '12px 8px' : '24px',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
                 cursor: toolMode === 'pan' ? (panStart.current ? 'grabbing' : 'grab') : undefined,
               }}
               onScroll={handleMainScroll}
@@ -2054,6 +2089,9 @@ export default function PDFEditor() {
                 </div>
               )}
 
+              {/* Insert zone before first page */}
+              <CanvasInsertZone onInsert={addPageAtStart} isMobile={isMobile} />
+
               {slots.map((slot, idx) => {
                 const slotElems = elements.filter(e => e.pageSlotId === slot.id)
                 const isActive = idx === slotIdx
@@ -2062,7 +2100,8 @@ export default function PDFEditor() {
                 const hasCrop = !!slot.crop && !isCropping
                 const drawCursor = toolMode === 'eraser' ? 'cell' : ['text','highlight','mark','annotation','shape','crop','draw'].includes(toolMode) ? 'crosshair' : toolMode === 'pan' ? 'inherit' : 'default'
                 return (
-                  <div key={slot.id}
+                  <React.Fragment key={slot.id}>
+                  <div
                     ref={el => { pageRefsMap.current[slot.id] = el }}
                     data-slot-id={slot.id}
                     style={{
@@ -2353,6 +2392,13 @@ export default function PDFEditor() {
                       </div>
                     )}
                   </div>
+                  {/* Insert zone after each page */}
+                  <CanvasInsertZone
+                    onInsert={() => idx === slots.length - 1 ? addPageAtEnd() : addPageAfter(idx)}
+                    isMobile={isMobile}
+                    last={idx === slots.length - 1}
+                  />
+                  </React.Fragment>
                 )
               })}
             </div>
@@ -2847,6 +2893,54 @@ export default function PDFEditor() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 90 }}
           onClick={() => { setShowSidebar(false); setShowPanel(false) }}
         />
+      )}
+    </div>
+  )
+}
+
+// ── Canvas insert zone (between pages in main scroll area) ────────────────────
+function CanvasInsertZone({ onInsert, isMobile, last }: { onInsert: () => void; isMobile: boolean; last?: boolean }) {
+  const [hov, setHov] = React.useState(false)
+  return (
+    <div
+      style={{
+        width: '100%', alignSelf: 'stretch',
+        height: hov ? (isMobile ? 44 : 52) : (isMobile ? 14 : 20),
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'height 0.15s',
+        flexShrink: 0,
+        position: 'relative',
+      }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+    >
+      {hov ? (
+        <button
+          onClick={e => { e.stopPropagation(); onInsert() }}
+          style={{
+            padding: isMobile ? '6px 18px' : '7px 24px',
+            borderRadius: 999,
+            border: '2px dashed #4f6ef7',
+            background: 'rgba(79,110,247,0.08)',
+            color: '#4f6ef7',
+            fontSize: isMobile ? 11 : 12,
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 6,
+            backdropFilter: 'blur(4px)',
+            boxShadow: '0 2px 12px rgba(79,110,247,0.15)',
+            transition: 'background 0.12s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,110,247,0.16)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(79,110,247,0.08)')}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          {last ? 'Add page at end' : 'Insert page here'}
+        </button>
+      ) : (
+        <div style={{ width: '60%', maxWidth: 320, height: 1.5, background: '#dde3f0', borderRadius: 1 }} />
       )}
     </div>
   )

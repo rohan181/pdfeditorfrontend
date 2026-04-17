@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import type React from 'react'
 import type { PageSlot } from '@/types'
 
@@ -21,6 +21,8 @@ interface Props {
   sidebarListRef?: React.RefObject<HTMLDivElement>
   onGoToFirst: () => void
   onGoToLast: () => void
+  onAddAtStart: () => void
+  onAddAtEnd: () => void
 }
 
 export default function PageSidebar({
@@ -29,6 +31,7 @@ export default function PageSidebar({
   onRotate, onRotateLeft, onAddBelow,
   onAddBlank, onAddImagePage, onMergePDF, onOrganise,
   sidebarListRef, onGoToFirst, onGoToLast,
+  onAddAtStart, onAddAtEnd,
 }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [dragIdx, setDragIdx] = useState<number | null>(null)
@@ -167,8 +170,11 @@ export default function PageSidebar({
       <div
         ref={sidebarListRef}
         className="thin-scroll"
-        style={{ flex: 1, overflowY: 'auto', padding: '10px 8px 6px', display: 'flex', flexDirection: 'column', gap: 2 }}
+        style={{ flex: 1, overflowY: 'auto', padding: '6px 8px 6px', display: 'flex', flexDirection: 'column', gap: 0 }}
       >
+        {/* Insert zone before first page */}
+        <SidebarInsertZone onInsert={onAddAtStart} />
+
         {pageSlots.map((slot, idx) => {
           const active = idx === currentSlotIdx
           const hovered = hoveredIdx === idx
@@ -311,32 +317,13 @@ export default function PageSidebar({
                 <div style={{ height: 3, borderRadius: 2, background: '#4f6ef7', margin: '2px 4px' }} />
               )}
 
-              {/* Add page below button (shown on hover) */}
-              {hovered && (
-                <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 3 }}>
-                  <button
-                    onClick={e => { e.stopPropagation(); onAddBelow(idx) }}
-                    title="Add blank page below"
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 4,
-                      padding: '3px 10px', borderRadius: 20,
-                      border: '1px dashed #93c5fd',
-                      background: 'rgba(79,110,247,0.06)',
-                      color: '#4f6ef7', fontSize: 9.5, fontWeight: 700,
-                      cursor: 'pointer', transition: 'background 0.1s',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,110,247,0.14)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'rgba(79,110,247,0.06)')}
-                  >
-                    <span style={{ fontSize: 12, lineHeight: 1 }}>+</span> Add below
-                  </button>
-                </div>
-              )}
+              {/* Insert zone after this page */}
+              <SidebarInsertZone onInsert={() => onAddBelow(idx)} />
             </div>
           )
         })}
-        {/* Bottom padding so last item isn't flush */}
-        <div style={{ height: 8 }} />
+
+        <div style={{ height: 4 }} />
       </div>
 
       {/* Add Page footer */}
@@ -364,6 +351,46 @@ export default function PageSidebar({
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
+
+function SidebarInsertZone({ onInsert, last }: { onInsert: () => void; last?: boolean }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <div
+      style={{
+        height: hov ? 30 : 10,
+        transition: 'height 0.14s',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative', flexShrink: 0,
+      }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+    >
+      {hov ? (
+        <button
+          onClick={e => { e.stopPropagation(); onInsert() }}
+          style={{
+            width: '92%', padding: '4px 6px', borderRadius: 6,
+            border: '1.5px dashed #4f6ef7',
+            background: 'rgba(79,110,247,0.09)',
+            color: '#4f6ef7', fontSize: 9.5, fontWeight: 700,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+            transition: 'background 0.1s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,110,247,0.18)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(79,110,247,0.09)')}
+        >
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          {last ? 'Add at end' : 'Insert page'}
+        </button>
+      ) : (
+        <div style={{ width: '78%', height: 1.5, background: '#dde3f0', borderRadius: 1 }} />
+      )}
+    </div>
+  )
+}
+
 function ActionBtn({ title, onClick, children, danger }: {
   title: string
   onClick: (e: React.MouseEvent) => void
