@@ -2926,7 +2926,7 @@ export default function PDFEditor() {
 
 // ── Canvas insert zone (between pages in main scroll area) ────────────────────
 function CanvasInsertZone({
-  onInsertBlank, onInsertImage, onInsertPDF, isMobile, last,
+  onInsertBlank, onInsertImage, onInsertPDF, isMobile,
 }: {
   onInsertBlank: () => void
   onInsertImage: () => void
@@ -2934,53 +2934,71 @@ function CanvasInsertZone({
   isMobile: boolean
   last?: boolean
 }) {
-  const [hov, setHov] = React.useState(false)
-  const h = isMobile ? 14 : 20
-  const hH = isMobile ? 48 : 56
+  const [open, setOpen] = React.useState(false)
+  const fs = isMobile ? 10.5 : 11.5
+  const btns = [
+    { label: 'Blank Page', icon: <PageIcon />,    color: '#4f6ef7', bg: 'rgba(79,110,247,0.08)',  bgH: 'rgba(79,110,247,0.17)',  onClick: onInsertBlank },
+    { label: 'Image Page', icon: <ImgPageIcon />, color: '#0e7490', bg: 'rgba(14,116,144,0.08)',  bgH: 'rgba(14,116,144,0.17)',  onClick: onInsertImage },
+    { label: 'Insert PDF', icon: <PDFPageIcon />, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', bgH: 'rgba(124,58,237,0.17)', onClick: onInsertPDF },
+  ]
   return (
-    <div
-      style={{
-        width: '100%', alignSelf: 'stretch',
-        height: hov ? hH : h,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        transition: 'height 0.15s',
-        flexShrink: 0,
-      }}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-    >
-      {hov ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 8 }}>
-          {[
-            { label: 'Blank Page', icon: <PageIcon />, color: '#4f6ef7', bg: 'rgba(79,110,247,0.08)', bgH: 'rgba(79,110,247,0.17)', onClick: onInsertBlank },
-            { label: 'Image Page', icon: <ImgPageIcon />, color: '#0e7490', bg: 'rgba(14,116,144,0.08)', bgH: 'rgba(14,116,144,0.17)', onClick: onInsertImage },
-            { label: 'Insert PDF', icon: <PDFPageIcon />, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', bgH: 'rgba(124,58,237,0.17)', onClick: onInsertPDF },
-          ].map(btn => (
+    <div style={{ width: '100%', alignSelf: 'stretch', flexShrink: 0 }}>
+      {/* Always-visible trigger row */}
+      <div style={{ display: 'flex', alignItems: 'center', padding: isMobile ? '6px 12px' : '8px 24px', gap: 10 }}>
+        <div style={{ flex: 1, height: 1.5, background: '#d1d5e8', borderRadius: 1 }} />
+        <button
+          onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
+          title="Insert page here"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: isMobile ? '4px 10px' : '5px 14px',
+            borderRadius: 999,
+            border: `1.5px ${open ? 'solid' : 'dashed'} #4f6ef7`,
+            background: open ? '#4f6ef7' : 'rgba(79,110,247,0.07)',
+            color: open ? '#fff' : '#4f6ef7',
+            fontSize: fs, fontWeight: 700, cursor: 'pointer',
+            boxShadow: open ? '0 2px 10px rgba(79,110,247,0.30)' : 'none',
+            transition: 'all 0.14s', whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={e => { if (!open) e.currentTarget.style.background = 'rgba(79,110,247,0.14)' }}
+          onMouseLeave={e => { if (!open) e.currentTarget.style.background = 'rgba(79,110,247,0.07)' }}
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+            {open
+              ? <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>
+              : <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>
+            }
+          </svg>
+          {open ? 'Cancel' : 'Insert page'}
+        </button>
+        <div style={{ flex: 1, height: 1.5, background: '#d1d5e8', borderRadius: 1 }} />
+      </div>
+
+      {/* Expanded options */}
+      {open && (
+        <div style={{ display: 'flex', justifyContent: 'center', gap: isMobile ? 6 : 10, padding: isMobile ? '2px 12px 10px' : '2px 24px 12px' }}>
+          {btns.map(btn => (
             <button key={btn.label}
-              onClick={e => { e.stopPropagation(); btn.onClick() }}
+              onClick={e => { e.stopPropagation(); btn.onClick(); setOpen(false) }}
               style={{
-                padding: isMobile ? '6px 10px' : '7px 16px',
+                padding: isMobile ? '6px 10px' : '8px 18px',
                 borderRadius: 999,
-                border: `1.5px dashed ${btn.color}80`,
+                border: `1.5px solid ${btn.color}60`,
                 background: btn.bg,
                 color: btn.color,
-                fontSize: isMobile ? 10.5 : 11.5,
-                fontWeight: 700,
-                cursor: 'pointer',
+                fontSize: fs, fontWeight: 700, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 5,
-                boxShadow: `0 2px 10px ${btn.color}20`,
+                boxShadow: `0 2px 10px ${btn.color}18`,
                 transition: 'background 0.12s, border-color 0.12s',
                 whiteSpace: 'nowrap',
               }}
               onMouseEnter={e => { e.currentTarget.style.background = btn.bgH; e.currentTarget.style.borderColor = btn.color }}
-              onMouseLeave={e => { e.currentTarget.style.background = btn.bg; e.currentTarget.style.borderColor = `${btn.color}80` }}
+              onMouseLeave={e => { e.currentTarget.style.background = btn.bg; e.currentTarget.style.borderColor = `${btn.color}60` }}
             >
               {btn.icon}{btn.label}
             </button>
           ))}
         </div>
-      ) : (
-        <div style={{ width: '50%', maxWidth: 280, height: 1.5, background: '#dde3f0', borderRadius: 1 }} />
       )}
     </div>
   )

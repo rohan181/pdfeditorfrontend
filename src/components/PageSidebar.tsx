@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import type React from 'react'
 import type { PageSlot } from '@/types'
 
@@ -364,52 +364,75 @@ export default function PageSidebar({
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function SidebarInsertZone({
-  onInsertBlank, onInsertImage, onInsertPDF, last,
+  onInsertBlank, onInsertImage, onInsertPDF,
 }: {
   onInsertBlank: () => void
   onInsertImage: () => void
   onInsertPDF: () => void
   last?: boolean
 }) {
-  const [hov, setHov] = useState(false)
+  const [open, setOpen] = useState(false)
   const btns = [
-    { label: '+ Page', color: '#4f6ef7', bg: 'rgba(79,110,247,0.08)', bgH: 'rgba(79,110,247,0.18)', border: '#93c5fd', onClick: onInsertBlank },
-    { label: '+ Img',  color: '#0e7490', bg: 'rgba(14,116,144,0.07)', bgH: 'rgba(14,116,144,0.16)', border: '#67e8f9', onClick: onInsertImage },
-    { label: '+ PDF',  color: '#7c3aed', bg: 'rgba(124,58,237,0.07)', bgH: 'rgba(124,58,237,0.16)', border: '#c4b5fd', onClick: onInsertPDF },
+    { label: 'Page', color: '#4f6ef7', bg: 'rgba(79,110,247,0.09)', bgH: 'rgba(79,110,247,0.20)', border: '#93c5fd', onClick: onInsertBlank },
+    { label: 'Image', color: '#0e7490', bg: 'rgba(14,116,144,0.08)', bgH: 'rgba(14,116,144,0.18)', border: '#67e8f9', onClick: onInsertImage },
+    { label: 'PDF',  color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', bgH: 'rgba(124,58,237,0.18)', border: '#c4b5fd', onClick: onInsertPDF },
   ]
+
   return (
-    <div
-      style={{
-        height: hov ? 34 : 10,
-        transition: 'height 0.14s',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        gap: 3, flexShrink: 0, overflow: 'hidden',
-      }}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-    >
-      {hov ? (
-        btns.map(btn => (
-          <button
-            key={btn.label}
-            onClick={e => { e.stopPropagation(); btn.onClick() }}
-            style={{
-              flex: 1, padding: '4px 0', borderRadius: 6,
-              border: `1.5px dashed ${btn.border}`,
-              background: btn.bg,
-              color: btn.color, fontSize: 9, fontWeight: 700,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'background 0.1s',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = btn.bgH)}
-            onMouseLeave={e => (e.currentTarget.style.background = btn.bg)}
-          >
-            {btn.label}
-          </button>
-        ))
-      ) : (
-        <div style={{ width: '78%', height: 1.5, background: '#dde3f0', borderRadius: 1 }} />
+    <div style={{ flexShrink: 0 }}>
+      {/* Always-visible trigger row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 2px' }}>
+        <div style={{ flex: 1, height: 1, background: '#e2e8f0', borderRadius: 1 }} />
+        <button
+          onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
+          title="Insert page here"
+          style={{
+            width: 20, height: 20, borderRadius: '50%',
+            border: `1.5px ${open ? 'solid' : 'dashed'} #4f6ef7`,
+            background: open ? '#4f6ef7' : 'rgba(79,110,247,0.07)',
+            color: open ? '#fff' : '#4f6ef7',
+            fontSize: 14, fontWeight: 700, lineHeight: 1,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, transition: 'background 0.14s, color 0.14s, border 0.14s',
+          }}
+          onMouseEnter={e => {
+            if (!open) e.currentTarget.style.background = 'rgba(79,110,247,0.18)'
+          }}
+          onMouseLeave={e => {
+            if (!open) e.currentTarget.style.background = 'rgba(79,110,247,0.07)'
+          }}
+        >
+          {open ? '×' : '+'}
+        </button>
+        <div style={{ flex: 1, height: 1, background: '#e2e8f0', borderRadius: 1 }} />
+      </div>
+
+      {/* Expanded options */}
+      {open && (
+        <div style={{ display: 'flex', gap: 3, padding: '2px 2px 4px' }}>
+          {btns.map(btn => (
+            <button
+              key={btn.label}
+              onClick={e => { e.stopPropagation(); btn.onClick(); setOpen(false) }}
+              style={{
+                flex: 1, padding: '5px 2px', borderRadius: 7,
+                border: `1.5px solid ${btn.border}`,
+                background: btn.bg,
+                color: btn.color, fontSize: 9, fontWeight: 700,
+                cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', gap: 2,
+                transition: 'background 0.1s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = btn.bgH)}
+              onMouseLeave={e => (e.currentTarget.style.background = btn.bg)}
+            >
+              {btn.label === 'Page'  && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>}
+              {btn.label === 'Image' && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>}
+              {btn.label === 'PDF'   && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}
+              {btn.label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )
