@@ -1629,9 +1629,6 @@ export default function PDFEditor() {
               onRotate={rotatePage}
               onRotateLeft={rotatePageLeft}
               onAddBelow={addPageAfter}
-              onAddBlank={addBlankPage}
-              onAddImagePage={() => imgPageInput.current?.click()}
-              onMergePDF={() => mergeInput.current?.click()}
               onOrganise={() => setShowOrganise(true)}
               onGoToFirst={() => { setSlotIdx(0); scrollToPage(0) }}
               onGoToLast={() => { const last = slots.length - 1; setSlotIdx(last); scrollToPage(last) }}
