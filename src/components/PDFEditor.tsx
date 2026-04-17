@@ -472,6 +472,8 @@ export default function PDFEditor() {
   const imgInput     = useRef<HTMLInputElement>(null)
   const mergeInput   = useRef<HTMLInputElement>(null)
   const imgPageInput = useRef<HTMLInputElement>(null)
+  // Tracks where to insert when file picker opens from an insert zone (-1 = after current page)
+  const insertAtRef  = useRef<number>(-1)
 
   // Pan tool
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -662,6 +664,8 @@ export default function PDFEditor() {
   }
 
   const mergePDF = async (file: File) => {
+    const insertBefore = insertAtRef.current >= 0 ? insertAtRef.current : -1
+    insertAtRef.current = -1
     const lib = await getPdfjs()
     const ab = await file.arrayBuffer()
     const bytes = ab.slice(0)
@@ -682,7 +686,12 @@ export default function PDFEditor() {
       s.thumbUrl = await makeThumb(s, allSrcs)
       newSlots.push(s)
     }
-    setSlots(prev => [...prev, ...newSlots])
+    if (insertBefore >= 0) {
+      setSlots(prev => { const n = [...prev]; n.splice(insertBefore, 0, ...newSlots); return n })
+      setSlotIdx(insertBefore)
+    } else {
+      setSlots(prev => [...prev, ...newSlots])
+    }
   }
 
   // ── File handlers ────────────────────────────────────────────────────────
@@ -789,6 +798,8 @@ export default function PDFEditor() {
   // ── Add image as new page ────────────────────────────────────────────────
   const handleImagePage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f) return
+    const insertBefore = insertAtRef.current >= 0 ? insertAtRef.current : slotIdx + 1
+    insertAtRef.current = -1
     const reader = new FileReader()
     reader.onload = async () => {
       const src = reader.result as string
@@ -799,13 +810,19 @@ export default function PDFEditor() {
         baseWidth: img.naturalWidth, baseHeight: img.naturalHeight, thumbUrl: '',
       }
       s.thumbUrl = await makeThumb(s, sources)
-      setSlots(prev => {
-        const next = [...prev]; next.splice(slotIdx + 1, 0, s); return next
-      })
-      setSlotIdx(slotIdx + 1)
+      setSlots(prev => { const next = [...prev]; next.splice(insertBefore, 0, s); return next })
+      setSlotIdx(insertBefore)
     }
     reader.readAsDataURL(f); e.target.value = ''
   }
+
+  // Opener helpers used by insert zones
+  const openImagePageAt = useCallback((insertBefore: number) => {
+    insertAtRef.current = insertBefore; imgPageInput.current?.click()
+  }, [])
+  const openMergePDFAt = useCallback((insertBefore: number) => {
+    insertAtRef.current = insertBefore; mergeInput.current?.click()
+  }, [])
 
   // ── Signature ────────────────────────────────────────────────────────────
   const handleSignatureApply = (dataUrl: string) => {
@@ -1620,6 +1637,8 @@ export default function PDFEditor() {
               onGoToLast={() => { const last = slots.length - 1; setSlotIdx(last); scrollToPage(last) }}
               onAddAtStart={addPageAtStart}
               onAddAtEnd={addPageAtEnd}
+              onAddImageAt={openImagePageAt}
+              onAddPDFAt={openMergePDFAt}
             />
           </div>
         )}
@@ -2090,7 +2109,12 @@ export default function PDFEditor() {
               )}
 
               {/* Insert zone before first page */}
-              <CanvasInsertZone onInsert={addPageAtStart} isMobile={isMobile} />
+              <CanvasInsertZone
+                onInsertBlank={addPageAtStart}
+                onInsertImage={() => openImagePageAt(0)}
+                onInsertPDF={() => openMergePDFAt(0)}
+                isMobile={isMobile}
+              />
 
               {slots.map((slot, idx) => {
                 const slotElems = elements.filter(e => e.pageSlotId === slot.id)
@@ -2394,7 +2418,9 @@ export default function PDFEditor() {
                   </div>
                   {/* Insert zone after each page */}
                   <CanvasInsertZone
-                    onInsert={() => idx === slots.length - 1 ? addPageAtEnd() : addPageAfter(idx)}
+                    onInsertBlank={() => idx === slots.length - 1 ? addPageAtEnd() : addPageAfter(idx)}
+                    onInsertImage={() => openImagePageAt(idx + 1)}
+                    onInsertPDF={() => openMergePDFAt(idx + 1)}
                     isMobile={isMobile}
                     last={idx === slots.length - 1}
                   />
@@ -2899,52 +2925,69 @@ export default function PDFEditor() {
 }
 
 // ── Canvas insert zone (between pages in main scroll area) ────────────────────
-function CanvasInsertZone({ onInsert, isMobile, last }: { onInsert: () => void; isMobile: boolean; last?: boolean }) {
+function CanvasInsertZone({
+  onInsertBlank, onInsertImage, onInsertPDF, isMobile, last,
+}: {
+  onInsertBlank: () => void
+  onInsertImage: () => void
+  onInsertPDF: () => void
+  isMobile: boolean
+  last?: boolean
+}) {
   const [hov, setHov] = React.useState(false)
+  const h = isMobile ? 14 : 20
+  const hH = isMobile ? 48 : 56
   return (
     <div
       style={{
         width: '100%', alignSelf: 'stretch',
-        height: hov ? (isMobile ? 44 : 52) : (isMobile ? 14 : 20),
+        height: hov ? hH : h,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         transition: 'height 0.15s',
         flexShrink: 0,
-        position: 'relative',
       }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
       {hov ? (
-        <button
-          onClick={e => { e.stopPropagation(); onInsert() }}
-          style={{
-            padding: isMobile ? '6px 18px' : '7px 24px',
-            borderRadius: 999,
-            border: '2px dashed #4f6ef7',
-            background: 'rgba(79,110,247,0.08)',
-            color: '#4f6ef7',
-            fontSize: isMobile ? 11 : 12,
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 6,
-            backdropFilter: 'blur(4px)',
-            boxShadow: '0 2px 12px rgba(79,110,247,0.15)',
-            transition: 'background 0.12s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,110,247,0.16)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(79,110,247,0.08)')}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          {last ? 'Add page at end' : 'Insert page here'}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 8 }}>
+          {[
+            { label: 'Blank Page', icon: <PageIcon />, color: '#4f6ef7', bg: 'rgba(79,110,247,0.08)', bgH: 'rgba(79,110,247,0.17)', onClick: onInsertBlank },
+            { label: 'Image Page', icon: <ImgPageIcon />, color: '#0e7490', bg: 'rgba(14,116,144,0.08)', bgH: 'rgba(14,116,144,0.17)', onClick: onInsertImage },
+            { label: 'Insert PDF', icon: <PDFPageIcon />, color: '#7c3aed', bg: 'rgba(124,58,237,0.08)', bgH: 'rgba(124,58,237,0.17)', onClick: onInsertPDF },
+          ].map(btn => (
+            <button key={btn.label}
+              onClick={e => { e.stopPropagation(); btn.onClick() }}
+              style={{
+                padding: isMobile ? '6px 10px' : '7px 16px',
+                borderRadius: 999,
+                border: `1.5px dashed ${btn.color}80`,
+                background: btn.bg,
+                color: btn.color,
+                fontSize: isMobile ? 10.5 : 11.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 5,
+                boxShadow: `0 2px 10px ${btn.color}20`,
+                transition: 'background 0.12s, border-color 0.12s',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = btn.bgH; e.currentTarget.style.borderColor = btn.color }}
+              onMouseLeave={e => { e.currentTarget.style.background = btn.bg; e.currentTarget.style.borderColor = `${btn.color}80` }}
+            >
+              {btn.icon}{btn.label}
+            </button>
+          ))}
+        </div>
       ) : (
-        <div style={{ width: '60%', maxWidth: 320, height: 1.5, background: '#dde3f0', borderRadius: 1 }} />
+        <div style={{ width: '50%', maxWidth: 280, height: 1.5, background: '#dde3f0', borderRadius: 1 }} />
       )}
     </div>
   )
 }
+const PageIcon    = () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+const ImgPageIcon = () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+const PDFPageIcon = () => <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function FBtn({ onClick, children, title }: { onClick: () => void; children: React.ReactNode; title?: string }) {

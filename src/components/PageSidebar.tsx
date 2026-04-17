@@ -23,6 +23,8 @@ interface Props {
   onGoToLast: () => void
   onAddAtStart: () => void
   onAddAtEnd: () => void
+  onAddImageAt: (insertBefore: number) => void
+  onAddPDFAt: (insertBefore: number) => void
 }
 
 export default function PageSidebar({
@@ -31,7 +33,7 @@ export default function PageSidebar({
   onRotate, onRotateLeft, onAddBelow,
   onAddBlank, onAddImagePage, onMergePDF, onOrganise,
   sidebarListRef, onGoToFirst, onGoToLast,
-  onAddAtStart, onAddAtEnd,
+  onAddAtStart, onAddAtEnd, onAddImageAt, onAddPDFAt,
 }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
   const [dragIdx, setDragIdx] = useState<number | null>(null)
@@ -173,7 +175,11 @@ export default function PageSidebar({
         style={{ flex: 1, overflowY: 'auto', padding: '6px 8px 6px', display: 'flex', flexDirection: 'column', gap: 0 }}
       >
         {/* Insert zone before first page */}
-        <SidebarInsertZone onInsert={onAddAtStart} />
+        <SidebarInsertZone
+          onInsertBlank={onAddAtStart}
+          onInsertImage={() => onAddImageAt(0)}
+          onInsertPDF={() => onAddPDFAt(0)}
+        />
 
         {pageSlots.map((slot, idx) => {
           const active = idx === currentSlotIdx
@@ -318,7 +324,12 @@ export default function PageSidebar({
               )}
 
               {/* Insert zone after this page */}
-              <SidebarInsertZone onInsert={() => onAddBelow(idx)} />
+              <SidebarInsertZone
+                onInsertBlank={() => onAddBelow(idx)}
+                onInsertImage={() => onAddImageAt(idx + 1)}
+                onInsertPDF={() => onAddPDFAt(idx + 1)}
+                last={idx === pageSlots.length - 1}
+              />
             </div>
           )
         })}
@@ -352,38 +363,51 @@ export default function PageSidebar({
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function SidebarInsertZone({ onInsert, last }: { onInsert: () => void; last?: boolean }) {
+function SidebarInsertZone({
+  onInsertBlank, onInsertImage, onInsertPDF, last,
+}: {
+  onInsertBlank: () => void
+  onInsertImage: () => void
+  onInsertPDF: () => void
+  last?: boolean
+}) {
   const [hov, setHov] = useState(false)
+  const btns = [
+    { label: '+ Page', color: '#4f6ef7', bg: 'rgba(79,110,247,0.08)', bgH: 'rgba(79,110,247,0.18)', border: '#93c5fd', onClick: onInsertBlank },
+    { label: '+ Img',  color: '#0e7490', bg: 'rgba(14,116,144,0.07)', bgH: 'rgba(14,116,144,0.16)', border: '#67e8f9', onClick: onInsertImage },
+    { label: '+ PDF',  color: '#7c3aed', bg: 'rgba(124,58,237,0.07)', bgH: 'rgba(124,58,237,0.16)', border: '#c4b5fd', onClick: onInsertPDF },
+  ]
   return (
     <div
       style={{
-        height: hov ? 30 : 10,
+        height: hov ? 34 : 10,
         transition: 'height 0.14s',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        position: 'relative', flexShrink: 0,
+        gap: 3, flexShrink: 0, overflow: 'hidden',
       }}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
       {hov ? (
-        <button
-          onClick={e => { e.stopPropagation(); onInsert() }}
-          style={{
-            width: '92%', padding: '4px 6px', borderRadius: 6,
-            border: '1.5px dashed #4f6ef7',
-            background: 'rgba(79,110,247,0.09)',
-            color: '#4f6ef7', fontSize: 9.5, fontWeight: 700,
-            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-            transition: 'background 0.1s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(79,110,247,0.18)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(79,110,247,0.09)')}
-        >
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-          {last ? 'Add at end' : 'Insert page'}
-        </button>
+        btns.map(btn => (
+          <button
+            key={btn.label}
+            onClick={e => { e.stopPropagation(); btn.onClick() }}
+            style={{
+              flex: 1, padding: '4px 0', borderRadius: 6,
+              border: `1.5px dashed ${btn.border}`,
+              background: btn.bg,
+              color: btn.color, fontSize: 9, fontWeight: 700,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background 0.1s',
+              whiteSpace: 'nowrap',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = btn.bgH)}
+            onMouseLeave={e => (e.currentTarget.style.background = btn.bg)}
+          >
+            {btn.label}
+          </button>
+        ))
       ) : (
         <div style={{ width: '78%', height: 1.5, background: '#dde3f0', borderRadius: 1 }} />
       )}
