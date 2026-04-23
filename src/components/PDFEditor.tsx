@@ -257,25 +257,31 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
   onChange: (t: string) => void; onDblClick: () => void
 }) {
   const fs = el.fontSize * scale
-  const shared: React.CSSProperties = {
+  const base: React.CSSProperties = {
     width: '100%', height: '100%', fontSize: fs, fontFamily: el.fontFamily,
     color: el.color, fontWeight: el.bold ? 700 : 400,
     fontStyle: el.italic ? 'italic' : 'normal',
     textDecoration: el.underline ? 'underline' : 'none',
-    textAlign: el.align, background: el.bgColor || 'transparent',
-    padding: el.align === 'center' ? '2px 0' : '2px 4px',
-    boxSizing: 'border-box', lineHeight: 1.35,
-    overflow: 'visible', wordBreak: 'break-word',
+    background: el.bgColor || 'transparent', boxSizing: 'border-box',
   }
   if (isEditing)
     return (
       <textarea autoFocus value={el.text} onChange={e => onChange(e.target.value)}
         onClick={e => e.stopPropagation()}
-        style={{ ...shared, border: 'none', outline: 'none', resize: 'none', cursor: 'text' }} />
+        style={{ ...base, textAlign: el.align, padding: '2px 4px', lineHeight: 1.35,
+          overflow: 'visible', wordBreak: 'break-word', border: 'none', outline: 'none', resize: 'none', cursor: 'text' }} />
+    )
+  if (el.align === 'center')
+    return (
+      <div onDoubleClick={onDblClick}
+        style={{ ...base, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'move' }}>
+        {el.text || <span style={{ opacity: 0.3, fontStyle: 'italic', fontSize: fs * 0.75 }}>Aa</span>}
+      </div>
     )
   return (
     <div onDoubleClick={onDblClick}
-      style={{ ...shared, cursor: 'move', whiteSpace: 'pre-wrap', minHeight: '1em' }}>
+      style={{ ...base, textAlign: el.align, padding: '2px 4px', lineHeight: 1.35,
+        overflow: 'visible', wordBreak: 'break-word', cursor: 'move', whiteSpace: 'pre-wrap', minHeight: '1em' }}>
       {el.text || <span style={{ opacity: 0.3, fontStyle: 'italic' }}>Double-click to type…</span>}
     </div>
   )
@@ -316,6 +322,7 @@ export default function PDFEditor() {
   const [showOrganise, setShowOrganise] = useState(false)
   const [showAutoFill, setShowAutoFill] = useState(false)
   const [autoFillFields, setAutoFillFields] = useState<DetectedField[]>([])
+  const [aiExistingFilled, setAiExistingFilled] = useState<Record<string, string>>({})
   const [vw, setVw]                   = useState(1280)
   // New tool options
   const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'|'circle'>('tick')
@@ -969,9 +976,46 @@ export default function PDFEditor() {
       } catch { /* page might not support annotations */ }
     }
 
+    // Scan existing elements to show already-filled values in the modal
+    const existingFilled: Record<string, string> = {}
+    const tol = 4  // tolerance in PDF points for position matching
+    for (const field of detectedFields) {
+      const slot = slots.find(s => s.type === 'pdf' && s.pageNum === field.pageNum)
+      if (!slot) continue
+      const [x1, y1, x2, y2] = field.rect
+      const fieldTop = field.pageHeight - y2
+      const fieldBot = field.pageHeight - y1
+      if (field.type === 'checkbox') {
+        const markEl = elements.find(e =>
+          e.type === 'mark' && e.pageSlotId === slot.id &&
+          e.x >= x1 - tol && e.x <= x2 + tol &&
+          e.y >= fieldTop - tol && e.y <= fieldBot + tol
+        )
+        if (markEl && markEl.type === 'mark') existingFilled[field.name] = markEl.markType
+      } else if (field.isComb && field.maxLen) {
+        const charEls = elements
+          .filter(e =>
+            e.type === 'text' && e.pageSlotId === slot.id &&
+            e.x >= x1 - tol && e.x <= x2 + tol &&
+            e.y >= fieldTop - tol && e.y <= fieldBot + tol
+          )
+          .sort((a, b) => a.x - b.x)
+        if (charEls.length > 0)
+          existingFilled[field.name] = charEls.map(e => e.type === 'text' ? e.text : '').join('')
+      } else {
+        const textEl = elements.find(e =>
+          e.type === 'text' && e.pageSlotId === slot.id &&
+          e.x >= x1 - tol && e.x <= x2 + tol &&
+          e.y >= fieldTop - tol && e.y <= fieldBot + tol
+        )
+        if (textEl && textEl.type === 'text') existingFilled[field.name] = textEl.text
+      }
+    }
+
     setAutoFillFields(detectedFields)
+    setAiExistingFilled(existingFilled)
     setShowAutoFill(true)
-  }, [slots, sources])
+  }, [slots, sources, elements])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
     const newElements: PDFElement[] = []
@@ -1003,9 +1047,11 @@ export default function PDFEditor() {
 
       // PDF rect: [x1, y1, x2, y2] in PDF units, origin bottom-left
       const [x1, y1, x2, y2] = field.rect
-      const pdfY = field.pageHeight - y2  // flip Y axis
       const pdfW = Math.max(16, x2 - x1)
       const pdfH = Math.max(16, y2 - y1)
+      // Nudge element slightly up so text appears at the visual centre of the field
+      const upNudge = Math.max(1, pdfH * 0.1)
+      const pdfY = field.pageHeight - y2 - upNudge
 
       // ── Checkbox → place a tick or cross MarkElement sized to the field ─────
       if (field.type === 'checkbox') {
@@ -1015,7 +1061,7 @@ export default function PDFEditor() {
         const strokeWidth = Math.max(0.5, Math.min(2.5, markSize * 0.06))
         newElements.push({
           id: uuidv4(), type: 'mark',
-          x: x1 + inset, y: pdfY + inset,
+          x: x1 + inset, y: (field.pageHeight - y2) + inset,
           width: pdfW - inset * 2, height: pdfH - inset * 2,
           markType: isChecked ? 'tick' : 'cross',
           color: '#1e293b', strokeWidth,
@@ -1028,7 +1074,7 @@ export default function PDFEditor() {
       if (field.isComb && field.maxLen && field.maxLen > 1) {
         const cellW = (x2 - x1) / field.maxLen
         const fontSize = Math.max(8, Math.min(18, Math.round(pdfH * 0.68)))
-        const elemH = Math.max(pdfH, Math.ceil(fontSize * 1.5))
+        const elemH = pdfH + upNudge
         const chars = value.replace(/\s/g, '').split('').slice(0, field.maxLen)
         chars.forEach((char, i) => {
           newElements.push({
@@ -1049,7 +1095,7 @@ export default function PDFEditor() {
 
       // ── Regular text field ─────────────────────────────────────────────────
       const fontSize = Math.max(8, Math.min(18, Math.round(pdfH * 0.68)))
-      const elemH = Math.max(pdfH, Math.ceil(fontSize * 1.5))
+      const elemH = pdfH + upNudge
       newElements.push({
         id: uuidv4(), type: 'text',
         x: x1, y: pdfY,
@@ -3174,6 +3220,7 @@ export default function PDFEditor() {
       {showAutoFill && (
         <AutoFillModal
           fields={autoFillFields}
+          existingFilled={aiExistingFilled}
           onApply={applyAutoFill}
           onClose={() => setShowAutoFill(false)}
         />
