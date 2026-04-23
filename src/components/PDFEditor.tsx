@@ -264,8 +264,8 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
     textDecoration: el.underline ? 'underline' : 'none',
     textAlign: el.align, background: el.bgColor || 'transparent',
     padding: el.align === 'center' ? '2px 0' : '2px 4px',
-    boxSizing: 'border-box', lineHeight: 1.4,
-    overflow: 'hidden', wordBreak: 'break-word',
+    boxSizing: 'border-box', lineHeight: 1.35,
+    overflow: 'visible', wordBreak: 'break-word',
   }
   if (isEditing)
     return (
@@ -1027,7 +1027,8 @@ export default function PDFEditor() {
       // ── Comb / character-box field → one TextElement per cell ─────────────
       if (field.isComb && field.maxLen && field.maxLen > 1) {
         const cellW = (x2 - x1) / field.maxLen
-        const fontSize = Math.max(7, Math.min(14, Math.round(pdfH * 0.55)))
+        const fontSize = Math.max(8, Math.min(18, Math.round(pdfH * 0.68)))
+        const elemH = Math.max(pdfH, Math.ceil(fontSize * 1.5))
         const chars = value.replace(/\s/g, '').split('').slice(0, field.maxLen)
         chars.forEach((char, i) => {
           newElements.push({
@@ -1035,7 +1036,7 @@ export default function PDFEditor() {
             x: x1 + i * cellW,
             y: pdfY,
             width: cellW,
-            height: pdfH,
+            height: elemH,
             text: char, fontSize,
             fontFamily: 'Inter', color: '#000',
             bold: false, italic: false, underline: false,
@@ -1047,11 +1048,12 @@ export default function PDFEditor() {
       }
 
       // ── Regular text field ─────────────────────────────────────────────────
-      const fontSize = Math.max(8, Math.min(16, Math.round(pdfH * 0.55)))
+      const fontSize = Math.max(8, Math.min(18, Math.round(pdfH * 0.68)))
+      const elemH = Math.max(pdfH, Math.ceil(fontSize * 1.5))
       newElements.push({
         id: uuidv4(), type: 'text',
         x: x1, y: pdfY,
-        width: Math.max(40, pdfW), height: pdfH,
+        width: Math.max(40, pdfW), height: elemH,
         text: value, fontSize,
         fontFamily: 'Inter', color: '#000',
         bold: false, italic: false, underline: false,
@@ -1061,16 +1063,11 @@ export default function PDFEditor() {
     })
 
     if (newElements.length > 0) {
-      const newIds = new Set(newElements.map(e => e.id))
       setElements(prev => {
-        // Remove previously AI-generated elements so re-running replaces them
-        const withoutOld = prev.filter(e => !aiFilledIdsRef.current.has(e.id))
-        const next = [...withoutOld, ...newElements]
+        const next = [...prev, ...newElements]
         pushHistory(next)
         return next
       })
-      // Track new IDs so the next run can replace them
-      aiFilledIdsRef.current = newIds
       setToolMode('select')
     }
   }, [autoFillFields, slots, slotIdx, pushHistory])
