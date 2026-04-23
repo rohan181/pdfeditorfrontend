@@ -71,7 +71,7 @@ export interface HighlightElement extends BaseElement {
 
 export interface MarkElement extends BaseElement {
   type: 'mark'
-  markType: 'tick' | 'cross'
+  markType: 'tick' | 'cross' | 'circle'
   color: string
   strokeWidth: number
 }

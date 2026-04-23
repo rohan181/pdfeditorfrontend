@@ -77,19 +77,21 @@ function HighlightDisplay({ el }: { el: HighlightElement }) {
 }
 
 function MarkDisplay({ el }: { el: MarkElement }) {
+  const sw = el.strokeWidth * 4
   return (
     <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-      {el.markType === 'tick' ? (
+      {el.markType === 'tick' && (
         <polyline points="10,55 38,82 90,18" fill="none" stroke={el.color}
-          strokeWidth={el.strokeWidth * 4} strokeLinecap="round" strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke" />
-      ) : (
+          strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      )}
+      {el.markType === 'cross' && (
         <>
-          <line x1="12" y1="12" x2="88" y2="88" stroke={el.color}
-            strokeWidth={el.strokeWidth * 4} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          <line x1="88" y1="12" x2="12" y2="88" stroke={el.color}
-            strokeWidth={el.strokeWidth * 4} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <line x1="12" y1="12" x2="88" y2="88" stroke={el.color} strokeWidth={sw} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <line x1="88" y1="12" x2="12" y2="88" stroke={el.color} strokeWidth={sw} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
         </>
+      )}
+      {el.markType === 'circle' && (
+        <ellipse cx="50" cy="50" rx="42" ry="42" fill="none" stroke={el.color} strokeWidth={sw} vectorEffect="non-scaling-stroke" />
       )}
     </svg>
   )
@@ -201,7 +203,7 @@ function WatermarkDisplay({ el, scale }: { el: WatermarkElement; scale: number }
 // ── Ghost position marker ──────────────────────────────────────────────────
 function GhostMarker({ toolMode, x, y, activeMarkType, activeShapeType, shapeStroke }: {
   toolMode: ToolMode; x: number; y: number
-  activeMarkType: 'tick' | 'cross'; activeShapeType: string; shapeStroke: string
+  activeMarkType: 'tick' | 'cross' | 'circle'; activeShapeType: string; shapeStroke: string
 }) {
   const base: React.CSSProperties = { position: 'absolute', left: x, top: y, pointerEvents: 'none', zIndex: 6, opacity: 0.55 }
   if (toolMode === 'text') return (
@@ -213,9 +215,9 @@ function GhostMarker({ toolMode, x, y, activeMarkType, activeShapeType, shapeStr
   if (toolMode === 'mark') return (
     <div style={{ ...base, width: 36, height: 36 }}>
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        {activeMarkType === 'tick'
-          ? <polyline points="20 6 9 17 4 12"/>
-          : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}
+        {activeMarkType === 'tick'   && <polyline points="20 6 9 17 4 12"/>}
+        {activeMarkType === 'cross'  && <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}
+        {activeMarkType === 'circle' && <circle cx="12" cy="12" r="9"/>}
       </svg>
     </div>
   )
@@ -261,7 +263,8 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
     fontStyle: el.italic ? 'italic' : 'normal',
     textDecoration: el.underline ? 'underline' : 'none',
     textAlign: el.align, background: el.bgColor || 'transparent',
-    padding: '2px 4px', boxSizing: 'border-box', lineHeight: 1.4,
+    padding: el.align === 'center' ? '2px 0' : '2px 4px',
+    boxSizing: 'border-box', lineHeight: 1.4,
     overflow: 'hidden', wordBreak: 'break-word',
   }
   if (isEditing)
@@ -315,7 +318,8 @@ export default function PDFEditor() {
   const [autoFillFields, setAutoFillFields] = useState<DetectedField[]>([])
   const [vw, setVw]                   = useState(1280)
   // New tool options
-  const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'>('tick')
+  const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'|'circle'>('tick')
+  const aiFilledIdsRef = useRef<Set<string>>(new Set())
   const [markColor, setMarkColor]           = useState('#1e293b')
   const [markStrokeWidth, setMarkStrokeWidth] = useState(0.5)
   const [activeShapeType, setActiveShapeType] = useState<'rectangle'|'ellipse'|'line'|'arrow'|'polygon'>('rectangle')
@@ -1003,15 +1007,18 @@ export default function PDFEditor() {
       const pdfW = Math.max(16, x2 - x1)
       const pdfH = Math.max(16, y2 - y1)
 
-      // ── Checkbox → place a tick or cross MarkElement ──────────────────────
+      // ── Checkbox → place a tick or cross MarkElement sized to the field ─────
       if (field.type === 'checkbox') {
         const isChecked = /^(tick|yes|true|1|check|checked|on)$/i.test(value.trim())
+        const markSize = Math.min(pdfW, pdfH)
+        const inset = Math.max(1, markSize * 0.08)
+        const strokeWidth = Math.max(0.5, Math.min(2.5, markSize * 0.06))
         newElements.push({
           id: uuidv4(), type: 'mark',
-          x: x1, y: pdfY,
-          width: pdfW, height: pdfH,
+          x: x1 + inset, y: pdfY + inset,
+          width: pdfW - inset * 2, height: pdfH - inset * 2,
           markType: isChecked ? 'tick' : 'cross',
-          color: '#1e293b', strokeWidth: 1.5,
+          color: '#1e293b', strokeWidth,
           pageSlotId: slot.id,
         } as MarkElement)
         return
@@ -1025,9 +1032,9 @@ export default function PDFEditor() {
         chars.forEach((char, i) => {
           newElements.push({
             id: uuidv4(), type: 'text',
-            x: x1 + i * cellW + cellW * 0.05,
+            x: x1 + i * cellW,
             y: pdfY,
-            width: cellW * 0.9,
+            width: cellW,
             height: pdfH,
             text: char, fontSize,
             fontFamily: 'Inter', color: '#000',
@@ -1054,11 +1061,16 @@ export default function PDFEditor() {
     })
 
     if (newElements.length > 0) {
+      const newIds = new Set(newElements.map(e => e.id))
       setElements(prev => {
-        const next = [...prev, ...newElements]
+        // Remove previously AI-generated elements so re-running replaces them
+        const withoutOld = prev.filter(e => !aiFilledIdsRef.current.has(e.id))
+        const next = [...withoutOld, ...newElements]
         pushHistory(next)
         return next
       })
+      // Track new IDs so the next run can replace them
+      aiFilledIdsRef.current = newIds
       setToolMode('select')
     }
   }, [autoFillFields, slots, slotIdx, pushHistory])
@@ -1592,9 +1604,11 @@ export default function PDFEditor() {
           if (el.markType === 'tick') {
             libPage.drawLine({ start:{x:mx+mw*0.1,y:my+mhh*0.45}, end:{x:mx+mw*0.38,y:my+mhh*0.2}, thickness:msw, color:rgb(mr,mg,mb) })
             libPage.drawLine({ start:{x:mx+mw*0.38,y:my+mhh*0.2}, end:{x:mx+mw*0.9,y:my+mhh*0.8}, thickness:msw, color:rgb(mr,mg,mb) })
-          } else {
+          } else if (el.markType === 'cross') {
             libPage.drawLine({ start:{x:mx+mw*0.1,y:my+mhh*0.9}, end:{x:mx+mw*0.9,y:my+mhh*0.1}, thickness:msw, color:rgb(mr,mg,mb) })
             libPage.drawLine({ start:{x:mx+mw*0.9,y:my+mhh*0.9}, end:{x:mx+mw*0.1,y:my+mhh*0.1}, thickness:msw, color:rgb(mr,mg,mb) })
+          } else {
+            libPage.drawEllipse({ x:mx+mw*0.5, y:my+mhh*0.5, xScale:mw*0.42, yScale:mhh*0.42, borderColor:rgb(mr,mg,mb), borderWidth:msw })
           }
         } else if (el.type === 'annotation') {
           const af = await out.embedFont(StandardFonts.Helvetica)
@@ -1901,10 +1915,10 @@ export default function PDFEditor() {
                 </button>
                 <div style={tbVDiv}/>
                 {/* Mark */}
-                <button title="Tick / Cross" style={{...tbStyle(toolMode==='mark'),position:'relative'}} onClick={()=>{setToolMode('mark');setShowMarkMenu(v=>!v);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='mark')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='mark')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
-                  {activeMarkType==='tick'
-                    ? <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    : <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                <button title="Tick / Cross / Circle" style={{...tbStyle(toolMode==='mark'),position:'relative'}} onClick={()=>{setToolMode('mark');setShowMarkMenu(v=>!v);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='mark')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='mark')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  {activeMarkType==='tick'   && <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                  {activeMarkType==='cross'  && <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                  {activeMarkType==='circle' && <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="9"/></svg>}
                   <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Mark</span>
                 </button>
                 {/* Shapes */}
@@ -1985,9 +1999,13 @@ export default function PDFEditor() {
                   <div>
                     <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Type</p>
                     <div style={{display:'flex',gap:7}}>
-                      {(['tick','cross'] as const).map(mt=>(
+                      {([
+                        {mt:'tick'   as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>},
+                        {mt:'cross'  as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>},
+                        {mt:'circle' as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="9"/></svg>},
+                      ]).map(({mt,icon})=>(
                         <button key={mt} onClick={()=>setActiveMarkType(mt)} style={{width:44,height:36,borderRadius:9,border:`1.5px solid ${activeMarkType===mt?'#6366f1':'#e2e8f0'}`,background:activeMarkType===mt?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:activeMarkType===mt?'#fff':'#475569',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.15s'}}>
-                          {mt==='tick'?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                          {icon}
                         </button>
                       ))}
                     </div>
@@ -2432,17 +2450,19 @@ export default function PDFEditor() {
                             boxSizing: 'border-box',
                           }}>
                             <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-                              {activeMarkType === 'tick' ? (
+                              {activeMarkType === 'tick' && (
                                 <polyline points="10,55 38,82 90,18" fill="none" stroke={markColor}
                                   strokeWidth={markStrokeWidth * 4} strokeLinecap="round" strokeLinejoin="round"
                                   vectorEffect="non-scaling-stroke" opacity={0.6} />
-                              ) : (
+                              )}
+                              {activeMarkType === 'cross' && (
                                 <>
-                                  <line x1="12" y1="12" x2="88" y2="88" stroke={markColor}
-                                    strokeWidth={markStrokeWidth * 4} strokeLinecap="round" vectorEffect="non-scaling-stroke" opacity={0.6} />
-                                  <line x1="88" y1="12" x2="12" y2="88" stroke={markColor}
-                                    strokeWidth={markStrokeWidth * 4} strokeLinecap="round" vectorEffect="non-scaling-stroke" opacity={0.6} />
+                                  <line x1="12" y1="12" x2="88" y2="88" stroke={markColor} strokeWidth={markStrokeWidth * 4} strokeLinecap="round" vectorEffect="non-scaling-stroke" opacity={0.6} />
+                                  <line x1="88" y1="12" x2="12" y2="88" stroke={markColor} strokeWidth={markStrokeWidth * 4} strokeLinecap="round" vectorEffect="non-scaling-stroke" opacity={0.6} />
                                 </>
+                              )}
+                              {activeMarkType === 'circle' && (
+                                <ellipse cx="50" cy="50" rx="42" ry="42" fill="none" stroke={markColor} strokeWidth={markStrokeWidth * 4} vectorEffect="non-scaling-stroke" opacity={0.6} />
                               )}
                             </svg>
                           </div>
@@ -2993,11 +3013,13 @@ export default function PDFEditor() {
           <div>
             <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Type</p>
             <div style={{display:'flex',gap:7}}>
-              {(['tick','cross'] as const).map(mt=>(
+              {([
+                {mt:'tick'   as const, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>},
+                {mt:'cross'  as const, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>},
+                {mt:'circle' as const, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="9"/></svg>},
+              ]).map(({mt,icon})=>(
                 <button key={mt} onClick={()=>setActiveMarkType(mt)} style={{width:48,height:40,borderRadius:10,border:`1.5px solid ${activeMarkType===mt?'#6366f1':'#e2e8f0'}`,background:activeMarkType===mt?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:activeMarkType===mt?'#fff':'#475569',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}>
-                  {mt==='tick'
-                    ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                  {icon}
                 </button>
               ))}
             </div>
