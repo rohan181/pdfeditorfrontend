@@ -3,10 +3,12 @@ import { useState } from 'react'
 
 export interface DetectedField {
   name: string
-  type: string
+  type: string        // 'text' | 'char_box' | 'checkbox' | 'dropdown'
   rect: [number, number, number, number]  // [x1, y1, x2, y2] in PDF units
   pageNum: number
   pageHeight: number
+  maxLen?: number     // number of cells in a comb/char-box field
+  isComb?: boolean    // true when PDF comb flag is set
 }
 
 export interface FilledField {

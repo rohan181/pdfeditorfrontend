@@ -458,6 +458,10 @@ export default function PDFEditor() {
   const cropResizing = useRef<string | null>(null)
   const cropResizeStart = useRef<{ cx: number; cy: number; ox: number; oy: number; ow: number; oh: number } | null>(null)
 
+  // Mark drag-to-place
+  const markDragStart = useRef<{ x: number; y: number; slotId: string } | null>(null)
+  const [markDraft, setMarkDraft] = useState<{ x: number; y: number; w: number; h: number; slotId: string } | null>(null)
+
   // Suppress synthesized click that fires ~300ms after touchend on mobile
   const touchFiredRef = useRef(false)
 
@@ -943,16 +947,19 @@ export default function PDFEditor() {
         const annotations = await page.getAnnotations()
         annotations.forEach((ann: any) => {
           if (ann.subtype !== 'Widget' || !ann.fieldName) return
+          // Comb flag is PDF spec bit 24 (0-indexed) of fieldFlags
+          const isComb = ann.fieldType === 'Tx' && !!(ann.fieldFlags & (1 << 24))
           const fieldType =
-            ann.fieldType === 'Tx' ? 'text' :
             ann.fieldType === 'Btn' ? 'checkbox' :
-            ann.fieldType === 'Ch' ? 'dropdown' : 'text'
+            ann.fieldType === 'Ch' ? 'dropdown' :
+            isComb ? 'char_box' : 'text'
           detectedFields.push({
             name: ann.alternativeText || ann.fieldName,
             type: fieldType,
             rect: ann.rect,
             pageNum: slot.pageNum!,
             pageHeight: viewport.height,
+            ...(isComb && ann.maxLen ? { isComb: true, maxLen: ann.maxLen } : {}),
           })
         })
       } catch { /* page might not support annotations */ }
@@ -963,7 +970,7 @@ export default function PDFEditor() {
   }, [slots, sources])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
-    const newElements: TextElement[] = []
+    const newElements: PDFElement[] = []
 
     filled.forEach(({ name, value }) => {
       if (!value.trim()) return
@@ -982,7 +989,7 @@ export default function PDFEditor() {
           bold: false, italic: false, underline: false,
           align: 'left', bgColor: '',
           pageSlotId: slot.id,
-        })
+        } as TextElement)
         return
       }
 
@@ -992,24 +999,58 @@ export default function PDFEditor() {
 
       // PDF rect: [x1, y1, x2, y2] in PDF units, origin bottom-left
       const [x1, y1, x2, y2] = field.rect
-      const pdfX = x1
       const pdfY = field.pageHeight - y2  // flip Y axis
-      const pdfW = Math.max(40, x2 - x1)
-      const pdfH = Math.max(14, y2 - y1)
+      const pdfW = Math.max(16, x2 - x1)
+      const pdfH = Math.max(16, y2 - y1)
 
-      // Estimate font size from field height (PDF units ≈ points)
+      // ── Checkbox → place a tick or cross MarkElement ──────────────────────
+      if (field.type === 'checkbox') {
+        const isChecked = /^(tick|yes|true|1|check|checked|on)$/i.test(value.trim())
+        newElements.push({
+          id: uuidv4(), type: 'mark',
+          x: x1, y: pdfY,
+          width: pdfW, height: pdfH,
+          markType: isChecked ? 'tick' : 'cross',
+          color: '#1e293b', strokeWidth: 1.5,
+          pageSlotId: slot.id,
+        } as MarkElement)
+        return
+      }
+
+      // ── Comb / character-box field → one TextElement per cell ─────────────
+      if (field.isComb && field.maxLen && field.maxLen > 1) {
+        const cellW = (x2 - x1) / field.maxLen
+        const fontSize = Math.max(7, Math.min(14, Math.round(pdfH * 0.55)))
+        const chars = value.replace(/\s/g, '').split('').slice(0, field.maxLen)
+        chars.forEach((char, i) => {
+          newElements.push({
+            id: uuidv4(), type: 'text',
+            x: x1 + i * cellW + cellW * 0.05,
+            y: pdfY,
+            width: cellW * 0.9,
+            height: pdfH,
+            text: char, fontSize,
+            fontFamily: 'Inter', color: '#000',
+            bold: false, italic: false, underline: false,
+            align: 'center', bgColor: '',
+            pageSlotId: slot.id,
+          } as TextElement)
+        })
+        return
+      }
+
+      // ── Regular text field ─────────────────────────────────────────────────
       const fontSize = Math.max(8, Math.min(16, Math.round(pdfH * 0.55)))
-
       newElements.push({
         id: uuidv4(), type: 'text',
-        x: pdfX, y: pdfY,
-        width: pdfW, height: pdfH,
+        x: x1, y: pdfY,
+        width: Math.max(40, pdfW), height: pdfH,
         text: value, fontSize,
         fontFamily: 'Inter', color: '#000',
         bold: false, italic: false, underline: false,
         align: 'left', bgColor: '',
         pageSlotId: slot.id,
-      })
+      } as TextElement)
     })
 
     if (newElements.length > 0) {
@@ -1057,7 +1098,7 @@ export default function PDFEditor() {
       setSelectedId(el.id); setToolMode('select')
     } else if (toolMode === 'mark') {
       const el: MarkElement = {
-        id: uuidv4(), type: 'mark', x, y, width: 52, height: 52,
+        id: uuidv4(), type: 'mark', x: x - 12, y: y - 12, width: 24, height: 24,
         markType: activeMarkType, color: markColor, strokeWidth: markStrokeWidth,
         pageSlotId: slotId,
       }
@@ -1205,6 +1246,52 @@ export default function PDFEditor() {
   const clearCrop = (slotId: string) => {
     setSlots(prev => prev.map(s => s.id === slotId ? { ...s, crop: undefined } : s))
   }
+
+  // ── Mark drag-to-place ────────────────────────────────────────────────────
+  const handleMarkDragStart = useCallback((e: React.MouseEvent<HTMLDivElement>, slotId: string) => {
+    e.stopPropagation()
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / scale
+    const y = (e.clientY - rect.top) / scale
+    markDragStart.current = { x, y, slotId }
+    setMarkDraft({ x, y, w: 0, h: 0, slotId })
+  }, [scale])
+
+  const handleMarkDragMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!markDragStart.current) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const cx = (e.clientX - rect.left) / scale
+    const cy = (e.clientY - rect.top) / scale
+    const x = Math.min(cx, markDragStart.current.x)
+    const y = Math.min(cy, markDragStart.current.y)
+    const w = Math.abs(cx - markDragStart.current.x)
+    const h = Math.abs(cy - markDragStart.current.y)
+    setMarkDraft(prev => prev ? { ...prev, x, y, w, h } : null)
+  }, [scale])
+
+  const handleMarkDragEnd = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!markDragStart.current) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const cx = (e.clientX - rect.left) / scale
+    const cy = (e.clientY - rect.top) / scale
+    const dx = cx - markDragStart.current.x
+    const dy = cy - markDragStart.current.y
+    const slotId = markDragStart.current.slotId
+    const isDrag = Math.abs(dx) > 8 || Math.abs(dy) > 8
+    let el: MarkElement
+    if (isDrag) {
+      const x = Math.min(cx, markDragStart.current.x)
+      const y = Math.min(cy, markDragStart.current.y)
+      el = { id: uuidv4(), type: 'mark', x, y, width: Math.max(16, Math.abs(dx)), height: Math.max(16, Math.abs(dy)), markType: activeMarkType, color: markColor, strokeWidth: markStrokeWidth, pageSlotId: slotId }
+    } else {
+      el = { id: uuidv4(), type: 'mark', x: markDragStart.current.x - 12, y: markDragStart.current.y - 12, width: 24, height: 24, markType: activeMarkType, color: markColor, strokeWidth: markStrokeWidth, pageSlotId: slotId }
+    }
+    setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+    setSelectedId(el.id)
+    setToolMode('select')
+    markDragStart.current = null
+    setMarkDraft(null)
+  }, [scale, activeMarkType, markColor, markStrokeWidth, pushHistory])
 
   // ── Scroll main canvas to a page and scroll sidebar in sync ───────────────
   const scrollToPage = useCallback((idx: number) => {
@@ -2334,6 +2421,32 @@ export default function PDFEditor() {
                               strokeLinecap="round" strokeLinejoin="round" opacity={drawOpacity}/>
                           </svg>
                         )}
+                        {/* Live mark drag preview */}
+                        {toolMode === 'mark' && markDraft?.slotId === slot.id && markDraft.w > 4 && markDraft.h > 4 && (
+                          <div style={{
+                            position: 'absolute', pointerEvents: 'none', zIndex: 8,
+                            left: markDraft.x * scale, top: markDraft.y * scale,
+                            width: markDraft.w * scale, height: markDraft.h * scale,
+                            border: `1.5px dashed ${markColor}`,
+                            background: 'rgba(99,102,241,0.05)',
+                            boxSizing: 'border-box',
+                          }}>
+                            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                              {activeMarkType === 'tick' ? (
+                                <polyline points="10,55 38,82 90,18" fill="none" stroke={markColor}
+                                  strokeWidth={markStrokeWidth * 4} strokeLinecap="round" strokeLinejoin="round"
+                                  vectorEffect="non-scaling-stroke" opacity={0.6} />
+                              ) : (
+                                <>
+                                  <line x1="12" y1="12" x2="88" y2="88" stroke={markColor}
+                                    strokeWidth={markStrokeWidth * 4} strokeLinecap="round" vectorEffect="non-scaling-stroke" opacity={0.6} />
+                                  <line x1="88" y1="12" x2="12" y2="88" stroke={markColor}
+                                    strokeWidth={markStrokeWidth * 4} strokeLinecap="round" vectorEffect="non-scaling-stroke" opacity={0.6} />
+                                </>
+                              )}
+                            </svg>
+                          </div>
+                        )}
                       </div>
                       {/* Crop mode: dim overlay + interactive handle rect */}
                       {isCropping && cropDraft?.slotId === slot.id && (
@@ -2418,21 +2531,33 @@ export default function PDFEditor() {
                         </>
                       )}
                       {/* Ghost position marker for placement tools */}
-                      {['text','highlight','mark','annotation','shape'].includes(toolMode) && hoverPos?.slotId === slot.id && (
+                      {['text','highlight','mark','annotation','shape'].includes(toolMode) && hoverPos?.slotId === slot.id && !markDraft && (
                         <GhostMarker
                           toolMode={toolMode} x={hoverPos.x * scale} y={hoverPos.y * scale}
                           activeMarkType={activeMarkType} activeShapeType={activeShapeType} shapeStroke={shapeStroke}
                         />
                       )}
-                      {/* Interaction overlay: click-to-place (not active during crop — handles manage that) */}
+                      {/* Interaction overlay: click/drag-to-place (not active during crop — handles manage that) */}
                       {toolMode !== 'pan' && toolMode !== 'draw' && !isCropping && (
                         <div
                           style={{
                             position:'absolute', inset:0, zIndex:5,
-                            cursor: 'pointer',
+                            cursor: toolMode === 'mark' ? 'crosshair' : 'pointer',
                             touchAction: ['text','highlight','mark','annotation','shape'].includes(toolMode) ? 'none' : 'auto',
                           }}
-                          onClick={e => { if (touchFiredRef.current) return; setSlotIdx(idx); handleOverlayClick(e, slot.id) }}
+                          onMouseDown={e => { if (toolMode === 'mark') { setSlotIdx(idx); handleMarkDragStart(e, slot.id) } }}
+                          onMouseMove={e => {
+                            if (['text','highlight','annotation','shape'].includes(toolMode)) {
+                              const r = e.currentTarget.getBoundingClientRect()
+                              setHoverPos({ x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale, slotId: slot.id })
+                            } else if (toolMode === 'mark') {
+                              const r = e.currentTarget.getBoundingClientRect()
+                              setHoverPos({ x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale, slotId: slot.id })
+                              handleMarkDragMove(e)
+                            }
+                          }}
+                          onMouseUp={e => { if (toolMode === 'mark') handleMarkDragEnd(e) }}
+                          onClick={e => { if (touchFiredRef.current) return; if (toolMode === 'mark') return; setSlotIdx(idx); handleOverlayClick(e, slot.id) }}
                           onTouchMove={e => {
                             if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
                               const t = e.touches[0]
@@ -2446,13 +2571,13 @@ export default function PDFEditor() {
                             setSlotIdx(idx)
                             handleOverlayTouchEnd(e, slot.id)
                           }}
-                          onMouseMove={e => {
-                            if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
-                              const r = e.currentTarget.getBoundingClientRect()
-                              setHoverPos({ x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale, slotId: slot.id })
+                          onMouseLeave={() => {
+                            setHoverPos(null)
+                            if (toolMode === 'mark' && markDragStart.current) {
+                              markDragStart.current = null
+                              setMarkDraft(null)
                             }
                           }}
-                          onMouseLeave={() => setHoverPos(null)}
                         />
                       )}
                     </div>

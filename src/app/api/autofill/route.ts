@@ -33,7 +33,8 @@ Return ONLY a valid JSON array with no extra text, in this exact format:
 - Use empty string "" for fields you cannot confidently fill
 - Keep values concise and appropriate for form fields
 - For date fields use MM/DD/YYYY format unless another format is obvious
-- For checkbox/boolean fields use "Yes" or "No"`,
+- For fields of type "checkbox": return exactly "tick" if the answer is yes/true/checked, or "cross" if no/false/unchecked
+- For fields of type "char_box": return ONLY the raw characters with NO spaces or separators (e.g. "A1234567" not "A 1 2 3 4 5 6 7"). The system will place each character into its own cell automatically.`,
       messages: [{
         role: 'user',
         content: `PDF Form Fields:\n${fieldList}\n\nUser Information:\n${userContext}\n\nFill all the fields above using the user information provided.`,
