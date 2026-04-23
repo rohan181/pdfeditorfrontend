@@ -7,6 +7,7 @@ import PropertiesPanel from './PropertiesPanel'
 import SignatureModal from './SignatureModal'
 import DatePickerPanel from './DatePickerPanel'
 import OrganisePages from './OrganisePages'
+import AutoFillModal, { type DetectedField, type FilledField } from './AutoFillModal'
 import type {
   PDFElement, PDFSource, PageSlot, ToolMode,
   TextElement, ImageElement, SignatureElement, StampElement, HighlightElement,
@@ -310,6 +311,8 @@ export default function PDFEditor() {
   const [showSidebar, setShowSidebar] = useState(true)
   const [showPanel, setShowPanel]     = useState(true)
   const [showOrganise, setShowOrganise] = useState(false)
+  const [showAutoFill, setShowAutoFill] = useState(false)
+  const [autoFillFields, setAutoFillFields] = useState<DetectedField[]>([])
   const [vw, setVw]                   = useState(1280)
   // New tool options
   const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'>('tick')
@@ -925,6 +928,99 @@ export default function PDFEditor() {
     setSlotIdx(newIdx)
     setShowOrganise(false)
   }
+
+  // ── AI Auto Fill ────────────────────────────────────────────────────────────
+  const openAutoFill = useCallback(async () => {
+    const detectedFields: DetectedField[] = []
+
+    for (const slot of slots) {
+      if (slot.type !== 'pdf' || !slot.sourceId || !slot.pageNum) continue
+      const src = sources.find(s => s.id === slot.sourceId)
+      if (!src) continue
+      try {
+        const page = await src.doc.getPage(slot.pageNum)
+        const viewport = page.getViewport({ scale: 1 })
+        const annotations = await page.getAnnotations()
+        annotations.forEach((ann: any) => {
+          if (ann.subtype !== 'Widget' || !ann.fieldName) return
+          const fieldType =
+            ann.fieldType === 'Tx' ? 'text' :
+            ann.fieldType === 'Btn' ? 'checkbox' :
+            ann.fieldType === 'Ch' ? 'dropdown' : 'text'
+          detectedFields.push({
+            name: ann.alternativeText || ann.fieldName,
+            type: fieldType,
+            rect: ann.rect,
+            pageNum: slot.pageNum!,
+            pageHeight: viewport.height,
+          })
+        })
+      } catch { /* page might not support annotations */ }
+    }
+
+    setAutoFillFields(detectedFields)
+    setShowAutoFill(true)
+  }, [slots, sources])
+
+  const applyAutoFill = useCallback((filled: FilledField[]) => {
+    const newElements: TextElement[] = []
+
+    filled.forEach(({ name, value }) => {
+      if (!value.trim()) return
+      const field = autoFillFields.find(f => f.name === name)
+      if (!field) {
+        // No detected field — place near current page centre
+        const slot = slots[slotIdx]
+        if (!slot) return
+        newElements.push({
+          id: uuidv4(), type: 'text',
+          x: slot.baseWidth / 2 - 100,
+          y: slot.baseHeight / 2,
+          width: 200, height: 30,
+          text: value, fontSize: 12,
+          fontFamily: 'Inter', color: '#000',
+          bold: false, italic: false, underline: false,
+          align: 'left', bgColor: '',
+          pageSlotId: slot.id,
+        })
+        return
+      }
+
+      // Find the slot matching this field's page
+      const slot = slots.find(s => s.type === 'pdf' && s.pageNum === field.pageNum)
+      if (!slot) return
+
+      // PDF rect: [x1, y1, x2, y2] in PDF units, origin bottom-left
+      const [x1, y1, x2, y2] = field.rect
+      const pdfX = x1
+      const pdfY = field.pageHeight - y2  // flip Y axis
+      const pdfW = Math.max(40, x2 - x1)
+      const pdfH = Math.max(14, y2 - y1)
+
+      // Estimate font size from field height (PDF units ≈ points)
+      const fontSize = Math.max(8, Math.min(16, Math.round(pdfH * 0.55)))
+
+      newElements.push({
+        id: uuidv4(), type: 'text',
+        x: pdfX, y: pdfY,
+        width: pdfW, height: pdfH,
+        text: value, fontSize,
+        fontFamily: 'Inter', color: '#000',
+        bold: false, italic: false, underline: false,
+        align: 'left', bgColor: '',
+        pageSlotId: slot.id,
+      })
+    })
+
+    if (newElements.length > 0) {
+      setElements(prev => {
+        const next = [...prev, ...newElements]
+        pushHistory(next)
+        return next
+      })
+      setToolMode('select')
+    }
+  }, [autoFillFields, slots, slotIdx, pushHistory])
 
   // ── Pan tool helpers (also triggered by middle mouse button) ────────────────
   const handlePanDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -1750,6 +1846,27 @@ export default function PDFEditor() {
                 <button title="Watermark (all pages)" style={tbStyle(showWmPanel)} onClick={()=>{setShowWmPanel(v=>!v);setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false)}} onMouseEnter={e=>{if(!showWmPanel)(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(!showWmPanel)(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10l2 4 2-4 2 4 2-4 2 4"/></svg>
                   <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Watermark</span>
+                </button>
+                {/* AI Auto Fill */}
+                <button
+                  title="AI Auto Fill — fill PDF form fields with Claude"
+                  disabled={!slots.length}
+                  style={{
+                    ...tbStyle(showAutoFill),
+                    background: showAutoFill ? 'linear-gradient(135deg,#6366f1,#818cf8)' : 'transparent',
+                    color: showAutoFill ? '#fff' : '#475569',
+                    border: '1px solid transparent',
+                    position: 'relative',
+                  }}
+                  onClick={() => { if (slots.length) openAutoFill() }}
+                  onMouseEnter={e => { if (!showAutoFill) (e.currentTarget as HTMLButtonElement).style.background = '#f1f5f9' }}
+                  onMouseLeave={e => { if (!showAutoFill) (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+                >
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/>
+                    <path d="M18 2v6"/><path d="M21 5h-6"/>
+                  </svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>AI Fill</span>
                 </button>
                 {/* Date */}
                 <button title="Insert Date" style={tbStyle(showDateMenu)} onClick={()=>{setShowDateMenu(v=>!v);setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(!showDateMenu)(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(!showDateMenu)(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
@@ -2908,6 +3025,15 @@ export default function PDFEditor() {
 
       {/* Signature modal */}
       {showSig && <SignatureModal onApply={handleSignatureApply} onClose={() => setShowSig(false)} savedSignature={savedSignature} />}
+
+      {/* AI Auto Fill modal */}
+      {showAutoFill && (
+        <AutoFillModal
+          fields={autoFillFields}
+          onApply={applyAutoFill}
+          onClose={() => setShowAutoFill(false)}
+        />
+      )}
 
       {/* Organise Pages modal */}
       {showOrganise && (
