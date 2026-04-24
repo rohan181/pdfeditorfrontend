@@ -947,23 +947,28 @@ export default function PDFEditor() {
 
   // ── AI Auto Fill ────────────────────────────────────────────────────────────
   const openAutoFill = useCallback(async () => {
-    const detectedFields: DetectedField[] = []
+    // Only process the current page
+    const slot = slots[slotIdx]
+    if (!slot || slot.type !== 'pdf' || !slot.sourceId || !slot.pageNum) {
+      setAutoFillFields([])
+      setAiExistingFilled({})
+      setShowAutoFill(true)
+      return
+    }
 
-    for (const slot of slots) {
-      if (slot.type !== 'pdf' || !slot.sourceId || !slot.pageNum) continue
-      const src = sources.find(s => s.id === slot.sourceId)
-      if (!src) continue
+    const detectedFields: DetectedField[] = []
+    const src = sources.find(s => s.id === slot.sourceId)
+    if (src) {
       try {
         const page = await src.doc.getPage(slot.pageNum)
         const viewport = page.getViewport({ scale: 1 })
         const annotations = await page.getAnnotations()
         annotations.forEach((ann: any) => {
           if (ann.subtype !== 'Widget' || !ann.fieldName) return
-          // Comb flag is PDF spec bit 24 (0-indexed) of fieldFlags
           const isComb = ann.fieldType === 'Tx' && !!(ann.fieldFlags & (1 << 24))
           const fieldType =
             ann.fieldType === 'Btn' ? 'checkbox' :
-            ann.fieldType === 'Ch' ? 'dropdown' :
+            ann.fieldType === 'Ch'  ? 'dropdown' :
             isComb ? 'char_box' : 'text'
           detectedFields.push({
             name: ann.alternativeText || ann.fieldName,
@@ -977,12 +982,10 @@ export default function PDFEditor() {
       } catch { /* page might not support annotations */ }
     }
 
-    // Scan existing elements to show already-filled values in the modal
+    // Scan existing elements on this page for already-filled values
     const existingFilled: Record<string, string> = {}
-    const tol = 4  // tolerance in PDF points for position matching
+    const tol = 4
     for (const field of detectedFields) {
-      const slot = slots.find(s => s.type === 'pdf' && s.pageNum === field.pageNum)
-      if (!slot) continue
       const [x1, y1, x2, y2] = field.rect
       const fieldTop = field.pageHeight - y2
       const fieldBot = field.pageHeight - y1
@@ -1016,7 +1019,7 @@ export default function PDFEditor() {
     setAutoFillFields(detectedFields)
     setAiExistingFilled(existingFilled)
     setShowAutoFill(true)
-  }, [slots, sources, elements])
+  }, [slots, slotIdx, sources, elements])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
     // fieldName → new elements built for that field this run
@@ -2806,6 +2809,32 @@ export default function PDFEditor() {
               <span style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', padding: '0 2px' }}>
                 {slotIdx + 1} / {slots.length}
               </span>
+
+              <div style={{ width: 1, height: 16, background: '#c8d4e8', margin: '0 3px' }} />
+
+              {/* AI Fill button */}
+              <button
+                title="AI Auto Fill — fill this page's form fields with AI"
+                onClick={openAutoFill}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '4px 10px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                  background: showAutoFill
+                    ? 'linear-gradient(135deg,#6366f1,#818cf8)'
+                    : 'linear-gradient(135deg,#6366f1,#818cf8)',
+                  color: '#fff', fontSize: 11, fontWeight: 700,
+                  boxShadow: '0 2px 8px rgba(99,102,241,0.35)',
+                  transition: 'opacity 0.15s',
+                  opacity: showAutoFill ? 0.75 : 1,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = showAutoFill ? '0.75' : '1')}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/><path d="M18 2v6"/><path d="M21 5h-6"/>
+                </svg>
+                AI Fill
+              </button>
             </div>
           )}
         </main>
@@ -3226,6 +3255,7 @@ export default function PDFEditor() {
           existingFilled={aiExistingFilled}
           onApply={applyAutoFill}
           onClose={() => setShowAutoFill(false)}
+          pageLabel={`Page ${slotIdx + 1} of ${slots.length}`}
         />
       )}
 

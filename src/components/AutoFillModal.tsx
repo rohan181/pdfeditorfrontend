@@ -32,6 +32,7 @@ interface Props {
   existingFilled?: Record<string, string>
   onApply: (filled: FilledField[]) => void
   onClose: () => void
+  pageLabel?: string   // e.g. "Page 2 of 5"
 }
 
 function buildPlaceholder(fields: DetectedField[]): string {
@@ -50,7 +51,7 @@ type Phase = 'fill' | 'improvise' | 'compare'
 let _docIdCounter = 0
 const nextDocId = () => `doc-${++_docIdCounter}`
 
-export default function AutoFillModal({ fields, existingFilled = {}, onApply, onClose }: Props) {
+export default function AutoFillModal({ fields, existingFilled = {}, onApply, onClose, pageLabel }: Props) {
   const filledCount  = fields.filter(f => existingFilled[f.name]).length
   const missingCount = fields.length - filledCount
 
@@ -296,11 +297,17 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
                   <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/><path d="M18 2v6"/><path d="M21 5h-6"/>
                 </svg>
               </div>
-              <h2 style={{ margin:0, fontSize:16, fontWeight:800, color:'#0f172a', fontFamily:'Manrope, sans-serif' }}>
+              <h2 style={{ margin:0, fontSize:16, fontWeight:800, color:'#0f172a', fontFamily:'Manrope, sans-serif', display:'flex', alignItems:'center', flexWrap:'wrap', gap:6 }}>
                 AI Auto Fill
-                {phase === 'improvise' && <span style={{ marginLeft:8, fontSize:12, fontWeight:600,
+                {pageLabel && (
+                  <span style={{ fontSize:11, fontWeight:700, color:'#6366f1',
+                    background:'rgba(99,102,241,0.1)', padding:'2px 8px', borderRadius:20, letterSpacing:'0.01em' }}>
+                    {pageLabel}
+                  </span>
+                )}
+                {phase === 'improvise' && <span style={{ fontSize:12, fontWeight:600,
                   color:'#f59e0b', background:'rgba(245,158,11,0.1)', padding:'2px 8px', borderRadius:20 }}>Improvise</span>}
-                {phase === 'compare'   && <span style={{ marginLeft:8, fontSize:12, fontWeight:600,
+                {phase === 'compare'   && <span style={{ fontSize:12, fontWeight:600,
                   color:'#8b5cf6', background:'rgba(139,92,246,0.1)', padding:'2px 8px', borderRadius:20 }}>Compare</span>}
               </h2>
             </div>
