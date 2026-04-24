@@ -323,6 +323,7 @@ export default function PDFEditor() {
   const [showAutoFill, setShowAutoFill] = useState(false)
   const [autoFillFields, setAutoFillFields] = useState<DetectedField[]>([])
   const [aiExistingFilled, setAiExistingFilled] = useState<Record<string, string>>({})
+  const [autoFillPageImage, setAutoFillPageImage] = useState('')
   const [vw, setVw]                   = useState(1280)
   // New tool options
   const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'|'circle'>('tick')
@@ -952,11 +953,13 @@ export default function PDFEditor() {
     if (!slot || slot.type !== 'pdf' || !slot.sourceId || !slot.pageNum) {
       setAutoFillFields([])
       setAiExistingFilled({})
+      setAutoFillPageImage('')
       setShowAutoFill(true)
       return
     }
 
     const detectedFields: DetectedField[] = []
+    let pageImage = ''
     const src = sources.find(s => s.id === slot.sourceId)
     if (src) {
       try {
@@ -979,6 +982,17 @@ export default function PDFEditor() {
             ...(isComb && ann.maxLen ? { isComb: true, maxLen: ann.maxLen } : {}),
           })
         })
+
+        // Render page to JPEG for AI visual context
+        try {
+          const renderVp = page.getViewport({ scale: 1.5 })
+          const canvas   = document.createElement('canvas')
+          canvas.width   = renderVp.width
+          canvas.height  = renderVp.height
+          const ctx = canvas.getContext('2d')!
+          await page.render({ canvasContext: ctx, viewport: renderVp }).promise
+          pageImage = canvas.toDataURL('image/jpeg', 0.7).split(',')[1]
+        } catch { /* ignore render errors */ }
       } catch { /* page might not support annotations */ }
     }
 
@@ -1018,6 +1032,7 @@ export default function PDFEditor() {
 
     setAutoFillFields(detectedFields)
     setAiExistingFilled(existingFilled)
+    setAutoFillPageImage(pageImage)
     setShowAutoFill(true)
   }, [slots, slotIdx, sources, elements])
 
@@ -3256,6 +3271,7 @@ export default function PDFEditor() {
           onApply={applyAutoFill}
           onClose={() => setShowAutoFill(false)}
           pageLabel={`Page ${slotIdx + 1} of ${slots.length}`}
+          pageImageBase64={autoFillPageImage}
         />
       )}
 

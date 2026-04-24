@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: 'ANTHROPIC_API_KEY not set in .env.local' }, { status: 500 })
     }
 
-    const { fields, userContext } = await req.json()
+    const { fields, userContext, pageImageBase64 } = await req.json()
 
     if (!userContext?.trim()) {
       return Response.json({ error: 'No context provided' }, { status: 400 })
@@ -30,10 +30,25 @@ export async function POST(req: NextRequest) {
     // Scale tokens with field count — ~60 tokens per field, minimum 2048
     const maxTokens = Math.min(8192, Math.max(2048, (fields?.length ?? 10) * 60))
 
+    // Build message content — include page image if available for visual context
+    const userContent: any[] = []
+    if (pageImageBase64) {
+      userContent.push({
+        type: 'image',
+        source: { type: 'base64', media_type: 'image/jpeg' as const, data: pageImageBase64 },
+      })
+      userContent.push({ type: 'text', text: 'Above is the PDF form page you are filling.' })
+    }
+    userContent.push({
+      type: 'text',
+      text: `PDF Form Fields:\n${fieldList}\n\nUser Information:\n${userContext}\n\nFill all the fields above using the user information provided. Reply with the JSON array only.`,
+    })
+
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: maxTokens,
-      system: `You are a PDF form-filling assistant.
+      system: `You are a PDF form-filling assistant with vision capability.
+When a form page image is provided, use it to visually understand field context, labels, and layout.
 Given a list of PDF form fields and user context, fill each field with the most appropriate value.
 Return ONLY a raw JSON array — no markdown, no code fences, no extra text — in this exact format:
 [{"name": "exact field name", "value": "filled value"}]
@@ -42,10 +57,7 @@ Return ONLY a raw JSON array — no markdown, no code fences, no extra text — 
 - For date fields use MM/DD/YYYY format unless another format is obvious
 - For fields of type "checkbox": return exactly "tick" if yes/true/checked, or "cross" if no/false/unchecked
 - For fields of type "char_box": return ONLY the raw characters with NO spaces or separators (e.g. "A1234567" not "A 1 2 3 4 5 6 7"). The system places each character into its own cell automatically.`,
-      messages: [{
-        role: 'user',
-        content: `PDF Form Fields:\n${fieldList}\n\nUser Information:\n${userContext}\n\nFill all the fields above using the user information provided. Reply with the JSON array only.`,
-      }],
+      messages: [{ role: 'user', content: userContent }],
     })
 
     const raw = message.content[0].type === 'text' ? message.content[0].text.trim() : ''

@@ -32,7 +32,8 @@ interface Props {
   existingFilled?: Record<string, string>
   onApply: (filled: FilledField[]) => void
   onClose: () => void
-  pageLabel?: string   // e.g. "Page 2 of 5"
+  pageLabel?: string        // e.g. "Page 2 of 5"
+  pageImageBase64?: string  // JPEG of the current PDF page for AI visual context
 }
 
 function buildPlaceholder(fields: DetectedField[]): string {
@@ -51,7 +52,7 @@ type Phase = 'fill' | 'improvise' | 'compare'
 let _docIdCounter = 0
 const nextDocId = () => `doc-${++_docIdCounter}`
 
-export default function AutoFillModal({ fields, existingFilled = {}, onApply, onClose, pageLabel }: Props) {
+export default function AutoFillModal({ fields, existingFilled = {}, onApply, onClose, pageLabel, pageImageBase64 = '' }: Props) {
   const filledCount  = fields.filter(f => existingFilled[f.name]).length
   const missingCount = fields.length - filledCount
 
@@ -75,6 +76,8 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const fileInputRef              = useRef<HTMLInputElement>(null)
   const pendingDocId              = useRef<string | null>(null)
+  // Stable ref so extractDoc can read latest docs without stale closure
+  const docsRef                   = useRef<UploadedDoc[]>([])
 
   // Improvise states
   const [phase, setPhase]                   = useState<Phase>('fill')
@@ -103,8 +106,42 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
     } finally { setTestLoading(false) }
   }
 
+  // Build context from a specific list of docs (allows calling before state settles)
+  const buildContextFromDocs = (docList: UploadedDoc[], extraInstructions = instructions) => {
+    const parts: string[] = []
+    docList.filter(d => d.status === 'done' && d.extracted).forEach(d => {
+      const label = d.description.trim() || d.fileName
+      parts.push(`=== Document: ${label} ===\n${d.extracted}`)
+    })
+    if (extraInstructions.trim()) parts.push(`=== Additional Details ===\n${extraInstructions.trim()}`)
+    return parts.join('\n\n')
+  }
+
+  const callFillAPI = async (combined: string) => {
+    if (!combined.trim() || fields.length === 0) return
+    setError(''); setLoading(true); setPreview(null)
+    setPhase('fill'); setImprovedValues({}); setVersionChoice({}); setImproviseSelected(new Set())
+    try {
+      const body: Record<string, any> = { fields, userContext: combined }
+      if (pageImageBase64) body.pageImageBase64 = pageImageBase64
+      const res  = await fetch('/api/autofill', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Request failed')
+      setPreview(data.filled.filter((f: FilledField) => f.value.trim()))
+    } catch (e: any) {
+      setError(e.message)
+    } finally { setLoading(false) }
+  }
+
   const extractDoc = async (docId: string, base64: string, mimeType: string) => {
-    setDocs(prev => prev.map(d => d.id === docId ? { ...d, status: 'extracting' } : d))
+    setDocs(prev => {
+      const next = prev.map(d => d.id === docId ? { ...d, status: 'extracting' as const } : d)
+      docsRef.current = next
+      return next
+    })
     try {
       const res  = await fetch('/api/extract-doc', {
         method: 'POST',
@@ -113,13 +150,28 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Extraction failed')
-      setDocs(prev => prev.map(d => d.id === docId
-        ? { ...d, status: 'done', extracted: data.extracted ?? '' }
-        : d))
+      const extracted: string = data.extracted ?? ''
+
+      // Update state + ref atomically so auto-fill sees latest data
+      let updatedDocs: UploadedDoc[] = []
+      setDocs(prev => {
+        const next = prev.map(d => d.id === docId ? { ...d, status: 'done' as const, extracted } : d)
+        docsRef.current = next
+        updatedDocs = next
+        return next
+      })
+
+      // Auto-fill immediately using the just-extracted doc data
+      if (extracted && fields.length > 0) {
+        const combined = buildContextFromDocs(updatedDocs)
+        if (combined.trim()) callFillAPI(combined)
+      }
     } catch (e: any) {
-      setDocs(prev => prev.map(d => d.id === docId
-        ? { ...d, status: 'error', error: e.message }
-        : d))
+      setDocs(prev => {
+        const next = prev.map(d => d.id === docId ? { ...d, status: 'error' as const, error: e.message } : d)
+        docsRef.current = next
+        return next
+      })
     }
   }
 
@@ -143,15 +195,24 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
       reader.onerror = reject
       reader.readAsDataURL(file)
     })
-    setDocs(prev => prev.map(d => d.id === docId
-      ? { ...d, fileName: file.name, base64, mimeType: file.type, status: 'extracting' }
-      : d))
+    setDocs(prev => {
+      const next = prev.map(d => d.id === docId
+        ? { ...d, fileName: file.name, base64, mimeType: file.type, status: 'extracting' as const }
+        : d)
+      docsRef.current = next
+      return next
+    })
     extractDoc(docId, base64, file.type)
   }
 
   const addDocSlot = () => {
     const id = nextDocId()
-    setDocs(prev => [...prev, { id, fileName: '', base64: '', mimeType: '', description: '', extracted: '', status: 'extracting' }])
+    const blank: UploadedDoc = { id, fileName: '', base64: '', mimeType: '', description: '', extracted: '', status: 'extracting' }
+    setDocs(prev => {
+      const next = [...prev, blank]
+      docsRef.current = next
+      return next
+    })
     return id
   }
 
@@ -180,44 +241,27 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
     processFile(file, id)
   }
 
-  const removeDoc = (id: string) => setDocs(prev => prev.filter(d => d.id !== id))
+  const removeDoc = (id: string) => setDocs(prev => {
+    const next = prev.filter(d => d.id !== id)
+    docsRef.current = next
+    return next
+  })
 
-  const updateDocDesc = (id: string, description: string) =>
-    setDocs(prev => prev.map(d => d.id === id ? { ...d, description } : d))
-
-  // Build combined context from all docs + manual instructions
-  const buildCombinedContext = () => {
-    const parts: string[] = []
-    docs.filter(d => d.status === 'done' && d.extracted).forEach(d => {
-      const label = d.description.trim() || d.fileName
-      parts.push(`=== Document: ${label} ===\n${d.extracted}`)
-    })
-    if (instructions.trim()) parts.push(`=== Additional Details ===\n${instructions.trim()}`)
-    return parts.join('\n\n')
-  }
+  const updateDocDesc = (id: string, description: string) => setDocs(prev => {
+    const next = prev.map(d => d.id === id ? { ...d, description } : d)
+    docsRef.current = next
+    return next
+  })
 
   // ── Fill ─────────────────────────────────────────────────────────────────
 
   const handleFill = async () => {
-    const combined = buildCombinedContext()
+    const combined = buildContextFromDocs(docsRef.current)
     if (!combined.trim()) {
       setError('Upload a document or add your information below.')
       return
     }
-    setError(''); setLoading(true); setPreview(null)
-    setPhase('fill'); setImprovedValues({}); setVersionChoice({}); setImproviseSelected(new Set())
-    try {
-      const res  = await fetch('/api/autofill', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields, userContext: combined }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Request failed')
-      setPreview(data.filled.filter((f: FilledField) => f.value.trim()))
-    } catch (e: any) {
-      setError(e.message)
-    } finally { setLoading(false) }
+    callFillAPI(combined)
   }
 
   // ── Improvise ─────────────────────────────────────────────────────────────
@@ -232,7 +276,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
       const res = await fetch('/api/improvise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: toImprove, userContext: buildCombinedContext(), wordLimit }),
+        body: JSON.stringify({ fields: toImprove, userContext: buildContextFromDocs(docsRef.current), wordLimit }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Improvise failed')
