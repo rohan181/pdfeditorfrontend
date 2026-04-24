@@ -1,0 +1,62 @@
+import Anthropic from '@anthropic-ai/sdk'
+import { NextRequest } from 'next/server'
+
+export const maxDuration = 60
+
+export async function POST(req: NextRequest) {
+  try {
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) return Response.json({ error: 'ANTHROPIC_API_KEY not set' }, { status: 500 })
+
+    const { fileBase64, mimeType, fieldNames } = await req.json()
+
+    if (!fileBase64 || !mimeType) {
+      return Response.json({ error: 'No file provided' }, { status: 400 })
+    }
+
+    const isImage = mimeType.startsWith('image/')
+    const isPDF   = mimeType === 'application/pdf'
+
+    if (!isImage && !isPDF) {
+      return Response.json({ error: 'Only images (JPG, PNG, WebP) and PDFs are supported' }, { status: 400 })
+    }
+
+    const client = new Anthropic({ apiKey })
+
+    const fieldHint = fieldNames?.length
+      ? `\n\nThe form has these fields — try to match extracted data to them:\n${(fieldNames as string[]).map(n => `- ${n}`).join('\n')}`
+      : ''
+
+    const docBlock = isImage
+      ? { type: 'image' as const, source: { type: 'base64' as const, media_type: mimeType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: fileBase64 } }
+      : { type: 'document' as const, source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: fileBase64 } }
+
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      system: `You are a document reader that extracts personal information from identity documents such as passports, driving licences, national ID cards, and similar documents.
+Extract all readable personal data and return it as plain "Field Name: value" lines — one per line, nothing else.
+Rules:
+- Only include fields that are clearly visible or inferable from the document
+- Normalize field names to match common form field labels (Full Name, Date of Birth, Passport Number, etc.)
+- For dates, keep the format as shown in the document
+- Do not guess or fabricate values`,
+      messages: [{
+        role: 'user',
+        content: [
+          docBlock,
+          {
+            type: 'text',
+            text: `Extract all personal information from this document.${fieldHint}\n\nReturn format:\nField Name: value\nField Name: value\n...`,
+          },
+        ],
+      }],
+    })
+
+    const extracted = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+    return Response.json({ extracted })
+  } catch (err: any) {
+    console.error('Extract-doc error:', err?.message)
+    return Response.json({ error: err.message ?? 'Unknown error' }, { status: 500 })
+  }
+}

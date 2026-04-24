@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 export interface DetectedField {
   name: string
@@ -61,6 +61,15 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
   const [improving, setImproving]           = useState(false)
   const [improvedValues, setImprovedValues] = useState<Record<string, string>>({})
   const [versionChoice, setVersionChoice]   = useState<Record<string, 'original' | 'improved'>>({})
+  const [wordLimit, setWordLimit]           = useState<number | null>(null)
+  const [customWords, setCustomWords]       = useState('')
+
+  // Document upload states
+  const [extracting, setExtracting]         = useState(false)
+  const [uploadedFileName, setUploadedFileName] = useState('')
+  const [extractError, setExtractError]     = useState('')
+  const [dragOver, setDragOver]             = useState(false)
+  const fileInputRef                        = useRef<HTMLInputElement>(null)
 
   const improvableFields = (preview ?? []).filter(f => {
     const det = fields.find(d => d.name === f.name)
@@ -76,6 +85,58 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
     } catch (e: any) {
       setTestResult('❌ ' + e.message)
     } finally { setTestLoading(false) }
+  }
+
+  const processDocFile = async (file: File) => {
+    const SUPPORTED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']
+    if (!SUPPORTED.includes(file.type)) {
+      setExtractError('Unsupported file type. Please upload a JPG, PNG, WebP, or PDF.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setExtractError('File too large. Maximum size is 5 MB.')
+      return
+    }
+    setExtracting(true); setExtractError(''); setUploadedFileName(file.name)
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const result = reader.result as string
+          resolve(result.split(',')[1])
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+      const res  = await fetch('/api/extract-doc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileBase64: base64, mimeType: file.type, fieldNames: fields.map(f => f.name) }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Extraction failed')
+      if (data.extracted) {
+        setContext(prev => {
+          const existing = prev.trim()
+          return existing ? existing + '\n\n' + data.extracted : data.extracted
+        })
+      }
+    } catch (e: any) {
+      setExtractError(e.message)
+      setUploadedFileName('')
+    } finally { setExtracting(false) }
+  }
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) processDocFile(file)
+    e.target.value = ''
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) processDocFile(file)
   }
 
   const handleFill = async () => {
@@ -107,7 +168,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
       const res = await fetch('/api/improvise', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields: toImprove, userContext: context }),
+        body: JSON.stringify({ fields: toImprove, userContext: context, wordLimit }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Improvise failed')
@@ -258,6 +319,111 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
           </div>
         )}
 
+        {/* Document upload — fill phase only */}
+        {phase === 'fill' && (
+          <div>
+            <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#64748b',
+              marginBottom:6, textTransform:'uppercase', letterSpacing:'0.06em' }}>
+              Upload Document
+              <span style={{ marginLeft:6, fontSize:10, fontWeight:400, color:'#94a3b8',
+                textTransform:'none', letterSpacing:0 }}>
+                passport · driving licence · ID card · any PDF
+              </span>
+            </label>
+
+            {/* Drop zone */}
+            <div
+              onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              onClick={() => !extracting && fileInputRef.current?.click()}
+              style={{
+                border: `2px dashed ${dragOver ? '#6366f1' : extracting ? '#94a3b8' : uploadedFileName ? '#16a34a' : '#cbd5e1'}`,
+                borderRadius: 10,
+                padding: '14px 16px',
+                background: dragOver ? 'rgba(99,102,241,0.05)' : uploadedFileName ? 'rgba(22,163,74,0.04)' : '#fafbff',
+                cursor: extracting ? 'default' : 'pointer',
+                display: 'flex', alignItems: 'center', gap: 12,
+                transition: 'all 0.15s',
+              }}
+            >
+              {/* Icon */}
+              <div style={{
+                width: 36, height: 36, borderRadius: 9, flexShrink: 0,
+                background: uploadedFileName
+                  ? 'linear-gradient(135deg,#16a34a,#22c55e)'
+                  : 'linear-gradient(135deg,#6366f1,#818cf8)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {extracting ? (
+                  <svg className="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                  </svg>
+                ) : uploadedFileName ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="12" y1="18" x2="12" y2="12"/>
+                    <line x1="9" y1="15" x2="15" y2="15"/>
+                  </svg>
+                )}
+              </div>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {extracting ? (
+                  <>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: '#475569' }}>Extracting info…</div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, overflow: 'hidden',
+                      textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{uploadedFileName}</div>
+                  </>
+                ) : uploadedFileName ? (
+                  <>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: '#15803d' }}>Extracted successfully</div>
+                    <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, overflow: 'hidden',
+                      textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{uploadedFileName} — info added below</div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: '#475569' }}>
+                      Drop file here or <span style={{ color: '#6366f1' }}>click to upload</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                      JPG · PNG · WebP · PDF — max 5 MB
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {uploadedFileName && !extracting && (
+                <button
+                  onClick={e => { e.stopPropagation(); setUploadedFileName(''); setExtractError('') }}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 4,
+                    color: '#94a3b8', fontSize: 16, lineHeight: 1, flexShrink: 0 }}
+                  title="Clear"
+                >×</button>
+              )}
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+              onChange={handleFileInput}
+              style={{ display: 'none' }}
+            />
+
+            {extractError && (
+              <p style={{ margin: '5px 0 0', fontSize: 11.5, color: '#dc2626', fontWeight: 600 }}>
+                {extractError}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Context input — fill phase only */}
         {phase === 'fill' && (
           <div>
@@ -276,7 +442,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
               onChange={e => setContext(e.target.value)}
               placeholder={buildPlaceholder(fields)}
               style={{
-                width:'100%', minHeight:140, borderRadius:10,
+                width:'100%', minHeight:120, borderRadius:10,
                 border:'1.5px solid #e2e8f0', padding:'10px 12px',
                 fontSize:12.5, fontFamily:'inherit', lineHeight:1.6,
                 resize:'vertical', color:'#1e293b',
@@ -316,12 +482,66 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
           </div>
         )}
 
-        {/* ── IMPROVISE PHASE: field selection ── */}
+        {/* ── IMPROVISE PHASE: field selection + word limit ── */}
         {phase === 'improvise' && preview && (
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
             <p style={{ margin:0, fontSize:11.5, color:'#475569' }}>
               Select the fields you want AI to enhance. Checkboxes and ID character fields are excluded.
             </p>
+
+            {/* Word limit control */}
+            <div style={{ padding:'10px 12px', borderRadius:10,
+              background:'rgba(245,158,11,0.06)', border:'1px solid rgba(245,158,11,0.25)' }}>
+              <p style={{ margin:'0 0 8px', fontSize:10, fontWeight:700, color:'#92400e',
+                textTransform:'uppercase', letterSpacing:'0.07em' }}>
+                Word limit per field
+              </p>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:6, alignItems:'center' }}>
+                {[null, 50, 100, 250, 500].map(opt => (
+                  <button
+                    key={String(opt)}
+                    onClick={() => { setWordLimit(opt); setCustomWords('') }}
+                    style={{
+                      padding:'4px 12px', borderRadius:20, fontSize:11.5, fontWeight:700, cursor:'pointer', border:'none',
+                      background: wordLimit === opt && customWords === ''
+                        ? 'linear-gradient(135deg,#f59e0b,#fbbf24)'
+                        : 'rgba(245,158,11,0.1)',
+                      color: wordLimit === opt && customWords === '' ? '#fff' : '#92400e',
+                      boxShadow: wordLimit === opt && customWords === '' ? '0 2px 8px rgba(245,158,11,0.3)' : 'none',
+                      transition:'all 0.12s',
+                    }}
+                  >
+                    {opt === null ? 'No limit' : `${opt}w`}
+                  </button>
+                ))}
+                <div style={{ display:'flex', alignItems:'center', gap:5 }}>
+                  <input
+                    type="number"
+                    min={10} max={2000}
+                    placeholder="Custom…"
+                    value={customWords}
+                    onChange={e => {
+                      setCustomWords(e.target.value)
+                      const n = parseInt(e.target.value)
+                      if (!isNaN(n) && n > 0) setWordLimit(n)
+                      else setWordLimit(null)
+                    }}
+                    style={{
+                      width:74, padding:'4px 8px', borderRadius:8, fontSize:11.5, fontWeight:600,
+                      border: customWords ? '1.5px solid #f59e0b' : '1.5px solid #e2e8f0',
+                      color:'#1e293b', background:'#fff', outline:'none',
+                    }}
+                  />
+                  {customWords && <span style={{ fontSize:10.5, color:'#92400e', fontWeight:600 }}>words</span>}
+                </div>
+              </div>
+              <p style={{ margin:'6px 0 0', fontSize:10.5, color:'#b45309' }}>
+                {wordLimit
+                  ? `AI will write each field in ~${wordLimit} words`
+                  : 'AI will decide the appropriate length'}
+              </p>
+            </div>
+
             {improvableFields.length === 0 ? (
               <p style={{ margin:0, fontSize:12, color:'#94a3b8', fontStyle:'italic' }}>
                 No improvable fields available (checkboxes and character boxes are excluded).

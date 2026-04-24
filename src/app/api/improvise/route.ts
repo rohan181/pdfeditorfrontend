@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: 'ANTHROPIC_API_KEY not set' }, { status: 500 })
     }
 
-    const { fields, userContext } = await req.json()
+    const { fields, userContext, wordLimit } = await req.json()
     if (!fields?.length) {
       return Response.json({ error: 'No fields provided' }, { status: 400 })
     }
@@ -21,13 +21,17 @@ export async function POST(req: NextRequest) {
       )
       .join('\n\n')
 
+    const wordRule = wordLimit
+      ? `- Each improved value MUST be approximately ${wordLimit} words. Do not exceed ${wordLimit} words.`
+      : `- Keep values concise and appropriate — 1-2 sentences for description fields, shorter for name/date/address fields`
+
     const message = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+      max_tokens: wordLimit ? Math.max(1024, wordLimit * fields.length * 8) : 1024,
       system: `You are a professional content writer helping improve PDF form field values.
 For each field given, enhance the current value to be more complete, professional, or descriptive while keeping the core information intact.
-- Expand abbreviations, fix capitalization, add relevant details if the field type suggests it
-- Keep form field values concise — not more than 1-2 sentences for description fields
+- Expand abbreviations, fix capitalization, add relevant details where appropriate
+${wordRule}
 - For name fields: proper capitalization only
 - For address fields: add standard formatting
 - For date fields: keep the same date, just standardize format
@@ -35,7 +39,7 @@ For each field given, enhance the current value to be more complete, professiona
 [{"name": "exact field name", "value": "improved value"}]`,
       messages: [{
         role: 'user',
-        content: `Improve these form field values:\n\n${fieldList}\n\nUser context: ${userContext || 'N/A'}`,
+        content: `Improve these form field values:\n\n${fieldList}\n\nUser context: ${userContext || 'N/A'}${wordLimit ? `\n\nIMPORTANT: Each value must be approximately ${wordLimit} words.` : ''}`,
       }],
     })
 
