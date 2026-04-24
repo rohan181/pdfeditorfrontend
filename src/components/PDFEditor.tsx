@@ -326,7 +326,8 @@ export default function PDFEditor() {
   const [vw, setVw]                   = useState(1280)
   // New tool options
   const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'|'circle'>('tick')
-  const aiFilledIdsRef = useRef<Set<string>>(new Set())
+  // fieldName → element IDs placed for that field by AI fill
+  const aiFieldElementsRef = useRef<Map<string, string[]>>(new Map())
   const [markColor, setMarkColor]           = useState('#1e293b')
   const [markStrokeWidth, setMarkStrokeWidth] = useState(0.5)
   const [activeShapeType, setActiveShapeType] = useState<'rectangle'|'ellipse'|'line'|'arrow'|'polygon'>('rectangle')
@@ -1018,104 +1019,106 @@ export default function PDFEditor() {
   }, [slots, sources, elements])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
-    const newElements: PDFElement[] = []
+    // fieldName → new elements built for that field this run
+    const perField = new Map<string, PDFElement[]>()
 
     filled.forEach(({ name, value }) => {
       if (!value.trim()) return
+      const els: PDFElement[] = []
       const field = autoFillFields.find(f => f.name === name)
+
       if (!field) {
         // No detected field — place near current page centre
         const slot = slots[slotIdx]
         if (!slot) return
-        newElements.push({
+        els.push({
           id: uuidv4(), type: 'text',
-          x: slot.baseWidth / 2 - 100,
-          y: slot.baseHeight / 2,
+          x: slot.baseWidth / 2 - 100, y: slot.baseHeight / 2,
           width: 200, height: 30,
-          text: value, fontSize: 12,
-          fontFamily: 'Inter', color: '#000',
-          bold: false, italic: false, underline: false,
-          align: 'left', bgColor: '',
+          text: value, fontSize: 12, fontFamily: 'Inter', color: '#000',
+          bold: false, italic: false, underline: false, align: 'left', bgColor: '',
           pageSlotId: slot.id,
         } as TextElement)
+        perField.set(name, els)
         return
       }
 
-      // Find the slot matching this field's page
       const slot = slots.find(s => s.type === 'pdf' && s.pageNum === field.pageNum)
       if (!slot) return
 
-      // PDF rect: [x1, y1, x2, y2] in PDF units, origin bottom-left
       const [x1, y1, x2, y2] = field.rect
       const pdfW = Math.max(16, x2 - x1)
       const pdfH = Math.max(16, y2 - y1)
-      // Nudge element slightly up so text appears at the visual centre of the field
       const upNudge = Math.max(1, pdfH * 0.1)
       const pdfY = field.pageHeight - y2 - upNudge
 
-      // ── Checkbox → place a tick or cross MarkElement sized to the field ─────
+      // ── Checkbox ─────────────────────────────────────────────────────────
       if (field.type === 'checkbox') {
         const isChecked = /^(tick|yes|true|1|check|checked|on)$/i.test(value.trim())
         const markSize = Math.min(pdfW, pdfH)
         const inset = Math.max(1, markSize * 0.08)
         const strokeWidth = Math.max(0.5, Math.min(2.5, markSize * 0.06))
-        newElements.push({
+        els.push({
           id: uuidv4(), type: 'mark',
           x: x1 + inset, y: (field.pageHeight - y2) + inset,
           width: pdfW - inset * 2, height: pdfH - inset * 2,
           markType: isChecked ? 'tick' : 'cross',
-          color: '#1e293b', strokeWidth,
-          pageSlotId: slot.id,
+          color: '#1e293b', strokeWidth, pageSlotId: slot.id,
         } as MarkElement)
-        return
-      }
 
-      // ── Comb / character-box field → one TextElement per cell ─────────────
-      if (field.isComb && field.maxLen && field.maxLen > 1) {
+      // ── Comb / character-box ──────────────────────────────────────────────
+      } else if (field.isComb && field.maxLen && field.maxLen > 1) {
         const cellW = (x2 - x1) / field.maxLen
         const fontSize = Math.max(8, Math.min(18, Math.round(pdfH * 0.68)))
         const elemH = pdfH + upNudge
-        const chars = value.replace(/\s/g, '').split('').slice(0, field.maxLen)
-        chars.forEach((char, i) => {
-          newElements.push({
+        value.replace(/\s/g, '').split('').slice(0, field.maxLen).forEach((char, i) => {
+          els.push({
             id: uuidv4(), type: 'text',
-            x: x1 + i * cellW,
-            y: pdfY,
-            width: cellW,
-            height: elemH,
-            text: char, fontSize,
-            fontFamily: 'Inter', color: '#000',
-            bold: false, italic: false, underline: false,
-            align: 'center', bgColor: '',
+            x: x1 + i * cellW, y: pdfY, width: cellW, height: elemH,
+            text: char, fontSize, fontFamily: 'Inter', color: '#000',
+            bold: false, italic: false, underline: false, align: 'center', bgColor: '',
             pageSlotId: slot.id,
           } as TextElement)
         })
-        return
+
+      // ── Regular text ──────────────────────────────────────────────────────
+      } else {
+        const fontSize = Math.max(8, Math.min(18, Math.round(pdfH * 0.68)))
+        const elemH = pdfH + upNudge
+        els.push({
+          id: uuidv4(), type: 'text',
+          x: x1, y: pdfY, width: Math.max(40, pdfW), height: elemH,
+          text: value, fontSize, fontFamily: 'Inter', color: '#000',
+          bold: false, italic: false, underline: false, align: 'left', bgColor: '',
+          pageSlotId: slot.id,
+        } as TextElement)
       }
 
-      // ── Regular text field ─────────────────────────────────────────────────
-      const fontSize = Math.max(8, Math.min(18, Math.round(pdfH * 0.68)))
-      const elemH = pdfH + upNudge
-      newElements.push({
-        id: uuidv4(), type: 'text',
-        x: x1, y: pdfY,
-        width: Math.max(40, pdfW), height: elemH,
-        text: value, fontSize,
-        fontFamily: 'Inter', color: '#000',
-        bold: false, italic: false, underline: false,
-        align: 'left', bgColor: '',
-        pageSlotId: slot.id,
-      } as TextElement)
+      if (els.length > 0) perField.set(name, els)
     })
 
-    if (newElements.length > 0) {
-      setElements(prev => {
-        const next = [...prev, ...newElements]
-        pushHistory(next)
-        return next
-      })
-      setToolMode('select')
-    }
+    if (perField.size === 0) return
+
+    // Collect old element IDs only for the fields being updated this run
+    const oldIdsToRemove = new Set<string>()
+    perField.forEach((_, fieldName) => {
+      const prev = aiFieldElementsRef.current.get(fieldName) || []
+      prev.forEach(id => oldIdsToRemove.add(id))
+    })
+
+    // Update per-field tracking (merge — untouched fields keep their old IDs)
+    perField.forEach((els, fieldName) => {
+      aiFieldElementsRef.current.set(fieldName, els.map(e => e.id))
+    })
+
+    const allNew = Array.from(perField.values()).flat()
+    setElements(prev => {
+      const withoutOld = prev.filter(e => !oldIdsToRemove.has(e.id))
+      const next = [...withoutOld, ...allNew]
+      pushHistory(next)
+      return next
+    })
+    setToolMode('select')
   }, [autoFillFields, slots, slotIdx, pushHistory])
 
   // ── Pan tool helpers (also triggered by middle mouse button) ────────────────
