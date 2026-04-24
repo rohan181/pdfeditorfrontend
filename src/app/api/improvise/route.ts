@@ -44,7 +44,8 @@ ${wordRule}
     })
 
     const raw = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
-    const match = raw.match(/\[[\s\S]*\]/)
+    const stripped = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
+    const match = stripped.match(/\[[\s\S]*\]/)
     if (!match) {
       return Response.json({ error: 'Invalid AI response: ' + raw }, { status: 500 })
     }
