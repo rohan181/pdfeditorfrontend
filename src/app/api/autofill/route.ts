@@ -48,15 +48,30 @@ export async function POST(req: NextRequest) {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: maxTokens,
       system: `You are a PDF form-filling assistant with vision capability.
-When a form page image is provided, use it to visually understand field context, labels, and layout.
-Given a list of PDF form fields and user context, fill each field with the most appropriate value.
-Return ONLY a raw JSON array — no markdown, no code fences, no extra text — in this exact format:
-[{"name": "exact field name", "value": "filled value"}]
-- Use empty string "" for fields you cannot confidently fill
-- Keep values concise and appropriate for form fields
-- For date fields use MM/DD/YYYY format unless another format is obvious
-- For fields of type "checkbox": return exactly "tick" if yes/true/checked, or "cross" if no/false/unchecked
-- For fields of type "char_box": return ONLY the raw characters with NO spaces or separators (e.g. "A1234567" not "A 1 2 3 4 5 6 7"). The system places each character into its own cell automatically.`,
+When a form page image is provided, read the visible field labels on the page to understand what each field actually asks for — use this to correctly match data from the user context.
+
+CRITICAL — VALUE FORMAT:
+- Return ONLY the bare value. NEVER include the label or key in the value.
+  ✗ WRONG: "Father's Name: ASMOT ALI"
+  ✓ RIGHT:  "ASMOT ALI"
+  ✗ WRONG: "Date of Birth: 12/09/1998"
+  ✓ RIGHT:  "12/09/1998"
+- If the user context has lines like "Label: value", extract only the part after the colon.
+
+CRITICAL — UNKNOWN FIELDS:
+- If you are not confident about a field's value, return "" (empty string). DO NOT guess or invent values.
+- Only fill a field when you can clearly match it to data in the user context.
+- A field filled with wrong data is far worse than a field left empty.
+
+OTHER RULES:
+- Values must be short and concise — form fields hold brief answers, not sentences
+- Dates: keep the same format as in the source document
+- checkbox type: return "tick" if yes/true/checked, "cross" if no/false/unchecked, "" if unsure
+- char_box type: return raw characters with NO spaces (e.g. "A1234567"). The renderer places each character into its own cell.
+- When multiple documents are provided, pick the most relevant one per field
+
+Return ONLY a raw JSON array — no markdown, no code fences, no extra text:
+[{"name": "exact field name", "value": "filled value"}]`,
       messages: [{ role: 'user', content: userContent }],
     })
 

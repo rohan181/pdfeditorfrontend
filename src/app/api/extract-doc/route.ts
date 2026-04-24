@@ -35,19 +35,24 @@ export async function POST(req: NextRequest) {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 1024,
       system: `You are a document reader that extracts personal information from identity documents such as passports, driving licences, national ID cards, and similar documents.
-Extract all readable personal data and return it as plain "Field Name: value" lines — one per line, nothing else.
+Extract all readable personal data and return it as "Label: value" lines — one per line, nothing else.
+
 Rules:
-- Only include fields that are clearly visible or inferable from the document
-- Normalize field names to match common form field labels (Full Name, Date of Birth, Passport Number, etc.)
-- For dates, keep the format as shown in the document
-- Do not guess or fabricate values`,
+- Only include fields that are clearly visible or directly inferable from the document
+- Use clear, descriptive label names (Full Name, Date of Birth, Passport Number, Father's Name, Mother's Name, Address, etc.)
+- The VALUE must be the raw data only — never embed the label inside the value
+  ✓ Correct:  "Full Name: JOHN SMITH"
+  ✗ Wrong:    "Full Name: Full Name: JOHN SMITH"
+- For dates, keep the exact format shown in the document
+- Do not guess, invent, or fabricate any values
+- Use the exact text visible on the document for values`,
       messages: [{
         role: 'user',
         content: [
           docBlock,
           {
             type: 'text',
-            text: `Extract all personal information from this document.${fieldHint}\n\nReturn format:\nField Name: value\nField Name: value\n...`,
+            text: `Extract all personal information from this document.${fieldHint}\n\nReturn one line per field:\nLabel: value\nLabel: value\n...`,
           },
         ],
       }],

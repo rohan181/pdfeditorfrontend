@@ -88,6 +88,10 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
   const [wordLimit, setWordLimit]           = useState<number | null>(null)
   const [customWords, setCustomWords]       = useState('')
 
+  // Prompt & Improve
+  const [promptText, setPromptText]         = useState('')
+  const [promptLoading, setPromptLoading]   = useState(false)
+
   const improvableFields = (preview ?? []).filter(f => {
     const det = fields.find(d => d.name === f.name)
     return det && det.type !== 'checkbox' && !det.isComb
@@ -262,6 +266,53 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
       return
     }
     callFillAPI(combined)
+  }
+
+  // ── Prompt Fill & Improve ─────────────────────────────────────────────────
+
+  const handlePromptFillAndImprove = async () => {
+    if (!promptText.trim()) { setError('Please enter some information in the prompt box.'); return }
+    setError(''); setPromptLoading(true); setPreview(null)
+    setPhase('fill'); setImprovedValues({}); setVersionChoice({}); setImproviseSelected(new Set())
+    try {
+      // Step 1: fill fields using the prompt text
+      const fillBody: Record<string, any> = { fields, userContext: promptText }
+      if (pageImageBase64) fillBody.pageImageBase64 = pageImageBase64
+      const fillRes  = await fetch('/api/autofill', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fillBody),
+      })
+      const fillData = await fillRes.json()
+      if (!fillRes.ok) throw new Error(fillData.error || 'Fill failed')
+      const filled: FilledField[] = (fillData.filled as FilledField[]).filter(f => f.value.trim())
+      setPreview(filled)
+
+      // Step 2: improve all text fields in one shot
+      const toImprove = filled.filter(f => {
+        const det = fields.find(d => d.name === f.name)
+        return det && det.type !== 'checkbox' && !det.isComb
+      }).map(f => ({ name: f.name, value: f.value, type: fields.find(d => d.name === f.name)?.type ?? 'text' }))
+
+      if (toImprove.length > 0) {
+        const improveRes = await fetch('/api/improvise', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fields: toImprove, userContext: promptText, wordLimit }),
+        })
+        const improveData = await improveRes.json()
+        if (!improveRes.ok) throw new Error(improveData.error || 'Improve failed')
+        const improved: Record<string, string> = {}
+        const choices:  Record<string, 'original' | 'improved'> = {}
+        ;(improveData.improved as FilledField[]).forEach(f => {
+          improved[f.name] = f.value
+          choices[f.name]  = 'improved'
+        })
+        setImprovedValues(improved)
+        setVersionChoice(choices)
+        setPhase('compare')
+      }
+    } catch (e: any) {
+      setError(e.message)
+    } finally { setPromptLoading(false) }
   }
 
   // ── Improvise ─────────────────────────────────────────────────────────────
@@ -569,6 +620,92 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
           </div>
         )}
 
+        {/* ── Prompt & Improve (fill phase only) ── */}
+        {phase === 'fill' && (
+          <div style={{ borderRadius:12, border:'1.5px solid rgba(99,102,241,0.25)',
+            background:'rgba(99,102,241,0.03)', padding:'14px 14px 10px' }}>
+
+            {/* Section header */}
+            <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:10 }}>
+              <div style={{ width:24, height:24, borderRadius:6,
+                background:'linear-gradient(135deg,#6366f1,#818cf8)',
+                display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ fontSize:12, fontWeight:800, color:'#3730a3' }}>Prompt &amp; Improve</div>
+                <div style={{ fontSize:10.5, color:'#6366f1', marginTop:1 }}>
+                  Type info → AI matches fields → AI improves each value
+                </div>
+              </div>
+            </div>
+
+            {/* Prompt textarea */}
+            <textarea
+              value={promptText}
+              onChange={e => setPromptText(e.target.value)}
+              placeholder={"e.g. \"I'm John Smith, 32, software engineer at Acme Corp, living at 12 Baker St London. Married with 2 kids.\""}
+              rows={3}
+              style={{ width:'100%', borderRadius:9, border:'1.5px solid rgba(99,102,241,0.25)',
+                padding:'9px 11px', fontSize:12.5, fontFamily:'inherit', lineHeight:1.6,
+                resize:'vertical', color:'#1e293b', background:'#fff', outline:'none',
+                boxSizing:'border-box' }}
+              onFocus={e => (e.currentTarget.style.borderColor = '#6366f1')}
+              onBlur={e  => (e.currentTarget.style.borderColor = 'rgba(99,102,241,0.25)')}
+            />
+
+            {/* Word limit row */}
+            <div style={{ display:'flex', flexWrap:'wrap', alignItems:'center', gap:6, marginTop:8 }}>
+              <span style={{ fontSize:10, fontWeight:700, color:'#6366f1', textTransform:'uppercase', letterSpacing:'0.06em', flexShrink:0 }}>
+                Word limit:
+              </span>
+              {[null, 50, 100, 250].map(opt => (
+                <button key={String(opt)}
+                  onClick={() => { setWordLimit(opt); setCustomWords('') }}
+                  style={{ padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:700,
+                    cursor:'pointer', border:'none',
+                    background: wordLimit === opt && customWords === ''
+                      ? 'linear-gradient(135deg,#6366f1,#818cf8)' : 'rgba(99,102,241,0.1)',
+                    color: wordLimit === opt && customWords === '' ? '#fff' : '#4338ca',
+                    transition:'all 0.12s' }}>
+                  {opt === null ? 'Auto' : `${opt}w`}
+                </button>
+              ))}
+              <input type="number" min={10} max={2000} placeholder="Custom…" value={customWords}
+                onChange={e => {
+                  setCustomWords(e.target.value)
+                  const n = parseInt(e.target.value)
+                  if (!isNaN(n) && n > 0) setWordLimit(n); else setWordLimit(null)
+                }}
+                style={{ width:68, padding:'3px 8px', borderRadius:8, fontSize:11, fontWeight:600,
+                  border: customWords ? '1.5px solid #6366f1' : '1.5px solid rgba(99,102,241,0.2)',
+                  color:'#1e293b', background:'#fff', outline:'none' }} />
+
+              {/* Fill & Improve button */}
+              <button
+                onClick={handlePromptFillAndImprove}
+                disabled={promptLoading || !promptText.trim()}
+                style={{ marginLeft:'auto', padding:'7px 16px', borderRadius:9, border:'none',
+                  fontSize:12.5, fontWeight:700,
+                  background: (promptLoading || !promptText.trim())
+                    ? '#e2e8f0' : 'linear-gradient(135deg,#6366f1,#818cf8)',
+                  color: (promptLoading || !promptText.trim()) ? '#94a3b8' : '#fff',
+                  cursor: (promptLoading || !promptText.trim()) ? 'not-allowed' : 'pointer',
+                  boxShadow: (promptLoading || !promptText.trim()) ? 'none' : '0 2px 10px rgba(99,102,241,0.35)',
+                  display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
+                {promptLoading && (
+                  <svg className="spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                  </svg>
+                )}
+                {promptLoading ? 'Analysing…' : '✨ Fill & Improve'}
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── Additional instructions textarea (fill phase only) ── */}
         {phase === 'fill' && (
           <div>
@@ -582,7 +719,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
               value={instructions}
               onChange={e => setInstructions(e.target.value)}
               placeholder={buildPlaceholder(fields)}
-              rows={3}
+              rows={2}
               style={{ width:'100%', borderRadius:10, border:'1.5px solid #e2e8f0',
                 padding:'10px 12px', fontSize:12.5, fontFamily:'inherit', lineHeight:1.6,
                 resize:'vertical', color:'#1e293b', background:'#fafbff', outline:'none',
