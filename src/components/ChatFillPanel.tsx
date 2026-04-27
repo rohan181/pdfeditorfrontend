@@ -63,43 +63,86 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
       .join('\n\n')
   }
 
-  // ── Extract a single doc and inject extracted info into chat ──────────────
+  // ── Extract doc → auto-fill matched fields → show in chat ────────────────
   const extractDoc = useCallback(async (docId: string, base64: string, mimeType: string, plainText?: string) => {
     syncDocs(docsRef.current.map(d => d.id === docId ? { ...d, status: 'extracting' as const } : d))
-    try {
-      const body: Record<string, any> = { fieldNames: fields.map(f => f.name) }
-      if (plainText !== undefined) {
-        body.plainText = plainText
-      } else {
-        body.fileBase64 = base64
-        body.mimeType = mimeType
-      }
-      const res = await fetch('/api/extract-doc', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Extraction failed')
-      const extracted: string = data.extracted ?? ''
 
-      let updatedDocs: UploadedDoc[] = []
+    // Show "analysing" bubble immediately
+    setLoading(true)
+    try {
+      // Step 1 — extract raw info from the document
+      const extractBody: Record<string, any> = { fieldNames: fields.map(f => f.name) }
+      if (plainText !== undefined) { extractBody.plainText = plainText }
+      else { extractBody.fileBase64 = base64; extractBody.mimeType = mimeType }
+
+      const extractRes = await fetch('/api/extract-doc', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(extractBody),
+      })
+      const extractData = await extractRes.json()
+      if (!extractRes.ok) throw new Error(extractData.error || 'Extraction failed')
+      const extracted: string = extractData.extracted ?? ''
+
       setDocs(prev => {
         const next = prev.map(d => d.id === docId ? { ...d, status: 'done' as const, extracted } : d)
         docsRef.current = next
-        updatedDocs = next
         return next
       })
 
-      // Inject a system message into chat so AI knows about the doc
-      const ctx = buildContext(updatedDocs)
-      if (ctx.trim() && historyRef.current.length > 0) {
-        const injectMsg: ChatMessage = {
-          role: 'user',
-          content: `[Document uploaded — here is the extracted information to use for filling the form:\n${ctx}\nPlease continue asking about any remaining unfilled fields using this information where applicable.]`,
+      if (!extracted.trim() || fields.length === 0) {
+        const noDataMsg: ChatMessage = { role: 'assistant', content: 'I read the document but couldn\'t find any personal information to match against form fields.' }
+        syncHistory([...historyRef.current, noDataMsg])
+        return
+      }
+
+      // Step 2 — auto-fill fields using the extracted text
+      const fillBody: Record<string, any> = { fields, userContext: extracted }
+      if (pageImageBase64) fillBody.pageImageBase64 = pageImageBase64
+      const fillRes = await fetch('/api/autofill', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fillBody),
+      })
+      const fillData = await fillRes.json()
+
+      // Step 3 — update collected values and show a summary bubble
+      const newCollected = { ...collectedRef.current }
+      const filledLines: string[] = []
+
+      if (fillData.filled?.length) {
+        for (const { name, value } of fillData.filled as { name: string; value: string }[]) {
+          if (value?.trim()) {
+            newCollected[name] = value
+            filledLines.push(`• ${name}: ${value}`)
+          }
         }
-        const newHistory = [...historyRef.current, injectMsg]
-        syncHistory(newHistory)
-        await sendToAI(newHistory)
+      }
+      syncCollected(newCollected)
+
+      const docLabel = docsRef.current.find(d => d.id === docId)?.description.trim()
+        || docsRef.current.find(d => d.id === docId)?.fileName
+        || 'document'
+
+      const summaryMsg: ChatMessage = {
+        role: 'assistant',
+        content: filledLines.length > 0
+          ? `I read your ${docLabel} and filled ${filledLines.length} field${filledLines.length !== 1 ? 's' : ''}:\n${filledLines.join('\n')}`
+          : `I read your ${docLabel} but couldn't confidently match any values to the form fields.`,
+      }
+
+      // Step 4 — check remaining unfilled fields and ask about them
+      const stillUnfilled = fields.filter(f => !newCollected[f.name] || newCollected[f.name] === '')
+
+      if (stillUnfilled.length > 0) {
+        const continueUserMsg: ChatMessage = {
+          role: 'user',
+          content: `[SYSTEM: Document processed. Fields filled: ${filledLines.length}. Still unfilled: ${stillUnfilled.map(f => f.name).join(', ')}. Continue asking the user about remaining unfilled fields.]`,
+        }
+        const nextHistory = [...historyRef.current, summaryMsg, continueUserMsg]
+        syncHistory(nextHistory)
+        await sendToAI(nextHistory)
+      } else {
+        syncHistory([...historyRef.current, summaryMsg])
+        setDone(true)
       }
     } catch (e: any) {
       setDocs(prev => {
@@ -107,9 +150,13 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
         docsRef.current = next
         return next
       })
+      const errMsg: ChatMessage = { role: 'assistant', content: `Failed to read document: ${e.message}` }
+      syncHistory([...historyRef.current, errMsg])
+    } finally {
+      setLoading(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields])
+  }, [fields, pageImageBase64])
 
   // ── Process a dropped / picked file ──────────────────────────────────────
   const processFile = useCallback(async (file: File) => {
@@ -336,32 +383,6 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            {/* Upload button */}
-            <button
-              title="Upload documents (PDF, JPG, PNG, CSV, DOCX…)"
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                padding: '4px 9px', borderRadius: 20, border: 'none', cursor: 'pointer',
-                background: 'rgba(255,255,255,0.22)', color: '#fff',
-                fontSize: 11, fontWeight: 700,
-              }}
-            >
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-              Upload
-              {docs.length > 0 && (
-                <span style={{
-                  background: docsExtracting ? 'rgba(255,255,255,0.4)' : '#fff',
-                  color: docsExtracting ? '#fff' : '#0ea5e9',
-                  borderRadius: 10, padding: '0 5px', fontSize: 10, fontWeight: 800,
-                }}>
-                  {docs.length}
-                </span>
-              )}
-            </button>
-            <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.3)' }} />
             <div style={{
               fontSize: 10, fontWeight: 700,
               background: 'rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 20,
@@ -385,85 +406,33 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           }} />
         </div>
 
-        {/* Docs strip */}
+        {/* Uploaded docs list (above input) */}
         {docs.length > 0 && (
-          <div style={{
-            background: '#f0f9ff', borderBottom: '1px solid #bae6fd',
-            padding: '8px 12px', flexShrink: 0,
-          }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#0369a1', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Uploaded documents
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              {docs.map(doc => (
-                <div key={doc.id} style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  background: '#fff', borderRadius: 8, padding: '5px 8px',
-                  border: `1px solid ${doc.status === 'error' ? '#fca5a5' : doc.status === 'done' ? '#86efac' : '#bae6fd'}`,
-                }}>
-                  <div style={{ fontSize: 16, flexShrink: 0 }}>
-                    {doc.status === 'extracting' ? '⏳' : doc.status === 'error' ? '❌' : '✅'}
+          <div style={{ background: '#f0f9ff', borderTop: '1px solid #bae6fd', padding: '6px 12px', flexShrink: 0 }}>
+            {docs.map(doc => (
+              <div key={doc.id} style={{
+                display: 'flex', alignItems: 'center', gap: 7,
+                padding: '4px 0', borderBottom: '1px solid #e0f2fe',
+              }}>
+                <span style={{ fontSize: 13, flexShrink: 0 }}>
+                  {doc.status === 'extracting' ? '⏳' : doc.status === 'error' ? '❌' : '✅'}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#0369a1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {doc.fileName}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {doc.fileName || 'Uploading…'}
-                    </div>
-                    {doc.status === 'extracting' && (
-                      <div style={{ fontSize: 10, color: '#0ea5e9' }}>Extracting info…</div>
-                    )}
-                    {doc.status === 'error' && (
-                      <div style={{ fontSize: 10, color: '#dc2626' }}>{doc.error}</div>
-                    )}
-                    {doc.status === 'done' && (
-                      <input
-                        value={doc.description}
-                        onChange={e => setDocs(prev => prev.map(d => d.id === doc.id ? { ...d, description: e.target.value } : d))}
-                        placeholder="Label (e.g. my passport)"
-                        style={{
-                          fontSize: 10, border: 'none', outline: 'none', background: 'transparent',
-                          color: '#64748b', width: '100%', fontFamily: 'inherit',
-                        }}
-                      />
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setDocs(prev => { const next = prev.filter(d => d.id !== doc.id); docsRef.current = next; return next })}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2, fontSize: 13, flexShrink: 0 }}
-                  >×</button>
+                  {doc.status === 'extracting' && <div style={{ fontSize: 10, color: '#7dd3fc' }}>Reading document…</div>}
+                  {doc.status === 'error' && <div style={{ fontSize: 10, color: '#dc2626' }}>{doc.error}</div>}
+                  {doc.status === 'done' && (
+                    <input value={doc.description} onChange={e => setDocs(prev => prev.map(d => d.id === doc.id ? { ...d, description: e.target.value } : d))}
+                      placeholder="Label (e.g. my passport)"
+                      style={{ fontSize: 10, border: 'none', outline: 'none', background: 'transparent', color: '#64748b', width: '100%', fontFamily: 'inherit' }} />
+                  )}
                 </div>
-              ))}
-            </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                marginTop: 6, width: '100%', padding: '5px 0', border: '1.5px dashed #7dd3fc',
-                borderRadius: 7, background: 'transparent', color: '#0ea5e9', fontSize: 11, fontWeight: 600, cursor: 'pointer',
-              }}
-            >
-              + Add another document
-            </button>
-          </div>
-        )}
-
-        {/* Drop hint when no docs */}
-        {docs.length === 0 && (
-          <div
-            onClick={() => fileInputRef.current?.click()}
-            style={{
-              margin: '8px 12px 0', padding: '7px 10px',
-              border: '1.5px dashed #7dd3fc', borderRadius: 9,
-              background: '#f0f9ff', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 8,
-              flexShrink: 0,
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#0369a1' }}>Upload documents for faster fill</div>
-              <div style={{ fontSize: 10, color: '#7dd3fc' }}>PDF · JPG · PNG · CSV · DOCX — or drag & drop</div>
-            </div>
+                <button onClick={() => setDocs(prev => { const next = prev.filter(d => d.id !== doc.id); docsRef.current = next; return next })}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: 14, padding: '0 2px', flexShrink: 0 }}>×</button>
+              </div>
+            ))}
           </div>
         )}
 
@@ -476,7 +445,8 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
             .filter(m => m.role === 'assistant' ||
               (m.role === 'user' &&
                !m.content.startsWith('Hello! Please start') &&
-               !m.content.startsWith('[Document uploaded')))
+               !m.content.startsWith('[Document uploaded') &&
+               !m.content.startsWith('[SYSTEM:')))
             .map((msg, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                 {msg.role === 'assistant' && (
@@ -559,20 +529,39 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
               <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
                 {unfilled.length === 0 ? 'All fields collected!' : 'Chat ended.'}
               </div>
-              <button
-                onClick={handleApply}
-                style={{
-                  width: '100%', padding: '9px 0', border: 'none', cursor: 'pointer',
-                  background: 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
-                  color: '#fff', fontSize: 13, fontWeight: 700, borderRadius: 10,
-                  boxShadow: '0 2px 8px rgba(14,165,233,0.35)',
-                }}
-              >
+              <button onClick={handleApply} style={{
+                width: '100%', padding: '9px 0', border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
+                color: '#fff', fontSize: 13, fontWeight: 700, borderRadius: 10,
+                boxShadow: '0 2px 8px rgba(14,165,233,0.35)',
+              }}>
                 Apply {filledCount} field{filledCount !== 1 ? 's' : ''} to PDF
               </button>
             </div>
           ) : (
             <>
+              {/* Upload hint */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                marginBottom: 8, padding: '6px 10px',
+                background: '#f0f9ff', borderRadius: 9, border: '1.5px dashed #7dd3fc',
+                cursor: 'pointer',
+              }} onClick={() => fileInputRef.current?.click()}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0 }}>
+                  <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+                </svg>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0369a1' }}>Attach document to auto-fill</span>
+                  <span style={{ fontSize: 10.5, color: '#7dd3fc', marginLeft: 6 }}>PDF · JPG · PNG · CSV · DOCX</span>
+                </div>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '2px 8px',
+                  background: 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
+                  color: '#fff', borderRadius: 20,
+                }}>+ Upload</span>
+              </div>
+
+              {/* Text input row */}
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 <textarea
                   value={input}
@@ -587,32 +576,26 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
                     outline: 'none', background: '#fff', color: '#1e293b', lineHeight: 1.5,
                   }}
                 />
-                <button
-                  onClick={handleSend}
-                  disabled={loading || !input.trim()}
-                  style={{
-                    width: 36, height: 36, borderRadius: 10, border: 'none', cursor: 'pointer',
-                    background: input.trim() && !loading ? 'linear-gradient(135deg,#0ea5e9,#38bdf8)' : '#e2e8f0',
-                    color: input.trim() && !loading ? '#fff' : '#94a3b8',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'background 0.15s', flexShrink: 0,
-                  }}
-                >
+                <button onClick={handleSend} disabled={loading || !input.trim()} style={{
+                  width: 36, height: 36, borderRadius: 10, border: 'none', cursor: 'pointer',
+                  background: input.trim() && !loading ? 'linear-gradient(135deg,#0ea5e9,#38bdf8)' : '#e2e8f0',
+                  color: input.trim() && !loading ? '#fff' : '#94a3b8',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.15s', flexShrink: 0,
+                }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                     <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                   </svg>
                 </button>
               </div>
+
               {filledCount > 0 && (
-                <button
-                  onClick={handleApply}
-                  style={{
-                    marginTop: 6, width: '100%', padding: '7px 0', border: 'none', cursor: 'pointer',
-                    background: 'transparent', borderRadius: 8,
-                    color: '#0ea5e9', fontSize: 12, fontWeight: 700,
-                    borderTop: '1px solid #e2e8f0',
-                  }}
-                >
+                <button onClick={handleApply} style={{
+                  marginTop: 6, width: '100%', padding: '7px 0', border: 'none', cursor: 'pointer',
+                  background: 'transparent', borderRadius: 8,
+                  color: '#0ea5e9', fontSize: 12, fontWeight: 700,
+                  borderTop: '1px solid #e2e8f0',
+                }}>
                   Apply {filledCount} collected field{filledCount !== 1 ? 's' : ''} now →
                 </button>
               )}
