@@ -8,6 +8,7 @@ import SignatureModal from './SignatureModal'
 import DatePickerPanel from './DatePickerPanel'
 import OrganisePages from './OrganisePages'
 import AutoFillModal, { type DetectedField, type FilledField } from './AutoFillModal'
+import ChatFillPanel from './ChatFillPanel'
 import type {
   PDFElement, PDFSource, PageSlot, ToolMode,
   TextElement, ImageElement, SignatureElement, StampElement, HighlightElement,
@@ -331,6 +332,7 @@ export default function PDFEditor() {
   const [autoFillFields, setAutoFillFields] = useState<DetectedField[]>([])
   const [aiExistingFilled, setAiExistingFilled] = useState<Record<string, string>>({})
   const [autoFillPageImage, setAutoFillPageImage] = useState('')
+  const [showChatFill, setShowChatFill] = useState(false)
   const [vw, setVw]                   = useState(1280)
   // New tool options
   const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'|'circle'|'square'>('tick')
@@ -954,14 +956,12 @@ export default function PDFEditor() {
   }
 
   // ── AI Auto Fill ────────────────────────────────────────────────────────────
-  const openAutoFill = useCallback(async () => {
-    // Only process the current page
+  const loadPageFields = useCallback(async () => {
     const slot = slots[slotIdx]
     if (!slot || slot.type !== 'pdf' || !slot.sourceId || !slot.pageNum) {
       setAutoFillFields([])
       setAiExistingFilled({})
       setAutoFillPageImage('')
-      setShowAutoFill(true)
       return
     }
 
@@ -990,7 +990,6 @@ export default function PDFEditor() {
           })
         })
 
-        // Render page to JPEG for AI visual context
         try {
           const renderVp = page.getViewport({ scale: 1.5 })
           const canvas   = document.createElement('canvas')
@@ -1003,7 +1002,6 @@ export default function PDFEditor() {
       } catch { /* page might not support annotations */ }
     }
 
-    // Scan existing elements on this page for already-filled values
     const existingFilled: Record<string, string> = {}
     const tol = 4
     for (const field of detectedFields) {
@@ -1040,8 +1038,17 @@ export default function PDFEditor() {
     setAutoFillFields(detectedFields)
     setAiExistingFilled(existingFilled)
     setAutoFillPageImage(pageImage)
-    setShowAutoFill(true)
   }, [slots, slotIdx, sources, elements])
+
+  const openAutoFill = useCallback(async () => {
+    await loadPageFields()
+    setShowAutoFill(true)
+  }, [loadPageFields])
+
+  const openChatFill = useCallback(async () => {
+    await loadPageFields()
+    setShowChatFill(true)
+  }, [loadPageFields])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
     // fieldName → new elements built for that field this run
@@ -2055,6 +2062,25 @@ export default function PDFEditor() {
                   </svg>
                   <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>AI Fill</span>
                 </button>
+                {/* AI Chat Fill */}
+                <button
+                  title="AI Chat Fill — conversational form filling"
+                  disabled={!slots.length}
+                  style={{
+                    ...tbStyle(showChatFill),
+                    background: showChatFill ? 'linear-gradient(135deg,#0ea5e9,#38bdf8)' : 'transparent',
+                    color: showChatFill ? '#fff' : '#475569',
+                    border: '1px solid transparent',
+                  }}
+                  onClick={() => { if (slots.length) openChatFill() }}
+                  onMouseEnter={e => { if (!showChatFill) (e.currentTarget as HTMLButtonElement).style.background = '#f1f5f9' }}
+                  onMouseLeave={e => { if (!showChatFill) (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+                >
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  </svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Chat Fill</span>
+                </button>
                 {/* Date */}
                 <button title="Insert Date" style={tbStyle(showDateMenu)} onClick={()=>{setShowDateMenu(v=>!v);setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(!showDateMenu)(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(!showDateMenu)(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -2860,9 +2886,7 @@ export default function PDFEditor() {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 5,
                   padding: '4px 10px', borderRadius: 20, border: 'none', cursor: 'pointer',
-                  background: showAutoFill
-                    ? 'linear-gradient(135deg,#6366f1,#818cf8)'
-                    : 'linear-gradient(135deg,#6366f1,#818cf8)',
+                  background: 'linear-gradient(135deg,#6366f1,#818cf8)',
                   color: '#fff', fontSize: 11, fontWeight: 700,
                   boxShadow: '0 2px 8px rgba(99,102,241,0.35)',
                   transition: 'opacity 0.15s',
@@ -2875,6 +2899,30 @@ export default function PDFEditor() {
                   <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/><path d="M18 2v6"/><path d="M21 5h-6"/>
                 </svg>
                 AI Fill
+              </button>
+
+              {/* AI Chat Fill button */}
+              <button
+                title="AI Chat Fill — answer questions to fill form fields conversationally"
+                onClick={() => { if (slots.length) openChatFill() }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '4px 10px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                  background: showChatFill
+                    ? 'linear-gradient(135deg,#0ea5e9,#38bdf8)'
+                    : 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
+                  color: '#fff', fontSize: 11, fontWeight: 700,
+                  boxShadow: '0 2px 8px rgba(14,165,233,0.35)',
+                  transition: 'opacity 0.15s',
+                  opacity: showChatFill ? 0.75 : 1,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = showChatFill ? '0.75' : '1')}
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+                Chat Fill
               </button>
             </div>
           )}
@@ -3297,6 +3345,18 @@ export default function PDFEditor() {
           existingFilled={aiExistingFilled}
           onApply={applyAutoFill}
           onClose={() => setShowAutoFill(false)}
+          pageLabel={`Page ${slotIdx + 1} of ${slots.length}`}
+          pageImageBase64={autoFillPageImage}
+        />
+      )}
+
+      {/* AI Chat Fill panel */}
+      {showChatFill && (
+        <ChatFillPanel
+          fields={autoFillFields}
+          existingFilled={aiExistingFilled}
+          onApply={applyAutoFill}
+          onClose={() => setShowChatFill(false)}
           pageLabel={`Page ${slotIdx + 1} of ${slots.length}`}
           pageImageBase64={autoFillPageImage}
         />

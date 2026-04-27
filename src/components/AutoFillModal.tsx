@@ -68,8 +68,6 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
   const [loading, setLoading]     = useState(false)
   const [preview, setPreview]     = useState<FilledField[] | null>(null)
   const [error, setError]         = useState('')
-  const [testResult, setTestResult] = useState('')
-  const [testLoading, setTestLoading] = useState(false)
 
   // Multi-document upload
   const [docs, setDocs]           = useState<UploadedDoc[]>([])
@@ -99,16 +97,6 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
-  const handleTestAPI = async () => {
-    setTestLoading(true); setTestResult('')
-    try {
-      const res  = await fetch('/api/test-ai')
-      const data = await res.json()
-      setTestResult(data.ok ? `✅ ${data.response} (key: ${data.keyPreview})` : `❌ ${data.error}`)
-    } catch (e: any) {
-      setTestResult('❌ ' + e.message)
-    } finally { setTestLoading(false) }
-  }
 
   // Build context from a specific list of docs (allows calling before state settles)
   const buildContextFromDocs = (docList: UploadedDoc[], extraInstructions = instructions) => {
@@ -423,24 +411,6 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
           }}>×</button>
         </div>
 
-        {/* ── API Test (fill phase only) ── */}
-        {phase === 'fill' && (
-          <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px',
-            background:'#f8faff', borderRadius:10, border:'1px solid #e2e8f0' }}>
-            <button onClick={handleTestAPI} disabled={testLoading} style={{
-              padding:'5px 14px', borderRadius:7, border:'none', fontSize:11.5, fontWeight:700,
-              background: testLoading ? '#e2e8f0' : 'linear-gradient(135deg,#0e7490,#06b6d4)',
-              color: testLoading ? '#94a3b8' : '#fff', cursor: testLoading ? 'not-allowed' : 'pointer',
-              display:'flex', alignItems:'center', gap:5, flexShrink:0,
-            }}>
-              {testLoading ? 'Testing…' : '🔌 Test API'}
-            </button>
-            <span style={{ fontSize:11.5, fontWeight:600,
-              color: testResult.startsWith('✅') ? '#16a34a' : testResult.startsWith('❌') ? '#dc2626' : '#94a3b8' }}>
-              {testResult || 'Click to verify API connection'}
-            </span>
-          </div>
-        )}
 
         {/* ── Detected fields list (fill phase only) ── */}
         {phase === 'fill' && hasFields && (
