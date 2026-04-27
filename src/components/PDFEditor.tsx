@@ -1102,7 +1102,7 @@ export default function PDFEditor() {
 
       // ── Checkbox ─────────────────────────────────────────────────────────
       } else if (field.type === 'checkbox') {
-        const isChecked = /^(filledbox|tick|yes|true|1|check|checked|on)$/i.test(value.trim())
+        const isChecked = /^(tick|yes|true|1|check|checked|on)$/i.test(value.trim())
         const markSize = Math.min(pdfW, pdfH)
         const inset = Math.max(1, markSize * 0.06)
         const strokeWidth = Math.max(0.5, Math.min(2, markSize * 0.05))
@@ -1110,7 +1110,7 @@ export default function PDFEditor() {
           id: uuidv4(), type: 'mark',
           x: x1 + inset, y: (field.pageHeight - y2) + inset,
           width: pdfW - inset * 2, height: pdfH - inset * 2,
-          markType: isChecked ? 'filledbox' : 'cross',
+          markType: isChecked ? 'tick' : 'cross',
           color: '#1e293b', strokeWidth, pageSlotId: slot.id,
         } as MarkElement)
 

@@ -69,7 +69,7 @@ Rules:
 - "signatureField": if the NEXT unfilled field is a signature/initials field, set this to the exact field name (string). Otherwise null.
 - "done": true only when all unfilled fields collected or user says stop.
 - Values must be bare (no "Label: value" — just the value).
-- Checkbox fields: "filledbox" if checked/yes, "cross" if no/unchecked, "" if unsure.
+- Checkbox fields: "tick" if checked/yes, "cross" if no/unchecked, "" if unsure.
 - char_box: raw characters, no spaces.
 - Never invent values.
 - For signature fields: set signatureField to the field name and say something like "Please sign below" — do NOT ask the user to type anything.`,
