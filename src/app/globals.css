@@ -19,18 +19,19 @@ body { overflow: hidden; }
 /* ── Resize handles ────────────────────────────────────────────────────────── */
 .resize-handle {
   position: absolute;
-  width: 12px; height: 12px;
+  width: 14px; height: 14px;
   background: #fff;
-  border: 1.5px solid #4f6ef7;
-  border-radius: 2px;
+  border: 2px solid #4f6ef7;
+  border-radius: 3px;
   z-index: 50;
   touch-action: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
-/* Larger invisible hit area for touch */
+/* Larger invisible hit area for mouse & touch */
 .resize-handle::after {
   content: '';
   position: absolute;
-  inset: -8px;
+  inset: -10px;
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────────────────── */

@@ -99,8 +99,7 @@ function MarkDisplay({ el }: { el: MarkElement }) {
           strokeWidth={sw} strokeLinejoin="round" vectorEffect="non-scaling-stroke" rx="4" />
       )}
       {el.markType === 'filledbox' && (
-        <rect x="8" y="8" width="84" height="84" fill={el.color}
-          stroke={el.color} strokeWidth={sw} strokeLinejoin="round" vectorEffect="non-scaling-stroke" rx="4" />
+        <rect x="2" y="2" width="96" height="96" fill={el.color} rx="4" />
       )}
     </svg>
   )
@@ -981,12 +980,15 @@ export default function PDFEditor() {
         annotations.forEach((ann: any) => {
           if (ann.subtype !== 'Widget' || !ann.fieldName) return
           const isComb = ann.fieldType === 'Tx' && !!(ann.fieldFlags & (1 << 24))
+          const fieldName = ann.alternativeText || ann.fieldName
+          const isSigByName = /signature|sign here|initials/i.test(fieldName)
           const fieldType =
+            ann.fieldType === 'Sig' || isSigByName ? 'signature' :
             ann.fieldType === 'Btn' ? 'checkbox' :
             ann.fieldType === 'Ch'  ? 'dropdown' :
             isComb ? 'char_box' : 'text'
           detectedFields.push({
-            name: ann.alternativeText || ann.fieldName,
+            name: fieldName,
             type: fieldType,
             rect: ann.rect,
             pageNum: slot.pageNum!,
@@ -1089,17 +1091,26 @@ export default function PDFEditor() {
       const upNudge = Math.max(1, pdfH * 0.1)
       const pdfY = field.pageHeight - y2 - upNudge
 
+      // ── Signature ────────────────────────────────────────────────────────
+      if (field.type === 'signature') {
+        if (!value.startsWith('data:image')) return
+        els.push({
+          id: uuidv4(), type: 'signature',
+          x: x1, y: pdfY, width: pdfW, height: pdfH + upNudge,
+          src: value, pageSlotId: slot.id,
+        } as SignatureElement)
+
       // ── Checkbox ─────────────────────────────────────────────────────────
-      if (field.type === 'checkbox') {
-        const isChecked = /^(tick|yes|true|1|check|checked|on)$/i.test(value.trim())
+      } else if (field.type === 'checkbox') {
+        const isChecked = /^(filledbox|tick|yes|true|1|check|checked|on)$/i.test(value.trim())
         const markSize = Math.min(pdfW, pdfH)
-        const inset = Math.max(1, markSize * 0.08)
-        const strokeWidth = Math.max(0.5, Math.min(2.5, markSize * 0.06))
+        const inset = Math.max(1, markSize * 0.06)
+        const strokeWidth = Math.max(0.5, Math.min(2, markSize * 0.05))
         els.push({
           id: uuidv4(), type: 'mark',
           x: x1 + inset, y: (field.pageHeight - y2) + inset,
           width: pdfW - inset * 2, height: pdfH - inset * 2,
-          markType: isChecked ? 'tick' : 'cross',
+          markType: isChecked ? 'filledbox' : 'cross',
           color: '#1e293b', strokeWidth, pageSlotId: slot.id,
         } as MarkElement)
 
@@ -2605,7 +2616,7 @@ export default function PDFEditor() {
                                 <rect x="8" y="8" width="84" height="84" fill="none" stroke={markColor} strokeWidth={markStrokeWidth * 4} strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity={0.6} rx="4" />
                               )}
                               {activeMarkType === 'filledbox' && (
-                                <rect x="8" y="8" width="84" height="84" fill={markColor} stroke={markColor} strokeWidth={markStrokeWidth * 4} strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity={0.6} rx="4" />
+                                <rect x="2" y="2" width="96" height="96" fill={markColor} opacity={0.6} rx="4" />
                               )}
                             </svg>
                           </div>

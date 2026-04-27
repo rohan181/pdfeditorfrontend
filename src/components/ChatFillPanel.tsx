@@ -1,6 +1,16 @@
 'use client'
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import type { DetectedField, FilledField } from './AutoFillModal'
+import SignatureModal from './SignatureModal'
+
+// Strip any raw JSON that leaks into displayed messages
+function sanitizeMsg(text: string): string {
+  return text
+    .replace(/^```[\s\S]*?```$/gm, '')   // code fences
+    .replace(/\{[\s\S]{0,800}\}/g, '')    // JSON objects
+    .replace(/\[[\s\S]{0,400}\]/g, '')    // JSON arrays
+    .trim()
+}
 
 interface ChatMessage {
   role: 'assistant' | 'user'
@@ -36,6 +46,11 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
   const [loading, setLoading] = useState(false)
   const [collected, setCollected] = useState<Record<string, string>>({ ...existingFilled })
   const [done, setDone] = useState(false)
+
+  // Signature
+  const [pendingSigField, setPendingSigField] = useState<string | null>(null)
+  const [showSigModal, setShowSigModal] = useState(false)
+  const [savedSignature, setSavedSignature] = useState<string | null>(null)
 
   // Document upload state
   const [docs, setDocs] = useState<UploadedDoc[]>([])
@@ -260,7 +275,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
         return
       }
 
-      const aiMsg: ChatMessage = { role: 'assistant', content: data.message ?? '' }
+      const aiMsg: ChatMessage = { role: 'assistant', content: sanitizeMsg(data.message ?? '') }
       syncHistory([...msgs, aiMsg])
 
       if (data.extracted?.length) {
@@ -269,6 +284,12 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           if (value !== undefined && value !== null) updated[name] = String(value)
         }
         syncCollected(updated)
+      }
+
+      // Signature field requested — prompt user to sign
+      if (data.signatureField) {
+        setPendingSigField(data.signatureField)
+        setShowSigModal(true)
       }
 
       if (data.done) setDone(true)
@@ -309,6 +330,27 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
+  }
+
+  function handleSignatureApply(dataUrl: string) {
+    setSavedSignature(dataUrl)
+    setShowSigModal(false)
+    if (!pendingSigField) return
+
+    // Store the signature data URL in collected
+    const updated = { ...collectedRef.current, [pendingSigField]: dataUrl }
+    syncCollected(updated)
+
+    // Inject confirmation into chat and continue
+    const sigMsg: ChatMessage = { role: 'assistant', content: `Signature captured for "${pendingSigField}".` }
+    const confirmUser: ChatMessage = {
+      role: 'user',
+      content: `[SYSTEM: Signature provided for field "${pendingSigField}". Continue with remaining unfilled fields.]`,
+    }
+    const next = [...historyRef.current, sigMsg, confirmUser]
+    syncHistory(next)
+    setPendingSigField(null)
+    sendToAI(next)
   }
 
   function handleApply() {
@@ -519,6 +561,36 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
             </div>
           )}
 
+          {/* Sign Here button when AI requests a signature */}
+          {pendingSigField && !showSigModal && (
+            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 4 }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                background: '#fdf4ff', border: '1.5px dashed #a855f7',
+                borderRadius: 12, padding: '10px 14px',
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 19l7-7-3-3-7 7v3h3z"/><path d="M18 5l1 1-9.5 9.5"/><path d="M5 21h14"/>
+                </svg>
+                <div>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: '#7e22ce' }}>{pendingSigField}</div>
+                  <div style={{ fontSize: 10.5, color: '#a855f7' }}>Signature required</div>
+                </div>
+                <button
+                  onClick={() => setShowSigModal(true)}
+                  style={{
+                    padding: '6px 14px', border: 'none', borderRadius: 20, cursor: 'pointer',
+                    background: 'linear-gradient(135deg,#a855f7,#c084fc)',
+                    color: '#fff', fontSize: 12, fontWeight: 700,
+                    boxShadow: '0 2px 8px rgba(168,85,247,0.35)',
+                  }}
+                >
+                  Sign Here
+                </button>
+              </div>
+            </div>
+          )}
+
           <div ref={bottomRef} />
         </div>
 
@@ -561,7 +633,20 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
                 }}>+ Upload</span>
               </div>
 
-              {/* Text input row */}
+              {/* Text input row — hidden while waiting for signature */}
+              {pendingSigField ? (
+                <button
+                  onClick={() => setShowSigModal(true)}
+                  style={{
+                    width: '100%', padding: '9px 0', border: 'none', cursor: 'pointer',
+                    background: 'linear-gradient(135deg,#a855f7,#c084fc)',
+                    color: '#fff', fontSize: 13, fontWeight: 700, borderRadius: 10,
+                    boxShadow: '0 2px 8px rgba(168,85,247,0.3)',
+                  }}
+                >
+                  ✍️ Open Signature Pad
+                </button>
+              ) : (
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 <textarea
                   value={input}
@@ -588,6 +673,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
                   </svg>
                 </button>
               </div>
+              )}
 
               {filledCount > 0 && (
                 <button onClick={handleApply} style={{
@@ -627,6 +713,15 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           30% { transform: translateY(-5px); }
         }
       `}</style>
+
+      {/* Signature modal */}
+      {showSigModal && (
+        <SignatureModal
+          onApply={handleSignatureApply}
+          onClose={() => { setShowSigModal(false); setPendingSigField(null) }}
+          savedSignature={savedSignature}
+        />
+      )}
     </div>
   )
 }
