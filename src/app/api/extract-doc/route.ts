@@ -8,7 +8,32 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) return Response.json({ error: 'ANTHROPIC_API_KEY not set' }, { status: 500 })
 
-    const { fileBase64, mimeType, fieldNames } = await req.json()
+    const { fileBase64, mimeType, fieldNames, plainText } = await req.json()
+
+    // Plain-text path (CSV, DOCX pre-extracted text, etc.)
+    if (plainText) {
+      const client = new Anthropic({ apiKey })
+      const fieldHint = fieldNames?.length
+        ? `\n\nThe form has these fields — try to match extracted data to them:\n${(fieldNames as string[]).map((n: string) => `- ${n}`).join('\n')}`
+        : ''
+      const message = await client.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: `You are a document reader that extracts personal information from text content.
+Extract all readable personal data and return it as "Label: value" lines — one per line, nothing else.
+Rules:
+- Only include fields that are clearly present in the text
+- Use clear, descriptive label names (Full Name, Date of Birth, Email, Phone, Address, etc.)
+- The VALUE must be the raw data only — never embed the label inside the value
+- Do not guess, invent, or fabricate any values`,
+        messages: [{
+          role: 'user',
+          content: `Extract all personal information from this document text.${fieldHint}\n\nDocument text:\n${plainText}\n\nReturn one line per field:\nLabel: value`,
+        }],
+      })
+      const extracted = message.content[0].type === 'text' ? message.content[0].text.trim() : ''
+      return Response.json({ extracted })
+    }
 
     if (!fileBase64 || !mimeType) {
       return Response.json({ error: 'No file provided' }, { status: 400 })
