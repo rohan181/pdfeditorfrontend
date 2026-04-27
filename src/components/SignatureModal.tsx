@@ -126,7 +126,9 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 16,
       }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      onClick={e => e.stopPropagation()}
+      onTouchStart={e => e.stopPropagation()}
+      onTouchEnd={e => e.stopPropagation()}
     >
       <div style={{
         background: '#fff', borderRadius: 20, padding: '24px 26px',

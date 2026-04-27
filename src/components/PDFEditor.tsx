@@ -79,11 +79,13 @@ function HighlightDisplay({ el }: { el: HighlightElement }) {
 
 function MarkDisplay({ el }: { el: MarkElement }) {
   const sw = el.strokeWidth * 4
+  // Tick always uses a fixed minimum to stay visible even in tiny checkboxes
+  const tickSw = Math.max(8, sw)
   return (
     <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
       {el.markType === 'tick' && (
         <polyline points="10,55 38,82 90,18" fill="none" stroke={el.color}
-          strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          strokeWidth={tickSw} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
       )}
       {el.markType === 'cross' && (
         <>

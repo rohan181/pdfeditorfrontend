@@ -55,10 +55,12 @@ FORM FIELDS:
 ${fieldSummary}
 
 YOUR JOB:
-1. Ask the user about UNFILLED fields, one or a few at a time in a conversational way.
-2. When the user provides information, extract the values and acknowledge what you captured.
-3. Continue until all fields are filled or the user says they're done.
-4. If a field is already filled, skip it unless the user wants to change it.
+1. The user can answer any field in any order — NEVER force them to follow a fixed sequence.
+2. If the user mentions or provides info for ANY field (even out of order), extract it immediately.
+3. Gently ask about remaining UNFILLED fields, but always accept whatever the user offers first.
+4. If the user says "skip", "later", or moves to a different field, follow their lead immediately.
+5. If a field is already filled, skip it unless the user wants to change it.
+6. Continue until all fields are filled or the user says they're done.
 
 RESPONSE FORMAT — always reply with a raw JSON object, no markdown, no code fences:
 {"message":"Your message here","extracted":[{"name":"field name","value":"value"}],"signatureField":null,"done":false}
