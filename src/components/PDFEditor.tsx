@@ -98,6 +98,10 @@ function MarkDisplay({ el }: { el: MarkElement }) {
         <rect x="8" y="8" width="84" height="84" fill="none" stroke={el.color}
           strokeWidth={sw} strokeLinejoin="round" vectorEffect="non-scaling-stroke" rx="4" />
       )}
+      {el.markType === 'filledbox' && (
+        <rect x="8" y="8" width="84" height="84" fill={el.color}
+          stroke={el.color} strokeWidth={sw} strokeLinejoin="round" vectorEffect="non-scaling-stroke" rx="4" />
+      )}
     </svg>
   )
 }
@@ -208,7 +212,7 @@ function WatermarkDisplay({ el, scale }: { el: WatermarkElement; scale: number }
 // ── Ghost position marker ──────────────────────────────────────────────────
 function GhostMarker({ toolMode, x, y, activeMarkType, activeShapeType, shapeStroke }: {
   toolMode: ToolMode; x: number; y: number
-  activeMarkType: 'tick' | 'cross' | 'circle' | 'square'; activeShapeType: string; shapeStroke: string
+  activeMarkType: 'tick' | 'cross' | 'circle' | 'square' | 'filledbox'; activeShapeType: string; shapeStroke: string
 }) {
   const base: React.CSSProperties = { position: 'absolute', left: x, top: y, pointerEvents: 'none', zIndex: 6, opacity: 0.55 }
   if (toolMode === 'text') return (
@@ -224,6 +228,7 @@ function GhostMarker({ toolMode, x, y, activeMarkType, activeShapeType, shapeStr
         {activeMarkType === 'cross'  && <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}
         {activeMarkType === 'circle' && <circle cx="12" cy="12" r="9"/>}
         {activeMarkType === 'square' && <rect x="3" y="3" width="18" height="18" rx="1.5"/>}
+        {activeMarkType === 'filledbox' && <rect x="3" y="3" width="18" height="18" rx="1.5" fill="currentColor" stroke="none"/>}
       </svg>
     </div>
   )
@@ -335,7 +340,7 @@ export default function PDFEditor() {
   const [showChatFill, setShowChatFill] = useState(false)
   const [vw, setVw]                   = useState(1280)
   // New tool options
-  const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'|'circle'|'square'>('tick')
+  const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'|'circle'|'square'|'filledbox'>('tick')
   // fieldName → element IDs placed for that field by AI fill
   const aiFieldElementsRef = useRef<Map<string, string[]>>(new Map())
   const [markColor, setMarkColor]           = useState('#1e293b')
@@ -1115,27 +1120,42 @@ export default function PDFEditor() {
 
       // ── Regular text ──────────────────────────────────────────────────────
       } else {
-        // Scale font to field height, but cap lower so long text fits
         const fontSize = Math.max(7, Math.min(13, Math.round(pdfH * 0.55)))
-        const lineH    = fontSize * 1.4  // matches lineHeight:1.4 in TextDisplay
-        // Estimate how many lines the text will need at this font size
-        const charsPerLine = Math.max(1, Math.floor(pdfW / (fontSize * 0.52)))
-        // Count explicit newlines + wrapped lines
-        let estimatedLines = 0
-        for (const line of value.split('\n')) {
-          estimatedLines += Math.max(1, Math.ceil(line.length / charsPerLine))
+        const baseElemH = pdfH + upNudge
+
+        // ── Date DD/MM/YYYY → 3 centred column elements (Day / Month / Year) ─
+        const dateParts = value.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/)
+        if (dateParts) {
+          const [, dd, mm, yyyy] = dateParts
+          const colW = pdfW / 3
+          ;[dd, mm, yyyy].forEach((part, i) => {
+            els.push({
+              id: uuidv4(), type: 'text',
+              x: x1 + i * colW, y: pdfY,
+              width: colW, height: baseElemH,
+              text: part, fontSize, fontFamily: 'Inter', color: '#000',
+              bold: false, italic: false, underline: false, align: 'center', bgColor: '',
+              pageSlotId: slot.id,
+            } as TextElement)
+          })
+        } else {
+          // Normal text — estimate height for multi-line values
+          const lineH = fontSize * 1.4
+          const charsPerLine = Math.max(1, Math.floor(pdfW / (fontSize * 0.52)))
+          let estimatedLines = 0
+          for (const line of value.split('\n')) {
+            estimatedLines += Math.max(1, Math.ceil(line.length / charsPerLine))
+          }
+          const elemH = Math.max(baseElemH, estimatedLines * lineH + 4)
+          const adjustedY = pdfY - (estimatedLines > 1 ? upNudge : 0)
+          els.push({
+            id: uuidv4(), type: 'text',
+            x: x1, y: adjustedY, width: Math.max(40, pdfW), height: elemH,
+            text: value, fontSize, fontFamily: 'Inter', color: '#000',
+            bold: false, italic: false, underline: false, align: 'left', bgColor: '',
+            pageSlotId: slot.id,
+          } as TextElement)
         }
-        // Element height = enough for all lines, minimum = field height
-        const elemH = Math.max(pdfH + upNudge, estimatedLines * lineH + 4)
-        // Shift y up to keep top of text aligned with field top
-        const adjustedY = pdfY - (estimatedLines > 1 ? upNudge : 0)
-        els.push({
-          id: uuidv4(), type: 'text',
-          x: x1, y: adjustedY, width: Math.max(40, pdfW), height: elemH,
-          text: value, fontSize, fontFamily: 'Inter', color: '#000',
-          bold: false, italic: false, underline: false, align: 'left', bgColor: '',
-          pageSlotId: slot.id,
-        } as TextElement)
       }
 
       if (els.length > 0) perField.set(name, els)
@@ -1699,6 +1719,8 @@ export default function PDFEditor() {
             libPage.drawLine({ start:{x:mx+mw*0.9,y:my+mhh*0.9}, end:{x:mx+mw*0.1,y:my+mhh*0.1}, thickness:msw, color:rgb(mr,mg,mb) })
           } else if (el.markType === 'square') {
             libPage.drawRectangle({ x:mx+msw/2, y:my+msw/2, width:Math.max(1,mw-msw), height:Math.max(1,mhh-msw), borderColor:rgb(mr,mg,mb), borderWidth:msw, color:rgb(1,1,1), opacity:0 })
+          } else if (el.markType === 'filledbox') {
+            libPage.drawRectangle({ x:mx, y:my, width:Math.max(1,mw), height:Math.max(1,mhh), color:rgb(mr,mg,mb) })
           } else {
             libPage.drawEllipse({ x:mx+mw*0.5, y:my+mhh*0.5, xScale:mw*0.42, yScale:mhh*0.42, borderColor:rgb(mr,mg,mb), borderWidth:msw })
           }
@@ -2011,7 +2033,8 @@ export default function PDFEditor() {
                   {activeMarkType==='tick'   && <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
                   {activeMarkType==='cross'  && <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
                   {activeMarkType==='circle' && <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="9"/></svg>}
-                  {activeMarkType==='square' && <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>}
+                  {activeMarkType==='square'    && <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>}
+                  {activeMarkType==='filledbox' && <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>}
                   <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Mark</span>
                 </button>
                 {/* Shapes */}
@@ -2115,7 +2138,8 @@ export default function PDFEditor() {
                         {mt:'tick'   as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>},
                         {mt:'cross'  as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>},
                         {mt:'circle' as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="9"/></svg>},
-                        {mt:'square' as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>},
+                        {mt:'square'    as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>},
+                        {mt:'filledbox' as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>},
                       ]).map(({mt,icon})=>(
                         <button key={mt} onClick={()=>setActiveMarkType(mt)} style={{width:44,height:36,borderRadius:9,border:`1.5px solid ${activeMarkType===mt?'#6366f1':'#e2e8f0'}`,background:activeMarkType===mt?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:activeMarkType===mt?'#fff':'#475569',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.15s'}}>
                           {icon}
@@ -2579,6 +2603,9 @@ export default function PDFEditor() {
                               )}
                               {activeMarkType === 'square' && (
                                 <rect x="8" y="8" width="84" height="84" fill="none" stroke={markColor} strokeWidth={markStrokeWidth * 4} strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity={0.6} rx="4" />
+                              )}
+                              {activeMarkType === 'filledbox' && (
+                                <rect x="8" y="8" width="84" height="84" fill={markColor} stroke={markColor} strokeWidth={markStrokeWidth * 4} strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity={0.6} rx="4" />
                               )}
                             </svg>
                           </div>
@@ -3181,7 +3208,8 @@ export default function PDFEditor() {
                 {mt:'tick'   as const, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>},
                 {mt:'cross'  as const, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>},
                 {mt:'circle' as const, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="9"/></svg>},
-                {mt:'square' as const, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>},
+                {mt:'square'    as const, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>},
+                {mt:'filledbox' as const, icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>},
               ]).map(({mt,icon})=>(
                 <button key={mt} onClick={()=>setActiveMarkType(mt)} style={{width:48,height:40,borderRadius:10,border:`1.5px solid ${activeMarkType===mt?'#6366f1':'#e2e8f0'}`,background:activeMarkType===mt?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:activeMarkType===mt?'#fff':'#475569',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}>
                   {icon}

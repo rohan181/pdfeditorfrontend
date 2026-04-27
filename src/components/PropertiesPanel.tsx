@@ -165,18 +165,22 @@ export default function PropertiesPanel({
         {/* ── MARK ──────────────────────────────── */}
         {mk && (
           <Card title="Mark">
-            <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-              {(['tick','cross'] as const).map(mt => (
+            <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+              {([
+                { mt: 'tick'      as const, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg> },
+                { mt: 'cross'     as const, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> },
+                { mt: 'circle'    as const, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="9"/></svg> },
+                { mt: 'square'    as const, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> },
+                { mt: 'filledbox' as const, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> },
+              ]).map(({ mt, icon }) => (
                 <button key={mt} onClick={() => onUpdate(mk.id, { markType: mt } as Partial<PDFElement>)} style={{
-                  flex:1, padding:'7px 0', borderRadius:8,
-                  border:`1.5px solid ${mk.markType===mt?'#4f6ef7':'#e2e8f0'}`,
-                  background:mk.markType===mt?'#4f6ef7':'#f8faff',
-                  color:mk.markType===mt?'#fff':'#475569',
-                  fontWeight:700, fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+                  width: 36, height: 32, borderRadius: 8, padding: 0,
+                  border: `1.5px solid ${mk.markType === mt ? '#4f6ef7' : '#e2e8f0'}`,
+                  background: mk.markType === mt ? '#4f6ef7' : '#f8faff',
+                  color: mk.markType === mt ? '#fff' : '#475569',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  {mt==='tick'
-                    ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                  {icon}
                 </button>
               ))}
             </div>

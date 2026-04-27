@@ -65,7 +65,7 @@ CRITICAL — UNKNOWN FIELDS:
 
 OTHER RULES:
 - Values must be short and concise — form fields hold brief answers, not sentences
-- Dates: look at the form page image — if separator characters (/ - .) are already printed on the form between day/month/year boxes, return ONLY the digits with NO separators (e.g. "12091998" not "12/09/1998"). If no separators are pre-printed, use the format from the source document.
+- Dates: always return dates with "/" separators in DD/MM/YYYY format (e.g. "09/12/1998"). Never return raw digits without separators.
 - checkbox type: return "tick" if yes/true/checked, "cross" if no/false/unchecked, "" if unsure
 - char_box type: return raw characters with NO spaces (e.g. "A1234567"). The renderer places each character into its own cell.
 - When multiple documents are provided, pick the most relevant one per field
