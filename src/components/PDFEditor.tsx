@@ -82,9 +82,8 @@ function MarkDisplay({ el }: { el: MarkElement }) {
   return (
     <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
       {el.markType === 'tick' && (
-        // strokeWidth in SVG user units (scales with element) — no vectorEffect so it works at any size
-        <polyline points="10,55 38,82 90,18" fill="none" stroke={el.color}
-          strokeWidth={Math.max(22, sw)} strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points="12,52 35,75 88,22" fill="none" stroke={el.color}
+          strokeWidth={Math.max(18, sw)} strokeLinecap="round" strokeLinejoin="round" />
       )}
       {el.markType === 'cross' && (
         <>
@@ -1104,15 +1103,17 @@ export default function PDFEditor() {
       // ── Checkbox ─────────────────────────────────────────────────────────
       } else if (field.type === 'checkbox') {
         const isChecked = /^(tick|filledbox|yes|true|1|check|checked|on|selected)$/i.test(value.trim())
-        const markSize = Math.min(pdfW, pdfH)
-        const inset = Math.max(1, markSize * 0.06)
-        const strokeWidth = Math.max(0.5, Math.min(2, markSize * 0.05))
+        // Use actual field dimensions (no forced minimum) so tick stays inside the box
+        const cbW = x2 - x1
+        const cbH = y2 - y1
+        const inset = Math.max(0.5, Math.min(cbW, cbH) * 0.08)
+        const strokeWidth = 1.5
         els.push({
           id: uuidv4(), type: 'mark',
           x: x1 + inset, y: (field.pageHeight - y2) + inset,
-          width: pdfW - inset * 2, height: pdfH - inset * 2,
+          width: cbW - inset * 2, height: cbH - inset * 2,
           markType: isChecked ? 'tick' : 'cross',
-          color: '#1e293b', strokeWidth, pageSlotId: slot.id,
+          color: '#1a2e5a', strokeWidth, pageSlotId: slot.id,
         } as MarkElement)
 
       // ── Comb / character-box ──────────────────────────────────────────────
@@ -1120,7 +1121,7 @@ export default function PDFEditor() {
         const cellW = (x2 - x1) / field.maxLen
         const fontSize = Math.max(8, Math.min(18, Math.round(pdfH * 0.68)))
         const elemH = pdfH + upNudge
-        value.replace(/\s/g, '').split('').slice(0, field.maxLen).forEach((char, i) => {
+        value.replace(/[\s\/\-\.]/g, '').split('').slice(0, field.maxLen).forEach((char, i) => {
           els.push({
             id: uuidv4(), type: 'text',
             x: x1 + i * cellW, y: pdfY, width: cellW, height: elemH,
@@ -1139,12 +1140,16 @@ export default function PDFEditor() {
         const dateParts = value.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/)
         if (dateParts) {
           const [, dd, mm, yyyy] = dateParts
-          const colW = pdfW / 3
+          // Use character-proportional widths (2:2:4) so each part sits
+          // well within its column and doesn't encroach on the printed "/" separators
+          const unit = pdfW / 8          // 1 character unit
+          const starts  = [0, unit * 2.8, unit * 5.6]   // leave gap around each "/" separator
+          const widths  = [unit * 2.4, unit * 2.4, unit * 2.4]
           ;[dd, mm, yyyy].forEach((part, i) => {
             els.push({
               id: uuidv4(), type: 'text',
-              x: x1 + i * colW, y: pdfY,
-              width: colW, height: baseElemH,
+              x: x1 + starts[i], y: pdfY,
+              width: widths[i], height: baseElemH,
               text: part, fontSize, fontFamily: 'Inter', color: '#000',
               bold: false, italic: false, underline: false, align: 'center', bgColor: '',
               pageSlotId: slot.id,
