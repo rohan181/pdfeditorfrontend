@@ -79,13 +79,12 @@ function HighlightDisplay({ el }: { el: HighlightElement }) {
 
 function MarkDisplay({ el }: { el: MarkElement }) {
   const sw = el.strokeWidth * 4
-  // Tick always uses a fixed minimum to stay visible even in tiny checkboxes
-  const tickSw = Math.max(8, sw)
   return (
     <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
       {el.markType === 'tick' && (
+        // strokeWidth in SVG user units (scales with element) — no vectorEffect so it works at any size
         <polyline points="10,55 38,82 90,18" fill="none" stroke={el.color}
-          strokeWidth={tickSw} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          strokeWidth={Math.max(22, sw)} strokeLinecap="round" strokeLinejoin="round" />
       )}
       {el.markType === 'cross' && (
         <>
@@ -1104,7 +1103,7 @@ export default function PDFEditor() {
 
       // ── Checkbox ─────────────────────────────────────────────────────────
       } else if (field.type === 'checkbox') {
-        const isChecked = /^(tick|yes|true|1|check|checked|on)$/i.test(value.trim())
+        const isChecked = /^(tick|filledbox|yes|true|1|check|checked|on|selected)$/i.test(value.trim())
         const markSize = Math.min(pdfW, pdfH)
         const inset = Math.max(1, markSize * 0.06)
         const strokeWidth = Math.max(0.5, Math.min(2, markSize * 0.05))

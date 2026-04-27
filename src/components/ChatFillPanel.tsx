@@ -720,7 +720,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
       {/* Signature modal — stop ALL event propagation so touches don't reach ChatFillPanel's backdrop */}
       {showSigModal && (
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 500 }}
+          style={{ position: 'fixed', inset: 0, zIndex: 500, pointerEvents: 'all' }}
           onClick={e => e.stopPropagation()}
           onMouseDown={e => e.stopPropagation()}
           onTouchStart={e => e.stopPropagation()}

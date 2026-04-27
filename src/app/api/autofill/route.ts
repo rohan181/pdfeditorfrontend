@@ -24,7 +24,9 @@ export async function POST(req: NextRequest) {
     const client = new Anthropic({ apiKey })
 
     const fieldList = fields?.length
-      ? fields.map((f: { name: string; type: string }, i: number) => `${i + 1}. "${f.name}" (${f.type})`).join('\n')
+      ? fields.map((f: { name: string; type: string; value?: string }, i: number) =>
+          `${i + 1}. "${f.name}" (${f.type})${f.value ? ` [already: ${f.value}]` : ''}`
+        ).join('\n')
       : '1. "Full Name" (text)\n2. "Date" (text)\n3. "Signature" (text)'
 
     // Scale tokens with field count — ~60 tokens per field, minimum 2048
@@ -66,7 +68,7 @@ CRITICAL — UNKNOWN FIELDS:
 OTHER RULES:
 - Values must be short and concise — form fields hold brief answers, not sentences
 - Dates: always return dates with "/" separators in DD/MM/YYYY format (e.g. "09/12/1998"). Never return raw digits without separators.
-- checkbox type: return "tick" if yes/true/checked, "cross" if no/false/unchecked, "" if unsure
+- checkbox type: MUST return exactly the string "tick" (not "yes", not "true", not "checked") if the box should be checked, "cross" if unchecked, "" if genuinely unsure. No other values allowed.
 - char_box type: return raw characters with NO spaces (e.g. "A1234567"). The renderer places each character into its own cell.
 - When multiple documents are provided, pick the most relevant one per field
 
