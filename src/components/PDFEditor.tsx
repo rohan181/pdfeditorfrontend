@@ -1021,7 +1021,12 @@ export default function PDFEditor() {
           e.x >= x1 - tol && e.x <= x2 + tol &&
           e.y >= fieldTop - tol && e.y <= fieldBot + tol
         )
-        if (markEl && markEl.type === 'mark') existingFilled[field.name] = markEl.markType
+        if (markEl && markEl.type === 'mark') {
+          existingFilled[field.name] = markEl.markType
+          // Register existing mark so AI fill replaces it instead of stacking on top
+          aiFieldElementsRef.current.set(field.name,
+            [...(aiFieldElementsRef.current.get(field.name) ?? []), markEl.id])
+        }
       } else if (field.isComb && field.maxLen) {
         const charEls = elements
           .filter(e =>
@@ -1030,15 +1035,21 @@ export default function PDFEditor() {
             e.y >= fieldTop - tol && e.y <= fieldBot + tol
           )
           .sort((a, b) => a.x - b.x)
-        if (charEls.length > 0)
+        if (charEls.length > 0) {
           existingFilled[field.name] = charEls.map(e => e.type === 'text' ? e.text : '').join('')
+          aiFieldElementsRef.current.set(field.name, charEls.map(e => e.id))
+        }
       } else {
         const textEl = elements.find(e =>
           e.type === 'text' && e.pageSlotId === slot.id &&
           e.x >= x1 - tol && e.x <= x2 + tol &&
           e.y >= fieldTop - tol && e.y <= fieldBot + tol
         )
-        if (textEl && textEl.type === 'text') existingFilled[field.name] = textEl.text
+        if (textEl && textEl.type === 'text') {
+          existingFilled[field.name] = textEl.text
+          aiFieldElementsRef.current.set(field.name,
+            [...(aiFieldElementsRef.current.get(field.name) ?? []), textEl.id])
+        }
       }
     }
 
