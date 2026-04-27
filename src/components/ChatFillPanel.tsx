@@ -391,6 +391,9 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           overflow: 'hidden', margin: '0 24px',
           animation: 'slideUpPanel 0.22s ease-out',
         }}
+        onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
         onDragOver={e => { e.preventDefault(); setDragOver(true) }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
@@ -714,13 +717,22 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
         }
       `}</style>
 
-      {/* Signature modal */}
+      {/* Signature modal — stop ALL event propagation so touches don't reach ChatFillPanel's backdrop */}
       {showSigModal && (
-        <SignatureModal
-          onApply={handleSignatureApply}
-          onClose={() => { setShowSigModal(false); setPendingSigField(null) }}
-          savedSignature={savedSignature}
-        />
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 500 }}
+          onClick={e => e.stopPropagation()}
+          onMouseDown={e => e.stopPropagation()}
+          onTouchStart={e => e.stopPropagation()}
+          onTouchEnd={e => e.stopPropagation()}
+          onTouchMove={e => e.stopPropagation()}
+        >
+          <SignatureModal
+            onApply={handleSignatureApply}
+            onClose={() => { setShowSigModal(false); setPendingSigField(null) }}
+            savedSignature={savedSignature}
+          />
+        </div>
       )}
     </div>
   )

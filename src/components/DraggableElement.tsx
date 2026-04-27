@@ -166,7 +166,6 @@ export default function DraggableElement({
         left: offX, top: offY,
         width: scaledW, height: scaledH,
         overflow: 'hidden',
-        pointerEvents: 'none',
       }}>
         {children}
       </div>
