@@ -336,6 +336,7 @@ export default function PDFEditor() {
   const [autoFillFields, setAutoFillFields] = useState<DetectedField[]>([])
   const [aiExistingFilled, setAiExistingFilled] = useState<Record<string, string>>({})
   const [autoFillPageImage, setAutoFillPageImage] = useState('')
+  const [autoFillPdfBase64, setAutoFillPdfBase64] = useState('')
   const [showChatFill, setShowChatFill] = useState(false)
   const [vw, setVw]                   = useState(1280)
   // New tool options
@@ -1056,6 +1057,16 @@ export default function PDFEditor() {
     setAutoFillFields(detectedFields)
     setAiExistingFilled(existingFilled)
     setAutoFillPageImage(pageImage)
+
+    // Encode the full PDF so the AI chat can read all pages for context
+    if (src?.bytes) {
+      const uint8 = new Uint8Array(src.bytes)
+      let binary = ''
+      for (let i = 0; i < uint8.length; i++) binary += String.fromCharCode(uint8[i])
+      setAutoFillPdfBase64(btoa(binary))
+    } else {
+      setAutoFillPdfBase64('')
+    }
   }, [slots, slotIdx, sources, elements])
 
   const openAutoFill = useCallback(async () => {
@@ -1103,7 +1114,7 @@ export default function PDFEditor() {
       const pdfY = field.pageHeight - y2 - upNudge
 
       // ── Signature ────────────────────────────────────────────────────────
-      if (field.type === 'signature') {
+      if (field.type === 'signature' || value.startsWith('data:image')) {
         if (!value.startsWith('data:image')) return
         els.push({
           id: uuidv4(), type: 'signature',
@@ -3413,6 +3424,7 @@ export default function PDFEditor() {
           onClose={() => setShowChatFill(false)}
           pageLabel={`Page ${slotIdx + 1} of ${slots.length}`}
           pageImageBase64={autoFillPageImage}
+          pdfDocBase64={autoFillPdfBase64}
         />
       )}
 

@@ -32,6 +32,7 @@ interface Props {
   fields: DetectedField[]
   existingFilled?: Record<string, string>
   pageImageBase64?: string
+  pdfDocBase64?: string
   onApply: (filled: FilledField[]) => void
   onClose: () => void
   pageLabel?: string
@@ -40,7 +41,7 @@ interface Props {
 let _idCounter = 0
 const nextId = () => `cdoc-${++_idCounter}`
 
-export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBase64, onApply, onClose, pageLabel }: Props) {
+export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBase64, pdfDocBase64, onApply, onClose, pageLabel }: Props) {
   const [history, setHistory] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -250,7 +251,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
   }, [extractDoc])
 
   // ── AI conversation ───────────────────────────────────────────────────────
-  const sendToAI = useCallback(async (msgs: ChatMessage[]) => {
+  const sendToAI = useCallback(async (msgs: ChatMessage[], isFirstMessage = false) => {
     setLoading(true)
     try {
       const fieldsWithValues = fields.map(f => ({
@@ -265,6 +266,8 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           history: msgs,
           fields: fieldsWithValues,
           pageImageBase64: pageImageBase64 || null,
+          // Send full PDF only on the first message so Claude reads the whole document
+          pdfDocBase64: isFirstMessage && pdfDocBase64 ? pdfDocBase64 : null,
         }),
       })
 
@@ -280,10 +283,16 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
 
       if (data.extracted?.length) {
         const updated = { ...collectedRef.current }
+        const newlyExtracted: FilledField[] = []
         for (const { name, value } of data.extracted) {
-          if (value !== undefined && value !== null) updated[name] = String(value)
+          if (value !== undefined && value !== null) {
+            updated[name] = String(value)
+            newlyExtracted.push({ name, value: String(value) })
+          }
         }
         syncCollected(updated)
+        // Apply each extracted field to the PDF immediately
+        if (newlyExtracted.length) onApply(newlyExtracted)
       }
 
       // Signature field requested — prompt user to sign
@@ -299,7 +308,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
     } finally {
       setLoading(false)
     }
-  }, [fields, pageImageBase64])
+  }, [fields, pageImageBase64, pdfDocBase64])
 
   // Kick off conversation on mount
   useEffect(() => {
@@ -309,7 +318,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
       role: 'user',
       content: 'Hello! Please start asking me about the form fields that need to be filled.',
     }
-    sendToAI([initMsg])
+    sendToAI([initMsg], true)
     historyRef.current = [initMsg]
     setHistory([initMsg])
   }, [fields, sendToAI])
@@ -337,15 +346,20 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
     setShowSigModal(false)
     if (!pendingSigField) return
 
+    const fieldName = pendingSigField
+
     // Store the signature data URL in collected
-    const updated = { ...collectedRef.current, [pendingSigField]: dataUrl }
+    const updated = { ...collectedRef.current, [fieldName]: dataUrl }
     syncCollected(updated)
 
+    // Apply signature to PDF immediately so the user sees it placed right away
+    onApply([{ name: fieldName, value: dataUrl }])
+
     // Inject confirmation into chat and continue
-    const sigMsg: ChatMessage = { role: 'assistant', content: `Signature captured for "${pendingSigField}".` }
+    const sigMsg: ChatMessage = { role: 'assistant', content: `Signature placed for "${fieldName}".` }
     const confirmUser: ChatMessage = {
       role: 'user',
-      content: `[SYSTEM: Signature provided for field "${pendingSigField}". Continue with remaining unfilled fields.]`,
+      content: `[SYSTEM: Signature provided for field "${fieldName}". Continue with remaining unfilled fields.]`,
     }
     const next = [...historyRef.current, sigMsg, confirmUser]
     syncHistory(next)
@@ -602,15 +616,15 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           {done || unfilled.length === 0 ? (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
-                {unfilled.length === 0 ? 'All fields collected!' : 'Chat ended.'}
+                {unfilled.length === 0 ? `All ${filledCount} fields applied to PDF!` : 'Chat ended — fields applied.'}
               </div>
-              <button onClick={handleApply} style={{
+              <button onClick={onClose} style={{
                 width: '100%', padding: '9px 0', border: 'none', cursor: 'pointer',
                 background: 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
                 color: '#fff', fontSize: 13, fontWeight: 700, borderRadius: 10,
                 boxShadow: '0 2px 8px rgba(14,165,233,0.35)',
               }}>
-                Apply {filledCount} field{filledCount !== 1 ? 's' : ''} to PDF
+                Done
               </button>
             </div>
           ) : (
@@ -678,16 +692,6 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
               </div>
               )}
 
-              {filledCount > 0 && (
-                <button onClick={handleApply} style={{
-                  marginTop: 6, width: '100%', padding: '7px 0', border: 'none', cursor: 'pointer',
-                  background: 'transparent', borderRadius: 8,
-                  color: '#0ea5e9', fontSize: 12, fontWeight: 700,
-                  borderTop: '1px solid #e2e8f0',
-                }}>
-                  Apply {filledCount} collected field{filledCount !== 1 ? 's' : ''} now →
-                </button>
-              )}
             </>
           )}
         </div>

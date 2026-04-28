@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) return Response.json({ error: 'ANTHROPIC_API_KEY not set' }, { status: 500 })
 
-    const { history, fields, pageImageBase64 } = await req.json()
+    const { history, fields, pageImageBase64, pdfDocBase64 } = await req.json()
 
     const client = new Anthropic({ apiKey })
 
@@ -29,7 +29,16 @@ export async function POST(req: NextRequest) {
       .join('\n')
 
     const userContent: any[] = []
-    if (pageImageBase64) {
+
+    // On the first call, include the full PDF so Claude understands the whole document
+    if (pdfDocBase64) {
+      userContent.push({
+        type: 'document',
+        source: { type: 'base64', media_type: 'application/pdf' as const, data: pdfDocBase64 },
+      })
+      userContent.push({ type: 'text', text: 'Above is the complete PDF form. Please read it fully before asking about fields.' })
+    } else if (pageImageBase64) {
+      // Subsequent messages: just the current page image for context
       userContent.push({
         type: 'image',
         source: { type: 'base64', media_type: 'image/jpeg' as const, data: pageImageBase64 },
@@ -58,7 +67,7 @@ YOUR JOB:
 1. The user can answer any field in any order — NEVER force them to follow a fixed sequence.
 2. If the user mentions or provides info for ANY field (even out of order), extract it immediately.
 3. Gently ask about remaining UNFILLED fields, but always accept whatever the user offers first.
-4. If the user says "skip", "later", or moves to a different field, follow their lead immediately.
+4. SKIP RULE (CRITICAL): If the user says "skip", "no", "next", "leave it", "doesn't apply", "N/A", "not applicable", "I don't have that", or ANY other dismissal — immediately reply with ONLY a short acknowledgement like "Skipped!" or "Got it, skipped." then ask about the NEXT unfilled field. NEVER ask for confirmation. NEVER ask if they're sure. NEVER ask why. Just skip instantly and move on.
 5. If a field is already filled, skip it unless the user wants to change it.
 6. Continue until all fields are filled or the user says they're done.
 
