@@ -80,7 +80,7 @@ Rules:
 - "signatureField": if the NEXT unfilled field is a signature/initials field, set this to the exact field name (string). Otherwise null.
 - "done": true only when all unfilled fields collected or user says stop.
 - Values must be bare (no "Label: value" — just the value).
-- Checkbox fields: "tick" if checked/yes, "cross" if no/unchecked, "" if unsure.
+- Checkbox fields: "tick" if checked/yes, "" (empty string) if unchecked or unsure. Never "cross" or "no".
 - char_box: raw characters, no spaces.
 - Date parts: if field name contains "Day" extract only the 2-digit day ("28"), "Month" → 2-digit month ("04"), "Year" → 4-digit year ("2026"). For other date fields return full DD/MM/YYYY.
 - Signature fields: set signatureField to the exact field name. Return "" as the extracted value. Never ask the user to type a signature.

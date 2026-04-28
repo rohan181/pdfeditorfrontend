@@ -68,7 +68,7 @@ CRITICAL — UNKNOWN FIELDS:
 OTHER RULES:
 - Values must be short and concise — form fields hold brief answers, not sentences
 - Dates: if the field name contains "Day" fill ONLY the 2-digit day (e.g. "09"). If it contains "Month" fill ONLY the 2-digit month (e.g. "12"). If it contains "Year" fill ONLY the 4-digit year (e.g. "1998"). For any other date field return the full date with "/" separators in DD/MM/YYYY format (e.g. "09/12/1998"). Never return raw digits without separators for full dates.
-- checkbox type: MUST return exactly the string "tick" (not "yes", not "true", not "checked") if the box should be checked, "cross" if unchecked, "" if genuinely unsure. No other values allowed.
+- checkbox type: return "tick" if the box should be checked, "" (empty string) if unchecked or unsure. Never return "cross", "no", "false", or any other value.
 - signature type: return "" (empty string) — signatures are drawn, never typed.
 - char_box type: return raw characters with NO spaces (e.g. "A1234567"). The renderer places each character into its own cell.
 - When multiple documents are provided, pick the most relevant one per field

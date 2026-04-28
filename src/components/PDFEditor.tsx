@@ -1086,20 +1086,40 @@ export default function PDFEditor() {
     filled.forEach(({ name, value }) => {
       if (!value.trim()) return
       const els: PDFElement[] = []
-      const field = autoFillFields.find(f => f.name === name)
+      const isSigValue = value.startsWith('data:image')
+
+      // Exact match first, then case-insensitive, then for signatures find any sig field
+      let field = autoFillFields.find(f => f.name === name)
+      if (!field) field = autoFillFields.find(f => f.name.toLowerCase() === name.toLowerCase())
+      if (!field && isSigValue) {
+        // Fall back to the first signature field not yet covered by an existing element
+        field = autoFillFields.find(f =>
+          f.type === 'signature' &&
+          !(aiFieldElementsRef.current.get(f.name)?.length)
+        ) ?? autoFillFields.find(f => f.type === 'signature')
+      }
 
       if (!field) {
-        // No detected field — place near current page centre
         const slot = slots[slotIdx]
         if (!slot) return
-        els.push({
-          id: uuidv4(), type: 'text',
-          x: slot.baseWidth / 2 - 100, y: slot.baseHeight / 2,
-          width: 200, height: 30,
-          text: value, fontSize: 12, fontFamily: 'Inter', color: '#000',
-          bold: false, italic: false, underline: false, align: 'left', bgColor: '',
-          pageSlotId: slot.id,
-        } as TextElement)
+        if (isSigValue) {
+          // Signature with no matched field — place centred on current page
+          els.push({
+            id: uuidv4(), type: 'signature',
+            x: slot.baseWidth / 2 - 100, y: slot.baseHeight / 2 - 25,
+            width: 200, height: 50,
+            src: value, pageSlotId: slot.id,
+          } as SignatureElement)
+        } else {
+          els.push({
+            id: uuidv4(), type: 'text',
+            x: slot.baseWidth / 2 - 100, y: slot.baseHeight / 2,
+            width: 200, height: 30,
+            text: value, fontSize: 12, fontFamily: 'Inter', color: '#000',
+            bold: false, italic: false, underline: false, align: 'left', bgColor: '',
+            pageSlotId: slot.id,
+          } as TextElement)
+        }
         perField.set(name, els)
         return
       }
@@ -1125,18 +1145,19 @@ export default function PDFEditor() {
       // ── Checkbox ─────────────────────────────────────────────────────────
       } else if (field.type === 'checkbox') {
         const isChecked = /^(tick|filledbox|yes|true|1|check|checked|on|selected)$/i.test(value.trim())
-        // Use actual field dimensions (no forced minimum) so tick stays inside the box
-        const cbW = x2 - x1
-        const cbH = y2 - y1
-        const inset = Math.max(0.5, Math.min(cbW, cbH) * 0.08)
-        const strokeWidth = 1.5
-        els.push({
-          id: uuidv4(), type: 'mark',
-          x: x1 + inset, y: (field.pageHeight - y2) + inset,
-          width: cbW - inset * 2, height: cbH - inset * 2,
-          markType: isChecked ? 'tick' : 'cross',
-          color: '#1a2e5a', strokeWidth, pageSlotId: slot.id,
-        } as MarkElement)
+        // Only place a mark for checked boxes — leave unchecked boxes completely empty
+        if (isChecked) {
+          const cbW = x2 - x1
+          const cbH = y2 - y1
+          const inset = Math.max(0.5, Math.min(cbW, cbH) * 0.08)
+          els.push({
+            id: uuidv4(), type: 'mark',
+            x: x1 + inset, y: (field.pageHeight - y2) + inset,
+            width: cbW - inset * 2, height: cbH - inset * 2,
+            markType: 'tick',
+            color: '#1a2e5a', strokeWidth: 1.5, pageSlotId: slot.id,
+          } as MarkElement)
+        }
 
       // ── Comb / character-box ──────────────────────────────────────────────
       } else if (field.isComb && field.maxLen && field.maxLen > 1) {
