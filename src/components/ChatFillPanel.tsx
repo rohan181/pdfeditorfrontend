@@ -124,15 +124,19 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
       const newCollected = { ...collectedRef.current }
       const filledLines: string[] = []
 
+      const docNewlyFilled: FilledField[] = []
       if (fillData.filled?.length) {
         for (const { name, value } of fillData.filled as { name: string; value: string }[]) {
           if (value?.trim()) {
             newCollected[name] = value
             filledLines.push(`• ${name}: ${value}`)
+            docNewlyFilled.push({ name, value })
           }
         }
       }
       syncCollected(newCollected)
+      // Apply extracted fields to PDF immediately
+      if (docNewlyFilled.length) onApply(docNewlyFilled)
 
       const docLabel = docsRef.current.find(d => d.id === docId)?.description.trim()
         || docsRef.current.find(d => d.id === docId)?.fileName
@@ -172,7 +176,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
       setLoading(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields, pageImageBase64])
+  }, [fields, pageImageBase64, onApply])
 
   // ── Process a dropped / picked file ──────────────────────────────────────
   const processFile = useCallback(async (file: File) => {
@@ -311,7 +315,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
     } finally {
       setLoading(false)
     }
-  }, [fields, pageImageBase64, pdfDocBase64])
+  }, [fields, pageImageBase64, pdfDocBase64, onApply])
 
   // Kick off conversation on mount
   useEffect(() => {
@@ -563,19 +567,26 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
             </div>
           )}
 
-          {/* Collected values */}
+          {/* Collected values — re-mounts (slide-in) every time filledCount grows */}
           {filledCount > 0 && (
-            <div style={{
+            <div key={filledCount} style={{
               background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 10,
               padding: '8px 10px', marginTop: 4,
+              animation: 'slideInField 0.28s ease-out',
             }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: '#15803d', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Collected so far
+                Collected so far ({filledCount}/{totalFields})
               </div>
-              {Object.entries(collected).filter(([, v]) => v !== '').map(([k, v]) => (
+              {Object.entries(collected).filter(([, v]) => v !== '' && !v.startsWith('data:image')).map(([k, v]) => (
                 <div key={k} style={{ fontSize: 11, color: '#166534', display: 'flex', gap: 4, marginBottom: 2 }}>
                   <span style={{ fontWeight: 600, flexShrink: 0 }}>{k}:</span>
                   <span style={{ opacity: 0.85, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v}</span>
+                </div>
+              ))}
+              {Object.entries(collected).filter(([, v]) => v.startsWith('data:image')).map(([k]) => (
+                <div key={k} style={{ fontSize: 11, color: '#166534', display: 'flex', gap: 4, marginBottom: 2 }}>
+                  <span style={{ fontWeight: 600, flexShrink: 0 }}>{k}:</span>
+                  <span style={{ opacity: 0.85, fontStyle: 'italic' }}>✍ signature</span>
                 </div>
               ))}
             </div>
@@ -721,6 +732,10 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
         @keyframes bounce {
           0%, 60%, 100% { transform: translateY(0); }
           30% { transform: translateY(-5px); }
+        }
+        @keyframes slideInField {
+          from { transform: translateY(10px); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
         }
       `}</style>
 
