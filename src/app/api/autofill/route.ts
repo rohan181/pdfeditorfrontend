@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     })
 
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: maxTokens,
       system: `You are a PDF form-filling assistant with vision capability.
 When a form page image is provided, read the visible field labels on the page to understand what each field actually asks for — use this to correctly match data from the user context.

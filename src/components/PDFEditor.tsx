@@ -1147,25 +1147,23 @@ export default function PDFEditor() {
         const fontSize = Math.max(7, Math.min(13, Math.round(pdfH * 0.55)))
         const baseElemH = pdfH + upNudge
 
-        // ── Date DD/MM/YYYY → 3 centred column elements (Day / Month / Year) ─
+        // ── Date DD/MM/YYYY → single centred element spanning the whole field ─
+        // The form's pre-printed "/" separators sit inside each Day/Month column,
+        // so splitting into 3 elements always merges the digit with its slash.
+        // Placing the full "09/12/1998" centred lets the "/" in the value coincide
+        // with the form's separator marks naturally.
         const dateParts = value.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/)
         if (dateParts) {
-          const [, dd, mm, yyyy] = dateParts
-          // Use character-proportional widths (2:2:4) so each part sits
-          // well within its column and doesn't encroach on the printed "/" separators
-          const unit = pdfW / 8          // 1 character unit
-          const starts  = [0, unit * 2.8, unit * 5.6]   // leave gap around each "/" separator
-          const widths  = [unit * 2.4, unit * 2.4, unit * 2.4]
-          ;[dd, mm, yyyy].forEach((part, i) => {
-            els.push({
-              id: uuidv4(), type: 'text',
-              x: x1 + starts[i], y: pdfY,
-              width: widths[i], height: baseElemH,
-              text: part, fontSize, fontFamily: 'Inter', color: '#000',
-              bold: false, italic: false, underline: false, align: 'center', bgColor: '',
-              pageSlotId: slot.id,
-            } as TextElement)
-          })
+          const dateStr = dateParts[1].padStart(2, '0') + '/' + dateParts[2].padStart(2, '0') + '/' + dateParts[3]
+          // Shrink font if needed so 10-char date fits the field width
+          const dateFontSize = Math.min(fontSize, Math.max(7, Math.floor(pdfW / (dateStr.length * 0.6))))
+          els.push({
+            id: uuidv4(), type: 'text',
+            x: x1, y: pdfY, width: pdfW, height: baseElemH,
+            text: dateStr, fontSize: dateFontSize, fontFamily: 'Inter', color: '#000',
+            bold: false, italic: false, underline: false, align: 'center', bgColor: '',
+            pageSlotId: slot.id,
+          } as TextElement)
         } else {
           // Normal text — estimate height for multi-line values
           const lineH = fontSize * 1.4

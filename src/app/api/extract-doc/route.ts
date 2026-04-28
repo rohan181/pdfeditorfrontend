@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
         ? `\n\nThe form has these fields — try to match extracted data to them:\n${(fieldNames as string[]).map((n: string) => `- ${n}`).join('\n')}`
         : ''
       const message = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
         system: `You are a document reader that extracts personal information from text content.
 Extract all readable personal data and return it as "Label: value" lines — one per line, nothing else.
@@ -57,7 +57,7 @@ Rules:
       : { type: 'document' as const, source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: fileBase64 } }
 
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: `You are a document reader that extracts personal information from identity documents such as passports, driving licences, national ID cards, and similar documents.
 Extract all readable personal data and return it as "Label: value" lines — one per line, nothing else.

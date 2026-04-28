@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     messages.push({ role: 'user', content: userContent })
 
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: `You are a friendly PDF form-filling assistant having a natural conversation to help complete a form.
 
