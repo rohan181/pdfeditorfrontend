@@ -285,9 +285,12 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
         const updated = { ...collectedRef.current }
         const newlyExtracted: FilledField[] = []
         for (const { name, value } of data.extracted) {
-          if (value !== undefined && value !== null) {
-            updated[name] = String(value)
-            newlyExtracted.push({ name, value: String(value) })
+          const v = String(value ?? '')
+          // Skip empty-string extractions for signature fields (they'll be drawn)
+          if (v === '' && data.signatureField === name) continue
+          if (value !== undefined && value !== null && v !== '') {
+            updated[name] = v
+            newlyExtracted.push({ name, value: v })
           }
         }
         syncCollected(updated)

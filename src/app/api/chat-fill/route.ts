@@ -82,8 +82,9 @@ Rules:
 - Values must be bare (no "Label: value" — just the value).
 - Checkbox fields: "tick" if checked/yes, "cross" if no/unchecked, "" if unsure.
 - char_box: raw characters, no spaces.
-- Never invent values.
-- For signature fields: set signatureField to the field name and say something like "Please sign below" — do NOT ask the user to type anything.`,
+- Date parts: if field name contains "Day" extract only the 2-digit day ("28"), "Month" → 2-digit month ("04"), "Year" → 4-digit year ("2026"). For other date fields return full DD/MM/YYYY.
+- Signature fields: set signatureField to the exact field name. Return "" as the extracted value. Never ask the user to type a signature.
+- Never invent values.`,
       messages,
     })
 

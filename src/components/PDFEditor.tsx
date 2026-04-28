@@ -982,7 +982,7 @@ export default function PDFEditor() {
           if (ann.subtype !== 'Widget' || !ann.fieldName) return
           const isComb = ann.fieldType === 'Tx' && !!(ann.fieldFlags & (1 << 24))
           const fieldName = ann.alternativeText || ann.fieldName
-          const isSigByName = /signature|sign here|initials/i.test(fieldName)
+          const isSigByName = /\b(signature|sign here|sign|initials?|autograph|signatory)\b/i.test(fieldName)
           const fieldType =
             ann.fieldType === 'Sig' || isSigByName ? 'signature' :
             ann.fieldType === 'Btn' ? 'checkbox' :
@@ -1158,23 +1158,40 @@ export default function PDFEditor() {
         const fontSize = Math.max(7, Math.min(13, Math.round(pdfH * 0.55)))
         const baseElemH = pdfH + upNudge
 
-        // ── Date DD/MM/YYYY → single centred element spanning the whole field ─
-        // The form's pre-printed "/" separators sit inside each Day/Month column,
-        // so splitting into 3 elements always merges the digit with its slash.
-        // Placing the full "09/12/1998" centred lets the "/" in the value coincide
-        // with the form's separator marks naturally.
+        // ── Date DD/MM/YYYY handling ──────────────────────────────────────────
         const dateParts = value.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/)
         if (dateParts) {
-          const dateStr = dateParts[1].padStart(2, '0') + '/' + dateParts[2].padStart(2, '0') + '/' + dateParts[3]
-          // Shrink font if needed so 10-char date fits the field width
-          const dateFontSize = Math.min(fontSize, Math.max(7, Math.floor(pdfW / (dateStr.length * 0.6))))
-          els.push({
-            id: uuidv4(), type: 'text',
-            x: x1, y: pdfY, width: pdfW, height: baseElemH,
-            text: dateStr, fontSize: dateFontSize, fontFamily: 'Inter', color: '#000',
-            bold: false, italic: false, underline: false, align: 'center', bgColor: '',
-            pageSlotId: slot.id,
-          } as TextElement)
+          const dd = dateParts[1].padStart(2, '0')
+          const mm = dateParts[2].padStart(2, '0')
+          const yyyy = dateParts[3].length === 2 ? '20' + dateParts[3] : dateParts[3]
+          const fn = field.name.toLowerCase()
+
+          // If the field name refers to a specific date part, render only that part
+          const isDay   = /\bday\b/.test(fn)
+          const isMonth = /\bmonth\b/.test(fn)
+          const isYear  = /\byear\b/.test(fn)
+          const partValue = isDay ? dd : isMonth ? mm : isYear ? yyyy : null
+
+          if (partValue) {
+            els.push({
+              id: uuidv4(), type: 'text',
+              x: x1, y: pdfY, width: pdfW, height: baseElemH,
+              text: partValue, fontSize, fontFamily: 'Inter', color: '#000',
+              bold: false, italic: false, underline: false, align: 'center', bgColor: '',
+              pageSlotId: slot.id,
+            } as TextElement)
+          } else {
+            // Full date in a single field — centre it, shrink font if needed
+            const dateStr = dd + '/' + mm + '/' + yyyy
+            const dateFontSize = Math.min(fontSize, Math.max(7, Math.floor(pdfW / (dateStr.length * 0.6))))
+            els.push({
+              id: uuidv4(), type: 'text',
+              x: x1, y: pdfY, width: pdfW, height: baseElemH,
+              text: dateStr, fontSize: dateFontSize, fontFamily: 'Inter', color: '#000',
+              bold: false, italic: false, underline: false, align: 'center', bgColor: '',
+              pageSlotId: slot.id,
+            } as TextElement)
+          }
         } else {
           // Normal text — estimate height for multi-line values
           const lineH = fontSize * 1.4
