@@ -2,13 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'NexusAI — AI-Powered Productivity Suite | PDF Editor & 16 Intelligent Tools',
-  description: 'Edit, sign and AI-fill PDFs, generate code, translate documents and automate workflows. 16 AI-powered tools built for professionals who move fast.',
-  keywords: 'AI PDF editor, PDF form filler, AI tools, document editor, sign PDF online, AI productivity suite',
+  title: 'EditPDF AI — AI-Powered PDF Editor & Document Suite',
+  description: 'Edit, sign, annotate and AI-fill PDF forms online. The fastest AI PDF editor with intelligent form detection, e-signatures and instant completion.',
+  keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, editpdfai',
   robots: 'index, follow',
   openGraph: {
-    title: 'NexusAI — AI-Powered Productivity Suite',
-    description: 'Edit PDFs, sign documents, translate files and automate workflows — powered by next-generation AI.',
+    title: 'EditPDF AI — AI-Powered PDF Editor & Document Suite',
+    description: 'Edit, sign and AI-fill PDF forms online. Intelligent form detection and instant completion.',
     type: 'website',
   },
 }
