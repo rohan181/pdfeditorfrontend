@@ -256,6 +256,7 @@ export default function HomePage() {
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { overflow: auto !important; }
         @keyframes floatUp {
           0%   { transform: translateY(0);     opacity: 0; }
           8%   { opacity: 1; }
