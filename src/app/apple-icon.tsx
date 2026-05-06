@@ -9,57 +9,53 @@ export default function AppleIcon() {
       <div
         style={{
           width: 180, height: 180,
-          background: '#020208',
+          background: '#000',
           borderRadius: 40,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 10,
-          position: 'relative',
+          gap: 0,
         }}
       >
-        {/* Glow behind spark */}
-        <div style={{
-          position: 'absolute',
-          width: 90, height: 90,
-          background: 'rgba(129,140,248,0.4)',
-          borderRadius: '50%',
-          filter: 'blur(32px)',
-          top: 36,
-        }} />
-        {/* Spark ✦ */}
-        <div style={{
-          position: 'relative',
-          fontSize: 68,
-          color: '#a5b4fc',
-          lineHeight: 1,
-          fontWeight: 700,
-        }}>
-          ✦
-        </div>
-        {/* EDITPDF.AI wordmark */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          gap: 0,
-          position: 'relative',
-        }}>
+        {/* Wordmark row 1: EDIT PDF */}
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 0, marginBottom: 6 }}>
           <span style={{
-            fontSize: 24,
-            fontWeight: 800,
-            color: '#f0f4ff',
-            letterSpacing: '-1px',
             fontFamily: 'sans-serif',
+            fontSize: 38,
+            fontWeight: 300,
+            color: 'rgba(240,244,255,.42)',
+            letterSpacing: '2px',
+            lineHeight: 1,
           }}>
-            EDITPDF
+            EDIT
           </span>
           <span style={{
-            fontSize: 24,
-            fontWeight: 800,
-            color: '#818cf8',
-            letterSpacing: '-1px',
             fontFamily: 'sans-serif',
+            fontSize: 38,
+            fontWeight: 900,
+            color: '#f0f4ff',
+            letterSpacing: '-1.5px',
+            lineHeight: 1,
+          }}>
+            PDF
+          </span>
+        </div>
+        {/* .AI badge */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'linear-gradient(135deg, #4f46e5, #818cf8)',
+          borderRadius: 10,
+          padding: '5px 18px',
+        }}>
+          <span style={{
+            fontFamily: 'monospace',
+            fontSize: 20,
+            fontWeight: 700,
+            color: '#fff',
+            letterSpacing: '3px',
           }}>
             .AI
           </span>

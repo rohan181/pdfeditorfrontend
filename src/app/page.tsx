@@ -73,8 +73,9 @@ export default function HomePage() {
         <nav className="nav" aria-label="Main navigation">
           <div className="nav-in">
             <Link href="/" className="wm" aria-label="EditPDF AI home">
-              <span className="wm-s" aria-hidden="true">✦</span>
-              <span className="wm-t">EDITPDF<span className="wm-d">.AI</span></span>
+              <span className="wm-e">EDIT</span>
+              <span className="wm-p">PDF</span>
+              <span className="wm-a">.AI</span>
             </Link>
             <div className="nav-mid" role="list">
               <a href="#tools" className="nla" role="listitem">Tools</a>
@@ -256,8 +257,9 @@ export default function HomePage() {
         <footer className="foot" role="contentinfo">
           <div className="wrap foot-in">
             <Link href="/" className="wm" aria-label="EditPDF AI home">
-              <span className="wm-s" aria-hidden="true">✦</span>
-              <span className="wm-t wm-sm">EDITPDF<span className="wm-d">.AI</span></span>
+              <span className="wm-e wm-sm">EDIT</span>
+              <span className="wm-p wm-sm">PDF</span>
+              <span className="wm-a wm-a-sm">.AI</span>
             </Link>
             <nav aria-label="Footer navigation" className="fnav">
               <Link href="/editor">AI PDF Editor</Link>
@@ -316,12 +318,12 @@ export default function HomePage() {
         .nbtn:hover{background:var(--ind2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,102,241,.4)}
 
         /* Wordmark */
-        .wm{display:flex;align-items:center;gap:8px;text-decoration:none}
-        .wm-s{font-size:15px;color:var(--ind2);filter:drop-shadow(0 0 10px rgba(129,140,248,.9));animation:spk 3s ease-in-out infinite}
-        .wm-t{font-family:var(--fd);font-size:17px;font-weight:800;color:var(--fg);letter-spacing:-.01em}
-        .wm-d{color:var(--ind2)}
-        .wm-sm{font-size:14px}
-        @keyframes spk{0%,100%{filter:drop-shadow(0 0 10px rgba(129,140,248,.9))}50%{filter:drop-shadow(0 0 20px rgba(129,140,248,1))}}
+        .wm{display:inline-flex;align-items:center;gap:0;text-decoration:none}
+        .wm-e{font-family:var(--fd);font-size:17px;font-weight:400;color:rgba(240,244,255,.42);letter-spacing:.03em}
+        .wm-p{font-family:var(--fd);font-size:17px;font-weight:800;color:#f0f4ff;letter-spacing:-.03em}
+        .wm-a{font-family:var(--fm);font-size:9.5px;font-weight:700;letter-spacing:.1em;color:#fff;background:linear-gradient(135deg,#4f46e5 0%,#818cf8 100%);padding:2px 7px;border-radius:4px;margin-left:6px;line-height:1.6;white-space:nowrap}
+        .wm-sm{font-size:15px}
+        .wm-a-sm{font-size:8.5px;padding:2px 6px;margin-left:5px}
 
         /* Hero */
         .hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
