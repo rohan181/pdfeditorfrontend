@@ -15,50 +15,47 @@ export default function AppleIcon() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 0,
+          gap: 16,
+          position: 'relative',
         }}
       >
-        {/* Wordmark row 1: EDIT PDF */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 0, marginBottom: 6 }}>
-          <span style={{
-            fontFamily: 'sans-serif',
-            fontSize: 38,
-            fontWeight: 300,
-            color: 'rgba(240,244,255,.42)',
-            letterSpacing: '2px',
-            lineHeight: 1,
-          }}>
-            EDIT
-          </span>
-          <span style={{
-            fontFamily: 'sans-serif',
-            fontSize: 38,
-            fontWeight: 900,
-            color: '#f0f4ff',
-            letterSpacing: '-1.5px',
-            lineHeight: 1,
-          }}>
-            PDF
-          </span>
-        </div>
-        {/* .AI badge */}
+        {/* Glow */}
         <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(135deg, #4f46e5, #818cf8)',
-          borderRadius: 10,
-          padding: '5px 18px',
-        }}>
+          position: 'absolute',
+          width: 100, height: 100,
+          background: 'rgba(99,102,241,0.38)',
+          borderRadius: '50%',
+          filter: 'blur(40px)',
+          top: 32,
+        }} />
+
+        {/* Pentagon abstract mark */}
+        <div style={{
+          position: 'relative',
+          width: 72, height: 88,
+          background: 'linear-gradient(148deg, #6366f1 0%, #818cf8 60%, #a78bfa 100%)',
+          clipPath: 'polygon(0% 0%, 68% 0%, 100% 26%, 100% 100%, 0% 100%)',
+        }} />
+
+        {/* Wordmark */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 0, position: 'relative' }}>
           <span style={{
-            fontFamily: 'monospace',
-            fontSize: 20,
-            fontWeight: 700,
-            color: '#fff',
-            letterSpacing: '3px',
-          }}>
-            .AI
-          </span>
+            fontFamily: 'sans-serif', fontSize: 22,
+            fontWeight: 300, color: 'rgba(240,244,255,.42)',
+            letterSpacing: '2px',
+          }}>EDIT</span>
+          <span style={{
+            fontFamily: 'sans-serif', fontSize: 22,
+            fontWeight: 900, color: '#f0f4ff',
+            letterSpacing: '-1px',
+          }}>PDF</span>
+          <span style={{
+            fontFamily: 'monospace', fontSize: 11,
+            fontWeight: 700, color: '#fff',
+            background: '#6366f1',
+            padding: '3px 8px', borderRadius: 5,
+            marginLeft: 6, letterSpacing: '1px',
+          }}>.AI</span>
         </div>
       </div>
     ),

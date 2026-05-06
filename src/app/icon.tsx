@@ -14,45 +14,23 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 0,
         }}
       >
-        {/* EDIT — thin */}
-        <span style={{
-          fontFamily: 'sans-serif',
-          fontSize: 8,
-          fontWeight: 400,
-          color: 'rgba(240,244,255,.45)',
-          letterSpacing: '0.02em',
-          lineHeight: 1,
-        }}>
-          EDIT
-        </span>
-        {/* PDF — bold */}
-        <span style={{
-          fontFamily: 'sans-serif',
-          fontSize: 8,
-          fontWeight: 900,
-          color: '#f0f4ff',
-          letterSpacing: '-0.02em',
-          lineHeight: 1,
-        }}>
-          PDF
-        </span>
-        {/* .AI badge */}
-        <span style={{
-          fontFamily: 'monospace',
-          fontSize: 5.5,
-          fontWeight: 700,
-          color: '#fff',
-          background: '#6366f1',
-          padding: '1px 3px',
-          borderRadius: 2,
-          marginLeft: 2,
-          lineHeight: 1.4,
-        }}>
-          .AI
-        </span>
+        {/* Glow layer */}
+        <div style={{
+          position: 'absolute',
+          width: 24, height: 24,
+          background: 'rgba(99,102,241,0.45)',
+          borderRadius: '50%',
+          filter: 'blur(10px)',
+        }} />
+        {/* Pentagon abstract mark — folded-page shape */}
+        <div style={{
+          position: 'relative',
+          width: 18, height: 22,
+          background: 'linear-gradient(148deg, #6366f1 0%, #818cf8 60%, #a78bfa 100%)',
+          clipPath: 'polygon(0% 0%, 68% 0%, 100% 26%, 100% 100%, 0% 100%)',
+        }} />
       </div>
     ),
     { ...size }
