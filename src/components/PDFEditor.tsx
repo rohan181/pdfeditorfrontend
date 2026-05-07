@@ -1081,7 +1081,7 @@ export default function PDFEditor() {
     setIsDetecting(true)
     try {
       await loadOpenCV()
-      const boxes = detectRectangles(canvas)
+      const boxes = await detectRectangles(canvas)
       if (boxes.length === 0) return null
       const annotatedImageBase64 = drawBoxesOnCanvas(canvas, boxes)
       const res = await fetch('/api/scan-detect', {

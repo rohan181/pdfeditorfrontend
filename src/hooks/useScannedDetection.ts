@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useCallback } from 'react'
 
 export interface DetectedBox {
   id: number
@@ -8,92 +8,73 @@ export interface DetectedBox {
   h: number
 }
 
+const MAX_DETECT_WIDTH = 1000 // scale down large canvases before sending to worker
+
 export function useScannedDetection() {
-  const [cvReady, setCvReady] = useState(false)
-  const cvRef = useRef<any>(null)
+  const workerRef = useRef<Worker | null>(null)
 
-  const loadOpenCV = useCallback(async () => {
-    if (cvRef.current) return
-    const module = await import('@techstark/opencv-js')
-    const cv = module.default
-    await new Promise<void>((resolve) => {
-      if (cv.Mat) {
-        resolve()
-      } else {
-        cv.onRuntimeInitialized = resolve
-      }
-    })
-    cvRef.current = cv
-    setCvReady(true)
-  }, [])
-
-  const detectRectangles = useCallback((canvas: HTMLCanvasElement): DetectedBox[] => {
-    const cv = cvRef.current
-    if (!cv) throw new Error('OpenCV not loaded')
-
-    const src = cv.imread(canvas)
-    const gray = new cv.Mat()
-    const blurred = new cv.Mat()
-    const thresh = new cv.Mat()
-    const morph = new cv.Mat()
-    const contours = new cv.MatVector()
-    const hierarchy = new cv.Mat()
-
-    try {
-      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY)
-      cv.GaussianBlur(gray, blurred, new cv.Size(3, 3), 0)
-      cv.adaptiveThreshold(
-        blurred, thresh, 255,
-        cv.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv.THRESH_BINARY_INV,
-        11, 2
+  const getWorker = useCallback((): Worker => {
+    if (!workerRef.current) {
+      workerRef.current = new Worker(
+        new URL('../workers/opencv-detect.worker.ts', import.meta.url)
       )
-      const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(5, 5))
-      cv.morphologyEx(thresh, morph, cv.MORPH_CLOSE, kernel)
-      kernel.delete()
+    }
+    return workerRef.current
+  }, [])
 
-      cv.findContours(morph, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+  // No-op kept for API compatibility — worker initialises OpenCV on first use
+  const loadOpenCV = useCallback(async () => {
+    getWorker()
+  }, [getWorker])
 
-      const boxes: DetectedBox[] = []
-      const canvasArea = canvas.width * canvas.height
+  const detectRectangles = useCallback((canvas: HTMLCanvasElement): Promise<DetectedBox[]> => {
+    return new Promise((resolve, reject) => {
+      const ctx = canvas.getContext('2d')
+      if (!ctx) { reject(new Error('No 2d context on canvas')); return }
 
-      for (let i = 0; i < contours.size(); i++) {
-        const contour = contours.get(i)
-        const rect = cv.boundingRect(contour)
+      // Downscale to reduce pixel data sent to worker
+      const scale = canvas.width > MAX_DETECT_WIDTH ? MAX_DETECT_WIDTH / canvas.width : 1
+      const w = Math.round(canvas.width * scale)
+      const h = Math.round(canvas.height * scale)
 
-        const area = rect.width * rect.height
-        if (area < canvasArea * 0.001 || area > canvasArea * 0.2) {
-          contour.delete()
-          continue
-        }
-        const ar = rect.width / rect.height
-        if (ar < 0.1 || ar > 20) {
-          contour.delete()
-          continue
-        }
-
-        const approx = new cv.Mat()
-        cv.approxPolyDP(contour, approx, 0.02 * cv.arcLength(contour, true), true)
-        const isRect = approx.rows >= 4 && approx.rows <= 6
-        approx.delete()
-        contour.delete()
-
-        if (isRect) {
-          boxes.push({ id: boxes.length + 1, x: rect.x, y: rect.y, w: rect.width, h: rect.height })
-        }
+      let imageData: ImageData
+      if (scale < 1) {
+        const tmp = document.createElement('canvas')
+        tmp.width = w
+        tmp.height = h
+        tmp.getContext('2d')!.drawImage(canvas, 0, 0, w, h)
+        imageData = tmp.getContext('2d')!.getImageData(0, 0, w, h)
+      } else {
+        imageData = ctx.getImageData(0, 0, w, h)
       }
 
-      return boxes
-    } finally {
-      src.delete()
-      gray.delete()
-      blurred.delete()
-      thresh.delete()
-      morph.delete()
-      contours.delete()
-      hierarchy.delete()
-    }
-  }, [])
+      const worker = getWorker()
+
+      const onMsg = (e: MessageEvent<{ boxes?: DetectedBox[]; error?: string }>) => {
+        worker.removeEventListener('message', onMsg)
+        worker.removeEventListener('error', onErr)
+        if (e.data.error) { reject(new Error(e.data.error)); return }
+        const boxes = (e.data.boxes ?? []).map(b => ({
+          ...b,
+          x: Math.round(b.x / scale),
+          y: Math.round(b.y / scale),
+          w: Math.round(b.w / scale),
+          h: Math.round(b.h / scale),
+        }))
+        resolve(boxes)
+      }
+      const onErr = (e: ErrorEvent) => {
+        worker.removeEventListener('message', onMsg)
+        worker.removeEventListener('error', onErr)
+        reject(new Error(e.message))
+      }
+
+      worker.addEventListener('message', onMsg)
+      worker.addEventListener('error', onErr)
+      // Transfer the buffer to avoid copying
+      worker.postMessage({ buffer: imageData.data.buffer, width: w, height: h }, [imageData.data.buffer])
+    })
+  }, [getWorker])
 
   const drawBoxesOnCanvas = useCallback(
     (sourceCanvas: HTMLCanvasElement, boxes: DetectedBox[]): string => {
@@ -119,5 +100,5 @@ export function useScannedDetection() {
     []
   )
 
-  return { cvReady, loadOpenCV, detectRectangles, drawBoxesOnCanvas }
+  return { loadOpenCV, detectRectangles, drawBoxesOnCanvas }
 }
