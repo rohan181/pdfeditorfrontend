@@ -1126,10 +1126,10 @@ export default function PDFEditor() {
 
   const openChatFill = useCallback(async () => {
     const fields = await loadPageFields()
-    if (!fields || fields.length === 0) {
-      await detectScannedFields()
-    }
     setShowChatFill(true)
+    if (!fields || fields.length === 0) {
+      detectScannedFields().catch(console.error)
+    }
   }, [loadPageFields, detectScannedFields])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
