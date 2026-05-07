@@ -1070,7 +1070,54 @@ export default function PDFEditor() {
     } else {
       setAutoFillPdfBase64('')
     }
+
+    return detectedFields
   }, [slots, slotIdx, sources, elements])
+
+  // ── Scanned PDF field detection ──────────────────────────────────────────────
+  const detectScannedFields = useCallback(async (): Promise<DetectedField[] | null> => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+    setIsDetecting(true)
+    try {
+      await loadOpenCV()
+      const boxes = detectRectangles(canvas)
+      if (boxes.length === 0) return null
+      const annotatedImageBase64 = drawBoxesOnCanvas(canvas, boxes)
+      const res = await fetch('/api/scan-detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ annotatedImageBase64, boxes }),
+      })
+      const { annotations, error } = await res.json()
+      if (error) { console.error('scan-detect error:', error); return null }
+      const typeMap: Record<string, string> = {
+        text_field: 'text', char_box: 'char_box', checkbox: 'checkbox',
+        dropdown: 'dropdown', date_field: 'text', signature: 'signature',
+      }
+      const detectedFields: DetectedField[] = (annotations as { box: number; type: string; label: string }[]).map(ann => {
+        const box = boxes[ann.box - 1]
+        return {
+          name: ann.label,
+          type: typeMap[ann.type] ?? 'text',
+          rect: [box.x, box.y, box.w, box.h] as [number, number, number, number],
+          pageNum: slotIdx + 1,
+          pageHeight: canvas.height,
+        }
+      })
+      setAutoFillFields(detectedFields)
+      setAutoFillPageImage(canvas.toDataURL('image/jpeg', 0.7).split(',')[1])
+      setAiExistingFilled({})
+      return detectedFields
+    } finally {
+      setIsDetecting(false)
+    }
+  }, [loadOpenCV, detectRectangles, drawBoxesOnCanvas, slotIdx])
+
+  const runScannedDetection = useCallback(async () => {
+    const fields = await detectScannedFields()
+    if (fields && fields.length > 0) setShowAutoFill(true)
+  }, [detectScannedFields])
 
   const openAutoFill = useCallback(async () => {
     await loadPageFields()
@@ -1078,9 +1125,12 @@ export default function PDFEditor() {
   }, [loadPageFields])
 
   const openChatFill = useCallback(async () => {
-    await loadPageFields()
+    const fields = await loadPageFields()
+    if (!fields || fields.length === 0) {
+      await detectScannedFields()
+    }
     setShowChatFill(true)
-  }, [loadPageFields])
+  }, [loadPageFields, detectScannedFields])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
     // fieldName → new elements built for that field this run
@@ -1262,46 +1312,6 @@ export default function PDFEditor() {
     })
     setToolMode('select')
   }, [autoFillFields, slots, slotIdx, pushHistory])
-
-  // ── Scanned PDF field detection ──────────────────────────────────────────────
-  const runScannedDetection = useCallback(async () => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    setIsDetecting(true)
-    try {
-      await loadOpenCV()
-      const boxes = detectRectangles(canvas)
-      if (boxes.length === 0) return
-      const annotatedImageBase64 = drawBoxesOnCanvas(canvas, boxes)
-      const res = await fetch('/api/scan-detect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ annotatedImageBase64, boxes }),
-      })
-      const { annotations, error } = await res.json()
-      if (error) { console.error('scan-detect error:', error); return }
-      const typeMap: Record<string, string> = {
-        text_field: 'text', checkbox: 'checkbox',
-        dropdown: 'dropdown', date_field: 'text', signature: 'text',
-      }
-      const detectedFields: DetectedField[] = (annotations as { box: number; type: string; label: string }[]).map(ann => {
-        const box = boxes[ann.box - 1]
-        return {
-          name: ann.label,
-          type: typeMap[ann.type] ?? 'text',
-          rect: [box.x, box.y, box.w, box.h] as [number, number, number, number],
-          pageNum: slotIdx + 1,
-          pageHeight: canvas.height,
-        }
-      })
-      setAutoFillFields(detectedFields)
-      setAutoFillPageImage(canvas.toDataURL('image/jpeg', 0.7).split(',')[1])
-      setAiExistingFilled({})
-      setShowAutoFill(true)
-    } finally {
-      setIsDetecting(false)
-    }
-  }, [loadOpenCV, detectRectangles, drawBoxesOnCanvas, slotIdx])
 
   // ── Pan tool helpers (also triggered by middle mouse button) ────────────────
   const handlePanDown = (e: React.MouseEvent<HTMLDivElement>) => {

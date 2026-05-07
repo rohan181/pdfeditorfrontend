@@ -42,13 +42,20 @@ export async function POST(req: NextRequest) {
               text: `This is a scanned form with ${boxes.length} numbered bounding boxes drawn on it in red. Each box marks a detected form field.
 
 For each numbered box (1 through ${boxes.length}), identify:
-1. "type": one of "text_field", "checkbox", "signature", "date_field", "dropdown"
+1. "type": one of:
+   - "text_field"  — a regular text input box
+   - "char_box"    — a row of individual character cells (each letter goes in its own cell, common on passport/ID/government forms)
+   - "checkbox"    — a small tick box (yes/no)
+   - "signature"   — a signature or initials box
+   - "date_field"  — a field specifically for a date
+   - "dropdown"    — a select / drop-down list
 2. "label": the field label visible near that box (e.g. "Full Name", "Date of Birth", "Email Address")
 
 Rules:
 - Every box number must appear in your response
 - Use the label text closest to each box
 - If no label is visible near a box, infer from context (e.g. "Field ${'{box_number}'}")
+- Prefer "char_box" over "text_field" when the box is clearly divided into equal-width individual character cells
 
 Return ONLY a JSON array with no other text:
 [{"box": 1, "type": "text_field", "label": "Full Name"}, ...]`,
