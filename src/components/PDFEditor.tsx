@@ -9,6 +9,7 @@ import DatePickerPanel from './DatePickerPanel'
 import OrganisePages from './OrganisePages'
 import AutoFillModal, { type DetectedField, type FilledField } from './AutoFillModal'
 import ChatFillPanel from './ChatFillPanel'
+import { useScannedDetection } from '@/hooks/useScannedDetection'
 import type {
   PDFElement, PDFSource, PageSlot, ToolMode,
   TextElement, ImageElement, SignatureElement, StampElement, HighlightElement,
@@ -303,6 +304,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function PDFEditor() {
+  const { loadOpenCV, detectRectangles, drawBoxesOnCanvas } = useScannedDetection()
   const canvasRef = useRef<HTMLCanvasElement>(null)  // kept for compat; primary: canvasRefsMap
   const canvasRefsMap = useRef<Record<string, HTMLCanvasElement | null>>({})
   const pageRefsMap   = useRef<Record<string, HTMLDivElement | null>>({})
@@ -337,6 +339,7 @@ export default function PDFEditor() {
   const [aiExistingFilled, setAiExistingFilled] = useState<Record<string, string>>({})
   const [autoFillPageImage, setAutoFillPageImage] = useState('')
   const [autoFillPdfBase64, setAutoFillPdfBase64] = useState('')
+  const [isDetecting, setIsDetecting] = useState(false)
   const [showChatFill, setShowChatFill] = useState(false)
   const [vw, setVw]                   = useState(1280)
   // New tool options
@@ -1260,6 +1263,46 @@ export default function PDFEditor() {
     setToolMode('select')
   }, [autoFillFields, slots, slotIdx, pushHistory])
 
+  // ── Scanned PDF field detection ──────────────────────────────────────────────
+  const runScannedDetection = useCallback(async () => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    setIsDetecting(true)
+    try {
+      await loadOpenCV()
+      const boxes = detectRectangles(canvas)
+      if (boxes.length === 0) return
+      const annotatedImageBase64 = drawBoxesOnCanvas(canvas, boxes)
+      const res = await fetch('/api/scan-detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ annotatedImageBase64, boxes }),
+      })
+      const { annotations, error } = await res.json()
+      if (error) { console.error('scan-detect error:', error); return }
+      const typeMap: Record<string, string> = {
+        text_field: 'text', checkbox: 'checkbox',
+        dropdown: 'dropdown', date_field: 'text', signature: 'text',
+      }
+      const detectedFields: DetectedField[] = (annotations as { box: number; type: string; label: string }[]).map(ann => {
+        const box = boxes[ann.box - 1]
+        return {
+          name: ann.label,
+          type: typeMap[ann.type] ?? 'text',
+          rect: [box.x, box.y, box.w, box.h] as [number, number, number, number],
+          pageNum: slotIdx + 1,
+          pageHeight: canvas.height,
+        }
+      })
+      setAutoFillFields(detectedFields)
+      setAutoFillPageImage(canvas.toDataURL('image/jpeg', 0.7).split(',')[1])
+      setAiExistingFilled({})
+      setShowAutoFill(true)
+    } finally {
+      setIsDetecting(false)
+    }
+  }, [loadOpenCV, detectRectangles, drawBoxesOnCanvas, slotIdx])
+
   // ── Pan tool helpers (also triggered by middle mouse button) ────────────────
   const handlePanDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (toolMode !== 'pan' && e.button !== 1) return
@@ -2178,6 +2221,28 @@ export default function PDFEditor() {
                     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
                   </svg>
                   <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Chat Fill</span>
+                </button>
+                {/* Scan Fields */}
+                <button
+                  title="Detect fields in scanned PDF — uses OpenCV + Claude Vision"
+                  disabled={!slots.length || isDetecting}
+                  style={{
+                    ...tbStyle(false),
+                    color: '#475569',
+                    border: '1px solid transparent',
+                    opacity: !slots.length || isDetecting ? 0.45 : 1,
+                  }}
+                  onClick={() => { if (slots.length && !isDetecting) runScannedDetection() }}
+                  onMouseEnter={e => { if (!isDetecting) (e.currentTarget as HTMLButtonElement).style.background = '#f1f5f9' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
+                >
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M3 9h18M3 15h18"/>
+                  </svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>
+                    {isDetecting ? '...' : 'Scan'}
+                  </span>
                 </button>
                 {/* Date */}
                 <button title="Insert Date" style={tbStyle(showDateMenu)} onClick={()=>{setShowDateMenu(v=>!v);setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(!showDateMenu)(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(!showDateMenu)(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
