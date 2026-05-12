@@ -5,11 +5,12 @@ export const metadata: Metadata = {
   title: 'EditPDF AI — AI-Powered PDF Editor & Document Suite',
   description: 'Edit, sign, annotate and AI-fill PDF forms online. The fastest AI PDF editor with intelligent form detection, e-signatures and instant completion.',
   keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, editpdfai',
-  robots: 'index, follow',
+  alternates: { canonical: 'https://editpdfai.com' },
   openGraph: {
     title: 'EditPDF AI — AI-Powered PDF Editor & Document Suite',
     description: 'Edit, sign and AI-fill PDF forms online. Intelligent form detection and instant completion.',
     type: 'website',
+    url: 'https://editpdfai.com',
   },
 }
 
@@ -32,13 +33,41 @@ const TOOLS = [
   { id: 'pdf-summary',   name: 'PDF Summarizer AI', tag: 'SOON', category: 'AI',       accent: '#67e8f9', accentRgb: '103,232,249',  desc: 'Generate AI-powered summaries of lengthy PDF documents in seconds.' },
 ]
 
-const jsonLd = {
+const jsonLdApp = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
   name: 'EditPDF AI',
+  url: 'https://editpdfai.com',
   applicationCategory: 'ProductivityApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  description: 'Edit, sign, annotate and AI-fill PDF forms online. The fastest AI PDF editor with intelligent form detection, e-signatures and instant completion.',
+  featureList: 'AI Form Filling, E-Signatures, PDF Annotation, PDF OCR, PDF Merge, PDF Split, PDF Compress',
+}
+
+const jsonLdWebsite = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'EditPDF AI',
+  url: 'https://editpdfai.com',
+  description: 'AI-powered PDF editor with 16 tools — edit, sign, annotate and AI-fill PDF forms online.',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: 'https://editpdfai.com/editor',
+    },
+  },
+}
+
+const jsonLdOrg = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'EditPDF AI',
+  url: 'https://editpdfai.com',
+  logo: 'https://editpdfai.com/icon.png',
+  description: 'AI-powered PDF editing platform offering 16 free tools for editing, signing, and processing PDF documents.',
+  sameAs: ['https://twitter.com/editpdfai'],
 }
 
 const CSS = `
@@ -289,7 +318,9 @@ export default function HomePage() {
   const others = TOOLS.slice(1)
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrg) }} />
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="pg">
 

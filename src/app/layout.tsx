@@ -9,22 +9,54 @@ const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500', '700'],
 export const metadata: Metadata = {
   title: { default: 'EditPDF AI — AI-Powered PDF Editor & Document Suite', template: '%s | EditPDF AI' },
   description: 'Edit, sign, annotate and AI-fill PDF forms online. The fastest AI PDF editor with intelligent form detection, e-signatures and instant completion.',
-  keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, editpdfai',
-  authors: [{ name: 'EditPDF AI' }],
+  keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, PDF annotator, PDF OCR, PDF compressor, editpdfai',
+  authors: [{ name: 'EditPDF AI', url: 'https://editpdfai.com' }],
   creator: 'EditPDF AI',
+  publisher: 'EditPDF AI',
+  category: 'technology',
   metadataBase: new URL('https://editpdfai.com'),
-  robots: 'index, follow',
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     type: 'website',
+    url: 'https://editpdfai.com',
     siteName: 'EditPDF AI',
     title: 'EditPDF AI — AI-Powered PDF Editor & Document Suite',
     description: 'Edit, sign, annotate and AI-fill PDF forms online. Intelligent form detection and instant completion.',
+    locale: 'en_US',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'EditPDF AI — AI-Powered PDF Editor',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     site: '@editpdfai',
+    creator: '@editpdfai',
     title: 'EditPDF AI — AI-Powered PDF Editor',
     description: 'Edit, sign and AI-fill PDF forms online. Intelligent form detection and instant completion.',
+    images: ['/og-image.png'],
+  },
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
   },
 }
 
