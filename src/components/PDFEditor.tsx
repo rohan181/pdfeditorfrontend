@@ -1935,21 +1935,31 @@ export default function PDFEditor() {
             <button onClick={() => setShowSidebar(v => !v)}
               style={mobileIconBtn}>☰</button>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
+            {/* Icon — matches home page wm-mark */}
             <div style={{
               width: 30, height: 30,
-              background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
-              borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(99,102,241,0.45)',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+              borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 14px rgba(139,92,246,0.45)', flexShrink: 0,
             }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-              </svg>
+              <div style={{
+                width: 15, height: 18,
+                background: 'rgba(255,255,255,0.95)',
+                clipPath: 'polygon(0% 0%, 68% 0%, 100% 26%, 100% 100%, 0% 100%)',
+              }} />
             </div>
             {!isMobile && (
-              <span style={{ fontWeight: 800, fontSize: 14.5, color: '#fff', fontFamily: 'Manrope, sans-serif', letterSpacing: '-0.03em' }}>
-                Lithograph
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ fontFamily: 'var(--font-jakarta, Plus Jakarta Sans, sans-serif)', fontSize: 17.5, fontWeight: 800, color: '#f0f4ff', letterSpacing: '-0.03em' }}>
+                  Edit<em style={{ fontStyle: 'normal', color: '#a78bfa' }}>PDF</em>
+                </span>
+                <span style={{
+                  fontFamily: 'JetBrains Mono, monospace', fontSize: 8, fontWeight: 700,
+                  letterSpacing: '0.12em', color: '#a78bfa',
+                  background: 'rgba(139,92,246,0.14)', border: '1px solid rgba(139,92,246,0.25)',
+                  padding: '2px 7px', borderRadius: 4, marginLeft: 2,
+                }}>.AI</span>
               </span>
             )}
           </div>

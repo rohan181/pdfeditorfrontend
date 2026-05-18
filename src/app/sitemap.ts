@@ -9,10 +9,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: 'https://editpdfai.com/editor',
+      url: 'https://editpdfai.com/ai-pdf-form-filler',
       lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.9,
+      changeFrequency: 'weekly',
+      priority: 1.0,
     },
   ]
 }

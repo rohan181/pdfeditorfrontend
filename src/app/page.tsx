@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 }
 
 const TOOLS = [
-  { id: 'pdf-editor',    name: 'AI PDF Editor',     tag: 'LIVE', href: '/editor', category: 'EDITOR',   accent: '#818cf8', accentRgb: '129,140,248', desc: 'Edit, annotate, sign and AI-fill PDF forms. Intelligent field detection and instant completion.' },
+  { id: 'pdf-editor',    name: 'AI PDF Editor',     tag: 'LIVE', href: '/ai-pdf-form-filler', category: 'EDITOR',   accent: '#818cf8', accentRgb: '129,140,248', desc: 'Edit, annotate, sign and AI-fill PDF forms. Intelligent field detection and instant completion.' },
   { id: 'pdf-word',      name: 'PDF → Word',        tag: 'SOON', category: 'CONVERT',  accent: '#38bdf8', accentRgb: '56,189,248',   desc: 'Convert PDFs to fully editable Word documents with perfect layout preservation.' },
   { id: 'pdf-excel',     name: 'PDF → Excel',       tag: 'SOON', category: 'CONVERT',  accent: '#4ade80', accentRgb: '74,222,128',   desc: 'Extract tables and data from PDFs directly into structured spreadsheets.' },
   { id: 'pdf-compress',  name: 'PDF Compressor',    tag: 'SOON', category: 'OPTIMIZE', accent: '#fb923c', accentRgb: '251,146,60',   desc: 'Shrink PDF file size up to 90% without visible quality loss.' },
@@ -55,7 +55,7 @@ const jsonLdWebsite = {
     '@type': 'SearchAction',
     target: {
       '@type': 'EntryPoint',
-      urlTemplate: 'https://editpdfai.com/editor',
+      urlTemplate: 'https://editpdfai.com/ai-pdf-form-filler',
     },
   },
 }
@@ -345,7 +345,7 @@ export default function HomePage() {
               <div className="status-pill" aria-label="Service online">
                 <span className="sdot" aria-hidden="true" /><span className="mk">ONLINE</span>
               </div>
-              <Link href="/editor" className="nav-cta">Open Editor →</Link>
+              <Link href="/ai-pdf-form-filler" className="nav-cta">Open Editor →</Link>
             </div>
           </div>
         </nav>
@@ -369,7 +369,7 @@ export default function HomePage() {
                 Precision AI. Free. No signup required.
               </p>
               <div className="hero-acts">
-                <Link href="/editor" className="btn-p">
+                <Link href="/ai-pdf-form-filler" className="btn-p">
                   Open Editor — Free
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </Link>
@@ -476,7 +476,7 @@ export default function HomePage() {
             <p className="sec-sub">Everything you need to work with PDFs — powered by AI. Free, no account required.</p>
 
             {/* Featured */}
-            <Link href="/editor" className="feat" aria-label="AI PDF Editor — open free now">
+            <Link href="/ai-pdf-form-filler" className="feat" aria-label="AI PDF Editor — open free now">
               <div className="feat-l">
                 <div className="feat-live mk"><span className="feat-live-dot" />LIVE NOW · FREE</div>
                 <h3 className="feat-name">AI PDF Editor</h3>
@@ -563,7 +563,7 @@ export default function HomePage() {
               <h2 id="cta-h" className="cta-h">Start editing PDFs<br/>right now. Free.</h2>
               <p className="cta-sub">No account. No credit card. No limits.</p>
               <div className="cta-acts">
-                <Link href="/editor" className="btn-p">
+                <Link href="/ai-pdf-form-filler" className="btn-p">
                   Open PDF Editor
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </Link>
@@ -582,7 +582,7 @@ export default function HomePage() {
               <span className="wm-badge mk">.AI</span>
             </Link>
             <nav className="foot-nav" aria-label="Footer navigation">
-              <Link href="/editor">AI PDF Editor</Link>
+              <Link href="/ai-pdf-form-filler">AI PDF Editor</Link>
               <a href="#tools">All Tools</a>
               <a href="#features">System Specs</a>
             </nav>
