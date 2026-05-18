@@ -303,7 +303,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
 // (Date formatting handled in DatePickerPanel)
 
 // ── Main ─────────────────────────────────────────────────────────────────────
-export default function PDFEditor() {
+export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }: { hideChatFill?: boolean; hideAutoFill?: boolean } = {}) {
   const { loadOpenCV, detectRectangles, drawBoxesOnCanvas } = useScannedDetection()
   const canvasRef = useRef<HTMLCanvasElement>(null)  // kept for compat; primary: canvasRefsMap
   const canvasRefsMap = useRef<Record<string, HTMLCanvasElement | null>>({})
@@ -471,6 +471,8 @@ export default function PDFEditor() {
   const drawPoints  = useRef<{ x: number; y: number }[]>([])
   const liveDrawEl  = useRef<DrawElement | null>(null)
   const [drawPreviewPts, setDrawPreviewPts] = useState<{ x: number; y: number }[]>([])
+  const drawRafRef  = useRef<number | null>(null)
+  const hoverRafRef = useRef<number | null>(null)
 
   // Watermark
   const [showWmPanel, setShowWmPanel] = useState(false)
@@ -783,12 +785,17 @@ export default function PDFEditor() {
     const x = (e.clientX - rect.left) / scale
     const y = (e.clientY - rect.top) / scale
     drawPoints.current = [...drawPoints.current, { x, y }]
-    setDrawPreviewPts([...drawPoints.current])
+    if (drawRafRef.current) return
+    drawRafRef.current = requestAnimationFrame(() => {
+      drawRafRef.current = null
+      setDrawPreviewPts([...drawPoints.current])
+    })
   }, [toolMode, scale])
 
   const handleDrawEnd = useCallback((slotId: string) => {
     if (!isDrawing.current || toolMode !== 'draw') return
     isDrawing.current = false
+    if (drawRafRef.current) { cancelAnimationFrame(drawRafRef.current); drawRafRef.current = null }
     const pts = drawPoints.current
     if (pts.length < 2) { setDrawPreviewPts([]); return }
     const xs = pts.map(p => p.x), ys = pts.map(p => p.y)
@@ -829,7 +836,11 @@ export default function PDFEditor() {
     const x = (t.clientX - rect.left) / scale
     const y = (t.clientY - rect.top) / scale
     drawPoints.current = [...drawPoints.current, { x, y }]
-    setDrawPreviewPts([...drawPoints.current])
+    if (drawRafRef.current) return
+    drawRafRef.current = requestAnimationFrame(() => {
+      drawRafRef.current = null
+      setDrawPreviewPts([...drawPoints.current])
+    })
   }, [toolMode, scale])
 
   // ── Add image as new page ────────────────────────────────────────────────
@@ -2203,7 +2214,7 @@ export default function PDFEditor() {
                   <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Watermark</span>
                 </button>
                 {/* AI Auto Fill */}
-                <button
+                {!hideAutoFill && <button
                   title="AI Auto Fill — fill PDF form fields with Claude"
                   disabled={!slots.length}
                   style={{
@@ -2222,9 +2233,9 @@ export default function PDFEditor() {
                     <path d="M18 2v6"/><path d="M21 5h-6"/>
                   </svg>
                   <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>AI Fill</span>
-                </button>
+                </button>}
                 {/* AI Chat Fill */}
-                <button
+                {!hideChatFill && <button
                   title="AI Chat Fill — conversational form filling"
                   disabled={!slots.length}
                   style={{
@@ -2241,7 +2252,7 @@ export default function PDFEditor() {
                     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
                   </svg>
                   <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Chat Fill</span>
-                </button>
+                </button>}
                 {/* Scan Fields */}
                 <button
                   title="Detect fields in scanned PDF — uses OpenCV + Claude Vision"
@@ -2872,10 +2883,21 @@ export default function PDFEditor() {
                           onMouseMove={e => {
                             if (['text','highlight','annotation','shape'].includes(toolMode)) {
                               const r = e.currentTarget.getBoundingClientRect()
-                              setHoverPos({ x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale, slotId: slot.id })
+                              const pos = { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale, slotId: slot.id }
+                              if (hoverRafRef.current) return
+                              hoverRafRef.current = requestAnimationFrame(() => {
+                                hoverRafRef.current = null
+                                setHoverPos(pos)
+                              })
                             } else if (toolMode === 'mark') {
                               const r = e.currentTarget.getBoundingClientRect()
-                              setHoverPos({ x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale, slotId: slot.id })
+                              const pos = { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale, slotId: slot.id }
+                              if (!hoverRafRef.current) {
+                                hoverRafRef.current = requestAnimationFrame(() => {
+                                  hoverRafRef.current = null
+                                  setHoverPos(pos)
+                                })
+                              }
                               handleMarkDragMove(e)
                             }
                           }}
@@ -2885,7 +2907,12 @@ export default function PDFEditor() {
                             if (['text','highlight','mark','annotation','shape'].includes(toolMode)) {
                               const t = e.touches[0]
                               const r = e.currentTarget.getBoundingClientRect()
-                              setHoverPos({ x: (t.clientX - r.left) / scale, y: (t.clientY - r.top) / scale, slotId: slot.id })
+                              const pos = { x: (t.clientX - r.left) / scale, y: (t.clientY - r.top) / scale, slotId: slot.id }
+                              if (hoverRafRef.current) return
+                              hoverRafRef.current = requestAnimationFrame(() => {
+                                hoverRafRef.current = null
+                                setHoverPos(pos)
+                              })
                             }
                           }}
                           onTouchEnd={e => {
@@ -3067,6 +3094,7 @@ export default function PDFEditor() {
               <div style={{ width: 1, height: 16, background: '#c8d4e8', margin: '0 3px' }} />
 
               {/* AI Fill button */}
+              {!hideAutoFill && (
               <button
                 title="AI Auto Fill — fill this page's form fields with AI"
                 onClick={openAutoFill}
@@ -3087,8 +3115,10 @@ export default function PDFEditor() {
                 </svg>
                 AI Fill
               </button>
+              )}
 
               {/* AI Chat Fill button */}
+              {!hideChatFill && (
               <button
                 title="AI Chat Fill — answer questions to fill form fields conversationally"
                 onClick={() => { if (slots.length) openChatFill() }}
@@ -3111,6 +3141,7 @@ export default function PDFEditor() {
                 </svg>
                 Chat Fill
               </button>
+              )}
             </div>
           )}
         </main>
@@ -3527,7 +3558,7 @@ export default function PDFEditor() {
       {showSig && <SignatureModal onApply={handleSignatureApply} onClose={() => setShowSig(false)} savedSignature={savedSignature} />}
 
       {/* AI Auto Fill modal */}
-      {showAutoFill && (
+      {!hideAutoFill && showAutoFill && (
         <AutoFillModal
           fields={autoFillFields}
           existingFilled={aiExistingFilled}
@@ -3539,7 +3570,7 @@ export default function PDFEditor() {
       )}
 
       {/* AI Chat Fill panel */}
-      {showChatFill && (
+      {!hideChatFill && showChatFill && (
         <ChatFillPanel
           fields={autoFillFields}
           existingFilled={aiExistingFilled}
