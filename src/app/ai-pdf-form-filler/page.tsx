@@ -267,6 +267,8 @@ export default function AIPDFFormFillerPage() {
             <span className="wm-badge">.AI</span>
           </Link>
           <div className="nav-r">
+            <Link href="/pdf-editor" className="back-link">PDF Editor</Link>
+            <Link href="/pdf-watermark" className="back-link">Watermarker</Link>
             <Link href="/" className="back-link">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
               All Tools
@@ -467,6 +469,29 @@ export default function AIPDFFormFillerPage() {
         </div>
       </section>
 
+      {/* Other Tools */}
+      <section style={{ position:'relative', zIndex:1, borderTop:'1px solid rgba(255,255,255,.07)', padding:'48px 0' }}>
+        <div className="wrap">
+          <p style={{ fontFamily:'var(--font-dm,system-ui)', fontSize:11, fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(240,244,255,.35)', marginBottom:20 }}>Try our other tools</p>
+          <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
+            {[
+              { name:'PDF Editor',     href:'/pdf-editor',     desc:'Add text, images, signatures & more' },
+              { name:'PDF Watermarker', href:'/pdf-watermark', desc:'Add text or image watermarks' },
+            ].map(({ name, href, desc }) => (
+              <Link key={name} href={href} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 18px', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:12, textDecoration:'none', transition:'all .15s', flex:'1', minWidth:220 }}
+                onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(255,255,255,.09)';(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,.2)'}}
+                onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='rgba(255,255,255,.05)';(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,.1)'}}>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontFamily:'var(--font-dm,system-ui)', fontSize:13.5, fontWeight:700, color:'rgba(240,244,255,.9)', letterSpacing:'-0.02em' }}>{name}</div>
+                  <div style={{ fontFamily:'var(--font-dm,system-ui)', fontSize:11, color:'rgba(240,244,255,.4)', marginTop:2 }}>{desc}</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(240,244,255,.4)" strokeWidth="2" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="foot">
         <div className="wrap foot-in">
@@ -479,6 +504,7 @@ export default function AIPDFFormFillerPage() {
             <Link href="/">Home</Link>
             <Link href="/ai-pdf-form-filler">AI Form Filler</Link>
             <Link href="/pdf-editor">PDF Editor</Link>
+            <Link href="/pdf-watermark">Watermarker</Link>
           </nav>
           <p className="foot-copy">© {new Date().getFullYear()} EDITPDF.AI — All rights reserved</p>
         </div>
