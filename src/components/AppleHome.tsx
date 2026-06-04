@@ -54,6 +54,7 @@ const CSS = `
 
   *,*::before,*::after { box-sizing:border-box; }
   html { scroll-behavior:smooth; }
+  body { overflow-x:hidden; }
 
   .grad-red {
     background:linear-gradient(120deg,#E24B4A 0%,#ff7a59 55%,#E24B4A 100%);
@@ -87,6 +88,29 @@ const CSS = `
   }
   @media(max-width:420px){
     .r-tgrid { grid-template-columns:1fr; }
+  }
+
+  /* ── hero grid ── */
+  .hero-grid   { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
+  .hero-visual { display:block; }
+  @media(max-width:900px){
+    .hero-grid   { grid-template-columns:1fr; }
+    .hero-visual { display:none; }
+  }
+
+  /* ── scroll gallery mobile ── */
+  @supports (height:100dvh){ .scr-sticky{ height:100dvh; } }
+
+  @media(max-width:768px){
+    .scr-sticky { padding-top:54px; box-sizing:border-box; }
+    .scr-row    { flex-direction:column !important; gap:12px !important; padding:16px 20px 0 !important; align-items:stretch !important; justify-content:flex-start !important; }
+    .scr-left   { width:100% !important; }
+    .scr-dots   { margin-bottom:16px !important; }
+    .scr-cta    { display:none !important; }
+    .scr-right  { width:100% !important; flex:unset !important; }
+    .scr-screen { height:200px !important; }
+    .scr-url    { display:none !important; }
+    .scr-hint   { display:none !important; }
   }
 `
 
@@ -406,78 +430,136 @@ function Nav() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  HERO — white, minimal, Apple-style
+//  HERO — split: text left · browser mockup right
 // ══════════════════════════════════════════════════════════════════════════════
 function Hero() {
   const { scrollY } = useScroll()
-  const textY = useTransform(scrollY, [0, 400], [0, -80])
+  const textY = useTransform(scrollY, [0, 500], [0, -60])
 
   return (
     <section style={{background:'#fff',minHeight:'100vh',display:'flex',flexDirection:'column',justifyContent:'center',position:'relative',overflow:'hidden',paddingTop:54}}>
 
-      {/* Subtle dot grid */}
+      {/* Dot grid */}
       <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(rgba(0,0,0,.04) 1px, transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}}/>
 
-      {/* Soft red glow — top left */}
-      <div style={{position:'absolute',top:'-20%',left:'-10%',width:600,height:600,borderRadius:'50%',background:'radial-gradient(circle, rgba(226,75,74,.07) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
-      {/* Soft blue glow — bottom right */}
-      <div style={{position:'absolute',bottom:'-15%',right:'-10%',width:500,height:500,borderRadius:'50%',background:'radial-gradient(circle, rgba(99,102,241,.05) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
+      {/* Ambient glows */}
+      <div style={{position:'absolute',top:'-20%',left:'-10%',width:700,height:700,borderRadius:'50%',background:'radial-gradient(circle, rgba(226,75,74,.10) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',bottom:'-15%',right:'-5%',width:600,height:600,borderRadius:'50%',background:'radial-gradient(circle, rgba(99,102,241,.07) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',top:'30%',right:'20%',width:400,height:400,borderRadius:'50%',background:'radial-gradient(circle, rgba(251,146,60,.06) 0%, transparent 70%)',filter:'blur(60px)',pointerEvents:'none'}}/>
 
-      {/* Content */}
+      {/* Content grid */}
       <motion.div style={{y:textY,maxWidth:1200,margin:'0 auto',padding:'0 28px',width:'100%',position:'relative',zIndex:2}}>
+        <div className="hero-grid">
 
-        {/* Eyebrow */}
-        <motion.div initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.1}}
-          style={{display:'flex',alignItems:'center',gap:10,marginBottom:36}}>
-          <span style={{width:5,height:5,borderRadius:'50%',background:RED,display:'inline-block',animation:'pdot 2s ease-in-out infinite'}}/>
-          <span style={{...MONO,fontSize:10.5,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase'}}>AI PDF Platform · Free · No Account</span>
-        </motion.div>
+          {/* ── LEFT: text ── */}
+          <div>
+            {/* Eyebrow */}
+            <motion.div initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.1}}
+              style={{display:'flex',alignItems:'center',gap:10,marginBottom:32}}>
+              <span style={{width:5,height:5,borderRadius:'50%',background:RED,display:'inline-block',animation:'pdot 2s ease-in-out infinite'}}/>
+              <span style={{...MONO,fontSize:10.5,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase'}}>AI PDF Platform · Free · No Account</span>
+            </motion.div>
 
-        {/* Main headline */}
-        <WordReveal
-          text="The PDF tool built for everyone."
-          style={{...FI,fontSize:'clamp(52px,8.5vw,124px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.055em',lineHeight:.95,margin:'0 0 28px'}}
-        />
+            {/* Headline — "Edit any PDF. In seconds." with shimmer on "seconds." */}
+            <motion.h1 variants={MV} initial="hidden" animate="visible"
+              style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(40px,5.8vw,96px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.95,margin:'0 0 24px',display:'flex',flexWrap:'wrap',gap:'0 .22em'}}>
+              {['Edit','any','PDF.','In'].map((w,i)=>(
+                <span key={i} style={{display:'inline-block',overflow:'hidden',lineHeight:1.06}}>
+                  <motion.span style={{display:'inline-block'}} variants={WV}>{w}</motion.span>
+                </span>
+              ))}
+              <span style={{display:'inline-block',overflow:'hidden',lineHeight:1.06}}>
+                <motion.span className="grad-red" style={{display:'inline-block'}} variants={WV}>seconds.</motion.span>
+              </span>
+            </motion.h1>
 
-        {/* Sub + CTA row */}
-        <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.75}}
-          style={{display:'flex',alignItems:'flex-start',gap:60,flexWrap:'wrap',marginTop:8}}>
-          <p style={{...FI,fontSize:'clamp(15px,1.8vw,19px)',color:'#6E6E73',lineHeight:1.65,maxWidth:360,margin:0,letterSpacing:'-0.01em',fontWeight:400}}>
-            Edit, sign, fill and convert — all in your browser, completely free.
-          </p>
-          <div style={{display:'flex',gap:12,flexWrap:'wrap',paddingTop:4}}>
-            <Mag>
-              <Link href="/ai-pdf-form-filler"
-                style={{...FI,display:'inline-flex',alignItems:'center',gap:8,padding:'13px 28px',background:'#1d1d1f',color:'#fff',borderRadius:99,fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:'0 4px 24px rgba(0,0,0,.14)'}}>
-                <motion.span style={{display:'flex',alignItems:'center',gap:8}} whileHover={{gap:14}} transition={SP}>
-                  Try free now <ArrowRight size={15} strokeWidth={2.5}/>
-                </motion.span>
-              </Link>
-            </Mag>
-            <Mag>
-              <a href="#tools"
-                style={{...FI,display:'inline-flex',alignItems:'center',gap:6,padding:'13px 22px',background:'transparent',color:'rgba(0,0,0,.5)',border:'1px solid rgba(0,0,0,.12)',borderRadius:99,fontSize:15,fontWeight:500,textDecoration:'none',letterSpacing:'-0.01em'}}>
-                17 tools <ChevronRight size={14} strokeWidth={2}/>
-              </a>
-            </Mag>
+            {/* Sub */}
+            <motion.p initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.7}}
+              style={{...FI,fontSize:'clamp(15px,1.6vw,18px)',color:'#6E6E73',lineHeight:1.65,maxWidth:400,margin:'0 0 32px',letterSpacing:'-0.01em',fontWeight:400}}>
+              Edit, sign, fill and convert PDFs — all in your browser, completely free.
+            </motion.p>
+
+            {/* CTAs */}
+            <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.85}}
+              style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:28}}>
+              <Mag>
+                <Link href="/ai-pdf-form-filler"
+                  style={{...FI,display:'inline-flex',alignItems:'center',gap:8,padding:'14px 28px',background:'#1d1d1f',color:'#fff',borderRadius:99,fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:'0 4px 28px rgba(0,0,0,.16)'}}>
+                  <motion.span style={{display:'flex',alignItems:'center',gap:8}} whileHover={{gap:14}} transition={SP}>
+                    Try free now <ArrowRight size={15} strokeWidth={2.5}/>
+                  </motion.span>
+                </Link>
+              </Mag>
+              <Mag>
+                <a href="#tools"
+                  style={{...FI,display:'inline-flex',alignItems:'center',gap:6,padding:'14px 22px',background:'transparent',color:'rgba(0,0,0,.5)',border:'1px solid rgba(0,0,0,.12)',borderRadius:99,fontSize:15,fontWeight:500,textDecoration:'none',letterSpacing:'-0.01em'}}>
+                  17 tools <ChevronRight size={14} strokeWidth={2}/>
+                </a>
+              </Mag>
+            </motion.div>
+
+            {/* Trust row */}
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.5,delay:1.05}}
+              style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+              <span style={{color:'#f59e0b',fontSize:12,letterSpacing:2}}>★★★★★</span>
+              {['Free forever','No signup','100% private','In-browser'].map((t,i)=>(
+                <span key={t} style={{display:'flex',alignItems:'center',gap:6}}>
+                  {i>0&&<span style={{width:3,height:3,borderRadius:'50%',background:'#ddd',display:'inline-block'}}/>}
+                  <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.06em',textTransform:'uppercase'}}>{t}</span>
+                </span>
+              ))}
+            </motion.div>
           </div>
-        </motion.div>
+
+          {/* ── RIGHT: browser mockup with floating chips ── */}
+          <div className="hero-visual" style={{position:'relative',overflow:'visible'}}>
+            {/* Glow behind frame */}
+            <div style={{position:'absolute',inset:-60,background:'radial-gradient(ellipse, rgba(226,75,74,.08) 0%, rgba(99,102,241,.06) 50%, transparent 70%)',filter:'blur(40px)',pointerEvents:'none'}}/>
+
+            {/* Feature chips */}
+            {([
+              { label:'AI Form Fill', Icon:Zap,      color:'#6366f1', delay:1.0, pos:{ top:'-16px',  left:'-20px'  } },
+              { label:'E-Sign',       Icon:PenLine,  color:RED,       delay:1.2, pos:{ bottom:'70px', left:'-24px'  } },
+              { label:'OCR Scan',     Icon:ScanLine, color:'#22c55e', delay:1.4, pos:{ top:'38%',     right:'-22px' } },
+            ] as const).map(({label,Icon,color,delay,pos})=>(
+              <motion.div key={label}
+                initial={{opacity:0,scale:0.8,y:8}} animate={{opacity:1,scale:1,y:0}}
+                transition={{duration:.45,ease:[0.22,1,0.36,1] as [number,number,number,number],delay}}
+                style={{position:'absolute',display:'flex',alignItems:'center',gap:6,padding:'7px 12px',
+                  background:'#fff',borderRadius:99,boxShadow:'0 4px 20px rgba(0,0,0,.10)',
+                  border:'1px solid #f0f0f0',...FI,fontSize:11,fontWeight:600,color,
+                  whiteSpace:'nowrap',zIndex:10,...pos}}>
+                <Icon size={12} strokeWidth={2.5} color={color}/>
+                {label}
+              </motion.div>
+            ))}
+
+            {/* Browser — entry animation + infinite float */}
+            <motion.div
+              initial={{opacity:0,x:40,scale:0.96}}
+              animate={{opacity:1,x:0,scale:1}}
+              transition={{duration:.75,ease:[0.22,1,0.36,1],delay:.5}}>
+              <motion.div animate={{y:[0,-10,0]}} transition={{duration:4,repeat:Infinity,ease:'easeInOut'}}>
+                <Tilt><BrowserUI /></Tilt>
+              </motion.div>
+            </motion.div>
+          </div>
+
+        </div>
       </motion.div>
 
       {/* Bottom bar */}
-      <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.5,delay:1.1}}
+      <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.5,delay:1.2}}
         style={{position:'absolute',bottom:0,left:0,right:0,height:44,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 28px',borderTop:'1px solid rgba(0,0,0,.06)',zIndex:3}}>
         <div style={{...MONO,fontSize:11,color:'rgba(0,0,0,.3)',letterSpacing:'0.1em',display:'flex',alignItems:'center',gap:8}}>
           <span style={{width:20,height:1,background:'rgba(0,0,0,.15)',display:'inline-block'}}/>
           <ScrollPct/>
         </div>
-
         <div className="desk" style={{gap:24}}>
           {['17 AI Tools','Free Forever','No Account','100% Private'].map(t=>(
             <span key={t} style={{...MONO,fontSize:10,color:'rgba(0,0,0,.25)',letterSpacing:'0.08em',textTransform:'uppercase'}}>{t}</span>
           ))}
         </div>
-
         <motion.div animate={{y:[0,5,0]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}
           style={{display:'flex',alignItems:'center',gap:7}}>
           <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.3)',letterSpacing:'0.1em',textTransform:'uppercase'}}>Scroll</span>
@@ -702,8 +784,7 @@ function Apple3DScroll() {
     const el = pin.current
     if (!el) return
     const onScroll = () => {
-      const rect = el.getBoundingClientRect()
-      const scrolled = -rect.top
+      const scrolled = window.scrollY - el.offsetTop
       const total = el.offsetHeight - window.innerHeight
       const p = Math.max(0, Math.min(1, scrolled / total))
       setProgress(p)
@@ -720,23 +801,23 @@ function Apple3DScroll() {
 
   return (
     <div ref={pin} style={{height:'400vh',position:'relative'}}>
-      <div style={{position:'sticky',top:0,height:'100vh',background:'#F5F5F7',overflow:'hidden',display:'flex',flexDirection:'column'}}>
+      <div className="scr-sticky" style={{position:'sticky',top:0,height:'100vh',background:'#F5F5F7',overflow:'hidden',display:'flex',flexDirection:'column'}}>
 
-        {/* Subtle dot grid */}
+        {/* Dot grid */}
         <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(rgba(0,0,0,.03) 1px,transparent 1px)',backgroundSize:'32px 32px',pointerEvents:'none'}}/>
 
-        {/* Per-step colour atmosphere — very subtle on white */}
+        {/* Per-step colour atmosphere */}
         {GSTEPS.map((s,i)=>(
           <motion.div key={i} animate={{opacity:i===step?1:0}} transition={{duration:.5}}
             style={{position:'absolute',inset:0,background:`radial-gradient(ellipse 55% 60% at 68% 50%, ${s.color}0a 0%, transparent 70%)`,pointerEvents:'none'}}/>
         ))}
 
         {/* Content row */}
-        <div style={{flex:1,display:'flex',alignItems:'center',gap:56,maxWidth:1200,margin:'0 auto',padding:'0 48px',width:'100%'}}>
+        <div className="scr-row" style={{flex:1,display:'flex',alignItems:'center',gap:56,maxWidth:1200,margin:'0 auto',padding:'0 48px',width:'100%'}}>
 
-          {/* LEFT: step dots + animated text */}
-          <div style={{width:300,flexShrink:0}}>
-            <div style={{display:'flex',gap:7,marginBottom:40}}>
+          {/* LEFT: step indicators + text */}
+          <div className="scr-left" style={{width:300,flexShrink:0}}>
+            <div className="scr-dots" style={{display:'flex',gap:7,marginBottom:40}}>
               {GSTEPS.map((s,i)=>(
                 <motion.div key={i}
                   animate={{width:i===step?28:7,background:i===step?s.color:'rgba(0,0,0,.12)'}}
@@ -749,58 +830,60 @@ function Apple3DScroll() {
               <motion.div key={step}
                 initial={{opacity:0,y:22}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-16}}
                 transition={{duration:.35,ease:E}}>
-                <div style={{...MONO,fontSize:10,letterSpacing:'0.16em',textTransform:'uppercase',color:cur.color,marginBottom:14}}>
+                <div style={{...MONO,fontSize:10,letterSpacing:'0.16em',textTransform:'uppercase',color:cur.color,marginBottom:10}}>
                   STEP {cur.n} — {cur.label}
                 </div>
-                <h2 style={{...FI,fontSize:'clamp(44px,5.5vw,72px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.055em',lineHeight:.96,margin:'0 0 16px'}}>
+                <h2 style={{...FI,fontSize:'clamp(28px,5.5vw,72px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.055em',lineHeight:.96,margin:'0 0 12px'}}>
                   {cur.headline}
                 </h2>
-                <p style={{...FI,fontSize:15,color:'#6E6E73',lineHeight:1.68,maxWidth:260,margin:'0 0 28px',letterSpacing:'-0.005em'}}>
+                <p style={{...FI,fontSize:15,color:'#6E6E73',lineHeight:1.65,maxWidth:260,margin:'0 0 20px',letterSpacing:'-0.005em'}}>
                   {cur.body}
                 </p>
-                <Mag>
-                  <Link href="/ai-pdf-form-filler"
-                    style={{...FI,display:'inline-flex',alignItems:'center',gap:7,fontSize:13,fontWeight:600,color:cur.color,textDecoration:'none',border:`1px solid ${cur.color}40`,padding:'8px 18px',borderRadius:99,background:`${cur.color}08`}}>
-                    <motion.span style={{display:'flex',alignItems:'center',gap:7}} whileHover={{gap:12}} transition={SP}>
-                      Try free <ArrowRight size={13} strokeWidth={2.5}/>
-                    </motion.span>
-                  </Link>
-                </Mag>
+                <div className="scr-cta">
+                  <Mag>
+                    <Link href="/ai-pdf-form-filler"
+                      style={{...FI,display:'inline-flex',alignItems:'center',gap:7,fontSize:13,fontWeight:600,color:cur.color,textDecoration:'none',border:`1px solid ${cur.color}40`,padding:'8px 18px',borderRadius:99,background:`${cur.color}08`}}>
+                      <motion.span style={{display:'flex',alignItems:'center',gap:7}} whileHover={{gap:12}} transition={SP}>
+                        Try free <ArrowRight size={13} strokeWidth={2.5}/>
+                      </motion.span>
+                    </Link>
+                  </Mag>
+                </div>
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* RIGHT: browser frame */}
-          <div style={{flex:1,position:'relative'}}>
+          {/* RIGHT: browser mockup */}
+          <div className="scr-right" style={{flex:1,position:'relative'}}>
 
-            {/* Per-step glow behind frame — subtle */}
+            {/* Glow behind frame */}
             {GSTEPS.map((s,i)=>(
               <motion.div key={i} animate={{opacity:i===step?1:0}} transition={{duration:.5}}
                 style={{position:'absolute',inset:-48,background:`radial-gradient(ellipse, ${s.color}10 0%, transparent 70%)`,filter:'blur(40px)',pointerEvents:'none'}}/>
             ))}
 
             <motion.div
-              animate={{boxShadow:`0 32px 80px -16px rgba(0,0,0,.10), 0 0 0 1px rgba(0,0,0,.06)`}}
+              animate={{boxShadow:`0 24px 60px -12px rgba(0,0,0,.10), 0 0 0 1px rgba(0,0,0,.06)`}}
               transition={{duration:.5}}
-              style={{borderRadius:16,border:'1px solid rgba(0,0,0,.07)',overflow:'hidden',position:'relative',background:'#fff'}}>
+              style={{borderRadius:14,border:'1px solid rgba(0,0,0,.07)',overflow:'hidden',position:'relative',background:'#fff'}}>
 
               {/* Chrome bar */}
-              <div style={{background:'#F5F5F7',borderBottom:'1px solid rgba(0,0,0,.07)',height:36,display:'flex',alignItems:'center',padding:'0 14px',gap:10}}>
-                <div style={{display:'flex',gap:5}}>
-                  {['#ff5f57','#febc2e','#28c840'].map(c=><div key={c} style={{width:9,height:9,borderRadius:'50%',background:c}}/>)}
+              <div style={{background:'#F5F5F7',borderBottom:'1px solid rgba(0,0,0,.07)',height:32,display:'flex',alignItems:'center',padding:'0 12px',gap:8}}>
+                <div style={{display:'flex',gap:4}}>
+                  {['#ff5f57','#febc2e','#28c840'].map(c=><div key={c} style={{width:8,height:8,borderRadius:'50%',background:c}}/>)}
                 </div>
-                <div style={{flex:1,display:'flex',justifyContent:'center'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:6,background:'rgba(0,0,0,.05)',borderRadius:6,padding:'3px 12px',minWidth:200}}>
-                    <Lock size={8} color="rgba(0,0,0,.35)" strokeWidth={2}/>
-                    <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)'}}>editpdfai.com/ai-pdf-form-filler</span>
+                <div className="scr-url" style={{flex:1,display:'flex',justifyContent:'center'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:5,background:'rgba(0,0,0,.05)',borderRadius:5,padding:'2px 10px',minWidth:180}}>
+                    <Lock size={7} color="rgba(0,0,0,.35)" strokeWidth={2}/>
+                    <span style={{...MONO,fontSize:9,color:'rgba(0,0,0,.38)'}}>editpdfai.com/ai-pdf-form-filler</span>
                   </div>
                 </div>
                 <motion.div animate={{background:cur.color}} transition={{duration:.4}}
-                  style={{width:7,height:7,borderRadius:'50%',animation:'pdot 2s ease-in-out infinite'}}/>
+                  style={{width:6,height:6,borderRadius:'50%',marginLeft:'auto'}}/>
               </div>
 
-              {/* Inner screen — crossfade on step change */}
-              <div style={{position:'relative',height:390,overflow:'hidden',background:'#F5F5F7'}}>
+              {/* Inner screen */}
+              <div className="scr-screen" style={{position:'relative',height:390,overflow:'hidden',background:'#F5F5F7'}}>
                 <AnimatePresence mode="wait">
                   <motion.div key={step}
                     initial={{opacity:0,y:10,scale:.995}}
@@ -816,8 +899,8 @@ function Apple3DScroll() {
           </div>
         </div>
 
-        {/* Scroll hint */}
-        <motion.div style={{opacity:hintOpacity,position:'absolute',bottom:'8%',left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,pointerEvents:'none'}}>
+        {/* Scroll hint — hidden on mobile via CSS */}
+        <motion.div className="scr-hint" style={{opacity:hintOpacity,position:'absolute',bottom:'8%',left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,pointerEvents:'none'}}>
           <motion.div animate={{y:[0,6,0]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}>
             <svg width="18" height="28" viewBox="0 0 18 28" fill="none"><rect x="1" y="1" width="16" height="26" rx="8" stroke="rgba(0,0,0,.18)" strokeWidth="1.5"/><motion.rect x="7.5" y="6" width="3" height="5" rx="1.5" fill="rgba(0,0,0,.3)" animate={{y:[0,7,0],opacity:[1,.2,1]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}/></svg>
           </motion.div>
@@ -1198,7 +1281,7 @@ function Footer() {
 // ══════════════════════════════════════════════════════════════════════════════
 export default function AppleHome() {
   return (
-    <div style={{background:'#fff',overflowX:'clip'}}>
+    <div style={{background:'#fff'}}>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
       <CursorDot />
       <Nav />
