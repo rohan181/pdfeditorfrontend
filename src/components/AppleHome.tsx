@@ -800,7 +800,18 @@ function Apple3DScroll() {
   const ScreenComp = cur.Screen
 
   return (
-    <div ref={pin} style={{height:'400vh',position:'relative'}}>
+    <>
+      {/* Section intro — scrolls normally before sticky activates */}
+      <div style={{padding:'80px 48px 48px',maxWidth:1200,margin:'0 auto'}}>
+        <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.55,ease:E}}>
+          <div style={{...MONO,fontSize:10,color:'#aaa',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>How it works</div>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,4vw,56px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>
+            Four steps.<br/><span style={{color:'#bbb'}}>Zero effort.</span>
+          </h2>
+        </motion.div>
+      </div>
+
+      <div ref={pin} style={{height:'400vh',position:'relative'}}>
       <div className="scr-sticky" style={{position:'sticky',top:0,height:'100vh',background:'#F5F5F7',overflow:'hidden',display:'flex',flexDirection:'column'}}>
 
         {/* Dot grid */}
@@ -809,14 +820,28 @@ function Apple3DScroll() {
         {/* Per-step colour atmosphere */}
         {GSTEPS.map((s,i)=>(
           <motion.div key={i} animate={{opacity:i===step?1:0}} transition={{duration:.5}}
-            style={{position:'absolute',inset:0,background:`radial-gradient(ellipse 55% 60% at 68% 50%, ${s.color}0a 0%, transparent 70%)`,pointerEvents:'none'}}/>
+            style={{position:'absolute',inset:0,background:`radial-gradient(ellipse 65% 75% at 65% 50%, ${s.color}1a 0%, transparent 70%)`,pointerEvents:'none'}}/>
         ))}
 
         {/* Content row */}
         <div className="scr-row" style={{flex:1,display:'flex',alignItems:'center',gap:56,maxWidth:1200,margin:'0 auto',padding:'0 48px',width:'100%'}}>
 
           {/* LEFT: step indicators + text */}
-          <div className="scr-left" style={{width:300,flexShrink:0}}>
+          <div className="scr-left" style={{width:300,flexShrink:0,position:'relative'}}>
+
+            {/* Ghost step number */}
+            <AnimatePresence mode="wait">
+              <motion.div key={`ghost-${step}`}
+                initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+                transition={{duration:.4}}
+                style={{position:'absolute',top:-40,left:-8,zIndex:0,fontFamily:'var(--font-jakarta,system-ui)',
+                  fontSize:180,fontWeight:800,color:'rgba(0,0,0,.04)',lineHeight:1,
+                  letterSpacing:'-0.06em',userSelect:'none',pointerEvents:'none'}}>
+                {cur.n}
+              </motion.div>
+            </AnimatePresence>
+
+            <div style={{position:'relative',zIndex:1}}>
             <div className="scr-dots" style={{display:'flex',gap:7,marginBottom:40}}>
               {GSTEPS.map((s,i)=>(
                 <motion.div key={i}
@@ -851,6 +876,7 @@ function Apple3DScroll() {
                 </div>
               </motion.div>
             </AnimatePresence>
+            </div>{/* end zIndex:1 wrapper */}
           </div>
 
           {/* RIGHT: browser mockup */}
@@ -863,9 +889,9 @@ function Apple3DScroll() {
             ))}
 
             <motion.div
-              animate={{boxShadow:`0 24px 60px -12px rgba(0,0,0,.10), 0 0 0 1px rgba(0,0,0,.06)`}}
+              animate={{boxShadow:`0 24px 60px -12px ${cur.color}35, 0 0 0 1px ${cur.color}30`,borderColor:`${cur.color}30`}}
               transition={{duration:.5}}
-              style={{borderRadius:14,border:'1px solid rgba(0,0,0,.07)',overflow:'hidden',position:'relative',background:'#fff'}}>
+              style={{borderRadius:14,border:'1px solid transparent',overflow:'hidden',position:'relative',background:'#fff'}}>
 
               {/* Chrome bar */}
               <div style={{background:'#F5F5F7',borderBottom:'1px solid rgba(0,0,0,.07)',height:32,display:'flex',alignItems:'center',padding:'0 12px',gap:8}}>
@@ -886,10 +912,10 @@ function Apple3DScroll() {
               <div className="scr-screen" style={{position:'relative',height:390,overflow:'hidden',background:'#F5F5F7'}}>
                 <AnimatePresence mode="wait">
                   <motion.div key={step}
-                    initial={{opacity:0,y:10,scale:.995}}
-                    animate={{opacity:1,y:0,scale:1}}
-                    exit={{opacity:0,y:-8,scale:1.005}}
-                    transition={{duration:.3,ease:E}}
+                    initial={{opacity:0,scale:.94,filter:'blur(8px)'}}
+                    animate={{opacity:1,scale:1,filter:'blur(0px)'}}
+                    exit={{opacity:0,scale:1.04,filter:'blur(8px)'}}
+                    transition={{duration:.4,ease:[0.22,1,0.36,1]}}
                     style={{position:'absolute',inset:0}}>
                     <ScreenComp />
                   </motion.div>
@@ -913,6 +939,7 @@ function Apple3DScroll() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
