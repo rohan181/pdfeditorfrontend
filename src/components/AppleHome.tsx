@@ -4,15 +4,14 @@ import { useRef, useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import {
   motion, AnimatePresence,
-  useScroll, useTransform, useInView,
-  useMotionValue, useSpring, useVelocity,
-  animate,
+  useScroll, useTransform,
+  useMotionValue, useSpring,
 } from 'framer-motion'
 import {
-  ArrowRight, FileText, Globe, Lock, PenLine, ScanLine, Zap,
+  ArrowRight, FileText, Lock, PenLine, ScanLine, Zap,
   Upload,
   CheckCircle2, MousePointer2, Layers, Download, X, Menu,
-  Sparkles, Shield, ChevronRight, ArrowUpRight,
+  ChevronRight, ArrowUpRight,
 } from 'lucide-react'
 
 // ─── tokens ──────────────────────────────────────────────────────────────────
@@ -54,7 +53,7 @@ const CSS = `
 
   *,*::before,*::after { box-sizing:border-box; }
   html { scroll-behavior:smooth; }
-  body { overflow-x:hidden; }
+  body { overflow-x:clip; }
 
   .grad-red {
     background:linear-gradient(120deg,#E24B4A 0%,#ff7a59 55%,#E24B4A 100%);
@@ -99,6 +98,7 @@ const CSS = `
   }
 
   /* ── scroll gallery mobile ── */
+  .scr-sticky { position:-webkit-sticky; position:sticky; }
   @supports (height:100dvh){ .scr-sticky{ height:100dvh; } }
 
   @media(max-width:768px){
@@ -160,69 +160,10 @@ function Tilt({ children }:{ children:React.ReactNode }) {
 
 const MV = { hidden:{}, visible:{ transition:{ staggerChildren:.08, delayChildren:.04 } } }
 const WV = { hidden:{y:'110%',opacity:0}, visible:{ y:'0%',opacity:1, transition:{ duration:.7, ease:[0.22,1,0.36,1] as [number,number,number,number] } } }
-function WordReveal({ text, style, tag='h1' }:{ text:string; style?:React.CSSProperties; tag?:string }) {
-  const Tag = tag as keyof JSX.IntrinsicElements
-  return (
-    <motion.div variants={MV} initial="hidden" animate="visible">
-      <Tag style={{...style,display:'flex',flexWrap:'wrap',gap:'0 .2em',overflow:'visible'}}>
-        {text.split(' ').map((w,i)=>(
-          <span key={i} style={{display:'inline-block',overflow:'hidden',lineHeight:1.06}}>
-            <motion.span style={{display:'inline-block'}} variants={WV}>{w}</motion.span>
-          </span>
-        ))}
-      </Tag>
-    </motion.div>
-  )
-}
-
-function VeloTicker({ items }:{ items:string[] }) {
-  const {scrollY}=useScroll()
-  const vel=useVelocity(scrollY)
-  const raw=useTransform(vel,[-2000,2000],[10,-10])
-  const skew=useSpring(raw,{stiffness:100,damping:30})
-  const x=useTransform(scrollY,[0,8000],[0,-2600],{clamp:false})
-  return (
-    <div style={{overflow:'hidden',borderTop:'1px solid rgba(0,0,0,.06)',padding:'12px 0',background:'#F5F5F7'}}>
-      <motion.div style={{skewX:skew,display:'flex',width:'max-content'}}>
-        <motion.div style={{x,display:'flex',width:'max-content'}}>
-          {[...items,...items].map((n,i)=>(
-            <span key={i} style={{display:'inline-flex',alignItems:'center',gap:12,padding:'0 22px'}}>
-              <span style={{width:3,height:3,borderRadius:'50%',background:RED,display:'inline-block',flexShrink:0}}/>
-              <span style={{...MONO,fontSize:11,color:'rgba(0,0,0,.3)',whiteSpace:'nowrap',letterSpacing:'0.08em',textTransform:'uppercase'}}>{n}</span>
-            </span>
-          ))}
-        </motion.div>
-      </motion.div>
-    </div>
-  )
-}
 
 const CC = { hidden:{}, visible:{ transition:{ staggerChildren:.04, delayChildren:.05 } } }
 const CI = { hidden:{opacity:0,y:20,scale:.98}, visible:{ opacity:1,y:0,scale:1, transition:{ duration:.42, ease:[0.22,1,0.36,1] as [number,number,number,number] } } }
 
-function ClipUp({ children, delay=0 }:{ children:React.ReactNode; delay?:number }) {
-  return (
-    <motion.div
-      initial={{clipPath:'inset(100% 0% 0% 0%)',opacity:0}}
-      whileInView={{clipPath:'inset(0% 0% 0% 0%)',opacity:1}}
-      viewport={{once:true,margin:'80px'}}
-      transition={{duration:.8,ease:[0.22,1,0.36,1],delay}}
-    >{children}</motion.div>
-  )
-}
-
-function SpringCount({ to, suffix='' }:{ to:number; suffix?:string }) {
-  const ref=useRef<HTMLSpanElement>(null)
-  const inView=useInView(ref,{once:true,margin:'100px'})
-  const mv=useMotionValue(0)
-  const [d,setD]=useState('0')
-  useEffect(()=>{
-    if(!inView) return
-    const c=animate(mv,to,{duration:1.8,ease:[0.22,1,0.36,1],onUpdate:v=>setD(String(Math.round(v)))})
-    return c.stop
-  },[inView,to,mv])
-  return <span ref={ref}>{d}{suffix}</span>
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  CURSOR DOT
@@ -306,14 +247,14 @@ function BrowserUI() {
         <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'14px 10px',overflow:'hidden'}}>
           <div style={{background:'#fff',borderRadius:4,boxShadow:'0 4px 20px rgba(0,0,0,.1)',width:'100%',maxWidth:260,padding:'16px 14px',position:'relative',overflow:'hidden',border:'1px solid #f0f0f0'}}>
             <div style={{position:'absolute',left:0,right:0,height:2,background:'linear-gradient(90deg,transparent,rgba(99,102,241,.85) 35%,rgba(167,139,250,1) 50%,rgba(99,102,241,.85) 65%,transparent)',boxShadow:'0 0 10px rgba(99,102,241,.5)',animation:'ocrscan 2.8s linear infinite',zIndex:5}}/>
-            <div style={{fontSize:7.5,fontWeight:800,letterSpacing:'0.1em',color:'#111',marginBottom:2}}>INVOICE #2025-089</div>
+            <div style={{fontSize:7.5,fontWeight:800,letterSpacing:'0.1em',color:'#1d1d1f',marginBottom:2}}>INVOICE #2025-089</div>
             <div style={{fontSize:6.5,color:'#ccc',marginBottom:10}}>Acme Corporation · NET 30</div>
             <div style={{height:1,background:'#f0f0f0',marginBottom:10}}/>
             {[['Bill To','Acme Corp.','0.2s','0.48s'],['Amount','$12,400.00','1.0s','1.28s'],['Due Date','Dec 30, 2025','1.8s','2.08s']].map(([label,val,d1,d2])=>(
               <div key={label} style={{marginBottom:8}}>
                 <div style={{fontSize:6,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:2}}>{label}</div>
                 <div style={{position:'relative',height:20,border:'1px solid #e8eaed',borderRadius:4,display:'flex',alignItems:'center',padding:'0 6px',overflow:'hidden'}}>
-                  <span style={{fontSize:8,color:'#111',fontWeight:500,animation:`fin .35s ${d1} both`,opacity:0}}>{val}</span>
+                  <span style={{fontSize:8,color:'#1d1d1f',fontWeight:500,animation:`fin .35s ${d1} both`,opacity:0}}>{val}</span>
                   <span style={{position:'absolute',right:5,fontSize:10,animation:`chk .35s ${d2} both`,opacity:0,color:'#22c55e'}}>✓</span>
                 </div>
               </div>
@@ -445,7 +386,7 @@ function Hero() {
       {/* Ambient glows */}
       <div style={{position:'absolute',top:'-20%',left:'-10%',width:700,height:700,borderRadius:'50%',background:'radial-gradient(circle, rgba(226,75,74,.10) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',bottom:'-15%',right:'-5%',width:600,height:600,borderRadius:'50%',background:'radial-gradient(circle, rgba(99,102,241,.07) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
-      <div style={{position:'absolute',top:'30%',right:'20%',width:400,height:400,borderRadius:'50%',background:'radial-gradient(circle, rgba(251,146,60,.06) 0%, transparent 70%)',filter:'blur(60px)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',top:'30%',right:'20%',width:400,height:400,borderRadius:'50%',background:'radial-gradient(circle, rgba(226,75,74,.05) 0%, transparent 70%)',filter:'blur(60px)',pointerEvents:'none'}}/>
 
       {/* Content grid */}
       <motion.div style={{y:textY,maxWidth:1200,margin:'0 auto',padding:'0 28px',width:'100%',position:'relative',zIndex:2}}>
@@ -505,7 +446,7 @@ function Hero() {
               {['Free forever','No signup','100% private','In-browser'].map((t,i)=>(
                 <span key={t} style={{display:'flex',alignItems:'center',gap:6}}>
                   {i>0&&<span style={{width:3,height:3,borderRadius:'50%',background:'#ddd',display:'inline-block'}}/>}
-                  <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.06em',textTransform:'uppercase'}}>{t}</span>
+                  <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.06em',textTransform:'uppercase'}}>{t}</span>
                 </span>
               ))}
             </motion.div>
@@ -526,7 +467,7 @@ function Hero() {
                 initial={{opacity:0,scale:0.8,y:8}} animate={{opacity:1,scale:1,y:0}}
                 transition={{duration:.45,ease:[0.22,1,0.36,1] as [number,number,number,number],delay}}
                 style={{position:'absolute',display:'flex',alignItems:'center',gap:6,padding:'7px 12px',
-                  background:'#fff',borderRadius:99,boxShadow:'0 4px 20px rgba(0,0,0,.10)',
+                  background:'#fff',borderRadius:99,boxShadow:'0 4px 16px rgba(0,0,0,.08)',
                   border:'1px solid #f0f0f0',...FI,fontSize:11,fontWeight:600,color,
                   whiteSpace:'nowrap',zIndex:10,...pos}}>
                 <Icon size={12} strokeWidth={2.5} color={color}/>
@@ -551,18 +492,18 @@ function Hero() {
       {/* Bottom bar */}
       <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.5,delay:1.2}}
         style={{position:'absolute',bottom:0,left:0,right:0,height:44,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 28px',borderTop:'1px solid rgba(0,0,0,.06)',zIndex:3}}>
-        <div style={{...MONO,fontSize:11,color:'rgba(0,0,0,.3)',letterSpacing:'0.1em',display:'flex',alignItems:'center',gap:8}}>
+        <div style={{...MONO,fontSize:11,color:'#999',letterSpacing:'0.1em',display:'flex',alignItems:'center',gap:8}}>
           <span style={{width:20,height:1,background:'rgba(0,0,0,.15)',display:'inline-block'}}/>
           <ScrollPct/>
         </div>
         <div className="desk" style={{gap:24}}>
           {['17 AI Tools','Free Forever','No Account','100% Private'].map(t=>(
-            <span key={t} style={{...MONO,fontSize:10,color:'rgba(0,0,0,.25)',letterSpacing:'0.08em',textTransform:'uppercase'}}>{t}</span>
+            <span key={t} style={{...MONO,fontSize:10,color:'#bbb',letterSpacing:'0.08em',textTransform:'uppercase'}}>{t}</span>
           ))}
         </div>
         <motion.div animate={{y:[0,5,0]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}
           style={{display:'flex',alignItems:'center',gap:7}}>
-          <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.3)',letterSpacing:'0.1em',textTransform:'uppercase'}}>Scroll</span>
+          <span style={{...MONO,fontSize:10,color:'#999',letterSpacing:'0.1em',textTransform:'uppercase'}}>Scroll</span>
           <svg width="14" height="18" viewBox="0 0 14 18" fill="none">
             <rect x=".75" y=".75" width="12.5" height="16.5" rx="6.25" stroke="rgba(0,0,0,.2)" strokeWidth="1.5"/>
             <motion.rect x="5.5" y="4" width="3" height="4" rx="1.5" fill="rgba(0,0,0,.25)"
@@ -574,45 +515,6 @@ function Hero() {
   )
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  BOLD STATEMENT
-// ══════════════════════════════════════════════════════════════════════════════
-function Statement() {
-  const ref=useRef(null)
-  const {scrollYProgress}=useScroll({target:ref,offset:['start end','end start']})
-  const x=useTransform(scrollYProgress,[0,1],[-40,40])
-
-  return (
-    <section ref={ref} style={{background:'#fff',padding:'120px 28px',overflow:'hidden',borderTop:'1px solid #f0f0f0'}}>
-      <div style={{maxWidth:1200,margin:'0 auto'}}>
-        <motion.div initial={{opacity:0}} whileInView={{opacity:1}} viewport={{once:true}} transition={{duration:.5,ease:E}}
-          style={{display:'flex',alignItems:'center',gap:10,marginBottom:32}}>
-          <span style={{...MONO,fontSize:10,color:'#aaa',letterSpacing:'0.14em',textTransform:'uppercase'}}>EditPDF AI</span>
-          <span style={{width:40,height:1,background:'#ddd',display:'inline-block'}}/>
-          <span style={{...MONO,fontSize:10,color:'#aaa',letterSpacing:'0.14em',textTransform:'uppercase'}}>Platform</span>
-        </motion.div>
-
-        <motion.div style={{x}}>
-          <motion.h2
-            initial={{opacity:0,y:40}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'0px'}}
-            transition={{duration:.8,ease:[0.22,1,0.36,1]}}
-            style={{...FI,fontSize:'clamp(38px,6.5vw,96px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.055em',lineHeight:.96,margin:0}}>
-            17 AI tools.<br/>
-            <span style={{color:'#bbb'}}>One platform.</span><br/>
-            <span className="grad-red">Zero friction.</span>
-          </motion.h2>
-        </motion.div>
-
-        <motion.div initial={{opacity:0}} whileInView={{opacity:1}} viewport={{once:true}} transition={{duration:.5,delay:.3,ease:E}}
-          style={{display:'flex',justifyContent:'flex-end',marginTop:32}}>
-          <p style={{...FI,fontSize:14,color:'#999',maxWidth:340,lineHeight:1.7,textAlign:'right',letterSpacing:'-0.005em'}}>
-            Free forever. No account needed. Edit, sign, fill, watermark — all in your browser without installing anything.
-          </p>
-        </motion.div>
-      </div>
-    </section>
-  )
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  SCROLL GALLERY SCREENS — all light/white
@@ -635,7 +537,7 @@ function ScreenDrop() {
             <Upload size={13} strokeWidth={2}/> Choose PDF File
           </div>
         </motion.div>
-        <div style={{...MONO,fontSize:9,color:'rgba(0,0,0,.25)',letterSpacing:'0.1em',textTransform:'uppercase'}}>PDF · Any size · Runs in your browser</div>
+        <div style={{...MONO,fontSize:9,color:'#bbb',letterSpacing:'0.1em',textTransform:'uppercase'}}>PDF · Any size · Runs in your browser</div>
       </div>
     </div>
   )
@@ -644,14 +546,14 @@ function ScreenDrop() {
 function ScreenScan() {
   return (
     <div style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
-      <div style={{background:'#fff',borderRadius:10,width:'100%',maxWidth:420,padding:'22px 18px',position:'relative',overflow:'hidden',boxShadow:'0 8px 40px rgba(0,0,0,.12)',border:'1px solid #e8e8e8'}}>
+      <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'22px 18px',position:'relative',overflow:'hidden',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
         <motion.div
           animate={{top:['-2%','102%']}}
           transition={{duration:2.2,repeat:Infinity,ease:'linear',repeatDelay:.6}}
           style={{position:'absolute',left:0,right:0,height:2,background:'linear-gradient(90deg,transparent,rgba(99,102,241,.9) 30%,rgba(167,139,250,1) 50%,rgba(99,102,241,.9) 70%,transparent)',boxShadow:'0 0 14px rgba(99,102,241,.4)',zIndex:5,pointerEvents:'none'}}/>
 
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-          <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#111'}}>INVOICE #2025-089</div>
+          <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#1d1d1f'}}>INVOICE #2025-089</div>
           <motion.div animate={{opacity:[1,.35,1]}} transition={{duration:1.1,repeat:Infinity}}
             style={{display:'flex',alignItems:'center',gap:5,padding:'3px 9px',background:'rgba(99,102,241,.07)',border:'1px solid rgba(99,102,241,.18)',borderRadius:99}}>
             <span style={{width:5,height:5,borderRadius:'50%',background:'#6366f1',display:'inline-block'}}/>
@@ -686,9 +588,9 @@ function ScreenScan() {
 function ScreenFill() {
   return (
     <div style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
-      <div style={{background:'#fff',borderRadius:10,width:'100%',maxWidth:420,padding:'22px 18px',boxShadow:'0 8px 40px rgba(0,0,0,.12)',border:'1px solid #e8e8e8'}}>
+      <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'22px 18px',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-          <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#111'}}>INVOICE #2025-089</div>
+          <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#1d1d1f'}}>INVOICE #2025-089</div>
           <div style={{display:'flex',alignItems:'center',gap:5,padding:'3px 9px',background:'rgba(226,75,74,.07)',border:'1px solid rgba(226,75,74,.18)',borderRadius:99}}>
             <Zap size={8} color={RED} strokeWidth={2.5}/>
             <span style={{...MONO,fontSize:8,color:RED,letterSpacing:'0.06em'}}>AI FILLING</span>
@@ -704,7 +606,7 @@ function ScreenFill() {
           <div key={label} style={{marginBottom:11}}>
             <div style={{fontSize:7,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:3}}>{label}</div>
             <div style={{position:'relative',height:26,borderRadius:6,border:`1.5px solid ${done?'rgba(34,197,94,.3)':'rgba(226,75,74,.35)'}`,background:done?'rgba(34,197,94,.03)':'rgba(226,75,74,.02)',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 9px',overflow:'hidden'}}>
-              <span style={{...FI,fontSize:9.5,color:'#111',fontWeight:500,animation:`fin .38s ${d1} both`,opacity:0}}>{val}</span>
+              <span style={{...FI,fontSize:9.5,color:'#1d1d1f',fontWeight:500,animation:`fin .38s ${d1} both`,opacity:0}}>{val}</span>
               {done && <span style={{fontSize:13,animation:`chk .38s ${d2} both`,opacity:0,color:'#22c55e',flexShrink:0}}>✓</span>}
               {!done && <motion.span animate={{opacity:[1,0,1]}} transition={{duration:.65,repeat:Infinity}} style={{...FI,fontSize:14,color:RED,lineHeight:1,flexShrink:0}}>|</motion.span>}
             </div>
@@ -716,7 +618,7 @@ function ScreenFill() {
             <motion.div initial={{width:'0%'}} animate={{width:'66%'}} transition={{duration:.9,delay:.4,ease:[0.22,1,0.36,1]}}
               style={{height:'100%',background:'#22c55e',borderRadius:99}}/>
           </div>
-          <span style={{...MONO,fontSize:9,color:'#aaa',whiteSpace:'nowrap'}}>2 / 3 filled</span>
+          <span style={{...MONO,fontSize:9,color:'rgba(0,0,0,.38)',whiteSpace:'nowrap'}}>2 / 3 filled</span>
         </div>
       </div>
     </div>
@@ -726,9 +628,9 @@ function ScreenFill() {
 function ScreenDone() {
   return (
     <div style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
-      <div style={{background:'#fff',borderRadius:10,width:'100%',maxWidth:420,padding:'22px 18px',boxShadow:'0 8px 40px rgba(0,0,0,.12)',border:'1px solid #e8e8e8'}}>
+      <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'22px 18px',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-          <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#111'}}>INVOICE #2025-089</div>
+          <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#1d1d1f'}}>INVOICE #2025-089</div>
           <div style={{display:'flex',alignItems:'center',gap:5,padding:'3px 9px',background:'rgba(34,197,94,.07)',border:'1px solid rgba(34,197,94,.2)',borderRadius:99}}>
             <CheckCircle2 size={9} color="#22c55e" strokeWidth={2.5}/>
             <span style={{...MONO,fontSize:8,color:'#22c55e',letterSpacing:'0.06em'}}>COMPLETE</span>
@@ -740,7 +642,7 @@ function ScreenDone() {
           <div key={label} style={{marginBottom:11}}>
             <div style={{fontSize:7,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:3}}>{label}</div>
             <div style={{height:26,borderRadius:6,border:'1.5px solid rgba(34,197,94,.3)',background:'rgba(34,197,94,.03)',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 9px'}}>
-              <span style={{...FI,fontSize:9.5,color:'#111',fontWeight:500}}>{val}</span>
+              <span style={{...FI,fontSize:9.5,color:'#1d1d1f',fontWeight:500}}>{val}</span>
               <CheckCircle2 size={13} color="#22c55e" strokeWidth={2.5}/>
             </div>
           </div>
@@ -758,7 +660,7 @@ function ScreenDone() {
         </div>
 
         <motion.div whileHover={{scale:1.02}} whileTap={{scale:.97}} transition={SP}
-          style={{height:40,background:'#22c55e',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',gap:7,cursor:'pointer',boxShadow:'0 4px 16px rgba(34,197,94,.25)'}}>
+          style={{height:40,background:'#22c55e',borderRadius:99,display:'flex',alignItems:'center',justifyContent:'center',gap:7,cursor:'pointer',boxShadow:'0 4px 16px rgba(34,197,94,.25)'}}>
           <Download size={14} color="#fff" strokeWidth={2.5}/>
           <span style={{...FI,fontSize:13,color:'#fff',fontWeight:700}}>Download filled PDF</span>
         </motion.div>
@@ -784,15 +686,24 @@ function Apple3DScroll() {
     const el = pin.current
     if (!el) return
     const onScroll = () => {
-      const scrolled = window.scrollY - el.offsetTop
+      // re-read offsetTop each call so layout shifts don't break the math
+      const elTop = el.getBoundingClientRect().top + window.scrollY
+      const scrolled = window.scrollY - elTop
       const total = el.offsetHeight - window.innerHeight
+      if (total <= 0) return
       const p = Math.max(0, Math.min(1, scrolled / total))
       setProgress(p)
       setStep(p < .25 ? 0 : p < .5 ? 1 : p < .75 ? 2 : 3)
     }
     window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
+    window.addEventListener('resize', onScroll, { passive: true })
+    // defer initial call so fonts/images have time to affect layout
+    const t = setTimeout(onScroll, 100)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      clearTimeout(t)
+    }
   }, [])
 
   const hintOpacity = Math.max(0, 1 - progress / 0.06)
@@ -804,7 +715,7 @@ function Apple3DScroll() {
       {/* Section intro — scrolls normally before sticky activates */}
       <div style={{padding:'80px 48px 48px',maxWidth:1200,margin:'0 auto'}}>
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.55,ease:E}}>
-          <div style={{...MONO,fontSize:10,color:'#aaa',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>How it works</div>
+          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>How it works</div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,4vw,56px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>
             Four steps.<br/><span style={{color:'#bbb'}}>Zero effort.</span>
           </h2>
@@ -812,7 +723,7 @@ function Apple3DScroll() {
       </div>
 
       <div ref={pin} style={{height:'400vh',position:'relative'}}>
-      <div className="scr-sticky" style={{position:'sticky',top:0,height:'100vh',background:'#F5F5F7',overflow:'hidden',display:'flex',flexDirection:'column'}}>
+      <div className="scr-sticky" style={{top:0,height:'100vh',background:'#F5F5F7',overflow:'hidden',display:'flex',flexDirection:'column'}}>
 
         {/* Dot grid */}
         <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(rgba(0,0,0,.03) 1px,transparent 1px)',backgroundSize:'32px 32px',pointerEvents:'none'}}/>
@@ -891,7 +802,7 @@ function Apple3DScroll() {
             <motion.div
               animate={{boxShadow:`0 24px 60px -12px ${cur.color}35, 0 0 0 1px ${cur.color}30`,borderColor:`${cur.color}30`}}
               transition={{duration:.5}}
-              style={{borderRadius:14,border:'1px solid transparent',overflow:'hidden',position:'relative',background:'#fff'}}>
+              style={{borderRadius:16,border:'1px solid transparent',overflow:'hidden',position:'relative',background:'#fff'}}>
 
               {/* Chrome bar */}
               <div style={{background:'#F5F5F7',borderBottom:'1px solid rgba(0,0,0,.07)',height:32,display:'flex',alignItems:'center',padding:'0 12px',gap:8}}>
@@ -930,7 +841,7 @@ function Apple3DScroll() {
           <motion.div animate={{y:[0,6,0]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}>
             <svg width="18" height="28" viewBox="0 0 18 28" fill="none"><rect x="1" y="1" width="16" height="26" rx="8" stroke="rgba(0,0,0,.18)" strokeWidth="1.5"/><motion.rect x="7.5" y="6" width="3" height="5" rx="1.5" fill="rgba(0,0,0,.3)" animate={{y:[0,7,0],opacity:[1,.2,1]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}/></svg>
           </motion.div>
-          <span style={{...MONO,fontSize:9.5,color:'rgba(0,0,0,.25)',letterSpacing:'0.12em',textTransform:'uppercase'}}>Scroll to explore</span>
+          <span style={{...MONO,fontSize:9.5,color:'#bbb',letterSpacing:'0.12em',textTransform:'uppercase'}}>Scroll to explore</span>
         </motion.div>
 
         {/* Progress bar */}
@@ -943,124 +854,7 @@ function Apple3DScroll() {
   )
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  FEATURE BLOCKS — all light/white
-// ══════════════════════════════════════════════════════════════════════════════
-const FEATS = [
-  {
-    n:'01', tag:'AI Form Filling',
-    headline:'Fill any form.\nIn seconds.',
-    body:'Drop any PDF. AI detects every field, maps your data, and fills the entire form instantly — no manual work.',
-    href:'/ai-pdf-form-filler',
-    Visual: ()=>(
-      <div style={{background:'#F5F5F7',border:'1px solid #e8e8e8',borderRadius:20,padding:28,position:'relative',overflow:'hidden'}}>
-        <div style={{position:'absolute',left:0,right:0,height:2,background:'linear-gradient(90deg,transparent,rgba(34,197,94,.8) 35%,rgba(134,239,172,1) 50%,rgba(34,197,94,.8) 65%,transparent)',boxShadow:'0 0 10px rgba(34,197,94,.4)',animation:'ocrscan 2.4s linear infinite',zIndex:5}}/>
-        {[78,100,58,90,68,52].map((w,i)=><div key={i} style={{height:7,borderRadius:99,background:`rgba(0,0,0,${.07+(i%2)*.04})`,marginBottom:10,width:`${w}%`}}/>)}
-        <div style={{marginTop:8,display:'flex',gap:8,flexWrap:'wrap'}}>
-          {['Acme Corp.','Invoice','$12,400'].map(t=>(
-            <motion.div key={t} whileHover={{scale:1.05,y:-2}} transition={SP} style={{display:'flex',alignItems:'center',gap:5,padding:'5px 10px',background:'rgba(34,197,94,.08)',border:'1px solid rgba(34,197,94,.2)',borderRadius:6}}>
-              <CheckCircle2 size={10} color="#22c55e" strokeWidth={2.5}/><span style={{...FI,fontSize:10,color:'#15803d',fontWeight:500}}>{t}</span>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    ),
-  },
-  {
-    n:'02', tag:'E-Signatures',
-    headline:'Sign anything.\nLegally binding.',
-    body:'Draw, type or upload your signature. Applied at full PDF resolution with a single click.',
-    href:'/pdf-editor',
-    Visual: ()=>(
-      <div style={{background:'#F5F5F7',borderRadius:20,padding:28}}>
-        <div style={{background:'#fff',borderRadius:12,padding:20,boxShadow:'0 2px 12px rgba(0,0,0,.06)',marginBottom:14,border:'1px solid #f0f0f0'}}>
-          {[['Party A','GlobalTech Inc.'],['Party B','Acme Corp.']].map(([l,v])=>(
-            <div key={l} style={{marginBottom:9}}>
-              <div style={{fontSize:7.5,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:2}}>{l}</div>
-              <div style={{height:22,background:'rgba(34,197,94,.05)',border:'1px solid rgba(34,197,94,.25)',borderRadius:5,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 8px'}}>
-                <span style={{...FI,fontSize:9,color:'#111',fontWeight:500}}>{v}</span>
-                <CheckCircle2 size={11} color="#22c55e" strokeWidth={2.5}/>
-              </div>
-            </div>
-          ))}
-          <div style={{height:38,border:'1.5px dashed #e4e4e7',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <svg width="170" height="30" viewBox="0 0 170 30" fill="none">
-              <path d="M8 22 C18 8 30 26 44 16 C58 6 70 26 86 14 C100 4 112 22 126 12 C138 5 148 20 158 14" stroke={RED} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="340" style={{animation:'sigdraw 4s ease-in-out infinite .3s'}}/>
-            </svg>
-          </div>
-        </div>
-        <motion.div whileHover={{scale:1.02,y:-2}} whileTap={{scale:.97}} transition={SP} style={{height:38,background:'#1d1d1f',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',gap:6,cursor:'pointer'}}>
-          <Download size={13} color="#fff" strokeWidth={2.5}/><span style={{...FI,fontSize:12,color:'#fff',fontWeight:700}}>Download signed PDF</span>
-        </motion.div>
-      </div>
-    ),
-  },
-  {
-    n:'03', tag:'PDF Watermarker',
-    headline:'Protect every\ndocument.',
-    body:'Add text or image watermarks with full opacity, angle and position control. Tile, center, or drag to place.',
-    href:'/pdf-watermark',
-    Visual: ()=>(
-      <div style={{background:'#F5F5F7',border:'1px solid #e8e8e8',borderRadius:20,padding:28}}>
-        <div style={{background:'#fff',borderRadius:10,padding:16,position:'relative',overflow:'hidden',border:'1px solid #f0f0f0'}}>
-          <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',zIndex:2,pointerEvents:'none'}}>
-            <span style={{...FI,fontSize:28,fontWeight:900,color:'rgba(226,75,74,.15)',letterSpacing:'0.04em',transform:'rotate(-28deg)',whiteSpace:'nowrap',userSelect:'none'}}>CONFIDENTIAL</span>
-          </div>
-          {[80,100,65,90,72,55].map((w,i)=><div key={i} style={{height:7,borderRadius:99,background:`rgba(0,0,0,${.06+(i%2)*.04})`,marginBottom:9,width:`${w}%`}}/>)}
-        </div>
-        <div style={{marginTop:14,display:'flex',gap:8}}>
-          {[['Opacity','20%'],['Angle','-28°'],['Position','Center']].map(([k,v])=>(
-            <div key={k} style={{flex:1,padding:'6px 8px',background:'#fff',border:'1px solid #e8e8e8',borderRadius:7,textAlign:'center'}}>
-              <div style={{...MONO,fontSize:8,color:'rgba(0,0,0,.35)',letterSpacing:'0.06em',textTransform:'uppercase'}}>{k}</div>
-              <div style={{...FI,fontSize:11,color:'#1d1d1f',fontWeight:600,marginTop:2}}>{v}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    ),
-  },
-]
 
-function FeatureBlocks() {
-  return (
-    <>
-      {FEATS.map(({ n, tag, headline, body, href, Visual })=>(
-        <section key={n} style={{background:'#fff',padding:'100px 28px',borderTop:'1px solid #f0f0f0'}}>
-          <div style={{maxWidth:1200,margin:'0 auto'}}>
-            <motion.div initial={{opacity:0}} whileInView={{opacity:1}} viewport={{once:true,margin:'80px'}} transition={{duration:.4,ease:E}}
-              style={{display:'flex',alignItems:'center',gap:12,marginBottom:56,paddingBottom:18,borderBottom:'1px solid #f0f0f0'}}>
-              <span style={{...MONO,fontSize:10,color:'#ccc',letterSpacing:'0.1em'}}>{n}</span>
-              <span style={{width:1,height:12,background:'#ddd',display:'inline-block'}}/>
-              <span style={{...MONO,fontSize:10,color:RED,letterSpacing:'0.12em',textTransform:'uppercase'}}>{tag}</span>
-              <div style={{flex:1}}/>
-              <Link href={href} style={{...FI,display:'flex',alignItems:'center',gap:5,fontSize:12,fontWeight:600,color:'#999',textDecoration:'none',letterSpacing:'-0.01em'}}>
-                Open <ArrowUpRight size={12} strokeWidth={2}/>
-              </Link>
-            </motion.div>
-
-            <div className="r-feat">
-              <motion.div initial={{opacity:0,x:-24}} whileInView={{opacity:1,x:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.65,ease:E}}>
-                <h2 style={{...FI,fontSize:'clamp(32px,4.5vw,58px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:1.04,margin:'0 0 20px',whiteSpace:'pre-line'}}>
-                  {headline}
-                </h2>
-                <p style={{...FI,fontSize:16,color:'#6E6E73',lineHeight:1.72,maxWidth:360,margin:'0 0 32px',letterSpacing:'-0.005em'}}>{body}</p>
-                <Mag>
-                  <Link href={href} style={{...FI,display:'inline-flex',alignItems:'center',gap:8,fontSize:14,fontWeight:600,color:'#1d1d1f',textDecoration:'none',padding:'10px 22px',border:'1px solid #e8e8e8',borderRadius:99}}>
-                    <motion.span style={{display:'flex',alignItems:'center',gap:8}} whileHover={{gap:14}} transition={SP}>
-                      Open tool <ArrowRight size={14} strokeWidth={2.5}/>
-                    </motion.span>
-                  </Link>
-                </Mag>
-              </motion.div>
-
-              <ClipUp delay={.1}><Visual /></ClipUp>
-            </div>
-          </div>
-        </section>
-      ))}
-    </>
-  )
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  ALL TOOLS
@@ -1077,14 +871,14 @@ function AllTools() {
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'100px'}} transition={{duration:.5,ease:E}}
           style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',flexWrap:'wrap',gap:16,marginBottom:40}}>
           <div>
-            <div style={{...MONO,fontSize:10,color:'#aaa',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>Tool Registry</div>
-            <h2 style={{...FI,fontSize:'clamp(28px,3.5vw,46px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:1.02,margin:0}}>17 tools. One platform.</h2>
+            <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>Tool Registry</div>
+            <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,3.5vw,46px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>17 tools. One platform.</h2>
           </div>
           <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
             {[['LIVE','rgba(34,197,94,.1)','#15803d','rgba(34,197,94,.3)'],['BETA','rgba(99,102,241,.1)','#4338ca','rgba(99,102,241,.3)'],['SOON','rgba(0,0,0,.04)','#bbb','#e8e8e8']].map(([tag,bg,col,br])=>(
               <span key={tag} style={{display:'flex',alignItems:'center',gap:5}}>
                 <span style={{...MONO,fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:4,background:bg,color:col,border:`1px solid ${br}`,letterSpacing:'0.06em'}}>{tag}</span>
-                <span style={{...FI,fontSize:12,color:'#aaa'}}>{tag==='LIVE'?'Available':tag==='BETA'?'Beta':'Soon'}</span>
+                <span style={{...FI,fontSize:12,color:'rgba(0,0,0,.38)'}}>{tag==='LIVE'?'Available':tag==='BETA'?'Beta':'Soon'}</span>
               </span>
             ))}
           </div>
@@ -1100,7 +894,7 @@ function AllTools() {
                 style={{display:'flex',alignItems:'center',gap:10,padding:'14px 16px',background:isLive?'#fff':'#fafafa',borderLeft:`3px solid ${isLive?'#22c55e':'transparent'}`,borderRight:'1px solid #f0f0f0',borderBottom:'1px solid #f0f0f0',minHeight:56,cursor:isLive?'pointer':'default',transition:'background .12s'}}>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{...FI,fontSize:13.5,fontWeight:isLive?700:500,color:isLive?'#1d1d1f':'#bbb',letterSpacing:'-0.02em',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{name}</div>
-                  <div style={{...MONO,fontSize:9.5,color:'#ccc',marginTop:1,letterSpacing:'0.04em'}}>{cat.toUpperCase()}</div>
+                  <div style={{...MONO,fontSize:9.5,color:'#bbb',marginTop:1,letterSpacing:'0.04em'}}>{cat.toUpperCase()}</div>
                 </div>
                 <div style={{display:'flex',alignItems:'center',gap:5}}>
                   <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.06em',padding:'2px 6px',borderRadius:4,...ts}}>{tag}</span>
@@ -1116,137 +910,17 @@ function AllTools() {
   )
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-//  BENTO CAPABILITIES
-// ══════════════════════════════════════════════════════════════════════════════
-function Bento() {
-  const langRef=useRef<HTMLDivElement>(null), langIn=useInView(langRef,{once:true,margin:'120px'})
-  const spRef=useRef<HTMLDivElement>(null), spIn=useInView(spRef,{once:true,margin:'120px'})
-  const [langN,setLangN]=useState(0)
-  useEffect(()=>{
-    if(!langIn) return
-    let c=0; const iv=setInterval(()=>{c+=3;if(c>=140){setLangN(140);clearInterval(iv)}else setLangN(c)},18)
-    return ()=>clearInterval(iv)
-  },[langIn])
-
-  const Card=({children,delay=0,cls=''}:{children:React.ReactNode;delay?:number;cls?:string})=>(
-    <motion.div className={cls} initial={{opacity:0,y:28,scale:.98}} whileInView={{opacity:1,y:0,scale:1}} viewport={{once:true,margin:'100px'}} transition={{duration:.55,ease:[0.22,1,0.36,1] as [number,number,number,number],delay}} whileHover={{y:-5,boxShadow:'0 24px 56px rgba(0,0,0,.08)'}} style={{background:'#F5F5F7',borderRadius:20,overflow:'hidden',padding:28}}>{children}</motion.div>
-  )
-
-  return (
-    <section style={{background:'#fafafa',borderTop:'1px solid #f0f0f0',padding:'88px 28px'}}>
-      <div style={{maxWidth:1200,margin:'0 auto'}}>
-        <motion.div initial={{opacity:0,y:14}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'100px'}} transition={{duration:.5,ease:E}} style={{marginBottom:40}}>
-          <div style={{...MONO,fontSize:10,color:'#aaa',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>Capabilities</div>
-          <h2 style={{...FI,fontSize:'clamp(28px,3.5vw,46px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:1.02,margin:0}}>Built to save time.</h2>
-        </motion.div>
-        <div className="r-bento" style={{gap:12}}>
-          <motion.div className="bspan2" initial={{opacity:0,y:28,scale:.98}} whileInView={{opacity:1,y:0,scale:1}} viewport={{once:true,margin:'100px'}} transition={{duration:.55,ease:[0.22,1,0.36,1] as [number,number,number,number]}} whileHover={{y:-5,boxShadow:'0 24px 56px rgba(0,0,0,.08)'}} style={{background:'#F5F5F7',borderRadius:20,padding:32,display:'flex',gap:28,flexWrap:'wrap',alignItems:'center',minHeight:240}}>
-            <div style={{flex:'0 0 auto',maxWidth:220}}>
-              <div style={{display:'flex',alignItems:'center',gap:7,marginBottom:12}}><ScanLine size={14} color={RED} strokeWidth={2}/><span style={{...MONO,fontSize:10,letterSpacing:'0.1em',textTransform:'uppercase',color:RED}}>OCR</span></div>
-              <h3 style={{...FI,fontSize:22,fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.04em',lineHeight:1.2,margin:'0 0 8px'}}>AI reads everything</h3>
-              <p style={{...FI,fontSize:13,color:'#6E6E73',lineHeight:1.65,margin:0}}>Scanned PDFs, handwriting, complex tables — perfectly detected.</p>
-            </div>
-            <div style={{flex:1,minWidth:140,background:'#fff',border:'1px solid #e8e8e8',borderRadius:14,padding:20,position:'relative',overflow:'hidden',minHeight:130,display:'flex',flexDirection:'column',justifyContent:'center',gap:9}}>
-              <div style={{position:'absolute',left:0,right:0,height:2,background:'linear-gradient(90deg,transparent,rgba(34,197,94,.8) 35%,rgba(134,239,172,1) 50%,rgba(34,197,94,.8) 65%,transparent)',boxShadow:'0 0 10px rgba(34,197,94,.4)',animation:'ocrscan 2.2s linear infinite',zIndex:5}}/>
-              {[78,100,60,88,70].map((w,i)=><div key={i} style={{height:6,borderRadius:99,background:`rgba(0,0,0,${.08+(i%2)*.04})`,width:`${w}%`}}/>)}
-            </div>
-          </motion.div>
-          <Card delay={.1}>
-            <div ref={langRef} style={{display:'flex',flexDirection:'column',justifyContent:'space-between',minHeight:180}}>
-              <div style={{width:44,height:44,background:'#fff',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 10px rgba(0,0,0,.06)'}}><Globe size={20} color="#1d1d1f" strokeWidth={1.6}/></div>
-              <div>
-                <div style={{...FI,fontSize:'clamp(40px,5vw,56px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.055em',lineHeight:1,marginBottom:5}}>{langN}<span style={{fontSize:'0.5em',color:RED,fontWeight:700}}>+</span></div>
-                <div style={{...FI,fontSize:14,fontWeight:600,color:'#1d1d1f',letterSpacing:'-0.025em',marginBottom:3}}>Languages</div>
-                <div style={{...FI,fontSize:12.5,color:'#6E6E73',lineHeight:1.5}}>Unicode, RTL, global character sets.</div>
-              </div>
-            </div>
-          </Card>
-          <Card delay={.2}>
-            <div style={{display:'flex',flexDirection:'column',justifyContent:'space-between',minHeight:180}}>
-              <div style={{width:44,height:44,background:'#fff',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 10px rgba(0,0,0,.06)'}}><Shield size={20} color="#1d1d1f" strokeWidth={1.6}/></div>
-              <div>
-                <div style={{...FI,fontSize:20,fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.035em',marginBottom:6}}>Zero data stored</div>
-                <div style={{...FI,fontSize:12.5,color:'#6E6E73',lineHeight:1.5}}>Runs in-browser. Files never touch our servers.</div>
-              </div>
-            </div>
-          </Card>
-          <Card delay={.3}>
-            <div style={{display:'flex',flexDirection:'column',justifyContent:'space-between',minHeight:180}}>
-              <div style={{width:44,height:44,background:'#fff',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 10px rgba(0,0,0,.06)'}}><PenLine size={20} color="#1d1d1f" strokeWidth={1.6}/></div>
-              <div>
-                <div style={{...FI,fontSize:20,fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.035em',marginBottom:10}}>Sign in seconds</div>
-                <div style={{background:'#fff',borderRadius:9,padding:'9px 12px',border:'1.5px dashed #ddd',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  <svg width="150" height="26" viewBox="0 0 150 26" fill="none">
-                    <path d="M7 20 C16 7 27 24 40 14 C53 5 64 24 78 12 C91 3 103 20 116 11 C127 4 137 18 144 13" stroke={RED} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="340" style={{animation:'sigdraw 4s ease-in-out infinite .4s'}}/>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </Card>
-          <Card delay={.4}>
-            <div ref={spRef} style={{display:'flex',flexDirection:'column',justifyContent:'space-between',minHeight:180}}>
-              <div style={{width:44,height:44,background:'#fff',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 10px rgba(0,0,0,.06)'}}><Zap size={20} color="#1d1d1f" strokeWidth={1.6}/></div>
-              <div>
-                <div style={{...FI,fontSize:20,fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.035em',marginBottom:4}}>&lt;10ms response</div>
-                <div style={{...FI,fontSize:12.5,color:'#6E6E73',marginBottom:14,lineHeight:1.5}}>Edge-native. Zero round trips.</div>
-                <div style={{height:4,background:'#e4e4e7',borderRadius:99,overflow:'hidden'}}>
-                  <motion.div initial={{width:'0%'}} animate={spIn?{width:'97%'}:{}} transition={{duration:1.5,ease:E,delay:.3}} style={{height:'100%',background:'#1d1d1f',borderRadius:99}}/>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  STATS — white/light
-// ══════════════════════════════════════════════════════════════════════════════
-function StatRow({ to, suffix, label, sub, isStatic, delay }: { to:number; suffix:string; label:string; sub:string; isStatic?:boolean; delay:number }) {
-  return (
-    <motion.div initial={{opacity:0,y:14}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'100px'}} transition={{duration:.5,ease:E,delay}}
-      style={{display:'flex',alignItems:'center',padding:'28px 0',borderBottom:'1px solid #e8e8e8',gap:32,flexWrap:'wrap'}}>
-      <div style={{...FI,fontSize:'clamp(48px,7vw,80px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.06em',lineHeight:1,minWidth:160,flexShrink:0}}>
-        {isStatic ? suffix : <SpringCount to={to} suffix={suffix}/>}
-      </div>
-      <div style={{flex:1}}>
-        <div style={{...FI,fontSize:18,fontWeight:600,color:'#1d1d1f',letterSpacing:'-0.02em',marginBottom:4}}>{label}</div>
-        <div style={{...MONO,fontSize:11,color:'rgba(0,0,0,.35)',letterSpacing:'0.08em',textTransform:'uppercase'}}>{sub}</div>
-      </div>
-      <div style={{width:4,height:4,borderRadius:'50%',background:RED,flexShrink:0}}/>
-    </motion.div>
-  )
-}
-
-function Stats() {
-  return (
-    <section style={{background:'#F5F5F7',borderTop:'1px solid #f0f0f0',padding:'88px 28px'}}>
-      <div style={{maxWidth:1200,margin:'0 auto'}}>
-        <motion.div initial={{opacity:0}} whileInView={{opacity:1}} viewport={{once:true,margin:'100px'}} transition={{duration:.4}} style={{marginBottom:12}}>
-          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:0}}>By the numbers</div>
-        </motion.div>
-        <StatRow to={17}  suffix=""      label="AI-powered tools"    sub="Free · Always"        isStatic={false} delay={0}   />
-        <StatRow to={140} suffix="+"     label="Languages supported" sub="Global coverage"       isStatic={false} delay={.08} />
-        <StatRow to={0}   suffix="0"     label="Data ever stored"    sub="Full privacy · Always" isStatic={true}  delay={.16} />
-        <StatRow to={0}   suffix="Free"  label="No account needed"   sub="Open instantly"        isStatic={true}  delay={.24} />
-      </div>
-    </section>
-  )
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  CTA
 // ══════════════════════════════════════════════════════════════════════════════
 function CTA() {
   return (
-    <section style={{background:'#fff',borderTop:'1px solid #f0f0f0',padding:'120px 28px'}}>
+    <section style={{background:'#F5F5F7',borderTop:'1px solid #e8e8e8',padding:'120px 28px'}}>
       <div style={{maxWidth:1200,margin:'0 auto'}}>
         <motion.div initial={{opacity:0,y:22}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'100px'}} transition={{duration:.65,ease:E}}>
-          <div style={{...MONO,fontSize:10,color:'#aaa',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:24}}>Get started</div>
-          <h2 style={{...FI,fontSize:'clamp(44px,7vw,100px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.055em',lineHeight:.95,margin:'0 0 40px'}}>
+          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:24}}>Get started</div>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(44px,7vw,100px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:'0 0 40px'}}>
             Ready to edit<br/><span className="grad-red">smarter?</span>
           </h2>
           <div style={{display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
@@ -1258,7 +932,7 @@ function CTA() {
                 </motion.span>
               </Link>
             </Mag>
-            <span style={{...MONO,fontSize:11,color:'#ccc',letterSpacing:'0.08em',textTransform:'uppercase'}}>No account · No credit card · Any browser</span>
+            <span style={{...MONO,fontSize:11,color:'#999',letterSpacing:'0.08em',textTransform:'uppercase'}}>No account · No credit card · Any browser</span>
           </div>
         </motion.div>
       </div>
@@ -1282,14 +956,14 @@ function Footer() {
               </Link>
             </Mag>
             <p style={{...FI,fontSize:13,color:'#6E6E73',lineHeight:1.65,maxWidth:220,margin:'0 0 20px'}}>AI-powered PDF editing. 17 tools. Free forever.</p>
-            <p style={{...MONO,fontSize:11,color:'rgba(0,0,0,.3)',letterSpacing:'0.04em'}}>© {new Date().getFullYear()} EDITPDF AI</p>
+            <p style={{...MONO,fontSize:11,color:'#999',letterSpacing:'0.04em'}}>© {new Date().getFullYear()} EDITPDF AI</p>
           </div>
           {[
             {title:'Live Tools', links:[['AI Form Filler','/ai-pdf-form-filler'],['PDF Editor','/pdf-editor'],['PDF Watermarker','/pdf-watermark'],['OCR Scanner','#']]},
             {title:'Coming Soon', links:[['PDF to Word','#'],['PDF Compressor','#'],['PDF Merger','#'],['PDF Translator','#']]},
           ].map(({title,links})=>(
             <div key={title}>
-              <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:16}}>{title}</div>
+              <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:16}}>{title}</div>
               {links.map(([l,h])=>(
                 <motion.div key={l} whileHover={{x:4}} transition={SP}>
                   <Link href={h} style={{...FI,display:'block',fontSize:13.5,color:'#6E6E73',textDecoration:'none',fontWeight:500,marginBottom:10,letterSpacing:'-0.01em'}}>{l}</Link>
