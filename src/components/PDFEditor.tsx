@@ -122,6 +122,7 @@ function AnnotationDisplay({ el, isEditing, onChange, onDblClick }: {
       {isEditing ? (
         <textarea autoFocus value={el.text} onChange={e => onChange(e.target.value)}
           onClick={e => e.stopPropagation()}
+          placeholder="Add a note…"
           style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', resize: 'none',
             fontSize: 11, fontFamily: 'Inter, sans-serif', color: '#1e293b', lineHeight: 1.45 }} />
       ) : (
@@ -279,6 +280,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
     return (
       <textarea autoFocus value={el.text} onChange={e => onChange(e.target.value)}
         onClick={e => e.stopPropagation()}
+        placeholder="Type here…"
         style={{ ...base, textAlign: el.align, padding: '2px 4px', lineHeight: 1.4,
           overflow: 'hidden', wordBreak: 'break-word', border: 'none', outline: 'none', resize: 'none', cursor: 'text' }} />
     )
@@ -287,7 +289,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
       <div onDoubleClick={onDblClick}
         style={{ ...base, display: 'flex', alignItems: 'center', justifyContent: 'center',
           overflow: 'hidden', cursor: 'move' }}>
-        {el.text || <span style={{ opacity: 0.3, fontStyle: 'italic', fontSize: fs * 0.75 }}>Aa</span>}
+        {el.text || <span style={{ opacity: 0.3, fontStyle: 'italic', fontSize: fs * 0.75 }}>Double-click to type…</span>}
       </div>
     )
   return (

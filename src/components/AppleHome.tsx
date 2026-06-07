@@ -26,19 +26,19 @@ const TOOLS = [
   { name:'AI Form Filler',    tag:'LIVE', href:'/ai-pdf-form-filler', cat:'Editor'   },
   { name:'PDF Editor',        tag:'LIVE', href:'/pdf-editor',         cat:'Editor'   },
   { name:'PDF Watermarker',   tag:'LIVE', href:'/pdf-watermark',      cat:'Protect'  },
+  { name:'PDF Password Lock', tag:'LIVE', href:'/pdf-password-lock', cat:'Security' },
   { name:'PDF OCR Scanner',   tag:'BETA', href:null, cat:'Extract'  },
-  { name:'PDF Form Builder',  tag:'BETA', href:null, cat:'Forms'    },
-  { name:'PDF Page Manager',  tag:'BETA', href:null, cat:'Tools'    },
+  { name:'PDF Form Builder',  tag:'LIVE', href:'/pdf-form-builder', cat:'Forms'    },
+  { name:'PDF Page Manager',  tag:'LIVE', href:'/pdf-page-manager', cat:'Tools'    },
   { name:'PDF → Word',        tag:'SOON', href:null, cat:'Convert'  },
   { name:'PDF → Excel',       tag:'SOON', href:null, cat:'Convert'  },
-  { name:'PDF Compressor',    tag:'SOON', href:null, cat:'Optimize' },
-  { name:'PDF Merger',        tag:'SOON', href:null, cat:'Tools'    },
-  { name:'PDF Splitter',      tag:'SOON', href:null, cat:'Tools'    },
+  { name:'PDF Compressor',    tag:'LIVE', href:'/pdf-compressor', cat:'Optimize' },
+  { name:'PDF Merger',        tag:'LIVE', href:'/pdf-merger', cat:'Tools'    },
+  { name:'PDF Splitter',      tag:'LIVE', href:'/pdf-splitter', cat:'Tools'    },
   { name:'PDF E-Signer',      tag:'SOON', href:null, cat:'Sign'     },
   { name:'PDF Translator',    tag:'SOON', href:null, cat:'Language' },
-  { name:'PDF to Images',     tag:'SOON', href:null, cat:'Export'   },
-  { name:'PDF Redactor',      tag:'SOON', href:null, cat:'Security' },
-  { name:'PDF Password Lock', tag:'SOON', href:null, cat:'Security' },
+  { name:'PDF to Images',     tag:'LIVE', href:'/pdf-to-images', cat:'Export'   },
+  { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor', cat:'Security' },
   { name:'PDF Summarizer AI', tag:'SOON', href:null, cat:'AI'       },
 ]
 
@@ -108,7 +108,8 @@ const CSS = `
     .scr-dots   { margin-bottom:16px !important; }
     .scr-cta    { display:none !important; }
     .scr-right  { width:100% !important; flex:unset !important; }
-    .scr-screen { height:200px !important; }
+    .scr-screen { height:280px !important; }
+    .scr-doc    { align-items:flex-start !important; padding:12px !important; }
     .scr-url    { display:none !important; }
     .scr-hint   { display:none !important; }
   }
@@ -148,9 +149,9 @@ function Tilt({ children }:{ children:React.ReactNode }) {
   const off=useCallback(()=>{mx.set(0);my.set(0);glX.set(50);glY.set(30);sc.set(1)},[mx,my,glX,glY,sc])
   return (
     <div ref={ref} style={{perspective:1200}} onMouseMove={on} onMouseLeave={off}>
-      <motion.div style={{rotateX:rx,rotateY:ry,scale:sc,transformStyle:'preserve-3d',willChange:'transform'}}>
-        <motion.div style={{position:'absolute',inset:0,zIndex:30,pointerEvents:'none',borderRadius:18,overflow:'hidden',
-          background:useTransform([glX,glY],([x,y])=>`radial-gradient(circle at ${x}% ${y}%, rgba(0,0,0,.04) 0%, transparent 60%)`),
+      <motion.div style={{rotateX:rx,rotateY:ry,scale:sc,willChange:'transform',position:'relative'}}>
+        <motion.div style={{position:'absolute',inset:0,zIndex:2,pointerEvents:'none',borderRadius:16,
+          background:useTransform([glX,glY],([x,y])=>`radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,.12) 0%, transparent 60%)`),
         }}/>
         {children}
       </motion.div>
@@ -302,7 +303,7 @@ function Nav() {
   const [open,setOpen]=useState(false)
   const { scrollY }=useScroll()
   const navBg=useTransform(scrollY,[0,80],['rgba(255,255,255,0)','rgba(255,255,255,0.96)'])
-  const links=[{l:'Form Filler',h:'/ai-pdf-form-filler'},{l:'PDF Editor',h:'/pdf-editor'},{l:'Watermarker',h:'/pdf-watermark'},{l:'All Tools',h:'#tools'}]
+  const links=[{l:'Form Filler',h:'/ai-pdf-form-filler'},{l:'PDF Editor',h:'/pdf-editor'},{l:'Watermarker',h:'/pdf-watermark'},{l:'Password Lock',h:'/pdf-password-lock'},{l:'All Tools',h:'#tools'}]
 
   return (
     <>
@@ -521,7 +522,7 @@ function Hero() {
 // ══════════════════════════════════════════════════════════════════════════════
 function ScreenDrop() {
   return (
-    <div style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
+    <div className="scr-doc" style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
       <div style={{textAlign:'center',width:'100%',maxWidth:400}}>
         <motion.div
           animate={{borderColor:['rgba(99,102,241,.2)','rgba(99,102,241,.6)','rgba(99,102,241,.2)'],background:['rgba(99,102,241,.02)','rgba(99,102,241,.06)','rgba(99,102,241,.02)']}}
@@ -545,7 +546,7 @@ function ScreenDrop() {
 
 function ScreenScan() {
   return (
-    <div style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
+    <div className="scr-doc" style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
       <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'22px 18px',position:'relative',overflow:'hidden',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
         <motion.div
           animate={{top:['-2%','102%']}}
@@ -587,7 +588,7 @@ function ScreenScan() {
 
 function ScreenFill() {
   return (
-    <div style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
+    <div className="scr-doc" style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
       <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'22px 18px',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
           <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#1d1d1f'}}>INVOICE #2025-089</div>
@@ -627,7 +628,7 @@ function ScreenFill() {
 
 function ScreenDone() {
   return (
-    <div style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
+    <div className="scr-doc" style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
       <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'22px 18px',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
           <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#1d1d1f'}}>INVOICE #2025-089</div>
@@ -872,7 +873,7 @@ function AllTools() {
           style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',flexWrap:'wrap',gap:16,marginBottom:40}}>
           <div>
             <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>Tool Registry</div>
-            <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,3.5vw,46px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>17 tools. One platform.</h2>
+            <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,3.5vw,46px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>18 tools. One platform.</h2>
           </div>
           <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
             {[['LIVE','rgba(34,197,94,.1)','#15803d','rgba(34,197,94,.3)'],['BETA','rgba(99,102,241,.1)','#4338ca','rgba(99,102,241,.3)'],['SOON','rgba(0,0,0,.04)','#bbb','#e8e8e8']].map(([tag,bg,col,br])=>(
