@@ -632,10 +632,14 @@ export default function PDFFormBuilderPage() {
     setChatLoading(true)
     setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
     try {
+      const currentFields = fields
+        .filter(f => f.page === curPage)
+        .map(f => ({ type: f.type, label: f.label, x: f.x, y: f.y, w: f.w, h: f.h }))
+
       const res = await fetch('/api/form-builder-ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ history: newHistory }),
+        body: JSON.stringify({ history: newHistory, currentFields }),
       })
       const data = await res.json()
       if (data.error) {
@@ -648,25 +652,14 @@ export default function PDFFormBuilderPage() {
       const assistantMsg = data.message ?? 'Sorry, something went wrong.'
       setChatHistory(prev => [...prev, { role: 'assistant', content: assistantMsg }])
 
-      if (data.action === 'replace' || data.action === 'add') {
-        const rawFields: any[] = data.fields ?? []
-
-        // For 'add': find lowest y+h of existing fields on this page so new fields go below
-        const existingBottom = data.action === 'add'
-          ? fields.filter(f => f.page === curPage).reduce((max, f) => Math.max(max, f.y + f.h + 0.06), 0.05)
-          : 0
-
-        // Normalise Claude's y range so the first new field starts at existingBottom
-        const rawYs = rawFields.map((f: any) => f.y ?? 0.07)
-        const minRawY = rawYs.length ? Math.min(...rawYs) : 0.07
-        const yOffset = data.action === 'add' ? existingBottom - minRawY : 0
-
+      const rawFields: any[] = data.fields ?? []
+      if (rawFields.length > 0) {
         const built: FormField[] = rawFields.map((f: any) => ({
           id: uid(),
           type: f.type ?? 'text',
           page: curPage,
           x: f.x ?? 0.08,
-          y: Math.min(0.92, (f.y ?? 0.07) + yOffset),
+          y: f.y ?? 0.07,
           w: f.w ?? 0.38,
           h: f.h ?? 0.038,
           label: f.label ?? '',
@@ -687,11 +680,8 @@ export default function PDFFormBuilderPage() {
           sigShowIcon: f.sigShowIcon ?? true,
           sigPromptText: f.sigPromptText ?? 'Sign here',
         }))
-        if (data.action === 'replace') {
-          setFields(built)
-        } else {
-          setFields(prev => [...prev, ...built])
-        }
+        // Always replace the full form — Claude returns all fields every time
+        setFields(prev => [...prev.filter(f => f.page !== curPage), ...built])
         setSelectedId(null)
       }
     } catch (err: any) {

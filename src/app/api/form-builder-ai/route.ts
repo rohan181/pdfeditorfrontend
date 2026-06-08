@@ -13,21 +13,17 @@ function extractJSON(raw: string): any | null {
 }
 
 const SYSTEM = `You are an AI form builder assistant embedded in a PDF form builder tool.
-The user will describe a form they want to create or modify. You generate form fields accordingly.
+
+CRITICAL RULE: Always return the COMPLETE form — every existing field PLUS any new ones requested.
+Never return only the new field. Always output all fields together so the form is rebuilt from scratch with no overlaps.
 
 ALWAYS respond with a raw JSON object (no markdown, no code fences):
 {
-  "message": "Friendly description of what you created/did",
-  "action": "replace" | "add" | "none",
+  "message": "Friendly description of what you did",
   "fields": []
 }
 
-action meanings:
-- "replace": clear all existing fields, create new ones from scratch
-- "add": add new fields to the existing form
-- "none": just chat/clarify, no field changes (fields must be [])
-
-Each field object in "fields":
+Each field object:
 {
   "type": "text"|"multiline"|"checkbox"|"dropdown"|"date"|"number"|"signature"|"radio"|"checkgroup",
   "label": "Label text",
@@ -66,33 +62,44 @@ Standard field sizes (w x h):
 
 Layout rules:
 - Start at y=0.05, x=0.08
-- labelPosition "top" needs ~0.05 extra vertical gap above the field for the label; increment y by h + 0.06 between fields
+- labelPosition "top" needs ~0.05 extra for the label; increment y by h + 0.06 between fields
 - Side-by-side pair: first at x=0.08, second at x=0.52 (same y row)
-- Signature usually goes near the bottom at y≈0.82
+- Signature usually at y≈0.82
 - Keep x+w ≤ 0.95 and y+h ≤ 0.93
-- radio/checkgroup: options[] should have 2–5 items; h scales automatically in the app
+- radio/checkgroup: options[] should have 2–5 items
 
 Common form examples:
-- Job application: Full Name (text), Email (text), Phone (text), Position Applied For (dropdown), Start Date (date), Cover Letter (multiline), Signature (signature)
+- Job application: Full Name (text), Email (text), Phone (text), Position (dropdown), Start Date (date), Cover Letter (multiline), Signature (signature)
 - Contact form: Name (text), Email (text), Subject (text), Message (multiline)
-- Registration: First Name + Last Name side-by-side (text), Email (text), DOB (date), Gender (radio), Terms (checkbox)
+- Registration: First Name + Last Name side-by-side, Email, DOB (date), Gender (radio), Terms (checkbox)
 - Survey: rating (radio 1–5), feedback (multiline), recommendation (radio yes/no/maybe)
-- Invoice: Company Name (text), Invoice # (number), Date (date), Description (multiline), Amount (number), Signature (signature)
+- Invoice: Company (text), Invoice # (number), Date (date), Description (multiline), Amount (number), Signature
 
-Be creative, precise, and friendly. Explain what you've built clearly.`
+Be creative, precise, and friendly.`
 
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) return Response.json({ error: 'ANTHROPIC_API_KEY not set' }, { status: 500 })
 
-    const { history } = await req.json() as {
+    const { history, currentFields } = await req.json() as {
       history: { role: 'user' | 'assistant'; content: string }[]
+      currentFields?: { type: string; label: string; x: number; y: number; w: number; h: number }[]
     }
 
     const client = new Anthropic({ apiKey })
 
-    const messages = history.map(h => ({ role: h.role, content: h.content }))
+    // Inject current form state into the last user message
+    const messages = history.map((h, i) => {
+      if (i === history.length - 1 && h.role === 'user' && currentFields && currentFields.length > 0) {
+        const summary = currentFields.map(f => `  • ${f.label} (${f.type}) at y=${f.y.toFixed(2)}`).join('\n')
+        return {
+          role: h.role,
+          content: `${h.content}\n\n[CURRENT FORM HAS ${currentFields.length} FIELDS — include all of them plus any changes in your response:\n${summary}]`,
+        }
+      }
+      return { role: h.role, content: h.content }
+    })
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
@@ -107,14 +114,12 @@ export async function POST(req: NextRequest) {
     if (parsed && typeof parsed.message === 'string') {
       return Response.json({
         message: parsed.message,
-        action: parsed.action ?? 'none',
         fields: Array.isArray(parsed.fields) ? parsed.fields : [],
       })
     }
 
     return Response.json({
       message: raw || "I couldn't process that. Try describing the form you need.",
-      action: 'none',
       fields: [],
     })
   } catch (err: any) {
