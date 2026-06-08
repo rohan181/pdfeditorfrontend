@@ -114,7 +114,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .field-overlay.sel{box-shadow:0 0 0 2px #6366f1,0 2px 12px rgba(99,102,241,.2)}
 .field-overlay:not(.sel):hover{box-shadow:0 0 0 1.5px #6366f1}
 .field-inner{width:100%;height:100%;display:flex;align-items:center;gap:4px;padding:0 6px;font-size:11px;color:rgba(0,0,0,.35);user-select:none;overflow:hidden;white-space:nowrap;border-radius:3px}
-.field-del{position:absolute;top:-8px;right:-8px;width:16px;height:16px;border-radius:50%;background:#E24B4A;border:none;color:#fff;font-size:8px;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10;line-height:1}
+.field-del{position:absolute;top:-11px;right:-11px;width:22px;height:22px;border-radius:50%;background:#E24B4A;border:2px solid #fff;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 .field-overlay.sel .field-del{display:flex}
 .resize-se{position:absolute;bottom:-4px;right:-4px;width:9px;height:9px;background:#6366f1;border:2px solid #fff;border-radius:2px;cursor:se-resize;z-index:5}
 
@@ -165,7 +165,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Mode          = 'idle' | 'pdf' | 'blank'
 type PageSizeName  = 'A4' | 'Letter' | 'Legal'
-type FieldType     = 'text' | 'multiline' | 'checkbox' | 'dropdown' | 'date' | 'number' | 'signature'
+type FieldType     = 'text' | 'multiline' | 'checkbox' | 'dropdown' | 'date' | 'number' | 'signature' | 'radio' | 'checkgroup'
 
 interface FormField {
   id: string; type: FieldType; page: number
@@ -173,11 +173,32 @@ interface FormField {
   label: string; placeholder: string; required: boolean; options: string[]
   labelPosition: 'top' | 'left' | 'below'
   borderStyle: 'box' | 'dash' | 'underline'
+  radioLayout: 'vertical' | 'horizontal'
   labelColor: string; labelFontSize: number; labelBold: boolean
   fieldTextColor: string
+  fieldFont: 'helvetica' | 'times' | 'courier'
+  fieldFontSize: number
   // signature-specific
   sigLineColor: string; sigLineStyle: 'solid' | 'dash'
   sigShowIcon: boolean; sigPromptText: string
+}
+
+type DocElementType = 'static-text' | 'table' | 'image'
+interface DocElement {
+  id: string; type: DocElementType; page: number
+  x: number; y: number; w: number; h: number
+  // static-text
+  text: string
+  textFont: 'helvetica' | 'times' | 'courier'
+  textSize: number; textColor: string; textBold: boolean; textItalic: boolean
+  textAlign: 'left' | 'center' | 'right'
+  // table
+  rows: number; cols: number; cellData: string[]
+  colWidths: number[]   // fractions per column, must sum to 1
+  rowHeights: number[]  // fractions per row, must sum to 1
+  tableHasHeader: boolean; tableBorderColor: string; tableBgHeader: string
+  // image
+  imageData: string; imageName: string
 }
 
 type DragState   = { id:string; scx:number; scy:number; ox:number; oy:number } | null
@@ -191,13 +212,15 @@ const PAGE_SIZES: Record<PageSizeName, { w:number; h:number; sub:string }> = {
 }
 
 const FIELD_DEFS = [
-  { type:'text'      as FieldType, icon:'Aa', label:'Text',      defW:.32, defH:.038 },
-  { type:'multiline' as FieldType, icon:'¶',  label:'Textarea',  defW:.32, defH:.10  },
-  { type:'signature' as FieldType, icon:'✍',  label:'Signature', defW:.40, defH:.055 },
-  { type:'checkbox'  as FieldType, icon:'☑',  label:'Checkbox',  defW:.03, defH:.03  },
-  { type:'dropdown'  as FieldType, icon:'▼',  label:'Dropdown',  defW:.28, defH:.038 },
-  { type:'date'      as FieldType, icon:'📅', label:'Date',       defW:.22, defH:.038 },
-  { type:'number'    as FieldType, icon:'#',  label:'Number',    defW:.18, defH:.038 },
+  { type:'text'       as FieldType, icon:'Aa', label:'Text',       defW:.32, defH:.038 },
+  { type:'multiline'  as FieldType, icon:'¶',  label:'Textarea',   defW:.32, defH:.10  },
+  { type:'signature'  as FieldType, icon:'✍',  label:'Signature',  defW:.40, defH:.055 },
+  { type:'checkbox'   as FieldType, icon:'☑',  label:'Checkbox',   defW:.03, defH:.03  },
+  { type:'radio'      as FieldType, icon:'◉',  label:'Radio',      defW:.24, defH:.07  },
+  { type:'checkgroup' as FieldType, icon:'☑☑', label:'Multi-Check',defW:.24, defH:.07  },
+  { type:'dropdown'   as FieldType, icon:'▼',  label:'Dropdown',   defW:.28, defH:.038 },
+  { type:'date'       as FieldType, icon:'📅', label:'Date',        defW:.22, defH:.038 },
+  { type:'number'     as FieldType, icon:'#',  label:'Number',     defW:.18, defH:.038 },
 ]
 
 let _id = 0
@@ -206,6 +229,57 @@ const fmt = (b: number) => b < 1048576 ? `${(b/1024).toFixed(1)} KB` : `${(b/104
 const hexToRgb = (hex: string) => {
   const h = hex.replace('#','')
   return rgb(parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255)
+}
+
+// Adjust one fraction in an array while keeping the rest proportional, each ≥ MIN
+const normalizeFractions = (arr: number[], idx: number, newVal: number): number[] => {
+  const MIN = 0.05
+  const clamped = Math.max(MIN, Math.min(1 - (arr.length - 1) * MIN, newVal))
+  const otherTotal = arr.reduce((s, v, i) => i === idx ? s : s + v, 0)
+  const remaining  = 1 - clamped
+  return arr.map((v, i) => {
+    if (i === idx) return clamped
+    return otherTotal > 0 ? Math.max(MIN, v / otherTotal * remaining) : remaining / (arr.length - 1)
+  })
+}
+
+const equalArr = (n: number) => Array(n).fill(1 / n)
+
+// Pure helpers for table row/col mutations
+const tblInsertRow = (de: DocElement, at: number) => {
+  const nr = de.rows + 1, nc = de.cols
+  const nd: string[] = []
+  for (let r = 0; r < nr; r++)
+    for (let c = 0; c < nc; c++)
+      nd.push(r < at ? de.cellData[r*nc+c] ?? '' : r === at ? '' : de.cellData[(r-1)*nc+c] ?? '')
+  const nf = 1/nr, old = de.rowHeights ?? equalArr(de.rows)
+  return { rows: nr, cellData: nd, h: de.h * nr / de.rows, rowHeights: [...old.slice(0,at).map(h=>h*(1-nf)), nf, ...old.slice(at).map(h=>h*(1-nf))] }
+}
+const tblDeleteRow = (de: DocElement, at: number) => {
+  if (de.rows <= 1) return null
+  const nr = de.rows - 1, nc = de.cols
+  const nd = de.cellData.filter((_, i) => Math.floor(i/nc) !== at)
+  const old = de.rowHeights ?? equalArr(de.rows), rf = old[at] ?? 1/de.rows
+  return { rows: nr, cellData: nd, h: de.h * nr / de.rows, rowHeights: old.filter((_,i)=>i!==at).map(h=>h/(1-rf)) }
+}
+const tblInsertCol = (de: DocElement, at: number) => {
+  const nc = de.cols + 1, nr = de.rows, oldc = nc - 1
+  const nd: string[] = []
+  for (let r = 0; r < nr; r++)
+    for (let c = 0; c < nc; c++)
+      nd.push(c < at ? de.cellData[r*oldc+c] ?? '' : c === at ? '' : de.cellData[r*oldc+(c-1)] ?? '')
+  const nf = 1/nc, old = de.colWidths ?? equalArr(oldc)
+  return { cols: nc, cellData: nd, w: de.w * nc / oldc, colWidths: [...old.slice(0,at).map(w=>w*(1-nf)), nf, ...old.slice(at).map(w=>w*(1-nf))] }
+}
+const tblDeleteCol = (de: DocElement, at: number) => {
+  if (de.cols <= 1) return null
+  const nc = de.cols - 1, nr = de.rows, oldc = nc + 1
+  const nd: string[] = []
+  for (let r = 0; r < nr; r++)
+    for (let c = 0; c < oldc; c++)
+      if (c !== at) nd.push(de.cellData[r*oldc+c] ?? '')
+  const old = de.colWidths ?? equalArr(oldc), cf = old[at] ?? 1/oldc
+  return { cols: nc, cellData: nd, w: de.w * nc / oldc, colWidths: old.filter((_,i)=>i!==at).map(w=>w/(1-cf)) }
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -220,22 +294,51 @@ export default function PDFFormBuilderPage() {
   const [loading,    setLoading]    = useState(false)
   const [applying,   setApplying]   = useState(false)
   const [error,      setError]      = useState('')
-  const [fields,     setFields]     = useState<FormField[]>([])
-  const [selectedId, setSelectedId] = useState<string|null>(null)
+  const [fields,      setFields]      = useState<FormField[]>([])
+  const [docElements, setDocElements] = useState<DocElement[]>([])
+  const [selectedId,  setSelectedId]  = useState<string|null>(null)
 
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const wrapRef   = useRef<HTMLDivElement>(null)
-  const fileRef   = useRef<HTMLInputElement>(null)
+  const canvasRef    = useRef<HTMLCanvasElement>(null)
+  const wrapRef      = useRef<HTMLDivElement>(null)
+  const canvasAreaRef = useRef<HTMLDivElement>(null)
+  const fileRef      = useRef<HTMLInputElement>(null)
+  const imageFileRef = useRef<HTMLInputElement>(null)
   const pdfDocRef = useRef<any>(null)
   const dragRef   = useRef<DragState>(null)
   const resizeRef = useRef<ResizeState>(null)
   const modeRef   = useRef<Mode>('idle')
-  const SCALE     = 1.8
+  const pinchRef  = useRef<number | null>(null)
+  const tableResizeRef = useRef<{
+    docId: string; axis: 'col'|'row'; idx: number
+    startX: number; startY: number; startFracs: number[]; totalPx: number
+  } | null>(null)
+  const [tableCtxMenu, setTableCtxMenu] = useState<{
+    docId: string; row: number; col: number; mx: number; my: number
+  } | null>(null)
+  const ctxMenuRef = useRef<HTMLDivElement>(null)
+  const [tablePickerOpen, setTablePickerOpen] = useState(false)
+  const [tableHover, setTableHover] = useState<[number, number]>([0, 0])
+  const tablePickerRef = useRef<HTMLDivElement>(null)
+  const [editingCell, setEditingCell] = useState<{ docId: string; row: number; col: number } | null>(null)
+  const [editingTextId, setEditingTextId] = useState<string | null>(null)
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatLoading, setChatLoading] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+  const chatInputRef = useRef<HTMLTextAreaElement>(null)
+  const [zoom, setZoom] = useState(1.0)
+  const SCALE = 1.8 * zoom
+
+  const zoomIn  = () => setZoom(z => Math.min(3.0, parseFloat((z + 0.25).toFixed(2))))
+  const zoomOut = () => setZoom(z => Math.max(0.25, parseFloat((z - 0.25).toFixed(2))))
 
   useEffect(() => { modeRef.current = mode }, [mode])
 
   const selectedField = fields.find(f => f.id === selectedId) ?? null
+  const selectedDoc   = docElements.find(d => d.id === selectedId) ?? null
   const curFields     = fields.filter(f => f.page === curPage)
+  const curDocs       = docElements.filter(d => d.page === curPage)
   const totalPages    = mode === 'blank' ? blankPages : thumbs.length
 
   // ── Add field at default stacked position ─────────────────────────────────
@@ -248,10 +351,13 @@ export default function PDFFormBuilderPage() {
       id: uid(), type, page: curPage,
       x, y, w: def.defW, h: def.defH,
       label: '', placeholder: '', required: false,
-      options: type === 'dropdown' ? ['Option 1', 'Option 2'] : [],
+      options: (type === 'dropdown' || type === 'radio' || type === 'checkgroup') ? ['Option 1', 'Option 2', 'Option 3'] : [],
+      radioLayout: 'vertical' as const,
       labelPosition: type === 'signature' ? 'below' : 'top', borderStyle: type === 'signature' ? 'underline' : 'box',
       labelColor: '#374151', labelFontSize: 9, labelBold: false,
       fieldTextColor: '#111111',
+      fieldFont: 'helvetica',
+      fieldFontSize: 10,
       sigLineColor: '#374151', sigLineStyle: 'solid',
       sigShowIcon: true, sigPromptText: 'Sign here',
     }
@@ -317,7 +423,7 @@ export default function PDFFormBuilderPage() {
       if (!cancelled) await pg.render({ canvasContext: ctx, viewport: vp }).promise
     })()
     return () => { cancelled = true }
-  }, [curPage, mode, thumbs.length, pageSize, blankPages])
+  }, [curPage, mode, thumbs.length, pageSize, blankPages, zoom])
 
   // ── Canvas mouse down — deselect only ────────────────────────────────────
   const onCanvasMouseDown = (e: React.MouseEvent) => {
@@ -338,6 +444,11 @@ export default function PDFFormBuilderPage() {
           x: Math.max(0, Math.min(1 - f.w, (ox + dx) / cw)),
           y: Math.max(0, Math.min(1 - f.h, (oy + dy) / ch)),
         }))
+        setDocElements(prev => prev.map(d => d.id !== id ? d : {
+          ...d,
+          x: Math.max(0, Math.min(1 - d.w, (ox + dx) / cw)),
+          y: Math.max(0, Math.min(1 - d.h, (oy + dy) / ch)),
+        }))
       }
       if (resizeRef.current) {
         const { id, scx, scy, ow, oh } = resizeRef.current
@@ -348,13 +459,105 @@ export default function PDFFormBuilderPage() {
           w: Math.max(0.03, Math.min(1 - f.x, (ow * cw + dx) / cw)),
           h: Math.max(0.02, Math.min(1 - f.y, (oh * ch + dy) / ch)),
         }))
+        setDocElements(prev => prev.map(d => d.id !== id ? d : {
+          ...d,
+          w: Math.max(0.05, Math.min(1 - d.x, (ow * cw + dx) / cw)),
+          h: Math.max(0.03, Math.min(1 - d.y, (oh * ch + dy) / ch)),
+        }))
+      }
+      if (tableResizeRef.current) {
+        const { docId, axis, idx, startX, startY, startFracs, totalPx } = tableResizeRef.current
+        const delta = (axis === 'col' ? e.clientX - startX : e.clientY - startY) / totalPx
+        const MIN = 0.05
+        const a = Math.max(MIN, Math.min(startFracs[idx] + startFracs[idx+1] - MIN, startFracs[idx] + delta))
+        const b = Math.max(MIN, startFracs[idx] + startFracs[idx+1] - a)
+        const nf = [...startFracs]; nf[idx] = a; nf[idx+1] = b
+        setDocElements(prev => prev.map(d => d.id !== docId ? d : {
+          ...d, ...(axis === 'col' ? { colWidths: nf } : { rowHeights: nf }),
+        }))
       }
     }
-    const mu = () => { dragRef.current = null; resizeRef.current = null }
+    const mu = () => { dragRef.current = null; resizeRef.current = null; tableResizeRef.current = null }
 
     window.addEventListener('mousemove', mm)
     window.addEventListener('mouseup',   mu)
-    return () => { window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu) }
+    window.addEventListener('touchmove', mm as EventListener, { passive: false })
+    window.addEventListener('touchend',  mu)
+    return () => {
+      window.removeEventListener('mousemove', mm)
+      window.removeEventListener('mouseup',   mu)
+      window.removeEventListener('touchmove', mm as EventListener)
+      window.removeEventListener('touchend',  mu)
+    }
+  }, [])
+
+  // ── Dismiss table context menu on outside click ───────────────────────────
+  useEffect(() => {
+    if (!tableCtxMenu) return
+    const dismiss = (e: MouseEvent) => {
+      if (ctxMenuRef.current?.contains(e.target as Node)) return
+      setTableCtxMenu(null)
+    }
+    document.addEventListener('mousedown', dismiss)
+    return () => document.removeEventListener('mousedown', dismiss)
+  }, [tableCtxMenu])
+
+  useEffect(() => {
+    if (!tablePickerOpen) return
+    const dismiss = (e: MouseEvent) => {
+      if (tablePickerRef.current?.contains(e.target as Node)) return
+      setTablePickerOpen(false)
+    }
+    document.addEventListener('mousedown', dismiss)
+    return () => document.removeEventListener('mousedown', dismiss)
+  }, [tablePickerOpen])
+
+  // ── Wheel + pinch zoom ────────────────────────────────────────────────────
+  useEffect(() => {
+    const area = canvasAreaRef.current
+    if (!area) return
+
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return          // plain scroll → let the area scroll normally
+      e.preventDefault()
+      // trackpad pinch also arrives here with ctrlKey=true and small fractional deltaY
+      const factor = e.deltaY < 0 ? 1.08 : 1 / 1.08
+      setZoom(z => Math.min(3.0, Math.max(0.25, +(z * factor).toFixed(3))))
+    }
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        pinchRef.current = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY,
+        )
+      }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || pinchRef.current === null) return
+      e.preventDefault()
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY,
+      )
+      const factor = dist / pinchRef.current
+      setZoom(z => Math.min(3.0, Math.max(0.25, +(z * factor).toFixed(3))))
+      pinchRef.current = dist
+    }
+
+    const onTouchEnd = () => { pinchRef.current = null }
+
+    area.addEventListener('wheel',      onWheel,      { passive: false })
+    area.addEventListener('touchstart', onTouchStart, { passive: true  })
+    area.addEventListener('touchmove',  onTouchMove,  { passive: false })
+    area.addEventListener('touchend',   onTouchEnd)
+    return () => {
+      area.removeEventListener('wheel',      onWheel)
+      area.removeEventListener('touchstart', onTouchStart)
+      area.removeEventListener('touchmove',  onTouchMove)
+      area.removeEventListener('touchend',   onTouchEnd)
+    }
   }, [])
 
   // ── Field interaction ─────────────────────────────────────────────────────
@@ -374,6 +577,155 @@ export default function PDFFormBuilderPage() {
 
   const deleteField    = (id: string) => { setFields(p => p.filter(f => f.id !== id)); if (selectedId === id) setSelectedId(null) }
   const updateField    = (id: string, patch: Partial<FormField>) => setFields(p => p.map(f => f.id === id ? { ...f, ...patch } : f))
+
+  const deleteDocElement = (id: string) => { setDocElements(p => p.filter(d => d.id !== id)); if (selectedId === id) setSelectedId(null) }
+  const updateDocElement = (id: string, patch: Partial<DocElement>) => setDocElements(p => p.map(d => d.id === id ? { ...d, ...patch } : d))
+
+  const addDocElement = (type: DocElementType) => {
+    if (type === 'image') { imageFileRef.current?.click(); return }
+    const defW = type === 'table' ? 0.6 : 0.32
+    const defH = type === 'table' ? 0.22 : 0.05
+    const nde: DocElement = {
+      id: uid(), type, page: curPage,
+      x: 0.08, y: Math.min(0.82 - defH, 0.07 + curDocs.length * 0.08),
+      w: defW, h: defH,
+      text: 'Your text here', textFont: 'helvetica', textSize: 12,
+      textColor: '#111111', textBold: false, textItalic: false, textAlign: 'left',
+      rows: 3, cols: 3, cellData: Array(9).fill(''),
+      colWidths: equalArr(3), rowHeights: equalArr(3),
+      tableHasHeader: true, tableBorderColor: '#374151', tableBgHeader: '#e5e7eb',
+      imageData: '', imageName: '',
+    }
+    setDocElements(prev => [...prev, nde])
+    setSelectedId(nde.id)
+  }
+
+  const addTableWithSize = (rows: number, cols: number) => {
+    const rowH = Math.min(0.055, 0.44 / rows)
+    const defH = rows * rowH
+    const defW = Math.min(0.88, cols * 0.13)
+    const nde: DocElement = {
+      id: uid(), type: 'table', page: curPage,
+      x: 0.06, y: Math.min(0.82 - defH, 0.07 + curDocs.length * 0.08),
+      w: defW, h: defH,
+      text: '', textFont: 'helvetica', textSize: 12,
+      textColor: '#111111', textBold: false, textItalic: false, textAlign: 'left',
+      rows, cols, cellData: Array(rows * cols).fill(''),
+      colWidths: equalArr(cols), rowHeights: equalArr(rows),
+      tableHasHeader: true, tableBorderColor: '#374151', tableBgHeader: '#e5e7eb',
+      imageData: '', imageName: '',
+    }
+    setDocElements(prev => [...prev, nde])
+    setSelectedId(nde.id)
+    setTablePickerOpen(false)
+  }
+
+  const sendChat = async () => {
+    const text = chatInput.trim()
+    if (!text || chatLoading) return
+    const newHistory: { role: 'user' | 'assistant'; content: string }[] = [
+      ...chatHistory,
+      { role: 'user', content: text },
+    ]
+    setChatHistory(newHistory)
+    setChatInput('')
+    setChatLoading(true)
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    try {
+      const res = await fetch('/api/form-builder-ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ history: newHistory }),
+      })
+      const data = await res.json()
+      if (data.error) {
+        const errMsg = data.error.includes('credit balance is too low')
+          ? '⚠️ Your Anthropic API credit balance is too low. Please add credits at console.anthropic.com → Plans & Billing, then try again.'
+          : `⚠️ API error: ${data.error}`
+        setChatHistory(prev => [...prev, { role: 'assistant', content: errMsg }])
+        return
+      }
+      const assistantMsg = data.message ?? 'Sorry, something went wrong.'
+      setChatHistory(prev => [...prev, { role: 'assistant', content: assistantMsg }])
+
+      if (data.action === 'replace' || data.action === 'add') {
+        const rawFields: any[] = data.fields ?? []
+        const built: FormField[] = rawFields.map((f: any) => ({
+          id: uid(),
+          type: f.type ?? 'text',
+          page: curPage,
+          x: f.x ?? 0.08,
+          y: f.y ?? 0.07,
+          w: f.w ?? 0.38,
+          h: f.h ?? 0.038,
+          label: f.label ?? '',
+          placeholder: f.placeholder ?? '',
+          required: f.required ?? false,
+          options: Array.isArray(f.options) ? f.options : [],
+          radioLayout: f.radioLayout ?? 'vertical',
+          labelPosition: f.labelPosition ?? 'top',
+          borderStyle: f.borderStyle ?? 'box',
+          labelColor: f.labelColor ?? '#374151',
+          labelFontSize: f.labelFontSize ?? 11,
+          labelBold: f.labelBold ?? false,
+          fieldTextColor: f.fieldTextColor ?? '#111111',
+          fieldFont: f.fieldFont ?? 'helvetica',
+          fieldFontSize: f.fieldFontSize ?? 12,
+          sigLineColor: f.sigLineColor ?? '#374151',
+          sigLineStyle: f.sigLineStyle ?? 'solid',
+          sigShowIcon: f.sigShowIcon ?? true,
+          sigPromptText: f.sigPromptText ?? 'Sign here',
+        }))
+        if (data.action === 'replace') {
+          setFields(built)
+        } else {
+          setFields(prev => [...prev, ...built])
+        }
+        setSelectedId(null)
+      }
+    } catch (err: any) {
+      setChatHistory(prev => [...prev, { role: 'assistant', content: `⚠️ Network error: ${err?.message ?? 'Could not reach the server. Please try again.'}` }])
+    } finally {
+      setChatLoading(false)
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+    }
+  }
+
+  const onImageFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const imgFile = e.target.files?.[0]; if (!imgFile) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const dataUrl = ev.target?.result as string
+      const nde: DocElement = {
+        id: uid(), type: 'image', page: curPage,
+        x: 0.08, y: 0.08, w: 0.45, h: 0.32,
+        text: '', textFont: 'helvetica', textSize: 12, textColor: '#111111',
+        textBold: false, textItalic: false, textAlign: 'left',
+        rows: 3, cols: 3, cellData: Array(9).fill(''),
+        colWidths: equalArr(3), rowHeights: equalArr(3),
+        tableHasHeader: true, tableBorderColor: '#374151', tableBgHeader: '#e5e7eb',
+        imageData: dataUrl, imageName: imgFile.name,
+      }
+      setDocElements(prev => [...prev, nde])
+      setSelectedId(nde.id)
+    }
+    reader.readAsDataURL(imgFile)
+    e.target.value = ''
+  }
+
+  const onDocMouseDown = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); setSelectedId(id)
+    const d  = docElements.find(dd => dd.id === id)!
+    const cw = wrapRef.current!.offsetWidth, ch = wrapRef.current!.offsetHeight
+    dragRef.current = { id, scx: e.clientX, scy: e.clientY, ox: d.x * cw, oy: d.y * ch }
+  }
+
+  const onDocResizeMouseDown = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); e.preventDefault()
+    const d = docElements.find(dd => dd.id === id)!
+    resizeRef.current = { id, scx: e.clientX, scy: e.clientY, ow: d.w, oh: d.h }
+  }
+
   const addBlankPage   = () => setBlankPages(p => p + 1)
   const removeLastPage = () => {
     const last = blankPages - 1
@@ -429,13 +781,14 @@ export default function PDFFormBuilderPage() {
           }
         }
 
-        const FIELD_FONT_SIZE = 10
-        // Build the DA string — /Helv is Helvetica standard name; colour in PDF is r g b rg
+        const FIELD_FONT_SIZE = f.fieldFontSize ?? 10
+        const pdfFontName = f.fieldFont === 'times' ? 'TiRo' : f.fieldFont === 'courier' ? 'Cour' : 'Helv'
+        // Build the DA string — standard PDF Type1 names; colour is r g b rg (non-stroking)
         const tc   = f.fieldTextColor ?? '#111111'
         const tr   = parseInt(tc.slice(1,3),16)/255
         const tg   = parseInt(tc.slice(3,5),16)/255
         const tb   = parseInt(tc.slice(5,7),16)/255
-        const daStr = `/Helv ${FIELD_FONT_SIZE} Tf ${tr.toFixed(3)} ${tg.toFixed(3)} ${tb.toFixed(3)} rg`
+        const daStr = `/${pdfFontName} ${FIELD_FONT_SIZE} Tf ${tr.toFixed(3)} ${tg.toFixed(3)} ${tb.toFixed(3)} rg`
         const setAppearance = (tf: any) => {
           tf.acroField.dict.set(PDFName.of('DA'), PDFString.of(daStr))
           tf.setFontSize(FIELD_FONT_SIZE)
@@ -492,12 +845,124 @@ export default function PDFFormBuilderPage() {
           const tf = form.createTextField(f.id)
           setAppearance(tf)
           tf.addToPage(pg, { ...opts, borderWidth: 0 })
+        } else if (f.type === 'radio') {
+          if (f.options.length > 0) {
+            const rg  = form.createRadioGroup(f.id)
+            const n   = f.options.length
+            const isH = f.radioLayout === 'horizontal'
+            const btnSize = Math.min(isH ? fieldW / n * 0.3 : fh / n * 0.4, 12)
+            const cellW = fieldW / n, cellH = fh / n
+            f.options.forEach((opt, i) => {
+              const bx = isH ? fieldX + i * cellW + (cellW - btnSize) / 2 : fieldX + 2
+              const by = isH ? y + (fh - btnSize) / 2 : y + fh - i * cellH - (cellH + btnSize) / 2
+              rg.addOptionToPage(opt, pg, { x: bx, y: by, width: btnSize, height: btnSize })
+              const lx = isH ? fieldX + i * cellW : fieldX + btnSize + 4
+              const ly = isH ? y + (fh - btnSize) / 2 - 10 : y + fh - i * cellH - cellH / 2 - 4
+              pg.drawText(opt, { x: lx, y: ly, size: 7, font, color: hexToRgb(f.fieldTextColor ?? '#111111'), maxWidth: isH ? cellW : fieldW - btnSize - 6 })
+            })
+          }
+        } else if (f.type === 'checkgroup') {
+          f.options.forEach((opt, i) => {
+            const n   = f.options.length
+            const isH = f.radioLayout === 'horizontal'
+            const btnSize = Math.min(isH ? fieldW / n * 0.3 : fh / n * 0.4, 11)
+            const cellW = fieldW / n, cellH = fh / n
+            const bx = isH ? fieldX + i * cellW + (cellW - btnSize) / 2 : fieldX + 2
+            const by = isH ? y + (fh - btnSize) / 2 : y + fh - i * cellH - (cellH + btnSize) / 2
+            const cb = form.createCheckBox(`${f.id}_${i}`)
+            cb.addToPage(pg, { x: bx, y: by, width: btnSize, height: btnSize })
+            const lx = isH ? fieldX + i * cellW : fieldX + btnSize + 4
+            const ly = isH ? y + (fh - btnSize) / 2 - 10 : y + fh - i * cellH - cellH / 2 - 4
+            pg.drawText(opt, { x: lx, y: ly, size: 7, font, color: hexToRgb(f.fieldTextColor ?? '#111111'), maxWidth: isH ? cellW : fieldW - btnSize - 6 })
+          })
         } else if (f.type === 'checkbox') {
           form.createCheckBox(f.id).addToPage(pg, opts)
         } else if (f.type === 'dropdown') {
           const dd = form.createDropdown(f.id)
           if (f.options.length) { dd.setOptions(f.options); dd.select(f.options[0]) }
           dd.addToPage(pg, opts)
+        }
+      }
+
+      // ── Render doc elements (static text, tables, images) ─────────────────
+      for (const de of docElements) {
+        if (de.page >= pdfPgs.length) continue
+        const pg  = pdfPgs[de.page]
+        const { width: pw, height: ph } = pg.getSize()
+        const x   = de.x * pw, w = de.w * pw
+        const fh  = de.h * ph, y = ph - de.y * ph - fh
+
+        if (de.type === 'static-text' && de.text) {
+          const txFont = de.textFont === 'times'
+            ? (de.textBold ? await pdfDoc.embedFont(StandardFonts.TimesRomanBold)   : await pdfDoc.embedFont(StandardFonts.TimesRoman))
+            : de.textFont === 'courier'
+            ? (de.textBold ? await pdfDoc.embedFont(StandardFonts.CourierBold)      : await pdfDoc.embedFont(StandardFonts.Courier))
+            : (de.textBold ? await pdfDoc.embedFont(StandardFonts.HelveticaBold)    : await pdfDoc.embedFont(StandardFonts.Helvetica))
+          const txColor = hexToRgb(de.textColor ?? '#111111')
+          const sz = de.textSize ?? 12
+          const lines = de.text.split('\n')
+          let lineY = y + fh - sz
+          for (const line of lines) {
+            if (lineY < y) break
+            pg.drawText(line, { x, y: lineY, size: sz, font: txFont, color: txColor, maxWidth: w })
+            lineY -= sz * 1.4
+          }
+
+        } else if (de.type === 'table') {
+          const rows = de.rows ?? 3, cols = de.cols ?? 3
+          const cws = de.colWidths  ?? equalArr(cols)
+          const rhs = de.rowHeights ?? equalArr(rows)
+          // Cumulative X positions for columns
+          const cumX: number[] = [x]
+          for (const cw2 of cws) cumX.push(cumX[cumX.length-1] + cw2 * w)
+          // Cumulative Y positions for rows (top-to-bottom in PDF coords means decreasing Y)
+          const cumY: number[] = [y + fh]
+          for (const rh of rhs) cumY.push(cumY[cumY.length-1] - rh * fh)
+          const bc  = hexToRgb(de.tableBorderColor ?? '#374151')
+          const hbg = hexToRgb(de.tableBgHeader ?? '#e5e7eb')
+          // header bg
+          if (de.tableHasHeader) {
+            pg.drawRectangle({ x, y: cumY[1], width: w, height: rhs[0] * fh, color: hbg, borderWidth: 0 })
+          }
+          // outer rect
+          pg.drawRectangle({ x, y, width: w, height: fh, borderColor: bc, borderWidth: 0.8, color: rgb(1,1,1) })
+          // horizontal inner lines
+          for (let r = 1; r < rows; r++) {
+            pg.drawLine({ start:{ x, y: cumY[r] }, end:{ x: x + w, y: cumY[r] }, thickness: 0.5, color: bc })
+          }
+          // vertical inner lines
+          for (let c = 1; c < cols; c++) {
+            pg.drawLine({ start:{ x: cumX[c], y }, end:{ x: cumX[c], y: y + fh }, thickness: 0.5, color: bc })
+          }
+          // cell text
+          const cellFont     = await pdfDoc.embedFont(StandardFonts.Helvetica)
+          const cellFontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              const txt = de.cellData?.[r * cols + c] ?? ''
+              if (!txt) continue
+              const isHeader = de.tableHasHeader && r === 0
+              const cellH = rhs[r] * fh
+              const cy2   = cumY[r] - cellH + cellH * 0.3
+              const cellW = cws[c] * w
+              pg.drawText(txt, {
+                x: cumX[c] + 3, y: cy2, size: Math.min(8, cellH * 0.5),
+                font: isHeader ? cellFontBold : cellFont,
+                color: rgb(0.1, 0.1, 0.1), maxWidth: cellW - 6,
+              })
+            }
+          }
+
+        } else if (de.type === 'image' && de.imageData) {
+          try {
+            const isJpg = de.imageData.includes('image/jpeg') || de.imageData.includes('image/jpg')
+            const b64   = de.imageData.split(',')[1]
+            const bin   = atob(b64)
+            const bytes = new Uint8Array(bin.length)
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+            const img = isJpg ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes)
+            pg.drawImage(img, { x, y, width: w, height: fh })
+          } catch { /* skip if image fails to embed */ }
         }
       }
 
@@ -516,7 +981,7 @@ export default function PDFFormBuilderPage() {
 
   const reset = () => {
     setMode('idle'); setFile(null); setThumbs([]); setCurPage(0)
-    setFields([]); setSelectedId(null); setError(''); setBlankPages(1)
+    setFields([]); setDocElements([]); setSelectedId(null); setError(''); setBlankPages(1); setZoom(1.0)
     pdfDocRef.current = null
   }
 
@@ -698,15 +1163,82 @@ export default function PDFFormBuilderPage() {
                 </button>
               ))}
               <div className="tb-div" />
+              <span className="tb-label">Insert</span>
+              <button className="tb-btn" onClick={() => addDocElement('static-text')}>
+                <span style={{ fontSize:11 }}>T</span>Text
+              </button>
+              <div style={{ position:'relative' }} ref={tablePickerRef}>
+                <button className="tb-btn" onClick={() => { setTablePickerOpen(o => !o); setTableHover([0,0]) }}>
+                  <span style={{ fontSize:11 }}>⊞</span>Table
+                </button>
+                {tablePickerOpen && (
+                  <div style={{
+                    position:'absolute', top:'100%', left:0, zIndex:9999,
+                    background:'#fff', border:'1px solid #e0e0e0', borderRadius:10,
+                    boxShadow:'0 8px 28px rgba(0,0,0,.13)', padding:'10px',
+                    userSelect:'none',
+                  }}>
+                    <div style={{ fontSize:11, color:'#555', marginBottom:6, textAlign:'center', fontWeight:600 }}>
+                      {tableHover[0] > 0 && tableHover[1] > 0
+                        ? `${tableHover[0]} × ${tableHover[1]} table`
+                        : 'Hover to select size'}
+                    </div>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(8,18px)', gap:2 }}>
+                      {Array.from({ length: 8 * 8 }, (_, i) => {
+                        const r = Math.floor(i / 8) + 1
+                        const c = (i % 8) + 1
+                        const active = r <= tableHover[0] && c <= tableHover[1]
+                        return (
+                          <div
+                            key={i}
+                            onMouseEnter={() => setTableHover([r, c])}
+                            onClick={() => addTableWithSize(tableHover[0], tableHover[1])}
+                            style={{
+                              width:18, height:18, borderRadius:3, cursor:'pointer',
+                              background: active ? '#3b82f6' : '#f3f4f6',
+                              border: `1px solid ${active ? '#2563eb' : '#d1d5db'}`,
+                              transition:'background .08s',
+                            }}
+                          />
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <button className="tb-btn" onClick={() => addDocElement('image')}>
+                <span style={{ fontSize:11 }}>🖼</span>Image
+              </button>
+              <div className="tb-div" />
               <button className="tb-btn" onClick={() => setCurPage(p=>Math.max(0,p-1))} disabled={curPage===0}>←</button>
               <span style={{ fontSize:11, color:'rgba(0,0,0,.4)', padding:'0 4px', whiteSpace:'nowrap' }}>{curPage+1} / {totalPages}</span>
               <button className="tb-btn" onClick={() => setCurPage(p=>Math.min(totalPages-1,p+1))} disabled={curPage===totalPages-1}>→</button>
               <div className="tb-div" />
+              <span className="tb-label">Zoom</span>
+              <button className="tb-btn" onClick={zoomOut} disabled={zoom <= 0.25} title="Zoom out">−</button>
+              <button
+                style={{ minWidth:52, padding:'4px 6px', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer',
+                  border:'1px solid #e0e0e0', background:'#fff', color:'#1d1d1f', textAlign:'center' }}
+                onClick={() => setZoom(1.0)}
+                title="Reset zoom"
+              >{Math.round(zoom * 100)}%</button>
+              <button className="tb-btn" onClick={zoomIn} disabled={zoom >= 3.0} title="Zoom in">+</button>
+              <div className="tb-div" />
               <button className="tb-btn danger" onClick={() => { setFields(f=>f.filter(x=>x.page!==curPage)); setSelectedId(null) }} disabled={curFields.length===0}>✕ Page</button>
               <button className="tb-btn danger" onClick={() => { setFields([]); setSelectedId(null) }} disabled={fields.length===0}>✕ All</button>
+              <div className="tb-div" />
+              <button
+                onClick={() => setChatOpen(o => !o)}
+                style={{
+                  display:'flex', alignItems:'center', gap:5, padding:'5px 12px',
+                  borderRadius:8, border:'none', cursor:'pointer', fontSize:12, fontWeight:700,
+                  background: chatOpen ? '#7c3aed' : 'linear-gradient(135deg,#7c3aed,#4f46e5)',
+                  color:'#fff', boxShadow:'0 2px 8px rgba(124,58,237,.35)', whiteSpace:'nowrap',
+                }}
+              >✨ AI Builder</button>
             </div>
 
-            <div className="canvas-area">
+            <div className="canvas-area" ref={canvasAreaRef}>
               <div ref={wrapRef} className="canvas-wrap mode-select" onMouseDown={onCanvasMouseDown}>
                 <canvas ref={canvasRef} />
                 {mode === 'blank' && <div className="canvas-guide" />}
@@ -773,9 +1305,37 @@ export default function PDFFormBuilderPage() {
                             <div style={{ position:'absolute', bottom:0, left:0, right:0, pointerEvents:'none',
                               borderBottom: `1.5px ${f.sigLineStyle === 'dash' ? 'dashed' : 'solid'} ${f.sigLineColor ?? '#374151'}` }}/>
                           </div>
+                        ) : (f.type === 'radio' || f.type === 'checkgroup') ? (
+                          <div style={{
+                            display:'flex',
+                            flexDirection: f.radioLayout === 'horizontal' ? 'row' : 'column',
+                            gap: f.radioLayout === 'horizontal' ? 8 : 3,
+                            padding:'3px 6px', width:'100%', height:'100%',
+                            overflow:'hidden', flexWrap: f.radioLayout === 'horizontal' ? 'wrap' : 'nowrap',
+                          }}>
+                            {(f.options.length ? f.options : ['Option 1','Option 2','Option 3']).map((opt, i) => {
+                              const optFontSize = Math.min(9, Math.max(7, f.h * ch / Math.max(f.options.length, 1) * 0.42))
+                              return (
+                                <div key={i} style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0, minWidth:0 }}>
+                                  {f.type === 'radio' ? (
+                                    <div style={{ width:9, height:9, borderRadius:'50%', border:'1.5px solid #6366f1', flexShrink:0, background:'#fff', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                      {i === 0 && <div style={{ width:4, height:4, borderRadius:'50%', background:'#6366f1' }} />}
+                                    </div>
+                                  ) : (
+                                    <div style={{ width:9, height:9, border:'1.5px solid #6366f1', borderRadius:2, flexShrink:0, background: i === 0 ? '#6366f1' : '#fff', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                      {i === 0 && <span style={{ color:'#fff', fontSize:7, lineHeight:1 }}>✓</span>}
+                                    </div>
+                                  )}
+                                  <span style={{ fontSize: optFontSize, color:'#1d1d1f', lineHeight:1.4, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{opt}</span>
+                                </div>
+                              )
+                            })}
+                          </div>
                         ) : f.type !== 'checkbox' ? (
-                          <span style={{ fontSize: Math.min(10, f.h*ch*.48), overflow:'hidden', textOverflow:'ellipsis',
-                            lineHeight:1.4,
+                          <span style={{
+                            fontSize: Math.min(f.fieldFontSize ?? 10, f.h*ch*.48),
+                            overflow:'hidden', textOverflow:'ellipsis', lineHeight:1.4,
+                            fontFamily: f.fieldFont === 'times' ? '"Times New Roman", Times, serif' : f.fieldFont === 'courier' ? '"Courier New", Courier, monospace' : 'inherit',
                             color: f.placeholder ? (f.fieldTextColor ?? 'rgba(0,0,0,.7)') : 'rgba(0,0,0,.35)',
                             fontStyle: f.placeholder ? 'normal' : 'italic' }}>
                             {f.placeholder || `Enter ${def.label.toLowerCase()}…`}
@@ -810,17 +1370,230 @@ export default function PDFFormBuilderPage() {
                     </div>
                   )
                 })}
+                {/* Doc element overlays (static text / table / image) */}
+                {canvasRef.current && curDocs.map(de => {
+                  const cw = canvasRef.current!.offsetWidth
+                  const ch = canvasRef.current!.offsetHeight
+                  const sel = selectedId === de.id
+                  const dw = de.w * cw, dh = de.h * ch
+                  return (
+                    <div key={de.id} style={{
+                      position:'absolute', left: de.x * cw, top: de.y * ch,
+                      width: dw, height: dh,
+                      border: sel ? '2px solid #f59e0b' : '1.5px dashed #f59e0b',
+                      borderRadius: 3, overflow: 'visible', cursor:'move',
+                      background: de.type === 'table' ? 'transparent' : 'rgba(255,255,255,.88)',
+                      boxShadow: sel ? '0 0 0 1px #f59e0b, 0 2px 10px rgba(245,158,11,.2)' : undefined,
+                    }}
+                      onMouseDown={e => onDocMouseDown(e, de.id)}
+                    >
+                      {de.type === 'static-text' && (() => {
+                        const isEditingText = editingTextId === de.id
+                        const textStyle = {
+                          fontSize: Math.min(de.textSize ?? 12, dh * 0.5),
+                          fontFamily: de.textFont === 'times' ? '"Times New Roman",serif' : de.textFont === 'courier' ? '"Courier New",monospace' : 'inherit',
+                          fontWeight: de.textBold ? 700 : 400,
+                          fontStyle: de.textItalic ? 'italic' : 'normal',
+                          color: de.textColor ?? '#111111',
+                          textAlign: de.textAlign ?? 'left' as const,
+                          lineHeight: 1.5,
+                        }
+                        return isEditingText ? (
+                          <textarea
+                            autoFocus
+                            defaultValue={de.text}
+                            style={{
+                              width:'100%', height:'100%', border:'none', resize:'none',
+                              outline:'2px solid #3b82f6', background:'#eff6ff',
+                              padding:'5px 7px', boxSizing:'border-box',
+                              ...textStyle, whiteSpace:'pre-wrap', wordBreak:'break-word',
+                            }}
+                            onMouseDown={e => e.stopPropagation()}
+                            onChange={e => updateDocElement(de.id, { text: e.target.value })}
+                            onBlur={() => setEditingTextId(null)}
+                            onKeyDown={e => { if (e.key === 'Escape') { e.preventDefault(); setEditingTextId(null) } }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width:'100%', height:'100%', padding:'5px 7px', overflow:'hidden',
+                              ...textStyle, whiteSpace:'pre-wrap', wordBreak:'break-word',
+                              cursor: sel ? 'text' : 'move', userSelect:'none',
+                            }}
+                            onClick={() => { if (sel) setEditingTextId(de.id) }}
+                          >
+                            {de.text || <span style={{ color:'rgba(0,0,0,.3)', fontStyle:'italic' }}>Click to edit text…</span>}
+                          </div>
+                        )
+                      })()}
+                      {de.type === 'table' && (() => {
+                        const rows = de.rows ?? 3, cols = de.cols ?? 3
+                        const cws  = de.colWidths  ?? equalArr(cols)
+                        const rhs  = de.rowHeights ?? equalArr(rows)
+                        // Cumulative % positions for dividers
+                        const cumCW = cws.reduce<number[]>((acc,w) => [...acc, (acc[acc.length-1]??0)+w*100], [])
+                        const cumRH = rhs.reduce<number[]>((acc,h) => [...acc, (acc[acc.length-1]??0)+h*100], [])
+                        return (
+                          <>
+                            <table style={{ width:'100%', height:'100%', borderCollapse:'collapse', tableLayout:'fixed', pointerEvents: sel ? 'auto' : 'none' }}>
+                              <colgroup>
+                                {cws.map((w, c) => <col key={c} style={{ width:`${w*100}%` }} />)}
+                              </colgroup>
+                              <tbody>
+                                {Array.from({ length: rows }).map((_, r) => (
+                                  <tr key={r} style={{
+                                    height:`${rhs[r]*100}%`,
+                                    background: de.tableHasHeader && r === 0 ? (de.tableBgHeader ?? '#e5e7eb') : '#fff',
+                                  }}>
+                                    {Array.from({ length: cols }).map((_, c) => {
+                                      const isEditing = editingCell?.docId === de.id && editingCell.row === r && editingCell.col === c
+                                      const cellIdx = r * cols + c
+                                      const cellVal = de.cellData?.[cellIdx] ?? ''
+                                      return (
+                                        <td key={c}
+                                          style={{
+                                            border: `1px solid ${de.tableBorderColor ?? '#374151'}`,
+                                            fontSize: Math.min(10, dh * (rhs[r] ?? 1/rows) * 0.5),
+                                            fontWeight: de.tableHasHeader && r === 0 ? 700 : 400,
+                                            padding: isEditing ? 0 : '2px 4px',
+                                            overflow:'hidden', whiteSpace:'nowrap', color:'#1d1d1f',
+                                            cursor: sel ? 'text' : 'move',
+                                            userSelect:'none',
+                                            position:'relative',
+                                          }}
+                                          onContextMenu={e => {
+                                            e.preventDefault(); e.stopPropagation()
+                                            setTableCtxMenu({ docId: de.id, row: r, col: c, mx: e.clientX, my: e.clientY })
+                                          }}
+                                          onDoubleClick={e => {
+                                            if (!sel) return
+                                            e.stopPropagation()
+                                            setEditingCell({ docId: de.id, row: r, col: c })
+                                          }}
+                                        >
+                                          {isEditing ? (
+                                            <input
+                                              autoFocus
+                                              defaultValue={cellVal}
+                                              style={{
+                                                width:'100%', height:'100%', border:'none', outline:'2px solid #3b82f6',
+                                                background:'#eff6ff', padding:'2px 4px', boxSizing:'border-box',
+                                                fontSize:'inherit', fontWeight:'inherit', fontFamily:'inherit', color:'#1d1d1f',
+                                              }}
+                                              onMouseDown={e => e.stopPropagation()}
+                                              onChange={e => {
+                                                const newData = [...(de.cellData ?? [])]
+                                                newData[cellIdx] = e.target.value
+                                                updateDocElement(de.id, { cellData: newData })
+                                              }}
+                                              onBlur={() => setEditingCell(null)}
+                                              onKeyDown={e => {
+                                                if (e.key === 'Enter' || e.key === 'Escape') {
+                                                  e.preventDefault()
+                                                  setEditingCell(null)
+                                                }
+                                                if (e.key === 'Tab') {
+                                                  e.preventDefault()
+                                                  const next = e.shiftKey
+                                                    ? (c > 0 ? { docId: de.id, row: r, col: c - 1 } : r > 0 ? { docId: de.id, row: r - 1, col: cols - 1 } : null)
+                                                    : (c < cols - 1 ? { docId: de.id, row: r, col: c + 1 } : r < rows - 1 ? { docId: de.id, row: r + 1, col: 0 } : null)
+                                                  setEditingCell(next)
+                                                }
+                                              }}
+                                            />
+                                          ) : cellVal}
+                                        </td>
+                                      )
+                                    })}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+
+                            {/* Drag-resize dividers — visible only when selected */}
+                            {sel && (
+                              <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:6 }}>
+                                {/* Column dividers */}
+                                {cumCW.slice(0, cols-1).map((pct, c) => (
+                                  <div key={`cd-${c}`} style={{
+                                    position:'absolute', top:0, bottom:0,
+                                    left:`${pct}%`, width:8, marginLeft:-4,
+                                    cursor:'col-resize', pointerEvents:'auto',
+                                    display:'flex', alignItems:'stretch', justifyContent:'center',
+                                  }}
+                                    onMouseDown={e => {
+                                      e.stopPropagation(); e.preventDefault()
+                                      tableResizeRef.current = {
+                                        docId: de.id, axis:'col', idx: c,
+                                        startX: e.clientX, startY: e.clientY,
+                                        startFracs: [...cws], totalPx: dw,
+                                      }
+                                    }}
+                                  >
+                                    <div style={{ width:2, background:'rgba(99,102,241,.5)', margin:'4px 0', borderRadius:1 }} />
+                                  </div>
+                                ))}
+                                {/* Row dividers */}
+                                {cumRH.slice(0, rows-1).map((pct, r) => (
+                                  <div key={`rd-${r}`} style={{
+                                    position:'absolute', left:0, right:0,
+                                    top:`${pct}%`, height:8, marginTop:-4,
+                                    cursor:'row-resize', pointerEvents:'auto',
+                                    display:'flex', flexDirection:'column', alignItems:'stretch', justifyContent:'center',
+                                  }}
+                                    onMouseDown={e => {
+                                      e.stopPropagation(); e.preventDefault()
+                                      tableResizeRef.current = {
+                                        docId: de.id, axis:'row', idx: r,
+                                        startX: e.clientX, startY: e.clientY,
+                                        startFracs: [...rhs], totalPx: dh,
+                                      }
+                                    }}
+                                  >
+                                    <div style={{ height:2, background:'rgba(99,102,241,.5)', margin:'0 4px', borderRadius:1 }} />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )
+                      })()}
+                      {de.type === 'image' && (
+                        de.imageData
+                          ? <img src={de.imageData} alt={de.imageName} style={{ width:'100%', height:'100%', objectFit:'contain', display:'block', pointerEvents:'none' }} />
+                          : <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(0,0,0,.3)', fontSize:12, fontStyle:'italic' }}>Click 🖼 Image to upload</div>
+                      )}
+                      {/* Delete button */}
+                      {sel && (
+                        <button style={{
+                          position:'absolute', top:-11, right:-11, width:22, height:22,
+                          borderRadius:'50%', background:'#E24B4A', border:'2px solid #fff',
+                          color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer',
+                          display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, lineHeight:1,
+                          boxShadow:'0 2px 6px rgba(0,0,0,.25)',
+                        }}
+                          onClick={e => { e.stopPropagation(); deleteDocElement(de.id) }}>×</button>
+                      )}
+                      {/* Resize handle */}
+                      {sel && (
+                        <div className="resize-se" onMouseDown={e => { e.stopPropagation(); onDocResizeMouseDown(e, de.id) }} />
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
 
             <div className="hint-strip">
-              🖱️ Click a field button above to add it to the page · Drag to move · Drag ◼ corner to resize · Click a field on canvas to select it
+              🖱️ Click a field button above to add it · Drag to move · ◼ corner to resize · Ctrl+Scroll or Pinch to zoom
             </div>
+
+            <input ref={imageFileRef} type="file" accept="image/jpeg,image/png,image/jpg" style={{ display:'none' }} onChange={onImageFileSelected} />
 
             <div className="apply-bar">
               {error && <div className="error-box" style={{ width:'100%' }}>{error}</div>}
-              <button className="apply-btn" onClick={onDownload} disabled={applying || fields.length===0}>
-                {applying ? '⏳ Generating…' : `⬇ Download Fillable PDF (${fields.length} field${fields.length!==1?'s':''})`}
+              <button className="apply-btn" onClick={onDownload} disabled={applying || (fields.length===0 && docElements.length===0)}>
+                {applying ? '⏳ Generating…' : `⬇ Download PDF (${fields.length} field${fields.length!==1?'s':''} · ${docElements.length} element${docElements.length!==1?'s':''})`}
               </button>
               <button className="new-file-btn" onClick={reset}>← Back</button>
             </div>
@@ -833,12 +1606,323 @@ export default function PDFFormBuilderPage() {
               <div className="props-head-sub">{selectedField ? 'Edit the selected field' : 'Select a field to edit'}</div>
             </div>
             <div className="props-body">
-              {!selectedField ? (
+              {!selectedField && !selectedDoc ? (
                 <div className="props-empty">
                   <span className="props-empty-icon">👆</span>
-                  <span className="props-empty-text">Click any field on the canvas to edit its label, placeholder, and settings</span>
+                  <span className="props-empty-text">Click a field or element on the canvas to edit it</span>
                 </div>
-              ) : (
+              ) : selectedDoc ? (
+                /* ── Doc element properties ─────────────────── */
+                <div key={selectedId!}>
+                  <div className="prop-type-chip">
+                    {selectedDoc.type === 'static-text' ? 'T' : selectedDoc.type === 'table' ? '⊞' : '🖼'}&nbsp;
+                    {selectedDoc.type === 'static-text' ? 'Text Block' : selectedDoc.type === 'table' ? 'Table' : 'Image'}
+                  </div>
+
+                  {selectedDoc.type === 'static-text' && (
+                    <>
+                      <div className="prop-row">
+                        <div className="prop-label">Content</div>
+                        <textarea className="prop-input" rows={4}
+                          value={selectedDoc.text}
+                          placeholder="Enter text…"
+                          onChange={e => updateDocElement(selectedDoc.id, { text: e.target.value })}
+                          style={{ resize:'vertical', lineHeight:1.5 }} />
+                      </div>
+                      <div className="prop-row">
+                        <div className="prop-label">Font Family</div>
+                        <div style={{ display:'flex', gap:5 }}>
+                          {(['helvetica','times','courier'] as const).map(f => (
+                            <button key={f} onClick={() => updateDocElement(selectedDoc.id, { textFont: f })}
+                              style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:10, fontWeight:700, cursor:'pointer',
+                                fontFamily: f === 'times' ? '"Times New Roman",serif' : f === 'courier' ? '"Courier New",monospace' : 'inherit',
+                                border: (selectedDoc.textFont ?? 'helvetica') === f ? '1.5px solid #f59e0b' : '1.5px solid #e0e0e0',
+                                background: (selectedDoc.textFont ?? 'helvetica') === f ? '#fffbeb' : '#fff',
+                                color: (selectedDoc.textFont ?? 'helvetica') === f ? '#d97706' : 'rgba(0,0,0,.55)' }}>
+                              {f === 'helvetica' ? 'Helv' : f === 'times' ? 'Times' : 'Courier'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="prop-row">
+                        <div className="prop-label">Size &amp; Color</div>
+                        <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                          <input type="number" min={6} max={72} value={selectedDoc.textSize ?? 12}
+                            onChange={e => updateDocElement(selectedDoc.id, { textSize: Number(e.target.value) })}
+                            style={{ width:55, padding:'5px 7px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:12, outline:'none' }} />
+                          <input type="color" value={selectedDoc.textColor ?? '#111111'}
+                            onChange={e => updateDocElement(selectedDoc.id, { textColor: e.target.value })}
+                            style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
+                          <button onClick={() => updateDocElement(selectedDoc.id, { textBold: !selectedDoc.textBold })}
+                            style={{ width:28, height:26, borderRadius:6, fontSize:12, fontWeight:800, cursor:'pointer',
+                              border: selectedDoc.textBold ? '1.5px solid #f59e0b' : '1.5px solid #e0e0e0',
+                              background: selectedDoc.textBold ? '#fffbeb' : '#fff',
+                              color: selectedDoc.textBold ? '#d97706' : 'rgba(0,0,0,.4)' }}>B</button>
+                          <button onClick={() => updateDocElement(selectedDoc.id, { textItalic: !selectedDoc.textItalic })}
+                            style={{ width:28, height:26, borderRadius:6, fontSize:12, fontWeight:400, fontStyle:'italic', cursor:'pointer',
+                              border: selectedDoc.textItalic ? '1.5px solid #f59e0b' : '1.5px solid #e0e0e0',
+                              background: selectedDoc.textItalic ? '#fffbeb' : '#fff',
+                              color: selectedDoc.textItalic ? '#d97706' : 'rgba(0,0,0,.4)' }}>I</button>
+                        </div>
+                      </div>
+                      <div className="prop-row">
+                        <div className="prop-label">Alignment</div>
+                        <div style={{ display:'flex', gap:5 }}>
+                          {(['left','center','right'] as const).map(a => (
+                            <button key={a} onClick={() => updateDocElement(selectedDoc.id, { textAlign: a })}
+                              style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer',
+                                border: (selectedDoc.textAlign ?? 'left') === a ? '1.5px solid #f59e0b' : '1.5px solid #e0e0e0',
+                                background: (selectedDoc.textAlign ?? 'left') === a ? '#fffbeb' : '#fff',
+                                color: (selectedDoc.textAlign ?? 'left') === a ? '#d97706' : 'rgba(0,0,0,.5)' }}>
+                              {a === 'left' ? '⬅ Left' : a === 'center' ? '≡ Center' : '➡ Right'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {selectedDoc.type === 'table' && (
+                    <>
+                      <div className="prop-row">
+                        <div className="prop-label">Rows &amp; Columns</div>
+                        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                          <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                            <span style={{ fontSize:10, color:'rgba(0,0,0,.4)' }}>Rows</span>
+                            <input type="number" min={1} max={12} value={selectedDoc.rows ?? 3}
+                              onChange={e => {
+                                const nr = Math.max(1, parseInt(e.target.value)||1)
+                                const nc = selectedDoc.cols ?? 3
+                                const nd = Array(nr * nc).fill('').map((_,i) => selectedDoc.cellData?.[i] ?? '')
+                                updateDocElement(selectedDoc.id, { rows: nr, cellData: nd, rowHeights: equalArr(nr) })
+                              }}
+                              style={{ width:44, padding:'4px 6px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:12, outline:'none' }} />
+                          </div>
+                          <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                            <span style={{ fontSize:10, color:'rgba(0,0,0,.4)' }}>Cols</span>
+                            <input type="number" min={1} max={8} value={selectedDoc.cols ?? 3}
+                              onChange={e => {
+                                const nr = selectedDoc.rows ?? 3
+                                const nc = Math.max(1, parseInt(e.target.value)||1)
+                                const nd = Array(nr * nc).fill('').map((_,i) => selectedDoc.cellData?.[i] ?? '')
+                                updateDocElement(selectedDoc.id, { cols: nc, cellData: nd, colWidths: equalArr(nc) })
+                              }}
+                              style={{ width:44, padding:'4px 6px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:12, outline:'none' }} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Insert row / column buttons */}
+                      <div className="prop-row">
+                        <div style={{ display:'flex', gap:6 }}>
+                          <button
+                            onClick={() => {
+                              const nr = (selectedDoc.rows ?? 3) + 1
+                              const nc = selectedDoc.cols ?? 3
+                              // preserve existing cell data, append empty row at bottom
+                              const nd = [
+                                ...Array((nr-1) * nc).fill('').map((_,i) => selectedDoc.cellData?.[i] ?? ''),
+                                ...Array(nc).fill(''),
+                              ]
+                              // shrink existing row heights proportionally and add new equal slice
+                              const oldRH = selectedDoc.rowHeights ?? equalArr(nr-1)
+                              const newFrac = 1 / nr
+                              const newRH  = [...oldRH.map(h => h * (1 - newFrac)), newFrac]
+                              updateDocElement(selectedDoc.id, { rows: nr, cellData: nd, rowHeights: newRH })
+                            }}
+                            style={{ flex:1, padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:700, cursor:'pointer',
+                              border:'1.5px solid #e0e0e0', background:'#fff', color:'#1d1d1f',
+                              display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+                            <span style={{ fontSize:13 }}>＋</span> Row
+                          </button>
+                          <button
+                            onClick={() => {
+                              const nr  = selectedDoc.rows ?? 3
+                              const nc  = (selectedDoc.cols ?? 3) + 1
+                              const oldc = nc - 1
+                              // rebuild cellData row-by-row, appending empty cell at end of each row
+                              const nd: string[] = []
+                              for (let r = 0; r < nr; r++) {
+                                for (let c = 0; c < oldc; c++) nd.push(selectedDoc.cellData?.[r * oldc + c] ?? '')
+                                nd.push('')
+                              }
+                              const oldCW = selectedDoc.colWidths ?? equalArr(oldc)
+                              const newFrac = 1 / nc
+                              const newCW  = [...oldCW.map(w => w * (1 - newFrac)), newFrac]
+                              updateDocElement(selectedDoc.id, { cols: nc, cellData: nd, colWidths: newCW })
+                            }}
+                            style={{ flex:1, padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:700, cursor:'pointer',
+                              border:'1.5px solid #e0e0e0', background:'#fff', color:'#1d1d1f',
+                              display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+                            <span style={{ fontSize:13 }}>＋</span> Column
+                          </button>
+                          <button
+                            disabled={(selectedDoc.rows ?? 3) <= 1}
+                            onClick={() => {
+                              const nr  = (selectedDoc.rows ?? 3) - 1
+                              const nc  = selectedDoc.cols ?? 3
+                              const nd  = Array(nr * nc).fill('').map((_,i) => selectedDoc.cellData?.[i] ?? '')
+                              updateDocElement(selectedDoc.id, { rows: nr, cellData: nd, rowHeights: equalArr(nr) })
+                            }}
+                            style={{ width:32, padding:'6px 0', borderRadius:7, fontSize:13, fontWeight:700, cursor:'pointer',
+                              border:'1.5px solid rgba(226,75,74,.3)', background:'rgba(226,75,74,.04)', color:'#E24B4A',
+                              display:'flex', alignItems:'center', justifyContent:'center' }}>
+                            −R
+                          </button>
+                          <button
+                            disabled={(selectedDoc.cols ?? 3) <= 1}
+                            onClick={() => {
+                              const nr   = selectedDoc.rows ?? 3
+                              const nc   = (selectedDoc.cols ?? 3) - 1
+                              const oldc = nc + 1
+                              const nd: string[] = []
+                              for (let r = 0; r < nr; r++) {
+                                for (let c = 0; c < nc; c++) nd.push(selectedDoc.cellData?.[r * oldc + c] ?? '')
+                              }
+                              updateDocElement(selectedDoc.id, { cols: nc, cellData: nd, colWidths: equalArr(nc) })
+                            }}
+                            style={{ width:32, padding:'6px 0', borderRadius:7, fontSize:13, fontWeight:700, cursor:'pointer',
+                              border:'1.5px solid rgba(226,75,74,.3)', background:'rgba(226,75,74,.04)', color:'#E24B4A',
+                              display:'flex', alignItems:'center', justifyContent:'center' }}>
+                            −C
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Column widths — visual proportional bar */}
+                      <div className="prop-row">
+                        <div className="prop-label">Column Widths (%)</div>
+                        <div style={{ display:'flex', height:44, border:'1px solid #d0d0d0', borderRadius:7, overflow:'hidden' }}>
+                          {Array.from({ length: selectedDoc.cols ?? 3 }).map((_, c) => {
+                            const cols = selectedDoc.cols ?? 3
+                            const frac = (selectedDoc.colWidths ?? equalArr(cols))[c] ?? 1/cols
+                            return (
+                              <div key={c} style={{
+                                flex: frac, display:'flex', flexDirection:'column', alignItems:'center',
+                                justifyContent:'center', gap:1,
+                                borderRight: c < cols-1 ? '1px solid #d0d0d0' : 'none',
+                                background: c % 2 === 0 ? '#f5f5f7' : '#fff',
+                                padding:'2px 1px', minWidth:0, overflow:'hidden',
+                              }}>
+                                <span style={{ fontSize:8, color:'rgba(0,0,0,.4)', lineHeight:1, userSelect:'none' }}>C{c+1}</span>
+                                <input
+                                  type="number" min={5} max={95}
+                                  value={Math.round(frac * 100)}
+                                  onChange={e => {
+                                    const cols2 = selectedDoc.cols ?? 3
+                                    const cur = selectedDoc.colWidths ?? equalArr(cols2)
+                                    const nv  = Math.max(5, Math.min(95, parseInt(e.target.value)||5)) / 100
+                                    updateDocElement(selectedDoc.id, { colWidths: normalizeFractions(cur, c, nv) })
+                                  }}
+                                  style={{ width:'100%', fontSize:10, fontWeight:700, textAlign:'center',
+                                    border:'none', background:'transparent', outline:'none', padding:0, color:'#1d1d1f', cursor:'text' }}
+                                />
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Row heights — list with mini progress bar */}
+                      <div className="prop-row">
+                        <div className="prop-label">Row Heights (%)</div>
+                        <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                          {Array.from({ length: selectedDoc.rows ?? 3 }).map((_, r) => {
+                            const rows = selectedDoc.rows ?? 3
+                            const frac = (selectedDoc.rowHeights ?? equalArr(rows))[r] ?? 1/rows
+                            const pct  = Math.round(frac * 100)
+                            return (
+                              <div key={r} style={{ display:'flex', alignItems:'center', gap:5 }}>
+                                <span style={{ fontSize:9, color:'rgba(0,0,0,.4)', width:18, flexShrink:0, textAlign:'right' }}>R{r+1}</span>
+                                <div style={{ flex:1, height:18, background:'#f0f0f5', borderRadius:4, overflow:'hidden', border:'1px solid #e0e0e0', cursor:'default' }}>
+                                  <div style={{ width:`${pct}%`, height:'100%', background:'rgba(99,102,241,.18)', borderRight:'2px solid #6366f1', transition:'width .12s' }} />
+                                </div>
+                                <input
+                                  type="number" min={5} max={95} value={pct}
+                                  onChange={e => {
+                                    const rows2 = selectedDoc.rows ?? 3
+                                    const cur   = selectedDoc.rowHeights ?? equalArr(rows2)
+                                    const nv    = Math.max(5, Math.min(95, parseInt(e.target.value)||5)) / 100
+                                    updateDocElement(selectedDoc.id, { rowHeights: normalizeFractions(cur, r, nv) })
+                                  }}
+                                  style={{ width:36, padding:'2px 4px', border:'1px solid #e0e0e0', borderRadius:5, fontSize:10, textAlign:'right', outline:'none', flexShrink:0 }}
+                                />
+                                <span style={{ fontSize:9, color:'rgba(0,0,0,.35)', flexShrink:0 }}>%</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <div className="prop-row">
+                        <div className="prop-label">Style</div>
+                        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                          <label className="prop-toggle">
+                            <input type="checkbox" checked={selectedDoc.tableHasHeader ?? true}
+                              onChange={e => updateDocElement(selectedDoc.id, { tableHasHeader: e.target.checked })} />
+                            <span style={{ fontSize:11 }}>Header row</span>
+                          </label>
+                          <input type="color" value={selectedDoc.tableBorderColor ?? '#374151'}
+                            onChange={e => updateDocElement(selectedDoc.id, { tableBorderColor: e.target.value })}
+                            title="Border color"
+                            style={{ width:26, height:24, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
+                          {(selectedDoc.tableHasHeader ?? true) && (
+                            <input type="color" value={selectedDoc.tableBgHeader ?? '#e5e7eb'}
+                              onChange={e => updateDocElement(selectedDoc.id, { tableBgHeader: e.target.value })}
+                              title="Header background"
+                              style={{ width:26, height:24, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
+                          )}
+                        </div>
+                      </div>
+                      <div className="prop-row">
+                        <div className="prop-label">Cell Data</div>
+                        <div style={{ display:'grid', gridTemplateColumns:`repeat(${selectedDoc.cols ?? 3}, 1fr)`, gap:3 }}>
+                          {Array.from({ length: (selectedDoc.rows ?? 3) * (selectedDoc.cols ?? 3) }).map((_, i) => {
+                            const r = Math.floor(i / (selectedDoc.cols ?? 3))
+                            const c = i % (selectedDoc.cols ?? 3)
+                            return (
+                              <input key={i} value={selectedDoc.cellData?.[i] ?? ''}
+                                placeholder={selectedDoc.tableHasHeader && r === 0 ? `H${c+1}` : `R${r+1}C${c+1}`}
+                                onChange={e => {
+                                  const nd = [...(selectedDoc.cellData ?? [])]
+                                  nd[i] = e.target.value
+                                  updateDocElement(selectedDoc.id, { cellData: nd })
+                                }}
+                                style={{ padding:'3px 4px', border:'1px solid #e0e0e0', borderRadius:4, fontSize:10,
+                                  fontWeight: selectedDoc.tableHasHeader && r === 0 ? 700 : 400,
+                                  outline:'none', width:'100%', minWidth:0 }} />
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {selectedDoc.type === 'image' && (
+                    <div className="prop-row">
+                      <div className="prop-label">Image</div>
+                      <div style={{ marginBottom:8, fontSize:11, color:'rgba(0,0,0,.5)', wordBreak:'break-all' }}>{selectedDoc.imageName || 'No image'}</div>
+                      <button className="tb-btn" style={{ width:'100%', justifyContent:'center' }}
+                        onClick={() => imageFileRef.current?.click()}>
+                        🖼 Replace Image
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="prop-divider" />
+                  <div className="prop-label">Position &amp; Size (0–1)</div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                    {(['x','y','w','h'] as const).map(k => (
+                      <div key={k}>
+                        <div className="prop-label">{k.toUpperCase()}</div>
+                        <input className="prop-input" type="number" step="0.005" min={0} max={1}
+                          value={selectedDoc[k].toFixed(4)}
+                          onChange={e => updateDocElement(selectedDoc.id, { [k]: parseFloat(e.target.value)||0 })} />
+                      </div>
+                    ))}
+                  </div>
+                  <button className="prop-del-btn" onClick={() => deleteDocElement(selectedDoc.id)}>Delete element</button>
+                </div>
+              ) : selectedField ? (
                 <div key={selectedId!}>
                   <div className="prop-type-chip">
                     {FIELD_DEFS.find(d=>d.type===selectedField.type)?.icon}&nbsp;
@@ -874,7 +1958,7 @@ export default function PDFFormBuilderPage() {
                     </div>
                   </div>
 
-                  {selectedField.type !== 'checkbox' && selectedField.type !== 'dropdown' && selectedField.type !== 'signature' && (
+                  {selectedField.type !== 'checkbox' && selectedField.type !== 'dropdown' && selectedField.type !== 'signature' && selectedField.type !== 'radio' && selectedField.type !== 'checkgroup' && (
                     <div className="prop-row">
                       <div className="prop-label">Placeholder Text</div>
                       <input className="prop-input"
@@ -884,17 +1968,43 @@ export default function PDFFormBuilderPage() {
                     </div>
                   )}
 
-                  {/* Field text color — shown for all input types except checkbox */}
-                  {selectedField.type !== 'checkbox' && selectedField.type !== 'signature' && (
-                    <div className="prop-row">
-                      <div className="prop-label">Text Color</div>
-                      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                        <input type="color" value={selectedField.fieldTextColor ?? '#111111'}
-                          onChange={e => updateField(selectedField.id, { fieldTextColor: e.target.value })}
-                          style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
-                        <span style={{ fontSize:11, color:'rgba(0,0,0,.4)' }}>Input text colour</span>
+                  {/* Field text font + color — shown for text-input types only */}
+                  {selectedField.type !== 'checkbox' && selectedField.type !== 'signature' && selectedField.type !== 'radio' && selectedField.type !== 'checkgroup' && (
+                    <>
+                      <div className="prop-row">
+                        <div className="prop-label">Font Family</div>
+                        <div style={{ display:'flex', gap:5 }}>
+                          {(['helvetica','times','courier'] as const).map(f => (
+                            <button key={f} onClick={() => updateField(selectedField.id, { fieldFont: f })}
+                              style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:10, fontWeight:700, cursor:'pointer',
+                                fontFamily: f === 'times' ? '"Times New Roman",serif' : f === 'courier' ? '"Courier New",monospace' : 'inherit',
+                                border: (selectedField.fieldFont ?? 'helvetica') === f ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
+                                background: (selectedField.fieldFont ?? 'helvetica') === f ? '#f0f0ff' : '#fff',
+                                color: (selectedField.fieldFont ?? 'helvetica') === f ? '#6366f1' : 'rgba(0,0,0,.55)' }}>
+                              {f === 'helvetica' ? 'Helvetica' : f === 'times' ? 'Times' : 'Courier'}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                      <div className="prop-row">
+                        <div className="prop-label">Font Size</div>
+                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                          <input type="number" min={6} max={36} value={selectedField.fieldFontSize ?? 10}
+                            onChange={e => updateField(selectedField.id, { fieldFontSize: Number(e.target.value) })}
+                            style={{ width:60, padding:'5px 8px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:12, color:'#1d1d1f', outline:'none' }} />
+                          <span style={{ fontSize:11, color:'rgba(0,0,0,.4)' }}>px</span>
+                        </div>
+                      </div>
+                      <div className="prop-row">
+                        <div className="prop-label">Text Color</div>
+                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                          <input type="color" value={selectedField.fieldTextColor ?? '#111111'}
+                            onChange={e => updateField(selectedField.id, { fieldTextColor: e.target.value })}
+                            style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
+                          <span style={{ fontSize:11, color:'rgba(0,0,0,.4)' }}>Input text colour</span>
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   <div className="prop-row">
@@ -970,7 +2080,7 @@ export default function PDFFormBuilderPage() {
                     </>
                   )}
 
-                  {selectedField.type !== 'checkbox' && selectedField.type !== 'signature' && (
+                  {selectedField.type !== 'checkbox' && selectedField.type !== 'signature' && selectedField.type !== 'radio' && selectedField.type !== 'checkgroup' && (
                     <div className="prop-row">
                       <div className="prop-label">Border Style</div>
                       <div style={{ display:'flex', gap:6 }}>
@@ -987,12 +2097,36 @@ export default function PDFFormBuilderPage() {
                     </div>
                   )}
 
-                  {selectedField.type === 'dropdown' && (
+                  {(selectedField.type === 'dropdown' || selectedField.type === 'radio' || selectedField.type === 'checkgroup') && (
                     <>
                       <div className="prop-divider" />
-                      <div className="prop-label">Options</div>
+
+                      {/* Layout toggle — only for radio / checkgroup */}
+                      {(selectedField.type === 'radio' || selectedField.type === 'checkgroup') && (
+                        <div className="prop-row">
+                          <div className="prop-label">Layout</div>
+                          <div style={{ display:'flex', gap:6 }}>
+                            {(['vertical','horizontal'] as const).map(lay => (
+                              <button key={lay} onClick={() => updateField(selectedField.id, { radioLayout: lay })}
+                                style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer',
+                                  border: (selectedField.radioLayout ?? 'vertical') === lay ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
+                                  background: (selectedField.radioLayout ?? 'vertical') === lay ? '#f0f0ff' : '#fff',
+                                  color: (selectedField.radioLayout ?? 'vertical') === lay ? '#6366f1' : 'rgba(0,0,0,.5)' }}>
+                                {lay === 'vertical' ? '↕ Vertical' : '↔ Horizontal'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="prop-label">
+                        {selectedField.type === 'radio' ? 'Radio Options (pick one)' : selectedField.type === 'checkgroup' ? 'Checkbox Options (pick many)' : 'Options'}
+                      </div>
                       {selectedField.options.map((opt, i) => (
                         <div key={i} className="option-row">
+                          <span style={{ fontSize:10, color:'rgba(0,0,0,.3)', flexShrink:0, marginRight:2 }}>
+                            {selectedField.type === 'radio' ? '◉' : selectedField.type === 'checkgroup' ? '☑' : `${i+1}.`}
+                          </span>
                           <input value={opt} placeholder={`Option ${i+1}`}
                             onChange={e => {
                               const o = [...selectedField.options]; o[i] = e.target.value
@@ -1024,11 +2158,183 @@ export default function PDFFormBuilderPage() {
 
                   <button className="prop-del-btn" onClick={() => deleteField(selectedField.id)}>Delete field</button>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
       </div>
+
+      {/* ── Table context menu ───────────────────────────────────────────── */}
+      {/* ── AI Chat Panel ───────────────────────────────────────────────── */}
+      {chatOpen && (
+        <div style={{
+          position:'fixed', right:0, top:0, bottom:0, width:360, zIndex:10000,
+          background:'#fff', boxShadow:'-4px 0 28px rgba(0,0,0,.15)',
+          display:'flex', flexDirection:'column', fontFamily:'inherit',
+        }}>
+          {/* Header */}
+          <div style={{
+            padding:'14px 16px', borderBottom:'1px solid #e5e7eb',
+            background:'linear-gradient(135deg,#7c3aed,#4f46e5)',
+            display:'flex', alignItems:'center', justifyContent:'space-between',
+          }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+              <span style={{ fontSize:20 }}>✨</span>
+              <div>
+                <div style={{ color:'#fff', fontWeight:700, fontSize:14 }}>AI Form Builder</div>
+                <div style={{ color:'rgba(255,255,255,.7)', fontSize:11 }}>Describe your form and I'll build it</div>
+              </div>
+            </div>
+            <button onClick={() => setChatOpen(false)} style={{
+              background:'rgba(255,255,255,.2)', border:'none', borderRadius:6,
+              color:'#fff', fontSize:16, cursor:'pointer', width:28, height:28,
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}>×</button>
+          </div>
+
+          {/* Messages */}
+          <div style={{ flex:1, overflowY:'auto', padding:'14px 14px 8px', display:'flex', flexDirection:'column', gap:10 }}>
+            {chatHistory.length === 0 && (
+              <div style={{ textAlign:'center', padding:'32px 16px', color:'#9ca3af' }}>
+                <div style={{ fontSize:32, marginBottom:10 }}>✨</div>
+                <div style={{ fontWeight:600, color:'#6b7280', marginBottom:6 }}>Start building your form</div>
+                <div style={{ fontSize:12, lineHeight:1.5 }}>
+                  Try: <em>"Create a job application form"</em><br/>
+                  or <em>"Add a survey with 5 rating options"</em><br/>
+                  or <em>"Make a contact form with name, email, message"</em>
+                </div>
+              </div>
+            )}
+            {chatHistory.map((msg, i) => (
+              <div key={i} style={{
+                display:'flex', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row', gap:8, alignItems:'flex-end',
+              }}>
+                <div style={{
+                  width:28, height:28, borderRadius:'50%', flexShrink:0,
+                  background: msg.role === 'user' ? '#4f46e5' : '#f3f4f6',
+                  display:'flex', alignItems:'center', justifyContent:'center', fontSize:13,
+                }}>
+                  {msg.role === 'user' ? '👤' : '✨'}
+                </div>
+                <div style={{
+                  maxWidth:'78%', padding:'9px 13px', borderRadius: msg.role === 'user' ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
+                  background: msg.role === 'user' ? '#4f46e5' : '#f9fafb',
+                  color: msg.role === 'user' ? '#fff' : '#111827',
+                  fontSize:13, lineHeight:1.55, border: msg.role === 'assistant' ? '1px solid #e5e7eb' : 'none',
+                  whiteSpace:'pre-wrap', wordBreak:'break-word',
+                }}>
+                  {msg.content}
+                </div>
+              </div>
+            ))}
+            {chatLoading && (
+              <div style={{ display:'flex', gap:8, alignItems:'flex-end' }}>
+                <div style={{ width:28, height:28, borderRadius:'50%', background:'#f3f4f6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>✨</div>
+                <div style={{ padding:'10px 14px', borderRadius:'4px 16px 16px 16px', background:'#f9fafb', border:'1px solid #e5e7eb', display:'flex', gap:5 }}>
+                  {[0,1,2].map(d => (
+                    <div key={d} style={{
+                      width:7, height:7, borderRadius:'50%', background:'#9ca3af',
+                      animation:'bounce 1.2s ease-in-out infinite', animationDelay:`${d*0.2}s`,
+                    }} />
+                  ))}
+                </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Suggestions */}
+          {chatHistory.length === 0 && (
+            <div style={{ padding:'0 14px 8px', display:'flex', flexWrap:'wrap', gap:6 }}>
+              {['Job application form','Contact form','Survey form','Invoice form','Registration form'].map(s => (
+                <button key={s} onClick={() => { setChatInput(s); chatInputRef.current?.focus() }} style={{
+                  padding:'5px 10px', borderRadius:20, border:'1px solid #e5e7eb',
+                  background:'#f9fafb', color:'#4f46e5', fontSize:11, cursor:'pointer',
+                  fontWeight:600, whiteSpace:'nowrap',
+                }}>{s}</button>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          <div style={{ padding:'10px 14px 14px', borderTop:'1px solid #e5e7eb', display:'flex', gap:8, alignItems:'flex-end' }}>
+            <textarea
+              ref={chatInputRef}
+              value={chatInput}
+              onChange={e => setChatInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat() } }}
+              placeholder="Describe the form you need…"
+              rows={2}
+              style={{
+                flex:1, resize:'none', border:'1.5px solid #e5e7eb', borderRadius:10,
+                padding:'9px 12px', fontSize:13, outline:'none', lineHeight:1.45,
+                fontFamily:'inherit', transition:'border-color .15s',
+              }}
+              onFocus={e => e.target.style.borderColor = '#7c3aed'}
+              onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+              disabled={chatLoading}
+            />
+            <button
+              onClick={sendChat}
+              disabled={!chatInput.trim() || chatLoading}
+              style={{
+                width:40, height:40, borderRadius:10, border:'none', cursor:'pointer',
+                background: chatInput.trim() && !chatLoading ? '#7c3aed' : '#e5e7eb',
+                color: chatInput.trim() && !chatLoading ? '#fff' : '#9ca3af',
+                display:'flex', alignItems:'center', justifyContent:'center', fontSize:18,
+                transition:'background .15s', flexShrink:0,
+              }}
+            >➤</button>
+          </div>
+
+          <style>{`@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }`}</style>
+        </div>
+      )}
+
+      {tableCtxMenu && (() => {
+        const de = docElements.find(d => d.id === tableCtxMenu.docId)
+        if (!de) return null
+        const { row, col, mx, my } = tableCtxMenu
+        const run = (patch: Partial<DocElement> | null) => {
+          if (patch) updateDocElement(de.id, patch)
+          setTableCtxMenu(null)
+        }
+        const menuItems: ({ label: string; action: () => void; danger?: boolean } | null)[] = [
+          { label: '↑ Insert Row Above',   action: () => run(tblInsertRow(de, row)) },
+          { label: '↓ Insert Row Below',   action: () => run(tblInsertRow(de, row + 1)) },
+          null,
+          { label: '← Insert Col Left',    action: () => run(tblInsertCol(de, col)) },
+          { label: '→ Insert Col Right',   action: () => run(tblInsertCol(de, col + 1)) },
+          null,
+          { label: '✕ Delete Row',  danger: true, action: () => run(tblDeleteRow(de, row)) },
+          { label: '✕ Delete Col',  danger: true, action: () => run(tblDeleteCol(de, col)) },
+        ]
+        return (
+          <div
+            ref={ctxMenuRef}
+            style={{
+              position:'fixed', left: mx + 2, top: my + 2, zIndex:9999,
+              background:'#fff', border:'1px solid #e0e0e0', borderRadius:9,
+              boxShadow:'0 6px 24px rgba(0,0,0,.14)', padding:'4px 0', minWidth:190,
+            }}
+          >
+            {menuItems.map((item, i) => item === null
+              ? <div key={i} style={{ height:1, background:'#e8e8e8', margin:'3px 8px' }} />
+              : (
+                <button key={i} onClick={item.action}
+                  style={{
+                    display:'block', width:'100%', padding:'7px 14px', border:'none', background:'transparent',
+                    textAlign:'left', fontSize:12, fontWeight:500, cursor:'pointer',
+                    color: item.danger ? '#E24B4A' : '#1d1d1f',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = item.danger ? 'rgba(226,75,74,.07)' : '#f5f5f7')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >{item.label}</button>
+              )
+            )}
+          </div>
+        )
+      })()}
     </>
   )
 }
