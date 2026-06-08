@@ -73,20 +73,39 @@ const CSS = `
   .desk      { display:flex; }
   .mob       { display:none; }
 
+  .sec-pad  { padding:80px 48px 48px; }
+  .tools-sec{ padding:88px 28px; }
+  .cta-sec  { padding:120px 28px; }
+  .tools-hdr{ display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:16px; margin-bottom:40px; }
+  .tools-legend { display:flex; gap:16px; flex-wrap:wrap; }
+  .hero-ctas{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:28px; }
+  .hero-trust{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+
   @media(max-width:1024px){
     .r-feat  { grid-template-columns:1fr; gap:40px; }
     .r-bento { grid-template-columns:repeat(2,1fr); }
   }
   @media(max-width:680px){
-    .r-bento { grid-template-columns:1fr; }
-    .bspan2  { grid-column:span 1; }
-    .r-footer{ grid-template-columns:1fr; gap:28px; }
-    .r-tgrid { grid-template-columns:1fr 1fr; }
-    .desk    { display:none; }
-    .mob     { display:flex; }
+    .r-bento  { grid-template-columns:1fr; }
+    .bspan2   { grid-column:span 1; }
+    .r-footer { grid-template-columns:1fr; gap:28px; }
+    .r-tgrid  { grid-template-columns:1fr 1fr; }
+    .desk     { display:none; }
+    .mob      { display:flex; }
+    .sec-pad  { padding:56px 20px 36px; }
+    .tools-sec{ padding:60px 16px; }
+    .cta-sec  { padding:72px 20px; }
+    .tools-hdr{ flex-direction:column; align-items:flex-start; gap:12px; margin-bottom:28px; }
+    .tools-legend { gap:10px; }
+    .hero-ctas{ flex-direction:column; align-items:stretch; }
+    .hero-ctas a { justify-content:center; text-align:center; }
+    .hero-trust { gap:8px; }
   }
   @media(max-width:420px){
-    .r-tgrid { grid-template-columns:1fr; }
+    .r-tgrid  { grid-template-columns:1fr; }
+    .sec-pad  { padding:48px 16px 28px; }
+    .tools-sec{ padding:48px 14px; }
+    .cta-sec  { padding:60px 16px; }
   }
 
   /* ── hero grid ── */
@@ -379,7 +398,7 @@ function Hero() {
   const textY = useTransform(scrollY, [0, 500], [0, -60])
 
   return (
-    <section style={{background:'#fff',minHeight:'100vh',display:'flex',flexDirection:'column',justifyContent:'center',position:'relative',overflow:'hidden',paddingTop:54}}>
+    <section style={{background:'#fff',minHeight:'100svh',display:'flex',flexDirection:'column',justifyContent:'center',position:'relative',overflow:'hidden',paddingTop:54}}>
 
       {/* Dot grid */}
       <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(rgba(0,0,0,.04) 1px, transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}}/>
@@ -390,7 +409,7 @@ function Hero() {
       <div style={{position:'absolute',top:'30%',right:'20%',width:400,height:400,borderRadius:'50%',background:'radial-gradient(circle, rgba(226,75,74,.05) 0%, transparent 70%)',filter:'blur(60px)',pointerEvents:'none'}}/>
 
       {/* Content grid */}
-      <motion.div style={{y:textY,maxWidth:1200,margin:'0 auto',padding:'0 28px',width:'100%',position:'relative',zIndex:2}}>
+      <motion.div style={{y:textY,maxWidth:1200,margin:'0 auto',padding:'0 clamp(16px,5vw,48px)',width:'100%',position:'relative',zIndex:2}}>
         <div className="hero-grid">
 
           {/* ── LEFT: text ── */}
@@ -423,7 +442,7 @@ function Hero() {
 
             {/* CTAs */}
             <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.85}}
-              style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:28}}>
+              className="hero-ctas">
               <Mag>
                 <Link href="/ai-pdf-form-filler"
                   style={{...FI,display:'inline-flex',alignItems:'center',gap:8,padding:'14px 28px',background:'#1d1d1f',color:'#fff',borderRadius:99,fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:'0 4px 28px rgba(0,0,0,.16)'}}>
@@ -442,7 +461,7 @@ function Hero() {
 
             {/* Trust row */}
             <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.5,delay:1.05}}
-              style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+              className="hero-trust">
               <span style={{color:'#f59e0b',fontSize:12,letterSpacing:2}}>★★★★★</span>
               {['Free forever','No signup','100% private','In-browser'].map((t,i)=>(
                 <span key={t} style={{display:'flex',alignItems:'center',gap:6}}>
@@ -714,7 +733,7 @@ function Apple3DScroll() {
   return (
     <>
       {/* Section intro — scrolls normally before sticky activates */}
-      <div style={{padding:'80px 48px 48px',maxWidth:1200,margin:'0 auto'}}>
+      <div className="sec-pad" style={{maxWidth:1200,margin:'0 auto'}}>
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.55,ease:E}}>
           <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>How it works</div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,4vw,56px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>
@@ -867,15 +886,15 @@ function AllTools() {
     SOON:{ background:'rgba(0,0,0,.04)',     color:'#bbb',    border:'1px solid #e8e8e8' },
   }
   return (
-    <section id="tools" style={{background:'#fff',borderTop:'1px solid #f0f0f0',padding:'88px 28px'}}>
+    <section id="tools" className="tools-sec" style={{background:'#fff',borderTop:'1px solid #f0f0f0'}}>
       <div style={{maxWidth:1200,margin:'0 auto'}}>
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'100px'}} transition={{duration:.5,ease:E}}
-          style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',flexWrap:'wrap',gap:16,marginBottom:40}}>
+          className="tools-hdr">
           <div>
             <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>Tool Registry</div>
             <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,3.5vw,46px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>18 tools. One platform.</h2>
           </div>
-          <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
+          <div className="tools-legend">
             {[['LIVE','rgba(34,197,94,.1)','#15803d','rgba(34,197,94,.3)'],['BETA','rgba(99,102,241,.1)','#4338ca','rgba(99,102,241,.3)'],['SOON','rgba(0,0,0,.04)','#bbb','#e8e8e8']].map(([tag,bg,col,br])=>(
               <span key={tag} style={{display:'flex',alignItems:'center',gap:5}}>
                 <span style={{...MONO,fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:4,background:bg,color:col,border:`1px solid ${br}`,letterSpacing:'0.06em'}}>{tag}</span>
@@ -917,7 +936,7 @@ function AllTools() {
 // ══════════════════════════════════════════════════════════════════════════════
 function CTA() {
   return (
-    <section style={{background:'#F5F5F7',borderTop:'1px solid #e8e8e8',padding:'120px 28px'}}>
+    <section className="cta-sec" style={{background:'#F5F5F7',borderTop:'1px solid #e8e8e8'}}>
       <div style={{maxWidth:1200,margin:'0 auto'}}>
         <motion.div initial={{opacity:0,y:22}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'100px'}} transition={{duration:.65,ease:E}}>
           <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:24}}>Get started</div>
