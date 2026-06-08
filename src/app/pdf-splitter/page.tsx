@@ -282,7 +282,7 @@ export default function PDFSplitterPage() {
         const copied = await outDoc.copyPages(srcDoc, indices)
         copied.forEach(p => outDoc.addPage(p))
         const outBytes = await outDoc.save()
-        const blob     = new Blob([outBytes], { type: 'application/pdf' })
+        const blob     = new Blob([outBytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' })
         const pgRange  = indices.length === 1
           ? `Page ${indices[0] + 1}`
           : `Pages ${indices[0] + 1}–${indices[indices.length - 1] + 1}`

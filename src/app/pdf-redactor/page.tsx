@@ -576,7 +576,7 @@ export default function PDFRedactorPage() {
       }
       setProgress(97)
       const out  = await pdfDoc.save()
-      const url  = URL.createObjectURL(new Blob([out], { type:'application/pdf' }))
+      const url  = URL.createObjectURL(new Blob([out as Uint8Array<ArrayBuffer>], { type:'application/pdf' }))
       const a    = document.createElement('a')
       a.href = url; a.download = file.name.replace(/\.pdf$/i,'') + '_redacted.pdf'; a.click()
       setTimeout(() => URL.revokeObjectURL(url), 5000)

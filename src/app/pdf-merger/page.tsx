@@ -228,7 +228,7 @@ export default function PDFMergerPage() {
 
       setProgress(97)
       const bytes = await out.save()
-      const blob  = new Blob([bytes], { type: 'application/pdf' })
+      const blob  = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' })
       const name  = (outputName.trim() || 'merged') + '.pdf'
       setProgress(100)
       setResult({ blob, name, totalPages: out.getPageCount() })
