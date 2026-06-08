@@ -650,12 +650,23 @@ export default function PDFFormBuilderPage() {
 
       if (data.action === 'replace' || data.action === 'add') {
         const rawFields: any[] = data.fields ?? []
+
+        // For 'add': find lowest y+h of existing fields on this page so new fields go below
+        const existingBottom = data.action === 'add'
+          ? fields.filter(f => f.page === curPage).reduce((max, f) => Math.max(max, f.y + f.h + 0.06), 0.05)
+          : 0
+
+        // Normalise Claude's y range so the first new field starts at existingBottom
+        const rawYs = rawFields.map((f: any) => f.y ?? 0.07)
+        const minRawY = rawYs.length ? Math.min(...rawYs) : 0.07
+        const yOffset = data.action === 'add' ? existingBottom - minRawY : 0
+
         const built: FormField[] = rawFields.map((f: any) => ({
           id: uid(),
           type: f.type ?? 'text',
           page: curPage,
           x: f.x ?? 0.08,
-          y: f.y ?? 0.07,
+          y: Math.min(0.92, (f.y ?? 0.07) + yOffset),
           w: f.w ?? 0.38,
           h: f.h ?? 0.038,
           label: f.label ?? '',
@@ -1113,7 +1124,7 @@ export default function PDFFormBuilderPage() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="editor-pg">
         {Nav}
-        <div className="editor-body">
+        <div className="editor-body" style={{ marginRight: chatOpen ? 360 : 0, transition: 'margin-right .25s ease' }}>
 
           {/* Left sidebar — pages */}
           <div className="sidebar">
