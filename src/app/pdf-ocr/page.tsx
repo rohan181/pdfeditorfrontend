@@ -113,7 +113,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .split{flex:1;display:flex;overflow:hidden;gap:0}
 .preview-pane{width:45%;border-right:1px solid #e8e8e8;overflow:auto;background:#e8e8ea;display:flex;align-items:flex-start;justify-content:center;padding:16px}
 .page-wrap{position:relative;display:inline-block;box-shadow:0 4px 24px rgba(0,0,0,.18);border-radius:2px;line-height:0}
-.page-wrap canvas{display:block;max-width:100%}
+.page-wrap canvas{display:block;max-width:100%;pointer-events:none}
 
 /* pdfjs-dist v3 text selection layer */
 .textLayer{position:absolute;left:0;top:0;overflow:hidden;line-height:1;z-index:2;
@@ -192,6 +192,7 @@ export default function PDFOCRPage() {
   const [language,   setLanguage]   = useState<LangOpt>('auto')
   const [useNative,  setUseNative]  = useState(true)
   const [copied,     setCopied]     = useState(false)
+  const [copiedPage, setCopiedPage] = useState(false)
   const [exporting,  setExporting]  = useState(false)
   const [editMode,   setEditMode]   = useState(false)
   const [pdfUrl,     setPdfUrl]     = useState<string | null>(null)
@@ -285,7 +286,7 @@ export default function PDFOCRPage() {
         renderTaskRef.current = null
         if (!alive) return
 
-        // Build selectable text layer using pdfjs v3 renderTextLayer
+        // Build selectable text layer — manually place transparent spans over canvas
         const tl = textLayerRef.current
         if (!tl || editMode) return
         tl.innerHTML = ''
@@ -293,14 +294,31 @@ export default function PDFOCRPage() {
         tl.style.height = vp.height + 'px'
         const textContent = await pg.getTextContent()
         if (!alive) return
-        try {
-          const task = (pdfjsLib as any).renderTextLayer({
-            textContentSource: textContent,
-            container: tl,
-            viewport: vp,
-          })
-          if (task?.promise) await task.promise
-        } catch { /* pdf has no text layer */ }
+
+        const utilTx = (pdfjsLib as any).Util?.transform
+          ?? ((A: number[], B: number[]) => [
+              A[0]*B[0]+A[2]*B[1], A[1]*B[0]+A[3]*B[1],
+              A[0]*B[2]+A[2]*B[3], A[1]*B[2]+A[3]*B[3],
+              A[0]*B[4]+A[2]*B[5]+A[4], A[1]*B[4]+A[3]*B[5]+A[5],
+            ])
+
+        const frag = document.createDocumentFragment()
+        for (const item of (textContent.items as any[])) {
+          if (!item.str) continue
+          const m  = utilTx(vp.transform, item.transform)
+          const fh = Math.hypot(m[2], m[3])   // font height in canvas px
+          if (fh < 2) continue
+          const angle = Math.atan2(m[1], m[0])
+          const span  = document.createElement('span')
+          span.textContent = item.str
+          span.style.cssText =
+            `position:absolute;left:${m[4].toFixed(1)}px;top:${(m[5]-fh).toFixed(1)}px;` +
+            `font-size:${fh.toFixed(1)}px;color:transparent;white-space:pre;cursor:text;` +
+            `transform-origin:0% 100%;user-select:text;-webkit-user-select:text;` +
+            (Math.abs(angle)>0.001 ? `transform:rotate(${(-angle*180/Math.PI).toFixed(2)}deg);` : '')
+          frag.appendChild(span)
+        }
+        tl.appendChild(frag)
       } catch (e: any) {
         if (e?.name !== 'RenderingCancelledException') console.warn(e)
       }
@@ -445,6 +463,21 @@ export default function PDFOCRPage() {
 
   const copyAll = () => {
     navigator.clipboard.writeText(allText).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
+  }
+
+  const copyPageText = async () => {
+    let text = selPageItem?.text?.trim() ?? ''
+    if (!text && pdfDocRef.current) {
+      try {
+        const pg = await pdfDocRef.current.getPage(selPage)
+        const tc = await pg.getTextContent()
+        text = (tc.items as any[]).map((i: any) => i.str).join(' ').trim()
+      } catch { /* ignore */ }
+    }
+    if (!text) return
+    await navigator.clipboard.writeText(text)
+    setCopiedPage(true)
+    setTimeout(() => setCopiedPage(false), 2000)
   }
 
   const downloadTxt = () => {
@@ -694,6 +727,12 @@ export default function PDFOCRPage() {
               {selPageItem?.status === 'idle' && !isRunning && (
                 <button className="nbtn pri" style={{fontSize:11}} onClick={()=>{ abortRef.current=false; setIsRunning(true); ocrPage(selPage).finally(()=>setIsRunning(false)) }}>
                   Scan this page
+                </button>
+              )}
+              {/* Copy page text */}
+              {!editMode && (
+                <button className="nbtn sec" style={{fontSize:11}} onClick={copyPageText}>
+                  {copiedPage ? '✓ Copied!' : '⎘ Copy text'}
                 </button>
               )}
               {/* View / Edit toggle */}
