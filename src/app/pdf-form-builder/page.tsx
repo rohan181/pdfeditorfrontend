@@ -65,11 +65,10 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:#eee}
 
 /* Editor layout */
-.editor-body{flex:1;display:grid;grid-template-columns:200px 1fr 250px;overflow:hidden}
-@media(max-width:900px){.editor-body{grid-template-columns:160px 1fr}}
+.editor-body{flex:1;display:flex;overflow:hidden}
 
 /* Page sidebar */
-.sidebar{background:#fafafa;border-right:1px solid #e8e8e8;display:flex;flex-direction:column;overflow:hidden}
+.sidebar{width:240px;flex-shrink:0;background:#fafafa;border-right:1px solid #e8e8e8;display:flex;flex-direction:column;overflow:hidden}
 .sidebar-head{padding:11px 13px;border-bottom:1px solid #e8e8e8;flex-shrink:0}
 .sidebar-title{font-size:11px;font-weight:700;color:#1d1d1f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
 .sidebar-sub{font-size:10px;color:rgba(0,0,0,.4)}
@@ -90,7 +89,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .rm-page-btn:disabled{opacity:.3;cursor:not-allowed}
 
 /* Center panel */
-.center-panel{display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.center-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 
 /* Toolbar */
 .toolbar{padding:6px 10px;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;gap:4px;flex-wrap:wrap;flex-shrink:0;background:#fff}
@@ -104,7 +103,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .tb-btn:disabled{opacity:.3;cursor:not-allowed}
 
 /* Canvas */
-.canvas-area{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:24px;background:#e8e8ea;min-height:0}
+.canvas-area{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:24px;gap:20px;background:#e8e8ea;min-height:0}
 .canvas-wrap{position:relative;display:inline-block;box-shadow:0 4px 32px rgba(0,0,0,.16);border-radius:2px;line-height:0;flex-shrink:0}
 .canvas-wrap.mode-select{cursor:default}
 .canvas-wrap canvas{display:block;max-width:100%}
@@ -119,8 +118,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .resize-se{position:absolute;bottom:-4px;right:-4px;width:9px;height:9px;background:#6366f1;border:2px solid #fff;border-radius:2px;cursor:se-resize;z-index:5}
 
 /* Properties panel */
-.props-panel{border-left:1px solid #e8e8e8;display:flex;flex-direction:column;overflow:hidden;background:#fafafa;min-width:0}
-@media(max-width:900px){.props-panel{display:none}}
+.props-panel{width:290px;border-left:1px solid #e8e8e8;display:flex;flex-direction:column;overflow:hidden;background:#fafafa;flex-shrink:0}
 .props-head{padding:11px 13px;border-bottom:1px solid #e8e8e8;flex-shrink:0}
 .props-head-title{font-size:12px;font-weight:700;color:#1d1d1f}
 .props-head-sub{font-size:10px;color:rgba(0,0,0,.4);margin-top:1px}
@@ -171,13 +169,14 @@ interface FormField {
   id: string; type: FieldType; page: number
   x: number; y: number; w: number; h: number
   label: string; placeholder: string; required: boolean; options: string[]
-  labelPosition: 'top' | 'left' | 'below'
+  labelPosition: 'top' | 'left' | 'right' | 'below'
   borderStyle: 'box' | 'dash' | 'underline'
   radioLayout: 'vertical' | 'horizontal'
   labelColor: string; labelFontSize: number; labelBold: boolean
   fieldTextColor: string
   fieldFont: 'helvetica' | 'times' | 'courier'
   fieldFontSize: number
+  optionFontSize: number
   // signature-specific
   sigLineColor: string; sigLineStyle: 'solid' | 'dash'
   sigShowIcon: boolean; sigPromptText: string
@@ -201,8 +200,8 @@ interface DocElement {
   imageData: string; imageName: string
 }
 
-type DragState   = { id:string; scx:number; scy:number; ox:number; oy:number } | null
-type ResizeState = { id:string; scx:number; scy:number; ow:number; oh:number } | null
+type DragState   = { id:string; scx:number; scy:number; ox:number; oy:number; page:number } | null
+type ResizeState = { id:string; scx:number; scy:number; ow:number; oh:number; page:number } | null
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const PAGE_SIZES: Record<PageSizeName, { w:number; h:number; sub:string }> = {
@@ -298,9 +297,9 @@ export default function PDFFormBuilderPage() {
   const [docElements, setDocElements] = useState<DocElement[]>([])
   const [selectedId,  setSelectedId]  = useState<string|null>(null)
 
-  const canvasRef    = useRef<HTMLCanvasElement>(null)
-  const wrapRef      = useRef<HTMLDivElement>(null)
-  const canvasAreaRef = useRef<HTMLDivElement>(null)
+  const pageCanvasRefs = useRef<(HTMLCanvasElement|null)[]>([])
+  const pageWrapRefs   = useRef<(HTMLDivElement|null)[]>([])
+  const canvasAreaRef  = useRef<HTMLDivElement>(null)
   const fileRef      = useRef<HTMLInputElement>(null)
   const imageFileRef = useRef<HTMLInputElement>(null)
   const pdfDocRef = useRef<any>(null)
@@ -328,7 +327,7 @@ export default function PDFFormBuilderPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const chatInputRef = useRef<HTMLTextAreaElement>(null)
   const [zoom, setZoom] = useState(1.0)
-  const SCALE = 1.8 * zoom
+  const SCALE = 1.2 * zoom
 
   const zoomIn  = () => setZoom(z => Math.min(3.0, parseFloat((z + 0.25).toFixed(2))))
   const zoomOut = () => setZoom(z => Math.max(0.25, parseFloat((z - 0.25).toFixed(2))))
@@ -353,11 +352,12 @@ export default function PDFFormBuilderPage() {
       label: '', placeholder: '', required: false,
       options: (type === 'dropdown' || type === 'radio' || type === 'checkgroup') ? ['Option 1', 'Option 2', 'Option 3'] : [],
       radioLayout: 'vertical' as const,
-      labelPosition: type === 'signature' ? 'below' : 'top', borderStyle: type === 'signature' ? 'underline' : 'box',
+      labelPosition: type === 'signature' ? 'below' : type === 'checkbox' ? 'right' : 'top', borderStyle: type === 'signature' ? 'underline' : 'box',
       labelColor: '#374151', labelFontSize: 9, labelBold: false,
       fieldTextColor: '#111111',
       fieldFont: 'helvetica',
       fieldFontSize: 10,
+      optionFontSize: 9,
       sigLineColor: '#374151', sigLineStyle: 'solid',
       sigShowIcon: true, sigPromptText: 'Sign here',
     }
@@ -394,36 +394,66 @@ export default function PDFFormBuilderPage() {
     }
   }, [])
 
-  // ── Render canvas ─────────────────────────────────────────────────────────
+  // ── Render all page canvases ──────────────────────────────────────────────
   useEffect(() => {
-    if (!canvasRef.current) return
-
-    // Blank canvas
+    // Blank canvas — render one canvas per blank page
     if (modeRef.current === 'blank') {
-      const { w, h } = PAGE_SIZES[pageSize]
-      const cv = canvasRef.current
-      cv.width  = Math.round(w * SCALE)
-      cv.height = Math.round(h * SCALE)
-      const ctx = cv.getContext('2d')!
-      ctx.fillStyle = '#fff'
-      ctx.fillRect(0, 0, cv.width, cv.height)
+      for (let i = 0; i < blankPages; i++) {
+        const cv = pageCanvasRefs.current[i]
+        if (!cv) continue
+        const { w, h } = PAGE_SIZES[pageSize]
+        cv.width  = Math.round(w * SCALE)
+        cv.height = Math.round(h * SCALE)
+        const ctx = cv.getContext('2d')!
+        ctx.fillStyle = '#fff'
+        ctx.fillRect(0, 0, cv.width, cv.height)
+      }
       return
     }
 
-    // PDF canvas
+    // PDF canvas — render each page
     if (!pdfDocRef.current || thumbs.length === 0) return
     let cancelled = false
     ;(async () => {
-      const pg = await pdfDocRef.current.getPage(curPage + 1)
-      const vp = pg.getViewport({ scale: SCALE })
-      const cv = canvasRef.current!
-      cv.width = vp.width; cv.height = vp.height
-      const ctx = cv.getContext('2d')!
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height)
-      if (!cancelled) await pg.render({ canvasContext: ctx, viewport: vp }).promise
+      for (let i = 0; i < thumbs.length; i++) {
+        if (cancelled) break
+        const cv = pageCanvasRefs.current[i]
+        if (!cv) continue
+        const pg = await pdfDocRef.current.getPage(i + 1)
+        const vp = pg.getViewport({ scale: SCALE })
+        cv.width = vp.width; cv.height = vp.height
+        const ctx = cv.getContext('2d')!
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height)
+        if (!cancelled) await pg.render({ canvasContext: ctx, viewport: vp }).promise
+      }
     })()
     return () => { cancelled = true }
-  }, [curPage, mode, thumbs.length, pageSize, blankPages, zoom])
+  }, [mode, thumbs.length, pageSize, blankPages, zoom])
+
+  // ── IntersectionObserver — update curPage while scrolling ────────────────
+  useEffect(() => {
+    const area = canvasAreaRef.current
+    if (!area || totalPages === 0) return
+    const observer = new IntersectionObserver(
+      entries => {
+        let best: { ratio: number; idx: number } | null = null
+        entries.forEach(entry => {
+          const idx = pageWrapRefs.current.indexOf(entry.target as HTMLDivElement)
+          if (idx >= 0 && entry.intersectionRatio > (best?.ratio ?? 0)) {
+            best = { ratio: entry.intersectionRatio, idx }
+          }
+        })
+        if (best !== null) setCurPage((best as { ratio:number; idx:number }).idx)
+      },
+      { root: area, threshold: [0, 0.25, 0.5, 0.75, 1.0] }
+    )
+    pageWrapRefs.current.forEach(el => { if (el) observer.observe(el) })
+    return () => observer.disconnect()
+  }, [totalPages])
+
+  const scrollToPage = (idx: number) => {
+    pageWrapRefs.current[idx]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }
 
   // ── Canvas mouse down — deselect only ────────────────────────────────────
   const onCanvasMouseDown = (e: React.MouseEvent) => {
@@ -435,8 +465,10 @@ export default function PDFFormBuilderPage() {
   useEffect(() => {
     const mm = (e: MouseEvent) => {
       if (dragRef.current) {
-        const { id, scx, scy, ox, oy } = dragRef.current
-        const cw = wrapRef.current!.offsetWidth, ch = wrapRef.current!.offsetHeight
+        const { id, scx, scy, ox, oy, page } = dragRef.current
+        const wrap = pageWrapRefs.current[page]
+        if (!wrap) return
+        const cw = wrap.offsetWidth, ch = wrap.offsetHeight
         const dx = e.clientX - scx, dy = e.clientY - scy
         if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return
         setFields(prev => prev.map(f => f.id !== id ? f : {
@@ -451,8 +483,10 @@ export default function PDFFormBuilderPage() {
         }))
       }
       if (resizeRef.current) {
-        const { id, scx, scy, ow, oh } = resizeRef.current
-        const cw = wrapRef.current!.offsetWidth, ch = wrapRef.current!.offsetHeight
+        const { id, scx, scy, ow, oh, page } = resizeRef.current
+        const wrap = pageWrapRefs.current[page]
+        if (!wrap) return
+        const cw = wrap.offsetWidth, ch = wrap.offsetHeight
         const dx = e.clientX - scx, dy = e.clientY - scy
         setFields(prev => prev.map(f => f.id !== id ? f : {
           ...f,
@@ -564,15 +598,17 @@ export default function PDFFormBuilderPage() {
   const onFieldMouseDown = (e: React.MouseEvent, id: string) => {
     e.stopPropagation()
     setSelectedId(id)
-    const f  = fields.find(ff => ff.id === id)!
-    const cw = wrapRef.current!.offsetWidth, ch = wrapRef.current!.offsetHeight
-    dragRef.current = { id, scx: e.clientX, scy: e.clientY, ox: f.x * cw, oy: f.y * ch }
+    const f    = fields.find(ff => ff.id === id)!
+    const wrap = pageWrapRefs.current[f.page]
+    if (!wrap) return
+    const cw = wrap.offsetWidth, ch = wrap.offsetHeight
+    dragRef.current = { id, scx: e.clientX, scy: e.clientY, ox: f.x * cw, oy: f.y * ch, page: f.page }
   }
 
   const onResizeMouseDown = (e: React.MouseEvent, id: string) => {
     e.stopPropagation(); e.preventDefault()
     const f = fields.find(ff => ff.id === id)!
-    resizeRef.current = { id, scx: e.clientX, scy: e.clientY, ow: f.w, oh: f.h }
+    resizeRef.current = { id, scx: e.clientX, scy: e.clientY, ow: f.w, oh: f.h, page: f.page }
   }
 
   const deleteField    = (id: string) => { setFields(p => p.filter(f => f.id !== id)); if (selectedId === id) setSelectedId(null) }
@@ -667,7 +703,7 @@ export default function PDFFormBuilderPage() {
           required: f.required ?? false,
           options: Array.isArray(f.options) ? f.options : [],
           radioLayout: f.radioLayout ?? 'vertical',
-          labelPosition: f.labelPosition ?? 'top',
+          labelPosition: f.labelPosition ?? (f.type === 'checkbox' ? 'right' : 'top'),
           borderStyle: f.borderStyle ?? 'box',
           labelColor: f.labelColor ?? '#374151',
           labelFontSize: f.labelFontSize ?? 11,
@@ -675,6 +711,7 @@ export default function PDFFormBuilderPage() {
           fieldTextColor: f.fieldTextColor ?? '#111111',
           fieldFont: f.fieldFont ?? 'helvetica',
           fieldFontSize: f.fieldFontSize ?? 12,
+          optionFontSize: f.optionFontSize ?? 9,
           sigLineColor: f.sigLineColor ?? '#374151',
           sigLineStyle: f.sigLineStyle ?? 'solid',
           sigShowIcon: f.sigShowIcon ?? true,
@@ -716,15 +753,17 @@ export default function PDFFormBuilderPage() {
 
   const onDocMouseDown = (e: React.MouseEvent, id: string) => {
     e.stopPropagation(); setSelectedId(id)
-    const d  = docElements.find(dd => dd.id === id)!
-    const cw = wrapRef.current!.offsetWidth, ch = wrapRef.current!.offsetHeight
-    dragRef.current = { id, scx: e.clientX, scy: e.clientY, ox: d.x * cw, oy: d.y * ch }
+    const d    = docElements.find(dd => dd.id === id)!
+    const wrap = pageWrapRefs.current[d.page]
+    if (!wrap) return
+    const cw = wrap.offsetWidth, ch = wrap.offsetHeight
+    dragRef.current = { id, scx: e.clientX, scy: e.clientY, ox: d.x * cw, oy: d.y * ch, page: d.page }
   }
 
   const onDocResizeMouseDown = (e: React.MouseEvent, id: string) => {
     e.stopPropagation(); e.preventDefault()
     const d = docElements.find(dd => dd.id === id)!
-    resizeRef.current = { id, scx: e.clientX, scy: e.clientY, ow: d.w, oh: d.h }
+    resizeRef.current = { id, scx: e.clientX, scy: e.clientY, ow: d.w, oh: d.h, page: d.page }
   }
 
   const addBlankPage   = () => setBlankPages(p => p + 1)
@@ -767,7 +806,7 @@ export default function PDFFormBuilderPage() {
         const lFont = f.labelBold ? fontBold : font
         const LEFT_LABEL_W = f.label ? Math.min(f.label.length * lsz * 0.55 + 6, pw * 0.22) : 0
         const fieldX = f.labelPosition === 'left' && f.label ? x + LEFT_LABEL_W + 4 : x
-        const fieldW = f.labelPosition === 'left' && f.label ? Math.max(8, w - LEFT_LABEL_W - 4) : w
+        const fieldW = f.labelPosition === 'left' && f.label ? Math.max(8, w - LEFT_LABEL_W - 4) : f.labelPosition === 'right' ? fh : w
         const opts   = { x: fieldX, y, width: fieldW, height: fh }
 
         if (f.label) {
@@ -776,6 +815,8 @@ export default function PDFFormBuilderPage() {
             pg.drawText(f.label, { x, y: y + fh + 3, size: lsz, font: lFont, color: lColor, maxWidth: w })
           } else if (f.labelPosition === 'below') {
             pg.drawText(f.label, { x, y: y - lsz - 3, size: lsz, font: lFont, color: lColor, maxWidth: w })
+          } else if (f.labelPosition === 'right') {
+            pg.drawText(f.label, { x: x + fh + 4, y: y + fh / 2 - lsz / 2, size: lsz, font: lFont, color: lColor, maxWidth: w - fh - 4 })
           } else {
             // left
             pg.drawText(f.label, { x, y: y + fh / 2 - lsz / 2, size: lsz, font: lFont, color: lColor, maxWidth: LEFT_LABEL_W })
@@ -881,6 +922,10 @@ export default function PDFFormBuilderPage() {
         } else if (f.type === 'dropdown') {
           const dd = form.createDropdown(f.id)
           if (f.options.length) { dd.setOptions(f.options); dd.select(f.options[0]) }
+          const ddFontSize = f.optionFontSize ?? 9
+          const ddDaStr = `/${pdfFontName} ${ddFontSize} Tf ${tr.toFixed(3)} ${tg.toFixed(3)} ${tb.toFixed(3)} rg`
+          dd.acroField.dict.set(PDFName.of('DA'), PDFString.of(ddDaStr))
+          dd.setFontSize(ddFontSize)
           dd.addToPage(pg, opts)
         }
       }
@@ -1114,42 +1159,303 @@ export default function PDFFormBuilderPage() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="editor-pg">
         {Nav}
-        <div className="editor-body" style={{ marginRight: chatOpen ? 360 : 0, transition: 'margin-right .25s ease' }}>
+        <div className="editor-body">
 
-          {/* Left sidebar — pages */}
+          {/* Left sidebar — pages or field properties */}
           <div className="sidebar">
-            <div className="sidebar-head">
-              <div className="sidebar-title">{mode === 'blank' ? `Blank Form · ${pageSize}` : file?.name}</div>
-              <div className="sidebar-sub">{totalPages} page{totalPages!==1?'s':''} · {fields.length} field{fields.length!==1?'s':''}</div>
-            </div>
-            <div className="page-list">
-              {Array.from({ length: totalPages }, (_, i) => {
-                const n = fields.filter(f => f.page === i).length
-                return (
-                  <button key={i} className={`page-thumb-btn${curPage===i?' active':''}`}
-                    onClick={() => { setCurPage(i); setSelectedId(null) }}>
-                    <div className="page-thumb-img">
-                      {mode === 'pdf' && thumbs[i]
-                        ? <img src={thumbs[i]} alt="" />
-                        : <span style={{ fontSize:14 }}>📄</span>}
-                    </div>
-                    <div className="page-thumb-info">
-                      <div className="page-thumb-num">Page {i+1}</div>
-                      <div className="page-thumb-marks">{n > 0 ? `${n} field${n!==1?'s':''}` : 'No fields'}</div>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-            {mode === 'blank' && (
+            {!(selectedField || selectedDoc) ? (
+              /* ── Pages view ── */
               <>
-                <button className="add-page-btn" onClick={addBlankPage}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                  Add Page
-                </button>
-                <button className="rm-page-btn" onClick={removeLastPage} disabled={blankPages <= 1}>
-                  Remove Last Page
-                </button>
+                <div className="sidebar-head">
+                  <div className="sidebar-title">{mode === 'blank' ? `Blank Form · ${pageSize}` : file?.name}</div>
+                  <div className="sidebar-sub">{totalPages} page{totalPages!==1?'s':''} · {fields.length} field{fields.length!==1?'s':''}</div>
+                </div>
+                <div className="page-list">
+                  {Array.from({ length: totalPages }, (_, i) => {
+                    const n = fields.filter(f => f.page === i).length
+                    return (
+                      <button key={i} className={`page-thumb-btn${curPage===i?' active':''}`}
+                        onClick={() => { setCurPage(i); setSelectedId(null); scrollToPage(i) }}>
+                        <div className="page-thumb-img">
+                          {mode === 'pdf' && thumbs[i]
+                            ? <img src={thumbs[i]} alt="" />
+                            : <span style={{ fontSize:14 }}>📄</span>}
+                        </div>
+                        <div className="page-thumb-info">
+                          <div className="page-thumb-num">Page {i+1}</div>
+                          <div className="page-thumb-marks">{n > 0 ? `${n} field${n!==1?'s':''}` : 'No fields'}</div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+                {mode === 'blank' && (
+                  <>
+                    <button className="add-page-btn" onClick={addBlankPage}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                      Add Page
+                    </button>
+                    <button className="rm-page-btn" onClick={removeLastPage} disabled={blankPages <= 1}>
+                      Remove Last Page
+                    </button>
+                  </>
+                )}
+              </>
+            ) : (
+              /* ── Properties view ── */
+              <>
+                <div style={{ padding:'9px 13px', borderBottom:'1px solid #e8e8e8', flexShrink:0, display:'flex', alignItems:'center', gap:8 }}>
+                  <button onClick={() => setSelectedId(null)} style={{
+                    fontSize:11, fontWeight:600, color:'rgba(0,0,0,.45)', background:'none', border:'none',
+                    cursor:'pointer', display:'flex', alignItems:'center', gap:3, padding:0, flexShrink:0,
+                  }}>← Pages</button>
+                  <div style={{ width:1, height:12, background:'#e0e0e0', flexShrink:0 }} />
+                  <div style={{ fontSize:11, fontWeight:700, color:'#1d1d1f', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {selectedField
+                      ? `${FIELD_DEFS.find(d=>d.type===selectedField.type)?.label ?? ''} Field`
+                      : selectedDoc?.type === 'static-text' ? 'Text Block'
+                      : selectedDoc?.type === 'table' ? 'Table' : 'Image'}
+                  </div>
+                </div>
+                <div className="props-body">
+                  {selectedDoc ? (
+                    <div key={selectedId!}>
+                      <div className="prop-type-chip">
+                        {selectedDoc.type === 'static-text' ? 'T' : selectedDoc.type === 'table' ? '⊞' : '🖼'}&nbsp;
+                        {selectedDoc.type === 'static-text' ? 'Text Block' : selectedDoc.type === 'table' ? 'Table' : 'Image'}
+                      </div>
+                      <div className="prop-row">
+                        <div className="prop-label">Position &amp; Size (0–1)</div>
+                        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                          {(['x','y','w','h'] as const).map(k => (
+                            <div key={k}>
+                              <div className="prop-label">{k.toUpperCase()}</div>
+                              <input className="prop-input" type="number" step="0.005" min={0} max={1}
+                                value={selectedDoc[k].toFixed(4)}
+                                onChange={e => updateDocElement(selectedDoc.id, { [k]: parseFloat(e.target.value)||0 })} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <button className="prop-del-btn" onClick={() => deleteDocElement(selectedDoc.id)}>Delete element</button>
+                    </div>
+                  ) : selectedField ? (
+                    <div key={selectedId!}>
+                      <div className="prop-type-chip">
+                        {FIELD_DEFS.find(d=>d.type===selectedField.type)?.icon}&nbsp;
+                        {FIELD_DEFS.find(d=>d.type===selectedField.type)?.label}
+                      </div>
+
+                      <div className="prop-row">
+                        <div className="prop-label">Label</div>
+                        <input className="prop-input" placeholder="e.g. First Name"
+                          defaultValue={selectedField.label}
+                          onChange={e => updateField(selectedField.id, { label: e.target.value })} />
+                      </div>
+
+                      <div className="prop-row">
+                        <div className="prop-label">Label Style</div>
+                        <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                          <input type="color" value={selectedField.labelColor ?? '#374151'}
+                            onChange={e => updateField(selectedField.id, { labelColor: e.target.value })}
+                            title="Label color"
+                            style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
+                          <input type="number" min={7} max={24} step={1}
+                            value={selectedField.labelFontSize ?? 9}
+                            onChange={e => updateField(selectedField.id, { labelFontSize: parseInt(e.target.value)||9 })}
+                            title="Font size"
+                            style={{ width:48, padding:'5px 6px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:11, color:'#1d1d1f', outline:'none', fontFamily:'inherit' }} />
+                          <button onClick={() => updateField(selectedField.id, { labelBold: !selectedField.labelBold })}
+                            title="Bold"
+                            style={{ width:30, height:26, borderRadius:6, fontSize:12, fontWeight:800, cursor:'pointer',
+                              border: selectedField.labelBold ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
+                              background: selectedField.labelBold ? '#f0f0ff' : '#fff',
+                              color: selectedField.labelBold ? '#6366f1' : 'rgba(0,0,0,.5)' }}>B</button>
+                        </div>
+                      </div>
+
+                      {selectedField.type !== 'checkbox' && selectedField.type !== 'dropdown' && selectedField.type !== 'signature' && selectedField.type !== 'radio' && selectedField.type !== 'checkgroup' && (
+                        <div className="prop-row">
+                          <div className="prop-label">Placeholder</div>
+                          <input className="prop-input"
+                            placeholder={selectedField.type==='date'?'MM/DD/YYYY':selectedField.type==='number'?'0':'Enter hint text…'}
+                            defaultValue={selectedField.placeholder}
+                            onChange={e => updateField(selectedField.id, { placeholder: e.target.value })} />
+                        </div>
+                      )}
+
+                      {selectedField.type !== 'checkbox' && selectedField.type !== 'signature' && selectedField.type !== 'radio' && selectedField.type !== 'checkgroup' && (
+                        <>
+                          <div className="prop-row">
+                            <div className="prop-label">Font Family</div>
+                            <div style={{ display:'flex', gap:5 }}>
+                              {(['helvetica','times','courier'] as const).map(f => (
+                                <button key={f} onClick={() => updateField(selectedField.id, { fieldFont: f })}
+                                  style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:10, fontWeight:700, cursor:'pointer',
+                                    fontFamily: f === 'times' ? '"Times New Roman",serif' : f === 'courier' ? '"Courier New",monospace' : 'inherit',
+                                    border: (selectedField.fieldFont ?? 'helvetica') === f ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
+                                    background: (selectedField.fieldFont ?? 'helvetica') === f ? '#f0f0ff' : '#fff',
+                                    color: (selectedField.fieldFont ?? 'helvetica') === f ? '#6366f1' : 'rgba(0,0,0,.55)' }}>
+                                  {f === 'helvetica' ? 'Helv' : f === 'times' ? 'Times' : 'Cour'}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="prop-row">
+                            <div className="prop-label">Font Size &amp; Color</div>
+                            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                              <input type="number" min={6} max={36} value={selectedField.fieldFontSize ?? 10}
+                                onChange={e => updateField(selectedField.id, { fieldFontSize: Number(e.target.value) })}
+                                style={{ width:52, padding:'5px 6px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:11, color:'#1d1d1f', outline:'none' }} />
+                              <input type="color" value={selectedField.fieldTextColor ?? '#111111'}
+                                onChange={e => updateField(selectedField.id, { fieldTextColor: e.target.value })}
+                                style={{ width:26, height:24, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      <div className="prop-row">
+                        <label className="prop-toggle">
+                          <input type="checkbox" checked={selectedField.required}
+                            onChange={e => updateField(selectedField.id, { required: e.target.checked })} />
+                          <span>Required field</span>
+                        </label>
+                      </div>
+
+                      <div className="prop-row">
+                        <div className="prop-label">Label Position</div>
+                        <div style={{ display:'flex', gap:5 }}>
+                          {(['top','left','right','below'] as const).map(pos => (
+                            <button key={pos} onClick={() => updateField(selectedField.id, { labelPosition: pos })}
+                              style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:10, fontWeight:700, cursor:'pointer',
+                                border: selectedField.labelPosition === pos ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
+                                background: selectedField.labelPosition === pos ? '#f0f0ff' : '#fff',
+                                color: selectedField.labelPosition === pos ? '#6366f1' : 'rgba(0,0,0,.5)' }}>
+                              {pos === 'top' ? '↑ Top' : pos === 'left' ? '← Left' : pos === 'right' ? 'Right →' : '↓ Below'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {selectedField.type !== 'checkbox' && selectedField.type !== 'signature' && selectedField.type !== 'radio' && selectedField.type !== 'checkgroup' && (
+                        <div className="prop-row">
+                          <div className="prop-label">Border Style</div>
+                          <div style={{ display:'flex', gap:5 }}>
+                            {(['box','dash','underline'] as const).map(bs => (
+                              <button key={bs} onClick={() => updateField(selectedField.id, { borderStyle: bs })}
+                                style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:10, fontWeight:700, cursor:'pointer',
+                                  border: selectedField.borderStyle === bs ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
+                                  background: selectedField.borderStyle === bs ? '#f0f0ff' : '#fff',
+                                  color: selectedField.borderStyle === bs ? '#6366f1' : 'rgba(0,0,0,.5)' }}>
+                                {bs === 'box' ? '▭ Box' : bs === 'dash' ? '╌ Dash' : '_ Line'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedField.type === 'signature' && (
+                        <>
+                          <div className="prop-divider" />
+                          <div style={{ fontSize:10, fontWeight:700, color:'#6366f1', letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:8 }}>✍ Signature</div>
+                          <div className="prop-row">
+                            <div className="prop-label">Prompt Text</div>
+                            <input className="prop-input"
+                              defaultValue={selectedField.sigPromptText ?? 'Sign here'}
+                              placeholder="e.g. Sign here"
+                              onChange={e => updateField(selectedField.id, { sigPromptText: e.target.value })} />
+                          </div>
+                          <div className="prop-row">
+                            <div className="prop-label">Line Color &amp; Style</div>
+                            <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                              <input type="color" value={selectedField.sigLineColor ?? '#374151'}
+                                onChange={e => updateField(selectedField.id, { sigLineColor: e.target.value })}
+                                style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
+                              {(['solid','dash'] as const).map(ls => (
+                                <button key={ls} onClick={() => updateField(selectedField.id, { sigLineStyle: ls })}
+                                  style={{ flex:1, padding:'4px 0', borderRadius:6, fontSize:10, fontWeight:700, cursor:'pointer',
+                                    border: (selectedField.sigLineStyle ?? 'solid') === ls ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
+                                    background: (selectedField.sigLineStyle ?? 'solid') === ls ? '#f0f0ff' : '#fff',
+                                    color: (selectedField.sigLineStyle ?? 'solid') === ls ? '#6366f1' : 'rgba(0,0,0,.5)' }}>
+                                  {ls === 'solid' ? '— Solid' : '╌ Dash'}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="prop-row">
+                            <label className="prop-toggle">
+                              <input type="checkbox" checked={selectedField.sigShowIcon ?? true}
+                                onChange={e => updateField(selectedField.id, { sigShowIcon: e.target.checked })} />
+                              <span>Show ✍ &amp; prompt</span>
+                            </label>
+                          </div>
+                        </>
+                      )}
+
+                      {(selectedField.type === 'dropdown' || selectedField.type === 'radio' || selectedField.type === 'checkgroup') && (
+                        <>
+                          <div className="prop-divider" />
+                          {(selectedField.type === 'radio' || selectedField.type === 'checkgroup') && (
+                            <div className="prop-row">
+                              <div className="prop-label">Layout</div>
+                              <div style={{ display:'flex', gap:5 }}>
+                                {(['vertical','horizontal'] as const).map(lay => (
+                                  <button key={lay} onClick={() => updateField(selectedField.id, { radioLayout: lay })}
+                                    style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:10, fontWeight:700, cursor:'pointer',
+                                      border: (selectedField.radioLayout ?? 'vertical') === lay ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
+                                      background: (selectedField.radioLayout ?? 'vertical') === lay ? '#f0f0ff' : '#fff',
+                                      color: (selectedField.radioLayout ?? 'vertical') === lay ? '#6366f1' : 'rgba(0,0,0,.5)' }}>
+                                    {lay === 'vertical' ? '↕ V' : '↔ H'}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <div className="prop-row">
+                            <div className="prop-label">Options font size</div>
+                            <input type="number" min={6} max={36} value={selectedField.optionFontSize ?? 9}
+                              onChange={e => updateField(selectedField.id, { optionFontSize: Number(e.target.value) })}
+                              className="prop-input" style={{ width:'100%' }} />
+                          </div>
+                          <div className="prop-label">Options</div>
+                          {selectedField.options.map((opt, i) => (
+                            <div key={i} className="option-row">
+                              <span style={{ fontSize:10, color:'rgba(0,0,0,.3)', flexShrink:0, marginRight:2 }}>
+                                {selectedField.type === 'radio' ? '◉' : selectedField.type === 'checkgroup' ? '☑' : `${i+1}.`}
+                              </span>
+                              <input value={opt} placeholder={`Option ${i+1}`}
+                                onChange={e => {
+                                  const o = [...selectedField.options]; o[i] = e.target.value
+                                  updateField(selectedField.id, { options: o })
+                                }} />
+                              <button className="option-del"
+                                onClick={() => updateField(selectedField.id, { options: selectedField.options.filter((_,j)=>j!==i) })}>✕</button>
+                            </div>
+                          ))}
+                          <button className="add-opt-btn"
+                            onClick={() => updateField(selectedField.id, { options: [...selectedField.options,''] })}>
+                            + Add option
+                          </button>
+                        </>
+                      )}
+
+                      <div className="prop-divider" />
+                      <div className="prop-label">Position &amp; Size (0–1)</div>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                        {(['x','y','w','h'] as const).map(k => (
+                          <div key={k}>
+                            <div className="prop-label">{k.toUpperCase()}</div>
+                            <input className="prop-input" type="number" step="0.005" min={0} max={1}
+                              value={selectedField[k].toFixed(4)}
+                              onChange={e => updateField(selectedField.id, { [k]: parseFloat(e.target.value)||0 })} />
+                          </div>
+                        ))}
+                      </div>
+                      <button className="prop-del-btn" onClick={() => deleteField(selectedField.id)}>Delete field</button>
+                    </div>
+                  ) : null}
+                </div>
               </>
             )}
           </div>
@@ -1211,9 +1517,9 @@ export default function PDFFormBuilderPage() {
                 <span style={{ fontSize:11 }}>🖼</span>Image
               </button>
               <div className="tb-div" />
-              <button className="tb-btn" onClick={() => setCurPage(p=>Math.max(0,p-1))} disabled={curPage===0}>←</button>
+              <button className="tb-btn" onClick={() => { const p=Math.max(0,curPage-1); setCurPage(p); scrollToPage(p) }} disabled={curPage===0}>←</button>
               <span style={{ fontSize:11, color:'rgba(0,0,0,.4)', padding:'0 4px', whiteSpace:'nowrap' }}>{curPage+1} / {totalPages}</span>
-              <button className="tb-btn" onClick={() => setCurPage(p=>Math.min(totalPages-1,p+1))} disabled={curPage===totalPages-1}>→</button>
+              <button className="tb-btn" onClick={() => { const p=Math.min(totalPages-1,curPage+1); setCurPage(p); scrollToPage(p) }} disabled={curPage===totalPages-1}>→</button>
               <div className="tb-div" />
               <span className="tb-label">Zoom</span>
               <button className="tb-btn" onClick={zoomOut} disabled={zoom <= 0.25} title="Zoom out">−</button>
@@ -1240,14 +1546,19 @@ export default function PDFFormBuilderPage() {
             </div>
 
             <div className="canvas-area" ref={canvasAreaRef}>
-              <div ref={wrapRef} className="canvas-wrap mode-select" onMouseDown={onCanvasMouseDown}>
-                <canvas ref={canvasRef} />
-                {mode === 'blank' && <div className="canvas-guide" />}
+              {Array.from({ length: totalPages }, (_, pageIdx) => {
+                const cv         = pageCanvasRefs.current[pageIdx]
+                const pageFields = fields.filter(f => f.page === pageIdx)
+                const pageDocs   = docElements.filter(d => d.page === pageIdx)
+                return (
+                <div key={pageIdx} ref={el => { pageWrapRefs.current[pageIdx] = el }} className="canvas-wrap mode-select" onMouseDown={onCanvasMouseDown}>
+                  <canvas ref={el => { pageCanvasRefs.current[pageIdx] = el }} />
+                  {mode === 'blank' && <div className="canvas-guide" />}
 
                 {/* Field overlays */}
-                {canvasRef.current && curFields.map(f => {
-                  const cw  = canvasRef.current!.offsetWidth
-                  const ch  = canvasRef.current!.offsetHeight
+                {cv && pageFields.map(f => {
+                  const cw  = cv.offsetWidth
+                  const ch  = cv.offsetHeight
                   const sel = selectedId === f.id
                   const def = FIELD_DEFS.find(d => d.type === f.type)!
                   const labelEl = (
@@ -1275,7 +1586,7 @@ export default function PDFFormBuilderPage() {
                     <div
                       className={`field-overlay${sel?' sel':''}`}
                       style={{ position:'relative', flexShrink:0,
-                        width: f.labelPosition === 'left' ? f.w*cw - 70 : '100%',
+                        width: f.labelPosition === 'left' ? f.w*cw - 70 : f.labelPosition === 'right' ? fieldH : '100%',
                         height: fieldH,
                         background:'rgba(255,255,255,.92)',
                         border: sel ? selBorder : idleBorderStyle,
@@ -1315,7 +1626,7 @@ export default function PDFFormBuilderPage() {
                             overflow:'hidden', flexWrap: f.radioLayout === 'horizontal' ? 'wrap' : 'nowrap',
                           }}>
                             {(f.options.length ? f.options : ['Option 1','Option 2','Option 3']).map((opt, i) => {
-                              const optFontSize = Math.min(9, Math.max(7, f.h * ch / Math.max(f.options.length, 1) * 0.42))
+                              const optFontSize = Math.min(f.optionFontSize ?? 9, f.h * ch * 0.45)
                               return (
                                 <div key={i} style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0, minWidth:0 }}>
                                   {f.type === 'radio' ? (
@@ -1334,7 +1645,7 @@ export default function PDFFormBuilderPage() {
                           </div>
                         ) : f.type !== 'checkbox' ? (
                           <span style={{
-                            fontSize: Math.min(f.fieldFontSize ?? 10, f.h*ch*.48),
+                            fontSize: Math.min(f.type === 'dropdown' ? (f.optionFontSize ?? 9) : (f.fieldFontSize ?? 10), f.h*ch*.48),
                             overflow:'hidden', textOverflow:'ellipsis', lineHeight:1.4,
                             fontFamily: f.fieldFont === 'times' ? '"Times New Roman", Times, serif' : f.fieldFont === 'courier' ? '"Courier New", Courier, monospace' : 'inherit',
                             color: f.placeholder ? (f.fieldTextColor ?? 'rgba(0,0,0,.7)') : 'rgba(0,0,0,.35)',
@@ -1362,6 +1673,11 @@ export default function PDFFormBuilderPage() {
                           {fieldBox}
                           <div style={{ marginTop:2 }}>{labelEl}</div>
                         </>
+                      ) : f.labelPosition === 'right' ? (
+                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                          {fieldBox}
+                          {labelEl}
+                        </div>
                       ) : (
                         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                           <div style={{ width:64, textAlign:'right' }}>{labelEl}</div>
@@ -1372,9 +1688,9 @@ export default function PDFFormBuilderPage() {
                   )
                 })}
                 {/* Doc element overlays (static text / table / image) */}
-                {canvasRef.current && curDocs.map(de => {
-                  const cw = canvasRef.current!.offsetWidth
-                  const ch = canvasRef.current!.offsetHeight
+                {cv && pageDocs.map(de => {
+                  const cw = cv.offsetWidth
+                  const ch = cv.offsetHeight
                   const sel = selectedId === de.id
                   const dw = de.w * cw, dh = de.h * ch
                   return (
@@ -1582,7 +1898,9 @@ export default function PDFFormBuilderPage() {
                     </div>
                   )
                 })}
-              </div>
+                </div>
+                )
+              })}
             </div>
 
             <div className="hint-strip">
@@ -1600,698 +1918,111 @@ export default function PDFFormBuilderPage() {
             </div>
           </div>
 
-          {/* Right — properties */}
+          {/* Right panel — AI Builder only, shown when chatOpen */}
+          {chatOpen && (
           <div className="props-panel">
-            <div className="props-head">
-              <div className="props-head-title">Field Properties</div>
-              <div className="props-head-sub">{selectedField ? 'Edit the selected field' : 'Select a field to edit'}</div>
+            <div style={{ padding:'11px 13px', borderBottom:'1px solid #e8e8e8', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', background:'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+              <div>
+                <div style={{ fontSize:12, fontWeight:700, color:'#fff' }}>✨ AI Builder</div>
+                <div style={{ fontSize:10, color:'rgba(255,255,255,.7)', marginTop:1 }}>Describe your form and I'll build it</div>
+              </div>
+              <button onClick={() => setChatOpen(false)} style={{ background:'rgba(255,255,255,.2)', border:'none', borderRadius:6, color:'#fff', cursor:'pointer', width:26, height:26, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>×</button>
             </div>
-            <div className="props-body">
-              {!selectedField && !selectedDoc ? (
-                <div className="props-empty">
-                  <span className="props-empty-icon">👆</span>
-                  <span className="props-empty-text">Click a field or element on the canvas to edit it</span>
-                </div>
-              ) : selectedDoc ? (
-                /* ── Doc element properties ─────────────────── */
-                <div key={selectedId!}>
-                  <div className="prop-type-chip">
-                    {selectedDoc.type === 'static-text' ? 'T' : selectedDoc.type === 'table' ? '⊞' : '🖼'}&nbsp;
-                    {selectedDoc.type === 'static-text' ? 'Text Block' : selectedDoc.type === 'table' ? 'Table' : 'Image'}
-                  </div>
-
-                  {selectedDoc.type === 'static-text' && (
-                    <>
-                      <div className="prop-row">
-                        <div className="prop-label">Content</div>
-                        <textarea className="prop-input" rows={4}
-                          value={selectedDoc.text}
-                          placeholder="Enter text…"
-                          onChange={e => updateDocElement(selectedDoc.id, { text: e.target.value })}
-                          style={{ resize:'vertical', lineHeight:1.5 }} />
-                      </div>
-                      <div className="prop-row">
-                        <div className="prop-label">Font Family</div>
-                        <div style={{ display:'flex', gap:5 }}>
-                          {(['helvetica','times','courier'] as const).map(f => (
-                            <button key={f} onClick={() => updateDocElement(selectedDoc.id, { textFont: f })}
-                              style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:10, fontWeight:700, cursor:'pointer',
-                                fontFamily: f === 'times' ? '"Times New Roman",serif' : f === 'courier' ? '"Courier New",monospace' : 'inherit',
-                                border: (selectedDoc.textFont ?? 'helvetica') === f ? '1.5px solid #f59e0b' : '1.5px solid #e0e0e0',
-                                background: (selectedDoc.textFont ?? 'helvetica') === f ? '#fffbeb' : '#fff',
-                                color: (selectedDoc.textFont ?? 'helvetica') === f ? '#d97706' : 'rgba(0,0,0,.55)' }}>
-                              {f === 'helvetica' ? 'Helv' : f === 'times' ? 'Times' : 'Courier'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="prop-row">
-                        <div className="prop-label">Size &amp; Color</div>
-                        <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                          <input type="number" min={6} max={72} value={selectedDoc.textSize ?? 12}
-                            onChange={e => updateDocElement(selectedDoc.id, { textSize: Number(e.target.value) })}
-                            style={{ width:55, padding:'5px 7px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:12, outline:'none' }} />
-                          <input type="color" value={selectedDoc.textColor ?? '#111111'}
-                            onChange={e => updateDocElement(selectedDoc.id, { textColor: e.target.value })}
-                            style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
-                          <button onClick={() => updateDocElement(selectedDoc.id, { textBold: !selectedDoc.textBold })}
-                            style={{ width:28, height:26, borderRadius:6, fontSize:12, fontWeight:800, cursor:'pointer',
-                              border: selectedDoc.textBold ? '1.5px solid #f59e0b' : '1.5px solid #e0e0e0',
-                              background: selectedDoc.textBold ? '#fffbeb' : '#fff',
-                              color: selectedDoc.textBold ? '#d97706' : 'rgba(0,0,0,.4)' }}>B</button>
-                          <button onClick={() => updateDocElement(selectedDoc.id, { textItalic: !selectedDoc.textItalic })}
-                            style={{ width:28, height:26, borderRadius:6, fontSize:12, fontWeight:400, fontStyle:'italic', cursor:'pointer',
-                              border: selectedDoc.textItalic ? '1.5px solid #f59e0b' : '1.5px solid #e0e0e0',
-                              background: selectedDoc.textItalic ? '#fffbeb' : '#fff',
-                              color: selectedDoc.textItalic ? '#d97706' : 'rgba(0,0,0,.4)' }}>I</button>
-                        </div>
-                      </div>
-                      <div className="prop-row">
-                        <div className="prop-label">Alignment</div>
-                        <div style={{ display:'flex', gap:5 }}>
-                          {(['left','center','right'] as const).map(a => (
-                            <button key={a} onClick={() => updateDocElement(selectedDoc.id, { textAlign: a })}
-                              style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer',
-                                border: (selectedDoc.textAlign ?? 'left') === a ? '1.5px solid #f59e0b' : '1.5px solid #e0e0e0',
-                                background: (selectedDoc.textAlign ?? 'left') === a ? '#fffbeb' : '#fff',
-                                color: (selectedDoc.textAlign ?? 'left') === a ? '#d97706' : 'rgba(0,0,0,.5)' }}>
-                              {a === 'left' ? '⬅ Left' : a === 'center' ? '≡ Center' : '➡ Right'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {selectedDoc.type === 'table' && (
-                    <>
-                      <div className="prop-row">
-                        <div className="prop-label">Rows &amp; Columns</div>
-                        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                          <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                            <span style={{ fontSize:10, color:'rgba(0,0,0,.4)' }}>Rows</span>
-                            <input type="number" min={1} max={12} value={selectedDoc.rows ?? 3}
-                              onChange={e => {
-                                const nr = Math.max(1, parseInt(e.target.value)||1)
-                                const nc = selectedDoc.cols ?? 3
-                                const nd = Array(nr * nc).fill('').map((_,i) => selectedDoc.cellData?.[i] ?? '')
-                                updateDocElement(selectedDoc.id, { rows: nr, cellData: nd, rowHeights: equalArr(nr) })
-                              }}
-                              style={{ width:44, padding:'4px 6px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:12, outline:'none' }} />
-                          </div>
-                          <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-                            <span style={{ fontSize:10, color:'rgba(0,0,0,.4)' }}>Cols</span>
-                            <input type="number" min={1} max={8} value={selectedDoc.cols ?? 3}
-                              onChange={e => {
-                                const nr = selectedDoc.rows ?? 3
-                                const nc = Math.max(1, parseInt(e.target.value)||1)
-                                const nd = Array(nr * nc).fill('').map((_,i) => selectedDoc.cellData?.[i] ?? '')
-                                updateDocElement(selectedDoc.id, { cols: nc, cellData: nd, colWidths: equalArr(nc) })
-                              }}
-                              style={{ width:44, padding:'4px 6px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:12, outline:'none' }} />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Insert row / column buttons */}
-                      <div className="prop-row">
-                        <div style={{ display:'flex', gap:6 }}>
-                          <button
-                            onClick={() => {
-                              const nr = (selectedDoc.rows ?? 3) + 1
-                              const nc = selectedDoc.cols ?? 3
-                              // preserve existing cell data, append empty row at bottom
-                              const nd = [
-                                ...Array((nr-1) * nc).fill('').map((_,i) => selectedDoc.cellData?.[i] ?? ''),
-                                ...Array(nc).fill(''),
-                              ]
-                              // shrink existing row heights proportionally and add new equal slice
-                              const oldRH = selectedDoc.rowHeights ?? equalArr(nr-1)
-                              const newFrac = 1 / nr
-                              const newRH  = [...oldRH.map(h => h * (1 - newFrac)), newFrac]
-                              updateDocElement(selectedDoc.id, { rows: nr, cellData: nd, rowHeights: newRH })
-                            }}
-                            style={{ flex:1, padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:700, cursor:'pointer',
-                              border:'1.5px solid #e0e0e0', background:'#fff', color:'#1d1d1f',
-                              display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
-                            <span style={{ fontSize:13 }}>＋</span> Row
-                          </button>
-                          <button
-                            onClick={() => {
-                              const nr  = selectedDoc.rows ?? 3
-                              const nc  = (selectedDoc.cols ?? 3) + 1
-                              const oldc = nc - 1
-                              // rebuild cellData row-by-row, appending empty cell at end of each row
-                              const nd: string[] = []
-                              for (let r = 0; r < nr; r++) {
-                                for (let c = 0; c < oldc; c++) nd.push(selectedDoc.cellData?.[r * oldc + c] ?? '')
-                                nd.push('')
-                              }
-                              const oldCW = selectedDoc.colWidths ?? equalArr(oldc)
-                              const newFrac = 1 / nc
-                              const newCW  = [...oldCW.map(w => w * (1 - newFrac)), newFrac]
-                              updateDocElement(selectedDoc.id, { cols: nc, cellData: nd, colWidths: newCW })
-                            }}
-                            style={{ flex:1, padding:'6px 0', borderRadius:7, fontSize:11, fontWeight:700, cursor:'pointer',
-                              border:'1.5px solid #e0e0e0', background:'#fff', color:'#1d1d1f',
-                              display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
-                            <span style={{ fontSize:13 }}>＋</span> Column
-                          </button>
-                          <button
-                            disabled={(selectedDoc.rows ?? 3) <= 1}
-                            onClick={() => {
-                              const nr  = (selectedDoc.rows ?? 3) - 1
-                              const nc  = selectedDoc.cols ?? 3
-                              const nd  = Array(nr * nc).fill('').map((_,i) => selectedDoc.cellData?.[i] ?? '')
-                              updateDocElement(selectedDoc.id, { rows: nr, cellData: nd, rowHeights: equalArr(nr) })
-                            }}
-                            style={{ width:32, padding:'6px 0', borderRadius:7, fontSize:13, fontWeight:700, cursor:'pointer',
-                              border:'1.5px solid rgba(226,75,74,.3)', background:'rgba(226,75,74,.04)', color:'#E24B4A',
-                              display:'flex', alignItems:'center', justifyContent:'center' }}>
-                            −R
-                          </button>
-                          <button
-                            disabled={(selectedDoc.cols ?? 3) <= 1}
-                            onClick={() => {
-                              const nr   = selectedDoc.rows ?? 3
-                              const nc   = (selectedDoc.cols ?? 3) - 1
-                              const oldc = nc + 1
-                              const nd: string[] = []
-                              for (let r = 0; r < nr; r++) {
-                                for (let c = 0; c < nc; c++) nd.push(selectedDoc.cellData?.[r * oldc + c] ?? '')
-                              }
-                              updateDocElement(selectedDoc.id, { cols: nc, cellData: nd, colWidths: equalArr(nc) })
-                            }}
-                            style={{ width:32, padding:'6px 0', borderRadius:7, fontSize:13, fontWeight:700, cursor:'pointer',
-                              border:'1.5px solid rgba(226,75,74,.3)', background:'rgba(226,75,74,.04)', color:'#E24B4A',
-                              display:'flex', alignItems:'center', justifyContent:'center' }}>
-                            −C
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Column widths — visual proportional bar */}
-                      <div className="prop-row">
-                        <div className="prop-label">Column Widths (%)</div>
-                        <div style={{ display:'flex', height:44, border:'1px solid #d0d0d0', borderRadius:7, overflow:'hidden' }}>
-                          {Array.from({ length: selectedDoc.cols ?? 3 }).map((_, c) => {
-                            const cols = selectedDoc.cols ?? 3
-                            const frac = (selectedDoc.colWidths ?? equalArr(cols))[c] ?? 1/cols
-                            return (
-                              <div key={c} style={{
-                                flex: frac, display:'flex', flexDirection:'column', alignItems:'center',
-                                justifyContent:'center', gap:1,
-                                borderRight: c < cols-1 ? '1px solid #d0d0d0' : 'none',
-                                background: c % 2 === 0 ? '#f5f5f7' : '#fff',
-                                padding:'2px 1px', minWidth:0, overflow:'hidden',
-                              }}>
-                                <span style={{ fontSize:8, color:'rgba(0,0,0,.4)', lineHeight:1, userSelect:'none' }}>C{c+1}</span>
-                                <input
-                                  type="number" min={5} max={95}
-                                  value={Math.round(frac * 100)}
-                                  onChange={e => {
-                                    const cols2 = selectedDoc.cols ?? 3
-                                    const cur = selectedDoc.colWidths ?? equalArr(cols2)
-                                    const nv  = Math.max(5, Math.min(95, parseInt(e.target.value)||5)) / 100
-                                    updateDocElement(selectedDoc.id, { colWidths: normalizeFractions(cur, c, nv) })
-                                  }}
-                                  style={{ width:'100%', fontSize:10, fontWeight:700, textAlign:'center',
-                                    border:'none', background:'transparent', outline:'none', padding:0, color:'#1d1d1f', cursor:'text' }}
-                                />
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Row heights — list with mini progress bar */}
-                      <div className="prop-row">
-                        <div className="prop-label">Row Heights (%)</div>
-                        <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                          {Array.from({ length: selectedDoc.rows ?? 3 }).map((_, r) => {
-                            const rows = selectedDoc.rows ?? 3
-                            const frac = (selectedDoc.rowHeights ?? equalArr(rows))[r] ?? 1/rows
-                            const pct  = Math.round(frac * 100)
-                            return (
-                              <div key={r} style={{ display:'flex', alignItems:'center', gap:5 }}>
-                                <span style={{ fontSize:9, color:'rgba(0,0,0,.4)', width:18, flexShrink:0, textAlign:'right' }}>R{r+1}</span>
-                                <div style={{ flex:1, height:18, background:'#f0f0f5', borderRadius:4, overflow:'hidden', border:'1px solid #e0e0e0', cursor:'default' }}>
-                                  <div style={{ width:`${pct}%`, height:'100%', background:'rgba(99,102,241,.18)', borderRight:'2px solid #6366f1', transition:'width .12s' }} />
-                                </div>
-                                <input
-                                  type="number" min={5} max={95} value={pct}
-                                  onChange={e => {
-                                    const rows2 = selectedDoc.rows ?? 3
-                                    const cur   = selectedDoc.rowHeights ?? equalArr(rows2)
-                                    const nv    = Math.max(5, Math.min(95, parseInt(e.target.value)||5)) / 100
-                                    updateDocElement(selectedDoc.id, { rowHeights: normalizeFractions(cur, r, nv) })
-                                  }}
-                                  style={{ width:36, padding:'2px 4px', border:'1px solid #e0e0e0', borderRadius:5, fontSize:10, textAlign:'right', outline:'none', flexShrink:0 }}
-                                />
-                                <span style={{ fontSize:9, color:'rgba(0,0,0,.35)', flexShrink:0 }}>%</span>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                      <div className="prop-row">
-                        <div className="prop-label">Style</div>
-                        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-                          <label className="prop-toggle">
-                            <input type="checkbox" checked={selectedDoc.tableHasHeader ?? true}
-                              onChange={e => updateDocElement(selectedDoc.id, { tableHasHeader: e.target.checked })} />
-                            <span style={{ fontSize:11 }}>Header row</span>
-                          </label>
-                          <input type="color" value={selectedDoc.tableBorderColor ?? '#374151'}
-                            onChange={e => updateDocElement(selectedDoc.id, { tableBorderColor: e.target.value })}
-                            title="Border color"
-                            style={{ width:26, height:24, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
-                          {(selectedDoc.tableHasHeader ?? true) && (
-                            <input type="color" value={selectedDoc.tableBgHeader ?? '#e5e7eb'}
-                              onChange={e => updateDocElement(selectedDoc.id, { tableBgHeader: e.target.value })}
-                              title="Header background"
-                              style={{ width:26, height:24, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
-                          )}
-                        </div>
-                      </div>
-                      <div className="prop-row">
-                        <div className="prop-label">Cell Data</div>
-                        <div style={{ display:'grid', gridTemplateColumns:`repeat(${selectedDoc.cols ?? 3}, 1fr)`, gap:3 }}>
-                          {Array.from({ length: (selectedDoc.rows ?? 3) * (selectedDoc.cols ?? 3) }).map((_, i) => {
-                            const r = Math.floor(i / (selectedDoc.cols ?? 3))
-                            const c = i % (selectedDoc.cols ?? 3)
-                            return (
-                              <input key={i} value={selectedDoc.cellData?.[i] ?? ''}
-                                placeholder={selectedDoc.tableHasHeader && r === 0 ? `H${c+1}` : `R${r+1}C${c+1}`}
-                                onChange={e => {
-                                  const nd = [...(selectedDoc.cellData ?? [])]
-                                  nd[i] = e.target.value
-                                  updateDocElement(selectedDoc.id, { cellData: nd })
-                                }}
-                                style={{ padding:'3px 4px', border:'1px solid #e0e0e0', borderRadius:4, fontSize:10,
-                                  fontWeight: selectedDoc.tableHasHeader && r === 0 ? 700 : 400,
-                                  outline:'none', width:'100%', minWidth:0 }} />
-                            )
-                          })}
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {selectedDoc.type === 'image' && (
-                    <div className="prop-row">
-                      <div className="prop-label">Image</div>
-                      <div style={{ marginBottom:8, fontSize:11, color:'rgba(0,0,0,.5)', wordBreak:'break-all' }}>{selectedDoc.imageName || 'No image'}</div>
-                      <button className="tb-btn" style={{ width:'100%', justifyContent:'center' }}
-                        onClick={() => imageFileRef.current?.click()}>
-                        🖼 Replace Image
-                      </button>
-                    </div>
-                  )}
-
-                  <div className="prop-divider" />
-                  <div className="prop-label">Position &amp; Size (0–1)</div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-                    {(['x','y','w','h'] as const).map(k => (
-                      <div key={k}>
-                        <div className="prop-label">{k.toUpperCase()}</div>
-                        <input className="prop-input" type="number" step="0.005" min={0} max={1}
-                          value={selectedDoc[k].toFixed(4)}
-                          onChange={e => updateDocElement(selectedDoc.id, { [k]: parseFloat(e.target.value)||0 })} />
-                      </div>
-                    ))}
-                  </div>
-                  <button className="prop-del-btn" onClick={() => deleteDocElement(selectedDoc.id)}>Delete element</button>
-                </div>
-              ) : selectedField ? (
-                <div key={selectedId!}>
-                  <div className="prop-type-chip">
-                    {FIELD_DEFS.find(d=>d.type===selectedField.type)?.icon}&nbsp;
-                    {FIELD_DEFS.find(d=>d.type===selectedField.type)?.label}
-                  </div>
-
-                  <div className="prop-row">
-                    <div className="prop-label">Label</div>
-                    <input className="prop-input" placeholder="e.g. First Name"
-                      defaultValue={selectedField.label}
-                      onChange={e => updateField(selectedField.id, { label: e.target.value })} />
-                  </div>
-
-                  {/* Label styling */}
-                  <div className="prop-row">
-                    <div className="prop-label">Label Style</div>
-                    <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                      <input type="color" value={selectedField.labelColor ?? '#374151'}
-                        onChange={e => updateField(selectedField.id, { labelColor: e.target.value })}
-                        title="Label color"
-                        style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
-                      <input type="number" min={7} max={24} step={1}
-                        value={selectedField.labelFontSize ?? 9}
-                        onChange={e => updateField(selectedField.id, { labelFontSize: parseInt(e.target.value)||9 })}
-                        title="Font size"
-                        style={{ width:48, padding:'5px 6px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:11, color:'#1d1d1f', outline:'none', fontFamily:'inherit' }} />
-                      <button onClick={() => updateField(selectedField.id, { labelBold: !selectedField.labelBold })}
-                        title="Bold"
-                        style={{ width:30, height:26, borderRadius:6, fontSize:12, fontWeight:800, cursor:'pointer',
-                          border: selectedField.labelBold ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
-                          background: selectedField.labelBold ? '#f0f0ff' : '#fff',
-                          color: selectedField.labelBold ? '#6366f1' : 'rgba(0,0,0,.5)' }}>B</button>
+            <div style={{ flex:1, overflowY:'auto', padding:'12px 14px 8px', display:'flex', flexDirection:'column', gap:10 }}>
+                {chatHistory.length === 0 && (
+                  <div style={{ textAlign:'center', padding:'24px 12px', color:'#9ca3af' }}>
+                    <div style={{ fontSize:28, marginBottom:8 }}>✨</div>
+                    <div style={{ fontWeight:600, color:'#6b7280', marginBottom:5 }}>Build with AI</div>
+                    <div style={{ fontSize:11, lineHeight:1.6 }}>
+                      Try: &quot;Create a job application form&quot;<br/>
+                      or &quot;Add a contact form with name, email&quot;
                     </div>
                   </div>
-
-                  {selectedField.type !== 'checkbox' && selectedField.type !== 'dropdown' && selectedField.type !== 'signature' && selectedField.type !== 'radio' && selectedField.type !== 'checkgroup' && (
-                    <div className="prop-row">
-                      <div className="prop-label">Placeholder Text</div>
-                      <input className="prop-input"
-                        placeholder={selectedField.type==='date'?'MM/DD/YYYY':selectedField.type==='number'?'0':'Enter hint text…'}
-                        defaultValue={selectedField.placeholder}
-                        onChange={e => updateField(selectedField.id, { placeholder: e.target.value })} />
+                )}
+                {chatHistory.map((msg, i) => (
+                  <div key={i} style={{
+                    display:'flex', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row', gap:7, alignItems:'flex-end',
+                  }}>
+                    <div style={{
+                      width:24, height:24, borderRadius:'50%', flexShrink:0,
+                      background: msg.role === 'user' ? '#4f46e5' : '#f3f4f6',
+                      display:'flex', alignItems:'center', justifyContent:'center', fontSize:11,
+                    }}>
+                      {msg.role === 'user' ? '👤' : '✨'}
                     </div>
-                  )}
-
-                  {/* Field text font + color — shown for text-input types only */}
-                  {selectedField.type !== 'checkbox' && selectedField.type !== 'signature' && selectedField.type !== 'radio' && selectedField.type !== 'checkgroup' && (
-                    <>
-                      <div className="prop-row">
-                        <div className="prop-label">Font Family</div>
-                        <div style={{ display:'flex', gap:5 }}>
-                          {(['helvetica','times','courier'] as const).map(f => (
-                            <button key={f} onClick={() => updateField(selectedField.id, { fieldFont: f })}
-                              style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:10, fontWeight:700, cursor:'pointer',
-                                fontFamily: f === 'times' ? '"Times New Roman",serif' : f === 'courier' ? '"Courier New",monospace' : 'inherit',
-                                border: (selectedField.fieldFont ?? 'helvetica') === f ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
-                                background: (selectedField.fieldFont ?? 'helvetica') === f ? '#f0f0ff' : '#fff',
-                                color: (selectedField.fieldFont ?? 'helvetica') === f ? '#6366f1' : 'rgba(0,0,0,.55)' }}>
-                              {f === 'helvetica' ? 'Helvetica' : f === 'times' ? 'Times' : 'Courier'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="prop-row">
-                        <div className="prop-label">Font Size</div>
-                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                          <input type="number" min={6} max={36} value={selectedField.fieldFontSize ?? 10}
-                            onChange={e => updateField(selectedField.id, { fieldFontSize: Number(e.target.value) })}
-                            style={{ width:60, padding:'5px 8px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:12, color:'#1d1d1f', outline:'none' }} />
-                          <span style={{ fontSize:11, color:'rgba(0,0,0,.4)' }}>px</span>
-                        </div>
-                      </div>
-                      <div className="prop-row">
-                        <div className="prop-label">Text Color</div>
-                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                          <input type="color" value={selectedField.fieldTextColor ?? '#111111'}
-                            onChange={e => updateField(selectedField.id, { fieldTextColor: e.target.value })}
-                            style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
-                          <span style={{ fontSize:11, color:'rgba(0,0,0,.4)' }}>Input text colour</span>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="prop-row">
-                    <label className="prop-toggle">
-                      <input type="checkbox" checked={selectedField.required}
-                        onChange={e => updateField(selectedField.id, { required: e.target.checked })} />
-                      <span>Required field</span>
-                    </label>
+                    <div style={{
+                      maxWidth:'82%', padding:'7px 10px', borderRadius: msg.role === 'user' ? '12px 3px 12px 12px' : '3px 12px 12px 12px',
+                      background: msg.role === 'user' ? '#4f46e5' : '#f9fafb',
+                      color: msg.role === 'user' ? '#fff' : '#111827',
+                      fontSize:11, lineHeight:1.55, border: msg.role === 'assistant' ? '1px solid #e5e7eb' : 'none',
+                      whiteSpace:'pre-wrap', wordBreak:'break-word',
+                    }}>
+                      {msg.content}
+                    </div>
                   </div>
-
-                  <div className="prop-row">
-                    <div className="prop-label">Label Position</div>
-                    <div style={{ display:'flex', gap:6 }}>
-                      {(['top','left','below'] as const).map(pos => (
-                        <button key={pos} onClick={() => updateField(selectedField.id, { labelPosition: pos })}
-                          style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer',
-                            border: selectedField.labelPosition === pos ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
-                            background: selectedField.labelPosition === pos ? '#f0f0ff' : '#fff',
-                            color: selectedField.labelPosition === pos ? '#6366f1' : 'rgba(0,0,0,.5)' }}>
-                          {pos === 'top' ? '↑ Top' : pos === 'left' ? '← Left' : '↓ Below'}
-                        </button>
+                ))}
+                {chatLoading && (
+                  <div style={{ display:'flex', gap:7, alignItems:'flex-end' }}>
+                    <div style={{ width:24, height:24, borderRadius:'50%', background:'#f3f4f6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11 }}>✨</div>
+                    <div style={{ padding:'8px 11px', borderRadius:'3px 12px 12px 12px', background:'#f9fafb', border:'1px solid #e5e7eb', display:'flex', gap:4 }}>
+                      {[0,1,2].map(d => (
+                        <div key={d} style={{
+                          width:5, height:5, borderRadius:'50%', background:'#9ca3af',
+                          animation:'bounce 1.2s ease-in-out infinite', animationDelay:`${d*0.2}s`,
+                        }} />
                       ))}
                     </div>
                   </div>
-
-                  {/* ── Signature-specific settings ── */}
-                  {selectedField.type === 'signature' && (
-                    <>
-                      <div className="prop-divider" />
-                      <div style={{ fontSize:10, fontWeight:700, color:'#6366f1', letterSpacing:'0.08em',
-                        textTransform:'uppercase', marginBottom:10 }}>✍ Signature Settings</div>
-
-                      <div className="prop-row">
-                        <div className="prop-label">Prompt Text</div>
-                        <input className="prop-input"
-                          defaultValue={selectedField.sigPromptText ?? 'Sign here'}
-                          placeholder="e.g. Sign here"
-                          onChange={e => updateField(selectedField.id, { sigPromptText: e.target.value })} />
-                      </div>
-
-                      <div className="prop-row">
-                        <div className="prop-label">Line Color</div>
-                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                          <input type="color" value={selectedField.sigLineColor ?? '#374151'}
-                            onChange={e => updateField(selectedField.id, { sigLineColor: e.target.value })}
-                            style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
-                          <span style={{ fontSize:11, color:'rgba(0,0,0,.4)' }}>{selectedField.sigLineColor ?? '#374151'}</span>
-                        </div>
-                      </div>
-
-                      <div className="prop-row">
-                        <div className="prop-label">Line Style</div>
-                        <div style={{ display:'flex', gap:6 }}>
-                          {(['solid','dash'] as const).map(ls => (
-                            <button key={ls} onClick={() => updateField(selectedField.id, { sigLineStyle: ls })}
-                              style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer',
-                                border: (selectedField.sigLineStyle ?? 'solid') === ls ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
-                                background: (selectedField.sigLineStyle ?? 'solid') === ls ? '#f0f0ff' : '#fff',
-                                color: (selectedField.sigLineStyle ?? 'solid') === ls ? '#6366f1' : 'rgba(0,0,0,.5)' }}>
-                              {ls === 'solid' ? '— Solid' : '╌ Dash'}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="prop-row">
-                        <label className="prop-toggle">
-                          <input type="checkbox" checked={selectedField.sigShowIcon ?? true}
-                            onChange={e => updateField(selectedField.id, { sigShowIcon: e.target.checked })} />
-                          <span>Show ✍ icon &amp; prompt</span>
-                        </label>
-                      </div>
-                    </>
-                  )}
-
-                  {selectedField.type !== 'checkbox' && selectedField.type !== 'signature' && selectedField.type !== 'radio' && selectedField.type !== 'checkgroup' && (
-                    <div className="prop-row">
-                      <div className="prop-label">Border Style</div>
-                      <div style={{ display:'flex', gap:6 }}>
-                        {(['box','dash','underline'] as const).map(bs => (
-                          <button key={bs} onClick={() => updateField(selectedField.id, { borderStyle: bs })}
-                            style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer',
-                              border: selectedField.borderStyle === bs ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
-                              background: selectedField.borderStyle === bs ? '#f0f0ff' : '#fff',
-                              color: selectedField.borderStyle === bs ? '#6366f1' : 'rgba(0,0,0,.5)' }}>
-                            {bs === 'box' ? '▭ Box' : bs === 'dash' ? '╌ Dash' : '_ Line'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {(selectedField.type === 'dropdown' || selectedField.type === 'radio' || selectedField.type === 'checkgroup') && (
-                    <>
-                      <div className="prop-divider" />
-
-                      {/* Layout toggle — only for radio / checkgroup */}
-                      {(selectedField.type === 'radio' || selectedField.type === 'checkgroup') && (
-                        <div className="prop-row">
-                          <div className="prop-label">Layout</div>
-                          <div style={{ display:'flex', gap:6 }}>
-                            {(['vertical','horizontal'] as const).map(lay => (
-                              <button key={lay} onClick={() => updateField(selectedField.id, { radioLayout: lay })}
-                                style={{ flex:1, padding:'5px 0', borderRadius:6, fontSize:11, fontWeight:700, cursor:'pointer',
-                                  border: (selectedField.radioLayout ?? 'vertical') === lay ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
-                                  background: (selectedField.radioLayout ?? 'vertical') === lay ? '#f0f0ff' : '#fff',
-                                  color: (selectedField.radioLayout ?? 'vertical') === lay ? '#6366f1' : 'rgba(0,0,0,.5)' }}>
-                                {lay === 'vertical' ? '↕ Vertical' : '↔ Horizontal'}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="prop-label">
-                        {selectedField.type === 'radio' ? 'Radio Options (pick one)' : selectedField.type === 'checkgroup' ? 'Checkbox Options (pick many)' : 'Options'}
-                      </div>
-                      {selectedField.options.map((opt, i) => (
-                        <div key={i} className="option-row">
-                          <span style={{ fontSize:10, color:'rgba(0,0,0,.3)', flexShrink:0, marginRight:2 }}>
-                            {selectedField.type === 'radio' ? '◉' : selectedField.type === 'checkgroup' ? '☑' : `${i+1}.`}
-                          </span>
-                          <input value={opt} placeholder={`Option ${i+1}`}
-                            onChange={e => {
-                              const o = [...selectedField.options]; o[i] = e.target.value
-                              updateField(selectedField.id, { options: o })
-                            }} />
-                          <button className="option-del"
-                            onClick={() => updateField(selectedField.id, { options: selectedField.options.filter((_,j)=>j!==i) })}>✕</button>
-                        </div>
-                      ))}
-                      <button className="add-opt-btn"
-                        onClick={() => updateField(selectedField.id, { options: [...selectedField.options,''] })}>
-                        + Add option
-                      </button>
-                    </>
-                  )}
-
-                  <div className="prop-divider" />
-                  <div className="prop-label">Position &amp; Size (0–1)</div>
-                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
-                    {(['x','y','w','h'] as const).map(k => (
-                      <div key={k}>
-                        <div className="prop-label">{k.toUpperCase()}</div>
-                        <input className="prop-input" type="number" step="0.005" min={0} max={1}
-                          value={selectedField[k].toFixed(4)}
-                          onChange={e => updateField(selectedField.id, { [k]: parseFloat(e.target.value)||0 })} />
-                      </div>
-                    ))}
-                  </div>
-
-                  <button className="prop-del-btn" onClick={() => deleteField(selectedField.id)}>Delete field</button>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+              {chatHistory.length === 0 && (
+                <div style={{ padding:'0 12px 8px', display:'flex', flexWrap:'wrap', gap:5 }}>
+                  {['Job application','Contact form','Survey','Invoice','Registration'].map(s => (
+                    <button key={s} onClick={() => { setChatInput(s); chatInputRef.current?.focus() }} style={{
+                      padding:'4px 8px', borderRadius:20, border:'1px solid #e5e7eb',
+                      background:'#f9fafb', color:'#4f46e5', fontSize:10, cursor:'pointer',
+                      fontWeight:600, whiteSpace:'nowrap',
+                    }}>{s}</button>
+                  ))}
                 </div>
-              ) : null}
-            </div>
+              )}
+              <div style={{ padding:'8px 12px 12px', borderTop:'1px solid #e5e7eb', display:'flex', gap:6, alignItems:'flex-end' }}>
+                <textarea
+                  ref={chatInputRef}
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat() } }}
+                  placeholder="Describe the form you need…"
+                  rows={2}
+                  style={{
+                    flex:1, resize:'none', border:'1.5px solid #e5e7eb', borderRadius:10,
+                    padding:'7px 9px', fontSize:12, outline:'none', lineHeight:1.45,
+                    fontFamily:'inherit', transition:'border-color .15s',
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#7c3aed'}
+                  onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+                  disabled={chatLoading}
+                />
+                <button
+                  onClick={sendChat}
+                  disabled={!chatInput.trim() || chatLoading}
+                  style={{
+                    width:34, height:34, borderRadius:9, border:'none', cursor:'pointer',
+                    background: chatInput.trim() && !chatLoading ? '#7c3aed' : '#e5e7eb',
+                    color: chatInput.trim() && !chatLoading ? '#fff' : '#9ca3af',
+                    display:'flex', alignItems:'center', justifyContent:'center', fontSize:15,
+                    transition:'background .15s', flexShrink:0,
+                  }}
+                >➤</button>
+              </div>
+              <style>{`@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }`}</style>
           </div>
+          )}
         </div>
       </div>
 
       {/* ── Table context menu ───────────────────────────────────────────── */}
-      {/* ── AI Chat Panel ───────────────────────────────────────────────── */}
-      {chatOpen && (
-        <div style={{
-          position:'fixed', right:0, top:0, bottom:0, width:360, zIndex:10000,
-          background:'#fff', boxShadow:'-4px 0 28px rgba(0,0,0,.15)',
-          display:'flex', flexDirection:'column', fontFamily:'inherit',
-        }}>
-          {/* Header */}
-          <div style={{
-            padding:'14px 16px', borderBottom:'1px solid #e5e7eb',
-            background:'linear-gradient(135deg,#7c3aed,#4f46e5)',
-            display:'flex', alignItems:'center', justifyContent:'space-between',
-          }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <span style={{ fontSize:20 }}>✨</span>
-              <div>
-                <div style={{ color:'#fff', fontWeight:700, fontSize:14 }}>AI Form Builder</div>
-                <div style={{ color:'rgba(255,255,255,.7)', fontSize:11 }}>Describe your form and I'll build it</div>
-              </div>
-            </div>
-            <button onClick={() => setChatOpen(false)} style={{
-              background:'rgba(255,255,255,.2)', border:'none', borderRadius:6,
-              color:'#fff', fontSize:16, cursor:'pointer', width:28, height:28,
-              display:'flex', alignItems:'center', justifyContent:'center',
-            }}>×</button>
-          </div>
-
-          {/* Messages */}
-          <div style={{ flex:1, overflowY:'auto', padding:'14px 14px 8px', display:'flex', flexDirection:'column', gap:10 }}>
-            {chatHistory.length === 0 && (
-              <div style={{ textAlign:'center', padding:'32px 16px', color:'#9ca3af' }}>
-                <div style={{ fontSize:32, marginBottom:10 }}>✨</div>
-                <div style={{ fontWeight:600, color:'#6b7280', marginBottom:6 }}>Start building your form</div>
-                <div style={{ fontSize:12, lineHeight:1.5 }}>
-                  Try: <em>"Create a job application form"</em><br/>
-                  or <em>"Add a survey with 5 rating options"</em><br/>
-                  or <em>"Make a contact form with name, email, message"</em>
-                </div>
-              </div>
-            )}
-            {chatHistory.map((msg, i) => (
-              <div key={i} style={{
-                display:'flex', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row', gap:8, alignItems:'flex-end',
-              }}>
-                <div style={{
-                  width:28, height:28, borderRadius:'50%', flexShrink:0,
-                  background: msg.role === 'user' ? '#4f46e5' : '#f3f4f6',
-                  display:'flex', alignItems:'center', justifyContent:'center', fontSize:13,
-                }}>
-                  {msg.role === 'user' ? '👤' : '✨'}
-                </div>
-                <div style={{
-                  maxWidth:'78%', padding:'9px 13px', borderRadius: msg.role === 'user' ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
-                  background: msg.role === 'user' ? '#4f46e5' : '#f9fafb',
-                  color: msg.role === 'user' ? '#fff' : '#111827',
-                  fontSize:13, lineHeight:1.55, border: msg.role === 'assistant' ? '1px solid #e5e7eb' : 'none',
-                  whiteSpace:'pre-wrap', wordBreak:'break-word',
-                }}>
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-            {chatLoading && (
-              <div style={{ display:'flex', gap:8, alignItems:'flex-end' }}>
-                <div style={{ width:28, height:28, borderRadius:'50%', background:'#f3f4f6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13 }}>✨</div>
-                <div style={{ padding:'10px 14px', borderRadius:'4px 16px 16px 16px', background:'#f9fafb', border:'1px solid #e5e7eb', display:'flex', gap:5 }}>
-                  {[0,1,2].map(d => (
-                    <div key={d} style={{
-                      width:7, height:7, borderRadius:'50%', background:'#9ca3af',
-                      animation:'bounce 1.2s ease-in-out infinite', animationDelay:`${d*0.2}s`,
-                    }} />
-                  ))}
-                </div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Suggestions */}
-          {chatHistory.length === 0 && (
-            <div style={{ padding:'0 14px 8px', display:'flex', flexWrap:'wrap', gap:6 }}>
-              {['Job application form','Contact form','Survey form','Invoice form','Registration form'].map(s => (
-                <button key={s} onClick={() => { setChatInput(s); chatInputRef.current?.focus() }} style={{
-                  padding:'5px 10px', borderRadius:20, border:'1px solid #e5e7eb',
-                  background:'#f9fafb', color:'#4f46e5', fontSize:11, cursor:'pointer',
-                  fontWeight:600, whiteSpace:'nowrap',
-                }}>{s}</button>
-              ))}
-            </div>
-          )}
-
-          {/* Input */}
-          <div style={{ padding:'10px 14px 14px', borderTop:'1px solid #e5e7eb', display:'flex', gap:8, alignItems:'flex-end' }}>
-            <textarea
-              ref={chatInputRef}
-              value={chatInput}
-              onChange={e => setChatInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat() } }}
-              placeholder="Describe the form you need…"
-              rows={2}
-              style={{
-                flex:1, resize:'none', border:'1.5px solid #e5e7eb', borderRadius:10,
-                padding:'9px 12px', fontSize:13, outline:'none', lineHeight:1.45,
-                fontFamily:'inherit', transition:'border-color .15s',
-              }}
-              onFocus={e => e.target.style.borderColor = '#7c3aed'}
-              onBlur={e => e.target.style.borderColor = '#e5e7eb'}
-              disabled={chatLoading}
-            />
-            <button
-              onClick={sendChat}
-              disabled={!chatInput.trim() || chatLoading}
-              style={{
-                width:40, height:40, borderRadius:10, border:'none', cursor:'pointer',
-                background: chatInput.trim() && !chatLoading ? '#7c3aed' : '#e5e7eb',
-                color: chatInput.trim() && !chatLoading ? '#fff' : '#9ca3af',
-                display:'flex', alignItems:'center', justifyContent:'center', fontSize:18,
-                transition:'background .15s', flexShrink:0,
-              }}
-            >➤</button>
-          </div>
-
-          <style>{`@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }`}</style>
-        </div>
-      )}
-
       {tableCtxMenu && (() => {
         const de = docElements.find(d => d.id === tableCtxMenu.docId)
         if (!de) return null

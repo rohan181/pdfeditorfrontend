@@ -27,7 +27,7 @@ const TOOLS = [
   { name:'PDF Editor',        tag:'LIVE', href:'/pdf-editor',         cat:'Editor'   },
   { name:'PDF Watermarker',   tag:'LIVE', href:'/pdf-watermark',      cat:'Protect'  },
   { name:'PDF Password Lock', tag:'LIVE', href:'/pdf-password-lock', cat:'Security' },
-  { name:'PDF OCR Scanner',   tag:'BETA', href:null, cat:'Extract'  },
+  { name:'PDF OCR Scanner',   tag:'LIVE', href:'/pdf-ocr', cat:'AI'  },
   { name:'PDF Form Builder',  tag:'LIVE', href:'/pdf-form-builder', cat:'Forms'    },
   { name:'PDF Page Manager',  tag:'LIVE', href:'/pdf-page-manager', cat:'Tools'    },
   { name:'PDF → Word',        tag:'SOON', href:null, cat:'Convert'  },
@@ -35,11 +35,12 @@ const TOOLS = [
   { name:'PDF Compressor',    tag:'LIVE', href:'/pdf-compressor', cat:'Optimize' },
   { name:'PDF Merger',        tag:'LIVE', href:'/pdf-merger', cat:'Tools'    },
   { name:'PDF Splitter',      tag:'LIVE', href:'/pdf-splitter', cat:'Tools'    },
-  { name:'PDF E-Signer',      tag:'SOON', href:null, cat:'Sign'     },
+  { name:'PDF E-Signer',      tag:'LIVE', href:'/pdf-signer', cat:'Sign'     },
   { name:'PDF Translator',    tag:'SOON', href:null, cat:'Language' },
   { name:'PDF to Images',     tag:'LIVE', href:'/pdf-to-images', cat:'Export'   },
+  { name:'Image to PDF',      tag:'LIVE', href:'/image-to-pdf',  cat:'Convert'  },
   { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor', cat:'Security' },
-  { name:'PDF Summarizer AI', tag:'SOON', href:null, cat:'AI'       },
+  { name:'PDF Summarizer AI', tag:'LIVE', href:'/pdf-summarizer', cat:'AI' },
 ]
 
 // ─── global CSS ──────────────────────────────────────────────────────────────
