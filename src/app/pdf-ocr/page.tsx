@@ -115,11 +115,13 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .page-wrap{position:relative;display:inline-block;box-shadow:0 4px 24px rgba(0,0,0,.18);border-radius:2px;line-height:0}
 .page-wrap canvas{display:block;max-width:100%}
 
-/* PDF.js text selection layer */
-.textLayer{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;line-height:1;z-index:2}
-.textLayer span{pointer-events:auto;user-select:text;-webkit-user-select:text;cursor:text}
-.textLayer ::selection{background:rgba(37,99,235,.25);color:transparent}
-.textLayer ::-moz-selection{background:rgba(37,99,235,.25);color:transparent}
+/* pdfjs-dist v3 text selection layer */
+.textLayer{position:absolute;left:0;top:0;overflow:hidden;line-height:1;z-index:2;
+  -webkit-text-size-adjust:none;text-size-adjust:none;forced-color-adjust:none;transform-origin:0 0}
+.textLayer :is(span,br){color:transparent;position:absolute;white-space:pre;cursor:text;
+  transform-origin:0% 0%;user-select:text;-webkit-user-select:text}
+.textLayer ::selection{background:rgba(37,99,235,.3);color:transparent}
+.textLayer ::-moz-selection{background:rgba(37,99,235,.3);color:transparent}
 
 /* Edit mode */
 .edit-overlay{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -283,7 +285,22 @@ export default function PDFOCRPage() {
         renderTaskRef.current = null
         if (!alive) return
 
-        // View mode uses iframe — no text layer needed on canvas
+        // Build selectable text layer using pdfjs v3 renderTextLayer
+        const tl = textLayerRef.current
+        if (!tl || editMode) return
+        tl.innerHTML = ''
+        tl.style.width  = vp.width  + 'px'
+        tl.style.height = vp.height + 'px'
+        const textContent = await pg.getTextContent()
+        if (!alive) return
+        try {
+          const task = (pdfjsLib as any).renderTextLayer({
+            textContentSource: textContent,
+            container: tl,
+            viewport: vp,
+          })
+          if (task?.promise) await task.promise
+        } catch { /* pdf has no text layer */ }
       } catch (e: any) {
         if (e?.name !== 'RenderingCancelledException') console.warn(e)
       }
@@ -701,23 +718,17 @@ export default function PDFOCRPage() {
             )}
 
             <div className="split">
-              {/* Preview pane: iframe (view mode) or canvas+inputs (edit mode) */}
-              <div className="preview-pane" style={editMode ? {} : {padding:0,background:'#fff'}}>
-                {!editMode ? (
-                  /* Native iframe — browser PDF renderer gives free text selection & copy */
-                  pdfUrl && (
-                    <iframe
-                      key={pdfUrl}
-                      src={`${pdfUrl}#page=${selPage}`}
-                      style={{width:'100%',height:'100%',border:'none',display:'block'}}
-                      title="PDF Preview"
-                    />
-                  )
-                ) : (
-                  /* Edit mode: canvas (current page) + positioned inputs per text item */
-                  <div className="page-wrap">
-                    <canvas ref={previewCanvRef}/>
-                    <div ref={textLayerRef} style={{display:'none'}}/>
+              {/* Preview pane: canvas + text-selection layer (view) or canvas + edit inputs */}
+              <div className="preview-pane">
+                <div className="page-wrap">
+                  <canvas ref={previewCanvRef}/>
+
+                  {/* pdfjs text layer — transparent selectable spans, hidden in edit mode */}
+                  <div ref={textLayerRef} className="textLayer"
+                    style={{display: editMode ? 'none' : 'block', pointerEvents: editMode ? 'none' : 'auto'}}/>
+
+                  {/* Edit mode overlay — positioned inputs per text item */}
+                  {editMode && (
                     <div className="edit-overlay">
                       {editItems.map(item => {
                         const saved    = pageEdits[selPage]?.[item.idx]
@@ -744,8 +755,8 @@ export default function PDFOCRPage() {
                         )
                       })}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* Text pane */}
