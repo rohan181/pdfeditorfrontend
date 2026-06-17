@@ -192,6 +192,7 @@ export default function PDFOCRPage() {
   const [copied,     setCopied]     = useState(false)
   const [exporting,  setExporting]  = useState(false)
   const [editMode,   setEditMode]   = useState(false)
+  const [pdfUrl,     setPdfUrl]     = useState<string | null>(null)
   const [editItems,  setEditItems]  = useState<EditItem[]>([])
   const [pageEdits,  setPageEdits]  = useState<Record<number, Record<number,string>>>({})
 
@@ -210,7 +211,9 @@ export default function PDFOCRPage() {
   // ── Load PDF ──────────────────────────────────────────────────────────────
   const loadFile = useCallback(async (file: File) => {
     if (file.type !== 'application/pdf') return
-    setPdfFile(file); setPages([]); setSelPage(1); setLoading(true)
+    // Create blob URL for native iframe view (enables text selection)
+    setPdfUrl(prev => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(file) })
+    setPdfFile(file); setPages([]); setSelPage(1); setLoading(true); setEditMode(false)
     try {
       const pdfjsLib = await import('pdfjs-dist')
       pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -280,43 +283,7 @@ export default function PDFOCRPage() {
         renderTaskRef.current = null
         if (!alive) return
 
-        // Build selectable text layer using vp.convertToViewportPoint — most reliable approach
-        const tl = textLayerRef.current
-        if (!tl || editMode) return
-        const tc = await pg.getTextContent()
-        if (!alive) return
-
-        tl.innerHTML = ''
-
-        for (const item of (tc.items as any[])) {
-          if (!item.str) continue
-
-          // Use PDF.js viewport method for accurate PDF→canvas coordinate conversion
-          const [cx, cy] = vp.convertToViewportPoint(item.transform[4], item.transform[5])
-
-          // Font size = magnitude of the transform's scale component × viewport scale
-          const pdfFs = Math.hypot(item.transform[0], item.transform[1]) || Math.abs(item.transform[3])
-          const fs    = pdfFs * scale
-          if (fs < 2 || fs > 500) continue
-
-          const span        = document.createElement('span')
-          span.textContent  = item.str
-          span.style.cssText =
-            `position:absolute;` +
-            `left:${cx}px;` +
-            `top:${cy - fs}px;` +
-            `font-size:${fs}px;` +
-            `font-family:sans-serif;` +
-            `line-height:1.2;` +
-            `white-space:pre;` +
-            `color:transparent;` +
-            `cursor:text;` +
-            `transform-origin:0% 0%;` +
-            `pointer-events:auto;` +
-            `user-select:text;` +
-            `-webkit-user-select:text;`
-          tl.appendChild(span)
-        }
+        // View mode uses iframe — no text layer needed on canvas
       } catch (e: any) {
         if (e?.name !== 'RenderingCancelledException') console.warn(e)
       }
@@ -660,7 +627,7 @@ export default function PDFOCRPage() {
               </button>
             </>
           )}
-          <button className="nbtn sec" onClick={()=>{setPdfFile(null);setPages([]);pdfDocRef.current=null}}>← New</button>
+          <button className="nbtn sec" onClick={()=>{setPdfFile(null);setPages([]);pdfDocRef.current=null;setPdfUrl(p=>{if(p)URL.revokeObjectURL(p);return null})}}>← New</button>
         </nav>
 
         {/* Progress bar */}
@@ -734,19 +701,26 @@ export default function PDFOCRPage() {
             )}
 
             <div className="split">
-              {/* Page preview: view mode = canvas + text selection; edit mode = canvas + edit boxes */}
-              <div className="preview-pane">
-                <div className="page-wrap">
-                  <canvas ref={previewCanvRef}/>
-
-                  {/* Selectable text layer — always in DOM, hidden in edit mode */}
-                  <div ref={textLayerRef} className="textLayer" style={{display: editMode ? 'none' : 'block'}}/>
-
-                  {/* Edit mode: transparent inputs positioned over each text item */}
-                  {editMode && (
+              {/* Preview pane: iframe (view mode) or canvas+inputs (edit mode) */}
+              <div className="preview-pane" style={editMode ? {} : {padding:0,background:'#fff'}}>
+                {!editMode ? (
+                  /* Native iframe — browser PDF renderer gives free text selection & copy */
+                  pdfUrl && (
+                    <iframe
+                      key={pdfUrl}
+                      src={`${pdfUrl}#page=${selPage}`}
+                      style={{width:'100%',height:'100%',border:'none',display:'block'}}
+                      title="PDF Preview"
+                    />
+                  )
+                ) : (
+                  /* Edit mode: canvas (current page) + positioned inputs per text item */
+                  <div className="page-wrap">
+                    <canvas ref={previewCanvRef}/>
+                    <div ref={textLayerRef} style={{display:'none'}}/>
                     <div className="edit-overlay">
                       {editItems.map(item => {
-                        const saved   = pageEdits[selPage]?.[item.idx]
+                        const saved    = pageEdits[selPage]?.[item.idx]
                         const isEdited = saved !== undefined && saved !== item.str
                         return (
                           <input
@@ -755,32 +729,23 @@ export default function PDFOCRPage() {
                             className={`edit-token${isEdited ? ' is-edited' : ''}`}
                             defaultValue={saved ?? item.str}
                             title={`Click to edit: "${item.str}"`}
-                            style={{
-                              left:     item.x,
-                              top:      item.y,
-                              width:    item.w + 20,
-                              height:   item.fs * 1.4,
-                              fontSize: item.fs,
-                            }}
+                            style={{ left:item.x, top:item.y, width:item.w+20, height:item.fs*1.4, fontSize:item.fs }}
                             onFocus={e => e.target.select()}
                             onBlur={e => {
                               const val = e.target.value
                               setPageEdits(prev => {
                                 const pg = prev[selPage] ?? {}
-                                if (val === item.str) {
-                                  const { [item.idx]: _, ...rest } = pg
-                                  return { ...prev, [selPage]: rest }
-                                }
+                                if (val === item.str) { const {[item.idx]:_,...rest}=pg; return {...prev,[selPage]:rest} }
                                 return { ...prev, [selPage]: { ...pg, [item.idx]: val } }
                               })
                             }}
-                            onKeyDown={e => { if (e.key === 'Escape') e.currentTarget.blur() }}
+                            onKeyDown={e => { if (e.key==='Escape') e.currentTarget.blur() }}
                           />
                         )
                       })}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Text pane */}
