@@ -280,23 +280,36 @@ export default function PDFOCRPage() {
         renderTaskRef.current = null
         if (!alive) return
 
-        // Render selectable text layer on top
+        // Build selectable text layer manually — works across all pdfjs-dist versions
         const tl = textLayerRef.current
-        if (!tl) return
-        tl.style.width  = vp.width  + 'px'
-        tl.style.height = vp.height + 'px'
-        const textContent = await pg.getTextContent()
+        if (!tl || editMode) return   // skip in edit mode
+        const tc = await pg.getTextContent()
         if (!alive) return
 
-        // renderTextLayer works across pdfjs versions
-        if (typeof (pdfjsLib as any).renderTextLayer === 'function') {
-          ;(pdfjsLib as any).renderTextLayer({
-            textContentSource: textContent,
-            textContent,
-            container: tl,
-            viewport: vp,
-            textDivs: [],
-          })
+        const utilTx = (pdfjsLib as any).Util?.transform
+          ?? ((A: number[], B: number[]) => [
+              A[0]*B[0]+A[2]*B[1], A[1]*B[0]+A[3]*B[1],
+              A[0]*B[2]+A[2]*B[3], A[1]*B[2]+A[3]*B[3],
+              A[0]*B[4]+A[2]*B[5]+A[4], A[1]*B[4]+A[3]*B[5]+A[5],
+            ])
+
+        tl.innerHTML = ''
+        tl.style.width  = vp.width  + 'px'
+        tl.style.height = vp.height + 'px'
+
+        for (const item of (tc.items as any[])) {
+          if (!item.str) continue
+          const m  = utilTx(vp.transform, item.transform)
+          const fs = Math.hypot(m[0], m[1])
+          if (fs < 1 || fs > 300) continue
+          const span = document.createElement('span')
+          span.textContent = item.str + (item.hasEOL ? ' ' : '')
+          span.style.cssText =
+            `position:absolute;color:transparent;white-space:pre;cursor:text;` +
+            `transform-origin:0% 0%;user-select:text;-webkit-user-select:text;` +
+            `left:${m[4]}px;top:${m[5] - fs}px;font-size:${fs}px;` +
+            `font-family:sans-serif;line-height:1;`
+          tl.appendChild(span)
         }
       } catch (e: any) {
         if (e?.name !== 'RenderingCancelledException') console.warn(e)
@@ -309,7 +322,7 @@ export default function PDFOCRPage() {
         renderTaskRef.current = null
       }
     }
-  }, [selPage, selPageItem])
+  }, [selPage, selPageItem, editMode])
 
   // ── Load positioned text items for edit mode ──────────────────────────────
   const PREVIEW_SCALE = 1.4
@@ -720,8 +733,8 @@ export default function PDFOCRPage() {
                 <div className="page-wrap">
                   <canvas ref={previewCanvRef}/>
 
-                  {/* View mode: transparent selectable text layer */}
-                  {!editMode && <div ref={textLayerRef} className="textLayer"/>}
+                  {/* Selectable text layer — always in DOM, hidden in edit mode */}
+                  <div ref={textLayerRef} className="textLayer" style={{display: editMode ? 'none' : 'block'}}/>
 
                   {/* Edit mode: transparent inputs positioned over each text item */}
                   {editMode && (
