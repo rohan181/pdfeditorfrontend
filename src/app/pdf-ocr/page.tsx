@@ -116,10 +116,10 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .page-wrap canvas{display:block;max-width:100%}
 
 /* PDF.js text selection layer */
-.textLayer{position:absolute;inset:0;overflow:hidden;opacity:1;line-height:1;user-select:text;-webkit-user-select:text}
-.textLayer span,.textLayer br{color:transparent;position:absolute;white-space:pre;cursor:text;transform-origin:0% 0%}
-.textLayer ::selection{background:rgba(37,99,235,.22);color:transparent}
-.textLayer ::-moz-selection{background:rgba(37,99,235,.22);color:transparent}
+.textLayer{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;line-height:1;z-index:2}
+.textLayer span{pointer-events:auto;user-select:text;-webkit-user-select:text;cursor:text}
+.textLayer ::selection{background:rgba(37,99,235,.25);color:transparent}
+.textLayer ::-moz-selection{background:rgba(37,99,235,.25);color:transparent}
 
 /* Edit mode */
 .edit-overlay{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -280,35 +280,41 @@ export default function PDFOCRPage() {
         renderTaskRef.current = null
         if (!alive) return
 
-        // Build selectable text layer manually — works across all pdfjs-dist versions
+        // Build selectable text layer using vp.convertToViewportPoint — most reliable approach
         const tl = textLayerRef.current
-        if (!tl || editMode) return   // skip in edit mode
+        if (!tl || editMode) return
         const tc = await pg.getTextContent()
         if (!alive) return
 
-        const utilTx = (pdfjsLib as any).Util?.transform
-          ?? ((A: number[], B: number[]) => [
-              A[0]*B[0]+A[2]*B[1], A[1]*B[0]+A[3]*B[1],
-              A[0]*B[2]+A[2]*B[3], A[1]*B[2]+A[3]*B[3],
-              A[0]*B[4]+A[2]*B[5]+A[4], A[1]*B[4]+A[3]*B[5]+A[5],
-            ])
-
         tl.innerHTML = ''
-        tl.style.width  = vp.width  + 'px'
-        tl.style.height = vp.height + 'px'
 
         for (const item of (tc.items as any[])) {
           if (!item.str) continue
-          const m  = utilTx(vp.transform, item.transform)
-          const fs = Math.hypot(m[0], m[1])
-          if (fs < 1 || fs > 300) continue
-          const span = document.createElement('span')
-          span.textContent = item.str + (item.hasEOL ? ' ' : '')
+
+          // Use PDF.js viewport method for accurate PDF→canvas coordinate conversion
+          const [cx, cy] = vp.convertToViewportPoint(item.transform[4], item.transform[5])
+
+          // Font size = magnitude of the transform's scale component × viewport scale
+          const pdfFs = Math.hypot(item.transform[0], item.transform[1]) || Math.abs(item.transform[3])
+          const fs    = pdfFs * scale
+          if (fs < 2 || fs > 500) continue
+
+          const span        = document.createElement('span')
+          span.textContent  = item.str
           span.style.cssText =
-            `position:absolute;color:transparent;white-space:pre;cursor:text;` +
-            `transform-origin:0% 0%;user-select:text;-webkit-user-select:text;` +
-            `left:${m[4]}px;top:${m[5] - fs}px;font-size:${fs}px;` +
-            `font-family:sans-serif;line-height:1;`
+            `position:absolute;` +
+            `left:${cx}px;` +
+            `top:${cy - fs}px;` +
+            `font-size:${fs}px;` +
+            `font-family:sans-serif;` +
+            `line-height:1.2;` +
+            `white-space:pre;` +
+            `color:transparent;` +
+            `cursor:text;` +
+            `transform-origin:0% 0%;` +
+            `pointer-events:auto;` +
+            `user-select:text;` +
+            `-webkit-user-select:text;`
           tl.appendChild(span)
         }
       } catch (e: any) {
