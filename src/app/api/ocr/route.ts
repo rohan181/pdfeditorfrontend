@@ -3,9 +3,6 @@ import { NextRequest } from 'next/server'
 
 export const maxDuration = 60
 
-// Allow up to 10 MB request body for base64 page images
-export const config = { api: { bodyParser: { sizeLimit: '10mb' } } }
-
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.ANTHROPIC_API_KEY
