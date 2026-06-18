@@ -7,7 +7,7 @@ const COLORS = ['#0891b2','#7c3aed','#16a34a','#dc2626','#d97706','#db2777','#25
 const LIGHTS = ['#cffafe','#ede9fe','#bbf7d0','#fecaca','#fde68a','#fbcfe8','#bfdbfe','#a7f3d0']
 
 // ─── types ────────────────────────────────────────────────────────────────────
-interface Source  { name: string; text: string; idx: number }
+interface Source  { name: string; text: string; idx: number; pages: number; chars: number }
 interface RawNode { id: string; label: string; description: string; type: 'center'|'branch'|'leaf'; sourceIdx: number }
 interface RawEdge { from: string; to: string; type: 'tree'|'cross'; label?: string }
 interface MapAPI  { title: string; nodes: RawNode[]; edges: RawEdge[] }
@@ -17,10 +17,10 @@ interface PNode   extends RawNode { x: number; y: number }
 const col  = (si: number) => si < 0 ? '#1d1d1f' : COLORS[si % COLORS.length]
 const bg   = (si: number) => si < 0 ? '#1d1d1f' : COLORS[si % COLORS.length]
 const lite = (si: number) => si < 0 ? '#f5f5f7' : LIGHTS[si % LIGHTS.length]
-const rad  = (t: PNode['type']) => t === 'center' ? 46 : t === 'branch' ? 32 : 22
+const rad  = (t: PNode['type']) => t === 'center' ? 46 : t === 'branch' ? 28 : 18
 
 function layout(data: MapAPI): PNode[] {
-  const R1 = 250, R2 = 165
+  const R1 = 300, R2 = 155
   const out: PNode[] = []
   const pos: Record<string, { x: number; y: number }> = {}
 
@@ -28,19 +28,40 @@ function layout(data: MapAPI): PNode[] {
   if (center) { pos[center.id] = { x: 0, y: 0 }; out.push({ ...center, x: 0, y: 0 }) }
 
   const branches = data.nodes.filter(n => n.type === 'branch')
-  branches.forEach((b, bi) => {
-    const a = (2 * Math.PI * bi / branches.length) - Math.PI / 2
-    const x = Math.cos(a) * R1, y = Math.sin(a) * R1
-    pos[b.id] = { x, y }; out.push({ ...b, x, y })
+
+  // Group branches by sourceIdx so each PDF gets its own angular sector
+  const srcGroups = new Map<number, typeof branches>()
+  branches.forEach(b => {
+    if (!srcGroups.has(b.sourceIdx)) srcGroups.set(b.sourceIdx, [])
+    srcGroups.get(b.sourceIdx)!.push(b)
+  })
+  const srcList = Array.from(srcGroups.entries()).sort((a, b) => a[0] - b[0])
+  const nSrc    = srcList.length || 1
+
+  const branchAngle: Record<string, number> = {}
+
+  srcList.forEach(([, brs], sIdx) => {
+    const sectorCenter = (2 * Math.PI * sIdx / nSrc) - Math.PI / 2
+    const sectorWidth  = (2 * Math.PI / nSrc) * 0.82
+    brs.forEach((b: typeof branches[0], bi: number) => {
+      const a = brs.length === 1
+        ? sectorCenter
+        : sectorCenter - sectorWidth / 2 + sectorWidth * bi / (brs.length - 1)
+      const x = Math.cos(a) * R1, y = Math.sin(a) * R1
+      pos[b.id] = { x, y }
+      branchAngle[b.id] = a
+      out.push({ ...b, x, y })
+    })
   })
 
-  branches.forEach((b, bi) => {
+  // Place leaves radiating outward from each branch
+  branches.forEach(b => {
     const bp = pos[b.id]; if (!bp) return
-    const ba  = (2 * Math.PI * bi / branches.length) - Math.PI / 2
+    const ba  = branchAngle[b.id] ?? Math.atan2(bp.y, bp.x)
     const ids = data.edges.filter(e => e.from === b.id && e.type === 'tree').map(e => e.to)
     const lvs = data.nodes.filter(n => ids.includes(n.id))
     if (!lvs.length) return
-    const spread = Math.min(Math.PI * 0.72, Math.PI * 0.19 * lvs.length)
+    const spread = Math.min(Math.PI * 0.62, Math.PI * 0.17 * lvs.length)
     lvs.forEach((lf, li) => {
       const a = lvs.length === 1 ? ba : ba - spread / 2 + spread * li / (lvs.length - 1)
       const x = bp.x + Math.cos(a) * R2, y = bp.y + Math.sin(a) * R2
@@ -114,6 +135,10 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .src-name{flex:1;font-size:11px;font-weight:600;color:#1d1d1f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .src-rm{width:18px;height:18px;border-radius:4px;border:none;background:transparent;color:rgba(0,0,0,.3);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s}
 .src-rm:hover{background:#fee2e2;color:#dc2626}
+.src-stat{font-size:9px;font-weight:600;color:rgba(0,0,0,.35);margin-top:1px}
+.src-warn{font-size:9px;font-weight:700;color:#d97706}
+.extr-bar{padding:8px 14px;display:flex;align-items:center;gap:8px;background:#f0fdf4;border-bottom:1px solid #bbf7d0;flex-shrink:0;font-size:11px;font-weight:700;color:#15803d}
+.extr-spin{width:12px;height:12px;border:2px solid #bbf7d0;border-top-color:#16a34a;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 
 /* Generate button */
 .gen-wrap{padding:12px 14px;flex-shrink:0}
@@ -183,9 +208,11 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 
 // ─── component ────────────────────────────────────────────────────────────────
 export default function MindMapPage() {
-  const [sources,  setSources]  = useState<Source[]>([])
-  const [loading,  setLoading]  = useState(false)
-  const [genStep,  setGenStep]  = useState('')
+  const [sources,    setSources]    = useState<Source[]>([])
+  const [extracting, setExtracting] = useState(false)
+  const [extrFile,   setExtrFile]   = useState('')
+  const [loading,    setLoading]    = useState(false)
+  const [genStep,    setGenStep]    = useState('')
   const [mapData,  setMapData]  = useState<MapAPI | null>(null)
   const [nodes,    setNodes]    = useState<PNode[]>([])
   const [edges,    setEdges]    = useState<RawEdge[]>([])
@@ -215,28 +242,57 @@ export default function MindMapPage() {
   const addPDFs = useCallback(async (files: File[]) => {
     const valid = files.filter(f => f.type === 'application/pdf')
     if (!valid.length) return
-    const pdfjsLib = await import('pdfjs-dist')
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+    setExtracting(true); setErr(null)
 
+    let pdfjsLib: any
+    try {
+      pdfjsLib = await import('pdfjs-dist')
+      // Try cdnjs first, fall back to unpkg
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+    } catch {
+      setErr('Failed to load PDF engine. Check your internet connection.')
+      setExtracting(false)
+      return
+    }
+
+    const currentCount = sources.length
     const next: Source[] = []
+
     for (const file of valid) {
-      const idx = sources.length + next.length
+      const idx = currentCount + next.length
       if (idx >= 8) break
+      setExtrFile(file.name)
       try {
         const buf = await file.arrayBuffer()
         const pdf = await pdfjsLib.getDocument({ data: buf }).promise
+        const numPages: number = pdf.numPages
         let text = ''
-        for (let p = 1; p <= pdf.numPages && text.length < 7000; p++) {
-          const pg = await pdf.getPage(p)
-          const tc = await pg.getTextContent()
-          text += (tc.items as any[]).map((i: any) => i.str).join(' ') + '\n'
+        for (let p = 1; p <= numPages; p++) {
+          const pg  = await pdf.getPage(p)
+          const tc  = await pg.getTextContent()
+          // join with space, preserve line breaks between items
+          const row = (tc.items as any[]).map((i: any) => i.str).join(' ')
+          text += row + '\n'
         }
-        next.push({ name: file.name.replace(/\.pdf$/i, ''), text: text.trim().slice(0, 7000), idx })
-      } catch { /* skip bad files */ }
+        const trimmed = text.replace(/\s+/g, ' ').trim()
+        next.push({
+          name:  file.name.replace(/\.pdf$/i, ''),
+          text:  trimmed.slice(0, 10000),
+          idx,
+          pages: numPages,
+          chars: trimmed.length,
+        })
+      } catch (e: any) {
+        setErr(`Could not read "${file.name}". It may be a scanned/image PDF or password-protected.`)
+      }
     }
-    setSources(prev => [...prev, ...next])
-    setMapData(null); setNodes([]); setEdges([])
+
+    setExtracting(false); setExtrFile('')
+    if (next.length) {
+      setSources(prev => [...prev, ...next])
+      setMapData(null); setNodes([]); setEdges([])
+    }
   }, [sources.length])
 
   const removePDF = (idx: number) => {
@@ -249,21 +305,32 @@ export default function MindMapPage() {
 
   const generate = async () => {
     if (!sources.length || loading) return
+    // Make sure at least one source actually has text
+    const noText = sources.filter(s => s.chars < 30)
+    if (noText.length === sources.length) {
+      setErr('No text could be extracted from the uploaded PDFs. Please use a text-based PDF.')
+      return
+    }
+    const usable = sources.filter(s => s.chars >= 30)
     setLoading(true); setErr(null); setMapData(null); setNodes([]); setEdges([]); setSelected(null)
     try {
-      setGenStep('Analysing documents…')
+      setGenStep('Sending text to AI…')
       const res = await fetch('/api/mind-map', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ sources: sources.map(s => ({ name: s.name, text: s.text })) }),
+        body:    JSON.stringify({ sources: usable.map(s => ({ name: s.name, text: s.text })) }),
       })
       setGenStep('Building graph…')
       if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error ?? `HTTP ${res.status}`) }
       const data: MapAPI = await res.json()
+      const laid = layout(data)
       setMapData(data)
-      setNodes(layout(data))
+      setNodes(laid)
       setEdges(data.edges)
-      setVp({ x: 0, y: 0, z: 1 })
+      // Auto-fit zoom: more nodes → zoom out more
+      const n = laid.length
+      const z = n > 60 ? 0.38 : n > 40 ? 0.48 : n > 25 ? 0.62 : n > 15 ? 0.78 : 1
+      setVp({ x: 0, y: 0, z })
     } catch (e: any) { setErr(e.message) }
     finally { setLoading(false); setGenStep('') }
   }
@@ -310,7 +377,7 @@ export default function MindMapPage() {
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       {/* ── LANDING (no sources yet) ─────────────────────────────────────── */}
-      {sources.length === 0 && !loading ? (
+      {sources.length === 0 && !loading && !extracting ? (
         <div className="pg">
           <nav className="nav">
             <Link href="/" className="logo">
@@ -329,10 +396,20 @@ export default function MindMapPage() {
                 onDrop={e => onDrop(e, true)}
                 onDragOver={e => { e.preventDefault(); setLandDrop(true) }}
                 onDragLeave={() => setLandDrop(false)}>
-                <div className="landing-icon">🧠</div>
-                <div className="landing-drop-txt">Drop PDFs here</div>
-                <div className="landing-drop-sub">Upload 1–8 PDF files to begin</div>
-                <button className="landing-btn">📄 Choose PDFs</button>
+                {extracting ? (
+                  <>
+                    <div style={{fontSize:32,marginBottom:10}}>⏳</div>
+                    <div className="landing-drop-txt" style={{color:'#0891b2'}}>Reading {extrFile || 'PDF'}…</div>
+                    <div className="landing-drop-sub">Extracting text from your document</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="landing-icon">🧠</div>
+                    <div className="landing-drop-txt">Drop PDFs here</div>
+                    <div className="landing-drop-sub">Upload 1–8 PDF files to begin</div>
+                    <button className="landing-btn">📄 Choose PDFs</button>
+                  </>
+                )}
               </div>
               <div className="feat-row">
                 <div className="feat"><div className="feat-icon">🎨</div><div className="feat-t">Color by source</div><div className="feat-d">Each PDF gets its own colour in the graph</div></div>
@@ -362,6 +439,14 @@ export default function MindMapPage() {
 
           {/* ── Sidebar ──────────────────────────────────────────────────── */}
           <div className="sb">
+            {/* Extraction progress bar */}
+            {extracting && (
+              <div className="extr-bar">
+                <div className="extr-spin"/>
+                Reading {extrFile || 'PDF'}…
+              </div>
+            )}
+
             <div className="sb-head">
               <div className="sb-ttl">PDF Sources ({sources.length}/8)</div>
               {/* Drop zone inside sidebar */}
@@ -382,7 +467,13 @@ export default function MindMapPage() {
               {sources.map(s => (
                 <div key={s.idx} className="src-item" style={{ borderColor: COLORS[s.idx % COLORS.length] }}>
                   <div className="src-dot" style={{ background: COLORS[s.idx % COLORS.length] }}/>
-                  <div className="src-name" title={s.name}>{s.name}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="src-name" title={s.name}>{s.name}</div>
+                    {s.chars >= 30
+                      ? <div className="src-stat">{s.pages}p · {(s.chars / 1000).toFixed(1)}k chars</div>
+                      : <div className="src-warn">⚠ No text found</div>
+                    }
+                  </div>
                   <button className="src-rm" onClick={() => removePDF(s.idx)}>×</button>
                 </div>
               ))}
@@ -390,8 +481,9 @@ export default function MindMapPage() {
 
             {/* Generate button */}
             <div className="gen-wrap">
-              <button className="gen-btn" onClick={generate} disabled={loading || sources.length === 0}>
-                {loading ? genStep || 'Generating…' : '✦ Generate Mind Map'}
+              <button className="gen-btn" onClick={generate}
+                disabled={loading || extracting || sources.length === 0 || sources.every(s => s.chars < 30)}>
+                {loading ? genStep || 'Generating…' : extracting ? 'Extracting text…' : '✦ Generate Mind Map'}
               </button>
             </div>
 
