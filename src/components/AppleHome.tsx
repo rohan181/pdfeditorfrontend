@@ -41,6 +41,7 @@ const TOOLS = [
   { name:'Image to PDF',      tag:'LIVE', href:'/image-to-pdf',  cat:'Convert'  },
   { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor', cat:'Security' },
   { name:'PDF Summarizer AI', tag:'LIVE', href:'/pdf-summarizer', cat:'AI' },
+  { name:'PDF Mind Map',      tag:'LIVE', href:'/mind-map',       cat:'AI' },
 ]
 
 // ─── global CSS ──────────────────────────────────────────────────────────────
@@ -893,7 +894,7 @@ function AllTools() {
           className="tools-hdr">
           <div>
             <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>Tool Registry</div>
-            <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,3.5vw,46px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>18 tools. One platform.</h2>
+            <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,3.5vw,46px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>19 tools. One platform.</h2>
           </div>
           <div className="tools-legend">
             {[['LIVE','rgba(34,197,94,.1)','#15803d','rgba(34,197,94,.3)'],['BETA','rgba(99,102,241,.1)','#4338ca','rgba(99,102,241,.3)'],['SOON','rgba(0,0,0,.04)','#bbb','#e8e8e8']].map(([tag,bg,col,br])=>(
