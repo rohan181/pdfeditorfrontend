@@ -33,15 +33,15 @@ OUTPUT FORMAT — return ONLY a single valid JSON object with NO markdown fences
 ═══ NODE TYPES ═══
 
 1. CENTER (exactly 1):
-   {"id":"center","label":"Core Theme","description":"The unifying idea across all documents in 1-2 sentences","type":"center","sourceIdx":-1}
+   {"id":"center","label":"Core Theme","description":"2-3 sentence summary of the central idea tying all documents together, mentioning key themes.","type":"center","sourceIdx":-1}
 
 2. BRANCH — main topic nodes (sourceIdx = document index 0,1,2…):
    Create exactly 6 branch nodes per document, covering DISTINCT aspects (theory, methodology, results, applications, limitations, examples, etc.)
-   {"id":"b0-1","label":"Short Specific Label","description":"What this topic covers in 1-2 sentences from the actual document","type":"branch","sourceIdx":0}
+   {"id":"b0-1","label":"Short Specific Label","description":"2-3 sentence summary explaining what this topic covers and why it matters, using specific terms from the document.","type":"branch","sourceIdx":0}
 
 3. LEAF — specific sub-concepts under each branch:
-   Create exactly 5 leaf nodes per branch with CONCRETE details (specific numbers, names, methods, findings, quotes).
-   {"id":"b0-1-1","label":"Specific Detail","description":"Precise fact or concept from the document","type":"leaf","sourceIdx":0}
+   Create exactly 5 leaf nodes per branch with CONCRETE details.
+   {"id":"b0-1-1","label":"Specific Detail","description":"1-2 sentence summary with a specific fact, finding, number, name, or quote extracted directly from the document.","type":"leaf","sourceIdx":0}
 
 ═══ EDGE TYPES ═══
 Tree: {"from":"center","to":"b0-1","type":"tree"} and {"from":"b0-1","to":"b0-1-1","type":"tree"}

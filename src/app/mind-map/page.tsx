@@ -174,14 +174,16 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .gen-step{font-size:13px;font-weight:700;color:#0891b2;animation:pulse .9s infinite}
 
 /* Detail panel */
-.detail{width:260px;flex-shrink:0;background:#fff;border-left:1px solid #e8e8e8;display:flex;flex-direction:column;overflow:hidden;animation:fadeup .2s ease}
+.detail{width:280px;flex-shrink:0;background:#fff;border-left:1px solid #e8e8e8;display:flex;flex-direction:column;overflow:hidden;animation:fadeup .2s ease}
 .detail-head{padding:12px 14px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px}
 .detail-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:2px 7px;border-radius:99px}
 .detail-close{margin-left:auto;width:22px;height:22px;border-radius:5px;border:none;background:#f0f0f0;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.5)}
 .detail-close:hover{background:#e0e0e0}
 .detail-body{padding:14px;flex:1;overflow-y:auto}
-.detail-label{font-size:15px;font-weight:800;color:#1d1d1f;margin-bottom:8px;line-height:1.3}
-.detail-desc{font-size:12px;color:rgba(0,0,0,.55);line-height:1.65;margin-bottom:12px}
+.detail-label{font-size:16px;font-weight:800;color:#1d1d1f;margin-bottom:12px;line-height:1.3}
+.detail-summary-head{font-size:9px;font-weight:700;color:rgba(0,0,0,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.detail-summary-box{background:#f8f9fa;border-left:3px solid #0891b2;border-radius:0 8px 8px 0;padding:10px 12px;margin-bottom:14px}
+.detail-summary-text{font-size:12.5px;color:#1d1d1f;line-height:1.7;font-weight:500}
 .detail-src{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:6px 9px;border-radius:8px}
 
 /* Error */
@@ -678,7 +680,11 @@ export default function MindMapPage() {
               </div>
               <div className="detail-body">
                 <div className="detail-label">{selected.label}</div>
-                <div className="detail-desc">{selected.description || '—'}</div>
+                <div className="detail-summary-head">Summary</div>
+                <div className="detail-summary-box"
+                  style={{ borderLeftColor: selected.type === 'center' ? '#1d1d1f' : col(selected.sourceIdx) }}>
+                  <div className="detail-summary-text">{selected.description || '—'}</div>
+                </div>
 
                 {selected.sourceIdx >= 0 && sources[selected.sourceIdx] && (
                   <div className="detail-src"
