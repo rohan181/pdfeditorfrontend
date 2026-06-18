@@ -219,8 +219,11 @@ export default function MindMapPage() {
   const [nodes,    setNodes]    = useState<PNode[]>([])
   const [edges,    setEdges]    = useState<RawEdge[]>([])
   const [err,      setErr]      = useState<string | null>(null)
-  const [selected, setSelected] = useState<PNode | null>(null)
-  const [hovered,  setHovered]  = useState<string | null>(null)
+  const [selected,       setSelected]       = useState<PNode | null>(null)
+  const [hovered,        setHovered]        = useState<string | null>(null)
+  const [nodeSummary,    setNodeSummary]    = useState<string>('')
+  const [summaryLoading, setSummaryLoading] = useState(false)
+  const summaryCache = useRef<Record<string, string>>({})
   const [vp,       setVp]       = useState({ x: 0, y: 0, z: 1 })
   const [sz,       setSz]       = useState({ w: 900, h: 650 })
   const [dropOver, setDropOver] = useState(false)
@@ -229,6 +232,40 @@ export default function MindMapPage() {
   const svgRef   = useRef<SVGSVGElement>(null)
   const fileRef  = useRef<HTMLInputElement>(null)
   const dragRef  = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null)
+
+  const selectNode = useCallback(async (n: PNode | null) => {
+    setSelected(n)
+    setNodeSummary('')
+    if (!n) return
+
+    if (summaryCache.current[n.id]) {
+      setNodeSummary(summaryCache.current[n.id])
+      return
+    }
+
+    setSummaryLoading(true)
+    try {
+      const src = n.sourceIdx >= 0 ? sources[n.sourceIdx] : null
+      const res = await fetch('/api/node-summary', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nodeLabel:  n.label,
+          nodeType:   n.type,
+          sourceText: src?.text ?? '',
+          sourceName: src?.name ?? '',
+        }),
+      })
+      const j = await res.json()
+      const s = j.summary ?? j.error ?? 'Could not generate summary.'
+      summaryCache.current[n.id] = s
+      setNodeSummary(s)
+    } catch {
+      setNodeSummary('Could not generate summary.')
+    } finally {
+      setSummaryLoading(false)
+    }
+  }, [sources])
 
   // track SVG size
   useEffect(() => {
@@ -534,7 +571,7 @@ export default function MindMapPage() {
                   onMouseDown={onSvgDown} onMouseMove={onSvgMove}
                   onMouseUp={onSvgUp}    onMouseLeave={onSvgUp}
                   onWheel={onWheel}
-                  onClick={() => setSelected(null)}>
+                  onClick={() => selectNode(null)}>
 
                   <defs>
                     <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -614,7 +651,7 @@ export default function MindMapPage() {
                         <g key={n.id} className="node"
                           transform={`translate(${n.x},${n.y})`}
                           style={{ cursor: 'pointer' }}
-                          onClick={e => { e.stopPropagation(); setSelected(isSel ? null : n) }}
+                          onClick={e => { e.stopPropagation(); selectNode(isSel ? null : n) }}
                           onMouseEnter={() => setHovered(n.id)}
                           onMouseLeave={() => setHovered(null)}>
 
@@ -676,14 +713,21 @@ export default function MindMapPage() {
                   }}>
                   {selected.type}
                 </div>
-                <button className="detail-close" onClick={() => setSelected(null)}>×</button>
+                <button className="detail-close" onClick={() => selectNode(null)}>×</button>
               </div>
               <div className="detail-body">
                 <div className="detail-label">{selected.label}</div>
                 <div className="detail-summary-head">Summary</div>
                 <div className="detail-summary-box"
                   style={{ borderLeftColor: selected.type === 'center' ? '#1d1d1f' : col(selected.sourceIdx) }}>
-                  <div className="detail-summary-text">{selected.description || '—'}</div>
+                  {summaryLoading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 12, height: 12, border: '2px solid #e0e0e0', borderTopColor: '#0891b2', borderRadius: '50%', animation: 'spin .7s linear infinite', flexShrink: 0 }}/>
+                      <span style={{ fontSize: 11, color: 'rgba(0,0,0,.4)', fontWeight: 600 }}>Generating summary…</span>
+                    </div>
+                  ) : (
+                    <div className="detail-summary-text">{nodeSummary || selected.description || '—'}</div>
+                  )}
                 </div>
 
                 {selected.sourceIdx >= 0 && sources[selected.sourceIdx] && (
@@ -715,7 +759,7 @@ export default function MindMapPage() {
                       {connected.map((c, i) => (
                         <div key={i}
                           style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', borderRadius: 7, background: '#f8f8f8', marginBottom: 4, cursor: 'pointer' }}
-                          onClick={() => setSelected(c.node)}>
+                          onClick={() => selectNode(c.node)}>
                           <div style={{ width: 7, height: 7, borderRadius: '50%', background: col(c.node.sourceIdx), flexShrink: 0 }}/>
                           <span style={{ fontSize: 11, fontWeight: 600, color: '#1d1d1f', flex: 1 }}>{c.node.label}</span>
                           {c.type === 'cross' && <span style={{ fontSize: 9, color: '#aaa' }}>cross</span>}
