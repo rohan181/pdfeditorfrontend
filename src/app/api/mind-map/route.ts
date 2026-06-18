@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest } from 'next/server'
 
-export const maxDuration = 60
+export const maxDuration = 120
 
 function extractJSON(raw: string): any {
   const m = raw.match(/```(?:json)?\s*([\s\S]+?)\s*```/)
@@ -17,65 +17,49 @@ export async function POST(req: NextRequest) {
     if (!sources?.length) return Response.json({ error: 'No sources provided' }, { status: 400 })
 
     const docsText = sources.map((s, i) =>
-      `=== Document ${i} (sourceIdx: ${i}): "${s.name}" ===\n${s.text.slice(0, 4000)}`
+      `=== Document ${i} (sourceIdx: ${i}): "${s.name}" ===\n${s.text.slice(0, 25000)}`
     ).join('\n\n')
 
-    const prompt = `You are an expert knowledge-graph and mind-map generator. Deeply analyze the content of these ${sources.length} document(s) and produce a RICH, DETAILED mind-map JSON with many topics and sub-topics.
+    const prompt = `You are an expert knowledge-graph and mind-map generator. Thoroughly read every word of the provided document(s), then produce a RICH, DETAILED mind-map JSON.
 
 ${docsText}
 
-OUTPUT FORMAT — return ONLY a single valid JSON object, absolutely no markdown fences or prose:
-{
-  "title": "Concise overall theme (3-6 words)",
-  "nodes": [ ... ],
-  "edges": [ ... ]
-}
+═══ TASK ═══
+Analyse the documents deeply. Extract real concepts, facts, arguments, methods, examples, and conclusions — not generic placeholders. Every label and description must come directly from the document content.
+
+OUTPUT FORMAT — return ONLY a single valid JSON object with NO markdown fences, NO prose, NO explanation:
+{"title":"...","nodes":[...],"edges":[...]}
 
 ═══ NODE TYPES ═══
 
 1. CENTER (exactly 1):
-   {"id":"center","label":"Core Theme","description":"The unifying idea across all documents","type":"center","sourceIdx":-1}
+   {"id":"center","label":"Core Theme","description":"The unifying idea across all documents in 1-2 sentences","type":"center","sourceIdx":-1}
 
-2. BRANCH — main topic nodes, one colour per document (sourceIdx = document index 0,1,2…):
-   IMPORTANT: For EACH document create 4 to 6 branch nodes representing its KEY TOPICS.
-   All branches from the same document share the same sourceIdx.
-   {"id":"b0-1","label":"Topic Name","description":"What this topic is about in 1-2 sentences","type":"branch","sourceIdx":0}
-   {"id":"b0-2","label":"Another Topic","description":"Description","type":"branch","sourceIdx":0}
-   … (4-6 per document)
+2. BRANCH — main topic nodes (sourceIdx = document index 0,1,2…):
+   Create exactly 6 branch nodes per document, covering DISTINCT aspects (theory, methodology, results, applications, limitations, examples, etc.)
+   {"id":"b0-1","label":"Short Specific Label","description":"What this topic covers in 1-2 sentences from the actual document","type":"branch","sourceIdx":0}
 
-3. LEAF — specific concepts, sub-topics, facts, or details under each branch:
-   For EACH branch node, create 3 to 5 leaf nodes.
-   Leaf sourceIdx must equal its parent branch's sourceIdx.
-   {"id":"b0-1-1","label":"Sub-concept","description":"Specific detail, fact, or insight","type":"leaf","sourceIdx":0}
-   {"id":"b0-1-2","label":"Another Detail","description":"...","type":"leaf","sourceIdx":0}
-   … (3-5 per branch)
+3. LEAF — specific sub-concepts under each branch:
+   Create exactly 5 leaf nodes per branch with CONCRETE details (specific numbers, names, methods, findings, quotes).
+   {"id":"b0-1-1","label":"Specific Detail","description":"Precise fact or concept from the document","type":"leaf","sourceIdx":0}
 
 ═══ EDGE TYPES ═══
-
-Tree edges (hierarchy only — no other connections):
-  {"from":"center","to":"b0-1","type":"tree"}   ← center to every branch
-  {"from":"b0-1","to":"b0-1-1","type":"tree"}   ← branch to its leaves
-
-Cross-reference edges (5 to 10 total, connecting LEAF nodes from DIFFERENT documents):
-  {"from":"b0-1-2","to":"b1-3-1","type":"cross","label":"relates to"}
+Tree: {"from":"center","to":"b0-1","type":"tree"} and {"from":"b0-1","to":"b0-1-1","type":"tree"}
+Cross (5-10 total, only between leaves from DIFFERENT documents): {"from":"b0-1-2","to":"b1-3-1","type":"cross","label":"relates to"}
 
 ═══ ID CONVENTION ═══
-- Center:  "center"
-- Branches: "b{docIdx}-{topicNum}"   e.g. b0-1, b0-2, b1-1, b1-2
-- Leaves:  "b{docIdx}-{topicNum}-{leafNum}"  e.g. b0-1-1, b0-1-2, b1-2-3
+Center: "center" | Branches: "b{docIdx}-{num}" e.g. b0-1 | Leaves: "b{docIdx}-{branchNum}-{leafNum}" e.g. b0-1-3
 
 ═══ QUALITY RULES ═══
-- Labels: 1–4 words, specific and meaningful (not generic like "Key Point")
-- Descriptions: 1–2 sentences with actual content from the document
-- Branches must cover genuinely DIFFERENT aspects of the document (no repetition)
-- Leaves must be SPECIFIC concepts, not vague summaries
-- Cross-links must connect truly RELATED concepts from different documents
-- Generate the maximum number of branches (6) and leaves (5) for rich, dense maps
-- Output ONLY the JSON — nothing else, no explanation`
+- Labels must be 1-4 words and SPECIFIC (no "Key Point", "Important Concept", "Overview")
+- Descriptions must contain actual content extracted from the text
+- Each branch must cover a genuinely different aspect — no overlap
+- Leaf descriptions must include specific details: numbers, names, quotes, findings
+- Output ONLY the JSON object`
 
     const client = new Anthropic({ apiKey })
     const msg = await client.messages.create({
-      model:      'claude-haiku-4-5-20251001',
+      model:      'claude-opus-4-8',
       max_tokens: 8192,
       messages:   [{ role: 'user', content: prompt }],
     })

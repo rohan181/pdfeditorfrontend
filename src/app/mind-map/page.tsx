@@ -278,7 +278,7 @@ export default function MindMapPage() {
         const trimmed = text.replace(/\s+/g, ' ').trim()
         next.push({
           name:  file.name.replace(/\.pdf$/i, ''),
-          text:  trimmed.slice(0, 10000),
+          text:  trimmed.slice(0, 50000),
           idx,
           pages: numPages,
           chars: trimmed.length,
