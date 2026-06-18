@@ -111,17 +111,11 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 
 /* Split view */
 .split{flex:1;display:flex;overflow:hidden;gap:0}
-.preview-pane{width:45%;border-right:1px solid #e8e8e8;overflow:auto;background:#e8e8ea;display:flex;align-items:flex-start;justify-content:center;padding:16px}
+.preview-pane{width:45%;border-right:1px solid #e8e8e8;overflow:hidden;background:#e8e8ea;display:flex;flex-direction:column}
+.preview-pane iframe{display:block;width:100%;flex:1;border:none}
+.preview-canvas-wrap{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:16px}
 .page-wrap{position:relative;display:inline-block;box-shadow:0 4px 24px rgba(0,0,0,.18);border-radius:2px;line-height:0}
-.page-wrap canvas{display:block;max-width:100%;pointer-events:none}
-
-/* pdfjs-dist v3 text selection layer */
-.textLayer{position:absolute;left:0;top:0;line-height:1;z-index:2;
-  -webkit-text-size-adjust:none;text-size-adjust:none;forced-color-adjust:none}
-.textLayer :is(span,br){color:transparent;position:absolute;white-space:pre;cursor:text;
-  transform-origin:0% 0%;user-select:text;-webkit-user-select:text}
-.textLayer ::selection{background:rgba(37,99,235,.3);color:transparent}
-.textLayer ::-moz-selection{background:rgba(37,99,235,.3);color:transparent}
+.page-wrap canvas{display:block;max-width:100%}
 
 /* Edit mode */
 .edit-overlay{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -193,8 +187,9 @@ export default function PDFOCRPage() {
   const [useNative,  setUseNative]  = useState(true)
   const [copied,     setCopied]     = useState(false)
   const [copiedPage, setCopiedPage] = useState(false)
-  const [exporting,  setExporting]  = useState(false)
-  const [editMode,   setEditMode]   = useState(false)
+  const [exporting,      setExporting]      = useState(false)
+  const [pendingExport,  setPendingExport]  = useState(false)
+  const [editMode,       setEditMode]       = useState(false)
   const [pdfUrl,     setPdfUrl]     = useState<string | null>(null)
   const [editItems,  setEditItems]  = useState<EditItem[]>([])
   const [pageEdits,  setPageEdits]  = useState<Record<number, Record<number,string>>>({})
@@ -203,13 +198,14 @@ export default function PDFOCRPage() {
   const dropLpRef      = useRef<HTMLDivElement>(null)
   const pdfDocRef      = useRef<any>(null)
   const previewCanvRef = useRef<HTMLCanvasElement>(null)
-  const textLayerRef   = useRef<HTMLDivElement>(null)
   const abortRef       = useRef(false)
+  const pagesRef       = useRef<PageItem[]>([])
 
   const totalPages   = pages.length
   const doneCount    = pages.filter(p => p.status === 'done' || p.status === 'native').length
   const progress     = totalPages > 0 ? doneCount / totalPages : 0
   const selPageItem  = pages.find(p => p.num === selPage)
+  pagesRef.current   = pages  // always current, safe for async callbacks
 
   // ── Load PDF ──────────────────────────────────────────────────────────────
   const loadFile = useCallback(async (file: File) => {
@@ -250,86 +246,33 @@ export default function PDFOCRPage() {
     return () => { el.removeEventListener('dragover',ov); el.removeEventListener('dragleave',lv); el.removeEventListener('drop',dp) }
   }, [loadFile])
 
-  // ── Render preview canvas when page selection changes ─────────────────────
+  // ── Render preview canvas (only in edit mode; view mode uses native iframe) ──
   const renderTaskRef = useRef<any>(null)
   useEffect(() => {
+    if (!editMode) return
     if (!pdfDocRef.current || !previewCanvRef.current || !selPageItem) return
-    // Cancel any in-progress render before starting a new one
     if (renderTaskRef.current) {
       renderTaskRef.current.cancel()
       renderTaskRef.current = null
     }
-    // Clear old text layer
-    if (textLayerRef.current) textLayerRef.current.innerHTML = ''
 
     let alive = true
     ;(async () => {
       try {
-        const pdfjsLib = await import('pdfjs-dist')
         const pg  = await pdfDocRef.current.getPage(selPage)
         if (!alive) return
-
-        const scale = 1.4
-        const vp    = pg.getViewport({ scale })
-        const cv    = previewCanvRef.current!
-        cv.width    = vp.width
-        cv.height   = vp.height
-        const ctx   = cv.getContext('2d')!
+        const vp  = pg.getViewport({ scale: 1.4 })
+        const cv  = previewCanvRef.current!
+        cv.width  = vp.width
+        cv.height = vp.height
+        const ctx = cv.getContext('2d')!
         ctx.fillStyle = '#fff'
         ctx.fillRect(0, 0, cv.width, cv.height)
         if (!alive) return
-
-        // Render visual layer
         const task = pg.render({ canvasContext: ctx, viewport: vp })
         renderTaskRef.current = task
         await task.promise
         renderTaskRef.current = null
-        if (!alive) return
-
-        // Build selectable text layer — manually place transparent spans over canvas
-        const tl = textLayerRef.current
-        if (!tl || editMode) return
-        tl.innerHTML = ''
-        tl.style.transform = ''
-        tl.style.width  = vp.width  + 'px'
-        tl.style.height = vp.height + 'px'
-        const textContent = await pg.getTextContent()
-        if (!alive) return
-
-        // The canvas may be CSS-shrunk by max-width:100%; measure the actual rendered size
-        // and apply a matching scale transform so span coords align with visual glyphs
-        await new Promise<void>(r => { requestAnimationFrame(() => r()) })
-        if (!alive) return
-        const cvRect = cv.getBoundingClientRect()
-        const sx = cvRect.width  > 0 ? cvRect.width  / vp.width  : 1
-        const sy = cvRect.height > 0 ? cvRect.height / vp.height : 1
-        tl.style.transformOrigin = '0 0'
-        tl.style.transform = `scale(${sx}, ${sy})`
-
-        const utilTx = (pdfjsLib as any).Util?.transform
-          ?? ((A: number[], B: number[]) => [
-              A[0]*B[0]+A[2]*B[1], A[1]*B[0]+A[3]*B[1],
-              A[0]*B[2]+A[2]*B[3], A[1]*B[2]+A[3]*B[3],
-              A[0]*B[4]+A[2]*B[5]+A[4], A[1]*B[4]+A[3]*B[5]+A[5],
-            ])
-
-        const frag = document.createDocumentFragment()
-        for (const item of (textContent.items as any[])) {
-          if (!item.str) continue
-          const m  = utilTx(vp.transform, item.transform)
-          const fh = Math.hypot(m[2], m[3])   // font height in canvas px
-          if (fh < 2) continue
-          const angle = Math.atan2(m[1], m[0])
-          const span  = document.createElement('span')
-          span.textContent = item.str
-          span.style.cssText =
-            `position:absolute;left:${m[4].toFixed(1)}px;top:${(m[5]-fh).toFixed(1)}px;` +
-            `font-size:${fh.toFixed(1)}px;color:transparent;white-space:pre;cursor:text;` +
-            `transform-origin:0% 100%;user-select:text;-webkit-user-select:text;` +
-            (Math.abs(angle)>0.001 ? `transform:rotate(${(-angle*180/Math.PI).toFixed(2)}deg);` : '')
-          frag.appendChild(span)
-        }
-        tl.appendChild(frag)
       } catch (e: any) {
         if (e?.name !== 'RenderingCancelledException') console.warn(e)
       }
@@ -469,6 +412,20 @@ export default function PDFOCRPage() {
 
   const stopOCR = () => { abortRef.current = true }
 
+  // ── Convert: scan all pages then auto-download OCR PDF ────────────────────
+  const convertToOCRPdf = () => {
+    setPendingExport(true)
+    runOCR()
+  }
+
+  // When a pending export is set and scanning finishes, trigger download
+  useEffect(() => {
+    if (!pendingExport || isRunning || doneCount === 0 || doneCount < totalPages) return
+    setPendingExport(false)
+    downloadOCRPdf()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingExport, isRunning, doneCount, totalPages])
+
   // ── Combined text ──────────────────────────────────────────────────────────
   const allText = pages.map(p => `--- Page ${p.num} ---\n${p.text}`).join('\n\n')
 
@@ -512,7 +469,7 @@ export default function PDFOCRPage() {
       const newDoc  = await PDFDocument.create()
       const font    = await newDoc.embedFont(StandardFonts.Helvetica)
 
-      for (const item of pages) {
+      for (const item of pagesRef.current) {
         // 1. Render original page at 2× to canvas (preserves exact layout & fonts visually)
         const origPg = await pdfDocRef.current.getPage(item.num)
         const vp2    = origPg.getViewport({ scale: 2 })
@@ -768,45 +725,45 @@ export default function PDFOCRPage() {
             )}
 
             <div className="split">
-              {/* Preview pane: canvas + text-selection layer (view) or canvas + edit inputs */}
+              {/* Preview pane */}
               <div className="preview-pane">
-                <div className="page-wrap">
-                  <canvas ref={previewCanvRef}/>
-
-                  {/* pdfjs text layer — transparent selectable spans, hidden in edit mode */}
-                  <div ref={textLayerRef} className="textLayer"
-                    style={{display: editMode ? 'none' : 'block', pointerEvents: editMode ? 'none' : 'auto'}}/>
-
-                  {/* Edit mode overlay — positioned inputs per text item */}
-                  {editMode && (
-                    <div className="edit-overlay">
-                      {editItems.map(item => {
-                        const saved    = pageEdits[selPage]?.[item.idx]
-                        const isEdited = saved !== undefined && saved !== item.str
-                        return (
-                          <input
-                            key={`${selPage}-${item.idx}-${saved ?? ''}`}
-                            type="text"
-                            className={`edit-token${isEdited ? ' is-edited' : ''}`}
-                            defaultValue={saved ?? item.str}
-                            title={`Click to edit: "${item.str}"`}
-                            style={{ left:item.x, top:item.y, width:item.w+20, height:item.fs*1.4, fontSize:item.fs }}
-                            onFocus={e => e.target.select()}
-                            onBlur={e => {
-                              const val = e.target.value
-                              setPageEdits(prev => {
-                                const pg = prev[selPage] ?? {}
-                                if (val === item.str) { const {[item.idx]:_,...rest}=pg; return {...prev,[selPage]:rest} }
-                                return { ...prev, [selPage]: { ...pg, [item.idx]: val } }
-                              })
-                            }}
-                            onKeyDown={e => { if (e.key==='Escape') e.currentTarget.blur() }}
-                          />
-                        )
-                      })}
+                {!editMode ? (
+                  /* View mode: native browser PDF viewer — click-drag to select, Ctrl+C to copy */
+                  <iframe src={pdfUrl ?? undefined} title="PDF Preview"/>
+                ) : (
+                  /* Edit mode: canvas background + positioned edit inputs */
+                  <div className="preview-canvas-wrap">
+                    <div className="page-wrap">
+                      <canvas ref={previewCanvRef}/>
+                      <div className="edit-overlay">
+                        {editItems.map(item => {
+                          const saved    = pageEdits[selPage]?.[item.idx]
+                          const isEdited = saved !== undefined && saved !== item.str
+                          return (
+                            <input
+                              key={`${selPage}-${item.idx}-${saved ?? ''}`}
+                              type="text"
+                              className={`edit-token${isEdited ? ' is-edited' : ''}`}
+                              defaultValue={saved ?? item.str}
+                              title={`Click to edit: "${item.str}"`}
+                              style={{ left:item.x, top:item.y, width:item.w+20, height:item.fs*1.4, fontSize:item.fs }}
+                              onFocus={e => e.target.select()}
+                              onBlur={e => {
+                                const val = e.target.value
+                                setPageEdits(prev => {
+                                  const pg = prev[selPage] ?? {}
+                                  if (val === item.str) { const {[item.idx]:_,...rest}=pg; return {...prev,[selPage]:rest} }
+                                  return { ...prev, [selPage]: { ...pg, [item.idx]: val } }
+                                })
+                              }}
+                              onKeyDown={e => { if (e.key==='Escape') e.currentTarget.blur() }}
+                            />
+                          )
+                        })}
+                      </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Text pane */}
@@ -900,13 +857,21 @@ export default function PDFOCRPage() {
 
             <div className="st-sec" style={{borderBottom:'none'}}>
               {!isRunning ? (
-                <button className="ocr-btn" disabled={totalPages===0||loading} onClick={runOCR}>
-                  🔍 Scan all {totalPages} pages
-                </button>
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {/* Primary CTA: one-click convert + download */}
+                  <button className="ocr-btn" disabled={totalPages===0||loading||exporting} onClick={convertToOCRPdf}
+                    style={{fontSize:13,fontWeight:800,padding:'14px 12px'}}>
+                    {exporting ? '⏳ Building PDF…' : `⚡ Convert to OCR PDF`}
+                  </button>
+                  {/* Secondary: just scan without downloading */}
+                  <button className="nbtn sec" style={{width:'100%',fontSize:11}} disabled={totalPages===0||loading} onClick={runOCR}>
+                    🔍 Scan only ({totalPages} pages)
+                  </button>
+                </div>
               ) : (
                 <>
                   <div style={{fontSize:11,fontWeight:700,color:'#0891b2',marginBottom:8,textAlign:'center'}}>
-                    Scanning {doneCount+1} of {totalPages}…
+                    {pendingExport ? '⚡ Converting…' : 'Scanning…'} {doneCount} / {totalPages} pages
                   </div>
                   <div style={{height:6,background:'#e8e8ea',borderRadius:3,marginBottom:10,overflow:'hidden'}}>
                     <div style={{height:'100%',background:'#0891b2',borderRadius:3,width:`${progress*100}%`,transition:'width .4s'}}/>
@@ -918,7 +883,7 @@ export default function PDFOCRPage() {
               {doneCount > 0 && !isRunning && (
                 <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:6}}>
                   <button className="nbtn grn" style={{width:'100%'}} onClick={downloadOCRPdf} disabled={exporting}>
-                    {exporting ? '⏳ Building PDF…' : '↓ Download PDF'}
+                    {exporting ? '⏳ Building PDF…' : '↓ Download OCR PDF'}
                   </button>
                   <button className="nbtn sec" style={{width:'100%'}} onClick={copyAll}>{copied?'✓ Copied':'⎘ Copy all text'}</button>
                   <button className="nbtn sec" style={{width:'100%'}} onClick={downloadTxt}>↓ Download .txt</button>
