@@ -187,8 +187,7 @@ export default function PDFOCRPage() {
   const [useNative,  setUseNative]  = useState(true)
   const [copied,     setCopied]     = useState(false)
   const [copiedPage, setCopiedPage] = useState(false)
-  const [exporting,      setExporting]      = useState(false)
-  const [pendingExport,  setPendingExport]  = useState(false)
+  const [exporting,  setExporting]  = useState(false)
   const [editMode,       setEditMode]       = useState(false)
   const [pdfUrl,     setPdfUrl]     = useState<string | null>(null)
   const [editItems,  setEditItems]  = useState<EditItem[]>([])
@@ -412,19 +411,148 @@ export default function PDFOCRPage() {
 
   const stopOCR = () => { abortRef.current = true }
 
-  // ── Convert: scan all pages then auto-download OCR PDF ────────────────────
-  const convertToOCRPdf = () => {
-    setPendingExport(true)
-    runOCR()
-  }
+  // ── One-shot convert: scan every page then build & download OCR PDF ─────────
+  // Self-contained: accumulates text in a local array so there are zero stale-state issues
+  const convertAndDownload = async () => {
+    const pdf  = pdfDocRef.current
+    const file = pdfFile
+    if (!pdf || !file || isRunning || exporting) return
 
-  // When a pending export is set and scanning finishes, trigger download
-  useEffect(() => {
-    if (!pendingExport || isRunning || doneCount === 0 || doneCount < totalPages) return
-    setPendingExport(false)
-    downloadOCRPdf()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingExport, isRunning, doneCount, totalPages])
+    abortRef.current = false
+    setIsRunning(true)
+    setPages(prev => prev.map(p => ({ ...p, status: 'idle' as PageStatus, text: '', error: undefined })))
+
+    const n         = pdf.numPages
+    const collected = new Array<string>(n).fill('')   // text per page, local — no React state
+
+    // ── Phase 1: OCR every page ──────────────────────────────────────────────
+    for (let i = 1; i <= n; i++) {
+      if (abortRef.current) break
+      setPages(prev => prev.map(p => p.num !== i ? p : { ...p, status: 'processing' }))
+      try {
+        const pg = await pdf.getPage(i)
+
+        // Native text check
+        if (useNative) {
+          const tc  = await pg.getTextContent()
+          const txt = (tc.items as any[]).map((x: any) => x.str).join(' ').trim()
+          if (txt.length > 30) {
+            collected[i-1] = txt
+            setPages(prev => prev.map(p => p.num !== i ? p : { ...p, status: 'native', text: txt, isNative: true }))
+            continue
+          }
+        }
+
+        // Render page image for AI OCR
+        const MAX_PX = 1400
+        const vp1   = pg.getViewport({ scale: 1 })
+        const sc    = Math.min(2.0, MAX_PX / vp1.width)
+        const vp    = pg.getViewport({ scale: sc })
+        const cv    = document.createElement('canvas')
+        cv.width    = Math.round(vp.width); cv.height = Math.round(vp.height)
+        const ctx   = cv.getContext('2d')!
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height)
+        await pg.render({ canvasContext: ctx, viewport: vp }).promise
+        const b64 = cv.toDataURL('image/jpeg', 0.85).split(',')[1]
+
+        let res: Response
+        try {
+          res = await fetch('/api/ocr', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ imageBase64: b64, mimeType: 'image/jpeg', language }),
+          })
+        } catch (netErr: any) {
+          setPages(prev => prev.map(p => p.num !== i ? p : { ...p, status: 'error', error: `Network: ${netErr.message}` }))
+          continue
+        }
+
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}))
+          setPages(prev => prev.map(p => p.num !== i ? p : { ...p, status: 'error', error: j.error ?? `HTTP ${res.status}` }))
+          continue
+        }
+
+        const reader = res.body!.getReader()
+        const dec    = new TextDecoder()
+        let text     = ''
+        for (;;) {
+          if (abortRef.current) { reader.cancel(); break }
+          const { done, value } = await reader.read()
+          if (done) break
+          text += dec.decode(value, { stream: true })
+          setPages(prev => prev.map(p => p.num !== i ? p : { ...p, text }))
+        }
+        collected[i-1] = text
+        setPages(prev => prev.map(p => p.num !== i ? p : { ...p, status: 'done', text }))
+
+      } catch (e: any) {
+        setPages(prev => prev.map(p => p.num !== i ? p : { ...p, status: 'error', error: e.message }))
+      }
+    }
+
+    setIsRunning(false)
+    if (abortRef.current) { abortRef.current = false; return }
+
+    // ── Phase 2: build searchable PDF with collected text ────────────────────
+    setExporting(true)
+    try {
+      const { PDFDocument, StandardFonts, rgb } = await import('pdf-lib')
+      const doc  = await PDFDocument.create()
+      const font = await doc.embedFont(StandardFonts.Helvetica)
+
+      for (let i = 1; i <= n; i++) {
+        const pg  = await pdf.getPage(i)
+        const vp2 = pg.getViewport({ scale: 2 })
+        const cv  = document.createElement('canvas')
+        cv.width  = vp2.width; cv.height = vp2.height
+        const ctx = cv.getContext('2d')!
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height)
+        await pg.render({ canvasContext: ctx, viewport: vp2 }).promise
+
+        const blob    = await new Promise<Blob>(r => cv.toBlob(b => r(b!), 'image/jpeg', 0.92))
+        const jpg     = new Uint8Array(await blob.arrayBuffer())
+
+        const vp1 = pg.getViewport({ scale: 1 })
+        const pgW = vp1.width, pgH = vp1.height
+        const pg2 = doc.addPage([pgW, pgH])
+        const img = await doc.embedJpg(jpg)
+        pg2.drawImage(img, { x: 0, y: 0, width: pgW, height: pgH })
+
+        // Invisible OCR text layer
+        const text = collected[i-1]
+        if (text?.trim()) {
+          const lines = text.split('\n').filter(Boolean)
+          const lineH = pgH / Math.max(lines.length, 1)
+          for (let li = 0; li < lines.length; li++) {
+            const safe = lines[li].replace(/[\x00-\x08\x0b-\x0c\x0e-\x1f\x7f-\x9f]/g, '')
+            if (!safe.trim()) continue
+            try {
+              pg2.drawText(safe, {
+                x: 0, y: pgH - lineH * (li + 1),
+                size: Math.max(lineH * 0.85, 4), font,
+                color: rgb(1, 1, 1), opacity: 0.01, maxWidth: pgW,
+              })
+            } catch { /* skip unencodable chars */ }
+          }
+        }
+      }
+
+      const bytes = await doc.save()
+      const url   = URL.createObjectURL(new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' }))
+      const a     = document.createElement('a')
+      a.href      = url
+      a.download  = file.name.replace(/\.pdf$/i, '') + '-ocr.pdf'
+      document.body.appendChild(a)
+      a.click()
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 2000)
+
+    } catch (e: any) {
+      console.error('PDF build failed:', e)
+    } finally {
+      setExporting(false)
+    }
+  }
 
   // ── Combined text ──────────────────────────────────────────────────────────
   const allText = pages.map(p => `--- Page ${p.num} ---\n${p.text}`).join('\n\n')
@@ -541,7 +669,9 @@ export default function PDFOCRPage() {
       const a     = document.createElement('a')
       a.href      = url
       a.download  = (pdfFile?.name ?? 'doc').replace(/\.pdf$/i, '') + '-searchable.pdf'
-      a.click(); URL.revokeObjectURL(url)
+      document.body.appendChild(a)
+      a.click()
+      setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 2000)
     } finally {
       setExporting(false)
     }
@@ -856,22 +986,25 @@ export default function PDFOCRPage() {
             </div>
 
             <div className="st-sec" style={{borderBottom:'none'}}>
-              {!isRunning ? (
+              {!isRunning && !exporting ? (
                 <div style={{display:'flex',flexDirection:'column',gap:8}}>
-                  {/* Primary CTA: one-click convert + download */}
-                  <button className="ocr-btn" disabled={totalPages===0||loading||exporting} onClick={convertToOCRPdf}
+                  <button className="ocr-btn" disabled={totalPages===0||loading} onClick={convertAndDownload}
                     style={{fontSize:13,fontWeight:800,padding:'14px 12px'}}>
-                    {exporting ? '⏳ Building PDF…' : `⚡ Convert to OCR PDF`}
+                    ⚡ Convert to OCR PDF
                   </button>
-                  {/* Secondary: just scan without downloading */}
                   <button className="nbtn sec" style={{width:'100%',fontSize:11}} disabled={totalPages===0||loading} onClick={runOCR}>
                     🔍 Scan only ({totalPages} pages)
                   </button>
                 </div>
+              ) : exporting ? (
+                <div style={{textAlign:'center',padding:'12px 0'}}>
+                  <div style={{fontSize:13,fontWeight:700,color:'#0891b2',marginBottom:8}}>⏳ Building PDF…</div>
+                  <div style={{fontSize:11,color:'rgba(0,0,0,.4)'}}>Embedding OCR text layer</div>
+                </div>
               ) : (
                 <>
                   <div style={{fontSize:11,fontWeight:700,color:'#0891b2',marginBottom:8,textAlign:'center'}}>
-                    {pendingExport ? '⚡ Converting…' : 'Scanning…'} {doneCount} / {totalPages} pages
+                    Converting… {doneCount} / {totalPages} pages
                   </div>
                   <div style={{height:6,background:'#e8e8ea',borderRadius:3,marginBottom:10,overflow:'hidden'}}>
                     <div style={{height:'100%',background:'#0891b2',borderRadius:3,width:`${progress*100}%`,transition:'width .4s'}}/>
