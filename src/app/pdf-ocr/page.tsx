@@ -116,8 +116,8 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .page-wrap canvas{display:block;max-width:100%;pointer-events:none}
 
 /* pdfjs-dist v3 text selection layer */
-.textLayer{position:absolute;left:0;top:0;overflow:hidden;line-height:1;z-index:2;
-  -webkit-text-size-adjust:none;text-size-adjust:none;forced-color-adjust:none;transform-origin:0 0}
+.textLayer{position:absolute;left:0;top:0;line-height:1;z-index:2;
+  -webkit-text-size-adjust:none;text-size-adjust:none;forced-color-adjust:none}
 .textLayer :is(span,br){color:transparent;position:absolute;white-space:pre;cursor:text;
   transform-origin:0% 0%;user-select:text;-webkit-user-select:text}
 .textLayer ::selection{background:rgba(37,99,235,.3);color:transparent}
@@ -290,10 +290,21 @@ export default function PDFOCRPage() {
         const tl = textLayerRef.current
         if (!tl || editMode) return
         tl.innerHTML = ''
+        tl.style.transform = ''
         tl.style.width  = vp.width  + 'px'
         tl.style.height = vp.height + 'px'
         const textContent = await pg.getTextContent()
         if (!alive) return
+
+        // The canvas may be CSS-shrunk by max-width:100%; measure the actual rendered size
+        // and apply a matching scale transform so span coords align with visual glyphs
+        await new Promise<void>(r => { requestAnimationFrame(() => r()) })
+        if (!alive) return
+        const cvRect = cv.getBoundingClientRect()
+        const sx = cvRect.width  > 0 ? cvRect.width  / vp.width  : 1
+        const sy = cvRect.height > 0 ? cvRect.height / vp.height : 1
+        tl.style.transformOrigin = '0 0'
+        tl.style.transform = `scale(${sx}, ${sy})`
 
         const utilTx = (pdfjsLib as any).Util?.transform
           ?? ((A: number[], B: number[]) => [
