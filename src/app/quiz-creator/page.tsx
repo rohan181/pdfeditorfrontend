@@ -512,6 +512,16 @@ export default function QuizCreatorPage() {
                   </div>
                 )}
 
+                {/* DEBUG — shows raw API data so we can see what fields Claude returned */}
+                {quizData.questions.length > 0 && (
+                  <div style={{ background:'#1e1e1e', borderRadius:10, padding:12, fontSize:10, color:'#a8ff78', fontFamily:'monospace', lineHeight:1.6, overflowX:'auto' }}>
+                    <div style={{ color:'#ffd700', fontWeight:700, marginBottom:4 }}>DEBUG — first question raw data:</div>
+                    <pre style={{ margin:0, whiteSpace:'pre-wrap', wordBreak:'break-all' }}>
+                      {JSON.stringify((quizData.questions as any[])[0], null, 2)}
+                    </pre>
+                  </div>
+                )}
+
                 {/* Answered progress for MCQ */}
                 {!submitted && totalMCQ > 0 && (
                   <div style={{ background:'#fff', borderRadius:10, padding:'10px 16px', border:'1.5px solid #e8e8e8' }}>
