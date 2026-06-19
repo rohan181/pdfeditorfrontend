@@ -45,6 +45,7 @@ const TOOLS = [
   { name:'PDF Mind Map',      tag:'LIVE', href:'/mind-map',       cat:'AI' },
   { name:'PDF → PowerPoint', tag:'LIVE', href:'/pdf-to-ppt',     cat:'Convert' },
   { name:'PPT → PDF',        tag:'LIVE', href:'/ppt-to-pdf',     cat:'Convert' },
+  { name:'Quiz Creator',     tag:'LIVE', href:'/quiz-creator',   cat:'AI' },
 ]
 
 // ─── global CSS ──────────────────────────────────────────────────────────────
