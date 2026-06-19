@@ -87,34 +87,69 @@ Rules:
     console.log('quiz-gen raw:', rawText.slice(0, 500))
 
     const data = extractJSON(rawText)
-    console.log('quiz-gen parsed keys:', Object.keys(data ?? {}))
-    if (data?.questions?.[0]) console.log('first question keys:', Object.keys(data.questions[0]))
+    const firstQ = data?.questions?.[0]
+    console.log('quiz first question:', JSON.stringify(firstQ, null, 2))
 
     if (!data.questions || !Array.isArray(data.questions))
       return Response.json({ error: 'Failed to generate questions.' }, { status: 422 })
 
-    // Normalize every question to guaranteed field names before returning
+    // Extract options from every possible format Claude might use
+    function extractOpts(q: any): string[] {
+      // 1. Standard array fields
+      for (const k of ['options','choices','Options','Choices','alternatives','possible_answers','answers','opts']) {
+        if (Array.isArray(q[k]) && q[k].length > 0) return q[k].map(String)
+      }
+      // 2. Options as an object {a:"...",b:"..."} or {"A":"...","B":"..."}
+      for (const k of ['options','choices','Options','Choices']) {
+        if (q[k] && typeof q[k] === 'object' && !Array.isArray(q[k])) {
+          const vals = Object.values(q[k]).map(String).filter(Boolean)
+          if (vals.length >= 2) return vals
+        }
+      }
+      // 3. Separate fields: option_a / option_b / option_c / option_d
+      if (q.option_a || q.option_b) {
+        return [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean).map(String)
+      }
+      // 4. Uppercase separate: A / B / C / D
+      if (q.A || q.B) {
+        return [q.A, q.B, q.C, q.D].filter(Boolean).map(String)
+      }
+      // 5. Lowercase single letter: a / b / c / d
+      if (q.a || q.b) {
+        return [q.a, q.b, q.c, q.d].filter(Boolean).map(String)
+      }
+      // 6. Numbered: option_1 / option_2 etc.
+      if (q.option_1 || q.option_2) {
+        return [q.option_1, q.option_2, q.option_3, q.option_4].filter(Boolean).map(String)
+      }
+      return []
+    }
+
     const normalized = {
       title: data.title || data.Title || 'Quiz',
       questions: data.questions.map((q: any) => {
-        // Detect MCQ by type string OR by presence of options/choices array
+        const qText = String(q.question || q.Question || q.text || q.Text || q.stem || q.prompt || '')
+        const opts  = extractOpts(q)
+
         const isMCQ =
           (typeof q.type === 'string' && (q.type === 'mcq' || q.type.toLowerCase().includes('multi') || q.type.toLowerCase().includes('choice'))) ||
-          (Array.isArray(q.options)  && q.options.length  > 0) ||
-          (Array.isArray(q.choices)  && q.choices.length  > 0) ||
-          (Array.isArray(q.Options)  && q.Options.length  > 0)
+          opts.length > 0
 
-        const opts: string[] = Array.isArray(q.options) ? q.options
-          : Array.isArray(q.choices) ? q.choices
-          : Array.isArray(q.Options) ? q.Options
-          : []
+        // Resolve letter answer (A/B/C/D) to actual option text
+        const rawAns = String(q.answer || q.Answer || q.correct_answer || q.correctAnswer || q.correct || q.correct_option || '')
+        let answer = rawAns
+        if (opts.length > 0 && /^[A-Da-d]$/.test(rawAns.trim())) {
+          const idx = rawAns.trim().toUpperCase().charCodeAt(0) - 65
+          if (idx >= 0 && idx < opts.length) answer = opts[idx]
+        }
 
         return {
           type:        isMCQ ? 'mcq' : 'short',
-          question:    q.question || q.Question || q.text || q.Text || q.stem || '',
+          question:    qText,
           options:     opts,
-          answer:      q.answer || q.Answer || q.correct_answer || q.correctAnswer || q.correct || '',
-          explanation: q.explanation || q.Explanation || q.rationale || q.reason || '',
+          answer,
+          explanation: String(q.explanation || q.Explanation || q.rationale || q.reason || ''),
+          _debug:      { rawType: q.type, rawKeys: Object.keys(q) },
         }
       }),
     }

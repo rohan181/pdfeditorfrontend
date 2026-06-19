@@ -430,6 +430,17 @@ export default function QuizCreatorPage() {
           {/* ── Main ─────────────────────────────────────────────────── */}
           <main className="main">
 
+            {/* DEBUG strip — always visible when quiz is loaded */}
+            {quizData && (quizData.questions as any[])[0] && (
+              <div style={{ background:'#1a1a2e', padding:'8px 16px', fontSize:10, color:'#a8ff78', fontFamily:'monospace', lineHeight:1.5, flexShrink:0, overflowX:'auto', whiteSpace:'nowrap' }}>
+                <span style={{ color:'#ffd700', fontWeight:700 }}>DEBUG q[0]: </span>
+                keys=[{Object.keys((quizData.questions as any[])[0]).join(', ')}] &nbsp;|&nbsp;
+                type="{(quizData.questions as any[])[0].type}" &nbsp;|&nbsp;
+                question="{String((quizData.questions as any[])[0].question || '').slice(0,40)}..." &nbsp;|&nbsp;
+                options={JSON.stringify((quizData.questions as any[])[0].options)}
+              </div>
+            )}
+
             {/* Toolbar — shown when quiz is active */}
             {quizData && (
               <div className="toolbar">
@@ -509,16 +520,6 @@ export default function QuizCreatorPage() {
                       <div className="score-sub">{totalShort} short answer{totalShort>1?'s':''} — self-graded</div>
                     )}
                     <div className="score-badge">{sl.text}</div>
-                  </div>
-                )}
-
-                {/* DEBUG — shows raw API data so we can see what fields Claude returned */}
-                {quizData.questions.length > 0 && (
-                  <div style={{ background:'#1e1e1e', borderRadius:10, padding:12, fontSize:10, color:'#a8ff78', fontFamily:'monospace', lineHeight:1.6, overflowX:'auto' }}>
-                    <div style={{ color:'#ffd700', fontWeight:700, marginBottom:4 }}>DEBUG — first question raw data:</div>
-                    <pre style={{ margin:0, whiteSpace:'pre-wrap', wordBreak:'break-all' }}>
-                      {JSON.stringify((quizData.questions as any[])[0], null, 2)}
-                    </pre>
                   </div>
                 )}
 
