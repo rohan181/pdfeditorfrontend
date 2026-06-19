@@ -30,7 +30,7 @@ const TOOLS = [
   { name:'PDF OCR Scanner',   tag:'LIVE', href:'/pdf-ocr', cat:'AI'  },
   { name:'PDF Form Builder',  tag:'LIVE', href:'/pdf-form-builder', cat:'Forms'    },
   { name:'PDF Page Manager',  tag:'LIVE', href:'/pdf-page-manager', cat:'Tools'    },
-  { name:'PDF → Word',        tag:'SOON', href:null, cat:'Convert'  },
+  { name:'PDF → Word',        tag:'LIVE', href:'/pdf-to-word', cat:'Convert'  },
   { name:'PDF → Excel',       tag:'LIVE', href:'/pdf-to-excel',  cat:'Convert'  },
   { name:'Excel / CSV → PDF', tag:'LIVE', href:'/excel-to-pdf',  cat:'Convert'  },
   { name:'PDF Compressor',    tag:'LIVE', href:'/pdf-compressor', cat:'Optimize' },
