@@ -269,24 +269,9 @@ export default function QuizCreatorPage() {
         throw new Error(j.error ?? `Server error ${res.status}`)
       }
 
-      const raw: QuizData = await res.json()
-      if (!raw.questions?.length) throw new Error('No questions generated.')
-
-      // Normalize: Claude sometimes returns "multiple_choice" or "multiple-choice"
-      const data: QuizData = {
-        ...raw,
-        questions: raw.questions.map((q: any) => {
-          const isMCQ = q.type === 'mcq'
-            || (typeof q.type === 'string' && q.type.toLowerCase().includes('multi'))
-            || (Array.isArray(q.options) && q.options.length > 0)
-          return {
-            ...q,
-            type:    isMCQ ? 'mcq' : 'short',
-            options: isMCQ ? (Array.isArray(q.options) ? q.options : []) : undefined,
-          }
-        }),
-      }
-      setQuizData(data)
+      const data = await res.json()
+      if (!data.questions?.length) throw new Error('No questions generated.')
+      setQuizData(data as QuizData)
       setProgress(100)
     } catch (e: any) {
       setError(e.message ?? 'Generation failed.')
@@ -328,18 +313,15 @@ export default function QuizCreatorPage() {
   const mcqScore = (() => {
     if (!quizData) return { correct: 0, total: 0 }
     let correct = 0, total = 0
-    quizData.questions.forEach((q, i) => {
-      if (q.type === 'mcq') {
-        total++
-        if (answers[i] === q.answer) correct++
-      }
+    ;(quizData.questions as any[]).forEach((q: any, i: number) => {
+      if (q.type === 'mcq') { total++; if (answers[i] === q.answer) correct++ }
     })
     return { correct, total }
   })()
 
-  const answeredMCQ = quizData ? quizData.questions.filter((q,i) => q.type==='mcq' && answers[i]).length : 0
-  const totalMCQ    = quizData ? quizData.questions.filter(q => q.type==='mcq').length : 0
-  const totalShort  = quizData ? quizData.questions.filter(q => q.type==='short').length : 0
+  const answeredMCQ = quizData ? (quizData.questions as any[]).filter((q: any, i: number) => q.type === 'mcq' && answers[i]).length : 0
+  const totalMCQ    = quizData ? (quizData.questions as any[]).filter((q: any) => q.type === 'mcq').length : 0
+  const totalShort  = quizData ? (quizData.questions as any[]).filter((q: any) => q.type === 'short').length : 0
   const canSubmit   = !submitted && quizData && answeredMCQ === totalMCQ && (totalShort === 0 || true)
 
   const pct = mcqScore.total > 0 ? Math.round((mcqScore.correct / mcqScore.total) * 100) : 0
@@ -544,30 +526,32 @@ export default function QuizCreatorPage() {
                 )}
 
                 {/* Questions */}
-                {quizData.questions.map((q, qi) => {
+                {(quizData.questions as any[]).map((q: any, qi: number) => {
+                  const isMCQ      = q.type === 'mcq'
                   const userAns    = answers[qi]
                   const isRevealed = revealed[qi]
-                  const isCorrect  = q.type === 'mcq' && submitted && userAns === q.answer
-                  const isWrong    = q.type === 'mcq' && submitted && !!userAns && userAns !== q.answer
+                  const isCorrect  = isMCQ && submitted && userAns === q.answer
+                  const isWrong    = isMCQ && submitted && !!userAns && userAns !== q.answer
                   const cardClass  = submitted
-                    ? (q.type==='mcq' ? (isCorrect?'correct':isWrong?'wrong':'') : (isRevealed?'revealed':''))
+                    ? (isMCQ ? (isCorrect ? 'correct' : isWrong ? 'wrong' : '') : (isRevealed ? 'revealed' : ''))
                     : ''
+                  const opts: string[] = Array.isArray(q.options) ? q.options : []
 
                   return (
                     <div key={qi} className={`q-card ${cardClass}`}>
                       <div className="q-head">
-                        <div className={`q-num${isCorrect?' correct':isWrong?' wrong':''}`}>{qi+1}</div>
-                        <div style={{ flex:1 }}>
-                          <div className={`q-badge ${q.type}`}>
-                            {q.type === 'mcq' ? '⬤ Multiple Choice' : '✍ Short Answer'}
+                        <div className={`q-num${isCorrect ? ' correct' : isWrong ? ' wrong' : ''}`}>{qi + 1}</div>
+                        <div style={{ flex: 1 }}>
+                          <div className={`q-badge ${isMCQ ? 'mcq' : 'short'}`}>
+                            {isMCQ ? '⬤ Multiple Choice' : '✍ Short Answer'}
                           </div>
                           <div className="q-text">{q.question}</div>
                         </div>
                       </div>
 
-                      {q.type === 'mcq' && (
+                      {isMCQ && opts.length > 0 && (
                         <div className="options">
-                          {((q as MCQQuestion).options ?? []).map((opt, oi) => {
+                          {opts.map((opt: string, oi: number) => {
                             let cls = ''
                             if (userAns === opt) cls = 'sel'
                             if (submitted) {
@@ -587,7 +571,7 @@ export default function QuizCreatorPage() {
                         </div>
                       )}
 
-                      {q.type === 'short' && (
+                      {!isMCQ && (
                         <div className="short-area">
                           <textarea className="short-input" rows={3}
                             placeholder="Type your answer here…"
@@ -608,8 +592,7 @@ export default function QuizCreatorPage() {
                         </div>
                       )}
 
-                      {/* Explanation — shown after submit for MCQ, or after reveal for short */}
-                      {((q.type==='mcq' && submitted) || (q.type==='short' && isRevealed)) && (
+                      {((isMCQ && submitted) || (!isMCQ && isRevealed)) && (
                         <div className="expl">
                           <strong>Explanation</strong>
                           {q.explanation}

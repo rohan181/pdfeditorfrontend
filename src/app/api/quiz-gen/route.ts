@@ -83,13 +83,43 @@ Rules:
       messages:   [{ role: 'user', content: prompt }],
     })
 
-    const raw  = (msg.content[0] as any).text as string
-    const data = extractJSON(raw)
+    const rawText = (msg.content[0] as any).text as string
+    console.log('quiz-gen raw:', rawText.slice(0, 500))
+
+    const data = extractJSON(rawText)
+    console.log('quiz-gen parsed keys:', Object.keys(data ?? {}))
+    if (data?.questions?.[0]) console.log('first question keys:', Object.keys(data.questions[0]))
 
     if (!data.questions || !Array.isArray(data.questions))
       return Response.json({ error: 'Failed to generate questions.' }, { status: 422 })
 
-    return Response.json(data)
+    // Normalize every question to guaranteed field names before returning
+    const normalized = {
+      title: data.title || data.Title || 'Quiz',
+      questions: data.questions.map((q: any) => {
+        // Detect MCQ by type string OR by presence of options/choices array
+        const isMCQ =
+          (typeof q.type === 'string' && (q.type === 'mcq' || q.type.toLowerCase().includes('multi') || q.type.toLowerCase().includes('choice'))) ||
+          (Array.isArray(q.options)  && q.options.length  > 0) ||
+          (Array.isArray(q.choices)  && q.choices.length  > 0) ||
+          (Array.isArray(q.Options)  && q.Options.length  > 0)
+
+        const opts: string[] = Array.isArray(q.options) ? q.options
+          : Array.isArray(q.choices) ? q.choices
+          : Array.isArray(q.Options) ? q.Options
+          : []
+
+        return {
+          type:        isMCQ ? 'mcq' : 'short',
+          question:    q.question || q.Question || q.text || q.Text || q.stem || '',
+          options:     opts,
+          answer:      q.answer || q.Answer || q.correct_answer || q.correctAnswer || q.correct || '',
+          explanation: q.explanation || q.Explanation || q.rationale || q.reason || '',
+        }
+      }),
+    }
+
+    return Response.json(normalized)
   } catch (e: any) {
     console.error('quiz-gen error:', e)
     return Response.json({ error: e.message ?? 'Generation failed' }, { status: 500 })
