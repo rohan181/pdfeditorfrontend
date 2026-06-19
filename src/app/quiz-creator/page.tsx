@@ -311,7 +311,7 @@ export default function QuizCreator() {
                     background:'#fff',
                     border:`1.5px solid ${correct ? '#16a34a' : wrong ? '#dc2626' : isRev && !isMCQ ? '#7c3aed' : '#e8e8e8'}`,
                     borderRadius:14,
-                    overflow:'hidden',
+                    flexShrink:0,
                   }}>
                     {/* Card header */}
                     <div style={{ display:'flex', alignItems:'flex-start', gap:12, padding:'16px 20px 12px' }}>
