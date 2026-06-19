@@ -37,7 +37,7 @@ const TOOLS = [
   { name:'PDF Merger',        tag:'LIVE', href:'/pdf-merger', cat:'Tools'    },
   { name:'PDF Splitter',      tag:'LIVE', href:'/pdf-splitter', cat:'Tools'    },
   { name:'PDF E-Signer',      tag:'LIVE', href:'/pdf-signer', cat:'Sign'     },
-  { name:'PDF Translator',    tag:'SOON', href:null, cat:'Language' },
+  { name:'PDF Translator',    tag:'LIVE', href:'/pdf-translator', cat:'Language' },
   { name:'PDF to Images',     tag:'LIVE', href:'/pdf-to-images', cat:'Export'   },
   { name:'Image to PDF',      tag:'LIVE', href:'/image-to-pdf',  cat:'Convert'  },
   { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor', cat:'Security' },
