@@ -98,6 +98,16 @@ td:last-child,th:last-child{padding-right:20px}
 /* Row count badge */
 .row-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;background:#e8f5ee;border-radius:99px;font-size:10px;font-weight:700;color:#217346}
 
+/* Format selector */
+.fmt-bar{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid #f0f0f0;background:#fafafa;flex-wrap:wrap}
+.fmt-label{font-size:10px;font-weight:700;letter-spacing:.07em;color:rgba(0,0,0,.38);text-transform:uppercase;white-space:nowrap}
+.fmt-group{display:flex;gap:5px;flex-wrap:wrap}
+.fmt-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #e0e0e0;background:#fff;color:rgba(0,0,0,.5);transition:all .15s;white-space:nowrap}
+.fmt-btn:hover:not(.active){border-color:#217346;color:#217346}
+.fmt-btn.active{background:#217346;border-color:#217346;color:#fff}
+.fmt-ext{font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;background:rgba(255,255,255,.25);letter-spacing:.04em}
+.fmt-btn:not(.active) .fmt-ext{background:rgba(0,0,0,.06);color:rgba(0,0,0,.4)}
+
 /* Action bar */
 .action-bar{display:flex;gap:10px;flex-wrap:wrap}
 .sec-btn{flex:1;min-width:140px;padding:13px;background:#fff;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;font-weight:600;color:#1d1d1f;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px}
@@ -144,15 +154,81 @@ function toSpreadsheetML(sheets: Sheet[]): string {
   return `<?xml version="1.0"?>\n<?mso-application progid="Excel.Sheet"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n${xmlSheets}\n</Workbook>`
 }
 
-function downloadExcel(sheets: Sheet[], filename: string) {
-  const xml  = toSpreadsheetML(sheets)
-  const blob = new Blob([xml], { type: 'application/vnd.ms-excel' })
+function triggerDL(content: string, mime: string, filename: string) {
+  const blob = new Blob([content], { type: mime })
   const url  = URL.createObjectURL(blob)
-  const a    = document.createElement('a')
-  a.href     = url
-  a.download = filename.replace(/\.pdf$/i, '') + '.xls'
-  a.click()
+  const a    = document.createElement('a'); a.href = url; a.download = filename; a.click()
   URL.revokeObjectURL(url)
+}
+
+function downloadExcel(sheets: Sheet[], filename: string) {
+  triggerDL(toSpreadsheetML(sheets), 'application/vnd.ms-excel', filename.replace(/\.pdf$/i, '') + '.xls')
+}
+
+function rowsToDelimited(rows: string[][], delim: string): string {
+  const esc = (v: string) => {
+    const s = String(v ?? '')
+    return s.includes(delim) || s.includes('"') || s.includes('\n')
+      ? `"${s.replace(/"/g, '""')}"`
+      : s
+  }
+  return rows.map(r => r.map(esc).join(delim)).join('\r\n')
+}
+
+function downloadCSV(sheets: Sheet[], filename: string) {
+  const base = filename.replace(/\.pdf$/i, '')
+  if (sheets.length === 1) {
+    triggerDL(rowsToDelimited(sheets[0].rows, ','), 'text/csv', `${base}.csv`)
+  } else {
+    // Multiple sheets: download each as a separate file with a short delay
+    sheets.forEach((s, i) => {
+      setTimeout(() => {
+        triggerDL(rowsToDelimited(s.rows, ','), 'text/csv', `${base} - ${s.name}.csv`)
+      }, i * 300)
+    })
+  }
+}
+
+function downloadTSV(sheets: Sheet[], filename: string) {
+  const base = filename.replace(/\.pdf$/i, '')
+  if (sheets.length === 1) {
+    triggerDL(rowsToDelimited(sheets[0].rows, '\t'), 'text/tab-separated-values', `${base}.tsv`)
+  } else {
+    sheets.forEach((s, i) => {
+      setTimeout(() => {
+        triggerDL(rowsToDelimited(s.rows, '\t'), 'text/tab-separated-values', `${base} - ${s.name}.tsv`)
+      }, i * 300)
+    })
+  }
+}
+
+function downloadJSON(sheets: Sheet[], filename: string) {
+  const obj: Record<string, Record<string, string>[]> = {}
+  sheets.forEach(s => {
+    const headers = s.rows[0] ?? []
+    obj[s.name] = s.rows.slice(1).map(row => {
+      const rec: Record<string, string> = {}
+      headers.forEach((h, i) => { rec[h || `col${i + 1}`] = row[i] ?? '' })
+      return rec
+    })
+  })
+  triggerDL(JSON.stringify(obj, null, 2), 'application/json', filename.replace(/\.pdf$/i, '') + '.json')
+}
+
+type Format = 'xls' | 'csv' | 'tsv' | 'json'
+
+const FORMAT_META: Record<Format, { label: string; ext: string; icon: string; desc: string }> = {
+  xls:  { label: 'Excel',  ext: '.xls',  icon: '📊', desc: 'Open in Microsoft Excel or Google Sheets' },
+  csv:  { label: 'CSV',    ext: '.csv',  icon: '📋', desc: 'Plain text, works in any spreadsheet app' },
+  tsv:  { label: 'TSV',    ext: '.tsv',  icon: '📄', desc: 'Tab-separated, good for databases & imports' },
+  json: { label: 'JSON',   ext: '.json', icon: '🔧', desc: 'Structured data for developers & APIs' },
+}
+
+function doDownload(fmt: Format, sheets: Sheet[], filename: string) {
+  if (fmt === 'xls')  downloadExcel(sheets, filename)
+  if (fmt === 'csv')  downloadCSV(sheets, filename)
+  if (fmt === 'tsv')  downloadTSV(sheets, filename)
+  if (fmt === 'json') downloadJSON(sheets, filename)
 }
 
 export default function PDFToExcelPage() {
@@ -164,6 +240,7 @@ export default function PDFToExcelPage() {
   const [progress,    setProgress]    = useState(0)
   const [sheets,      setSheets]      = useState<Sheet[]>([])
   const [activeSheet, setActiveSheet] = useState(0)
+  const [format,      setFormat]      = useState<Format>('xls')
   const [error,       setError]       = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -329,9 +406,23 @@ export default function PDFToExcelPage() {
                       {sheets.length} sheet{sheets.length !== 1 ? 's' : ''} · {totalRows.toLocaleString()} data rows
                     </div>
                   </div>
-                  <button className="dl-btn" onClick={() => downloadExcel(sheets, file!.name)}>
-                    ⬇ Download Excel
-                  </button>
+                </div>
+
+                {/* Format selector */}
+                <div className="fmt-bar">
+                  <span className="fmt-label">Download as</span>
+                  <div className="fmt-group">
+                    {(Object.keys(FORMAT_META) as Format[]).map(f => (
+                      <button key={f} className={`fmt-btn${format === f ? ' active' : ''}`} onClick={() => setFormat(f)}>
+                        {FORMAT_META[f].icon} {FORMAT_META[f].label}
+                        <span className="fmt-ext">{FORMAT_META[f].ext}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <span style={{ fontSize: 11, color: 'rgba(0,0,0,.35)', marginLeft: 4 }}>
+                    {FORMAT_META[format].desc}
+                    {(format === 'csv' || format === 'tsv') && sheets.length > 1 && ' · one file per sheet'}
+                  </span>
                 </div>
 
                 {/* Sheet tabs */}
@@ -387,8 +478,8 @@ export default function PDFToExcelPage() {
                 <button className="sec-btn" onClick={() => { setSheets([]); setFile(null); setPageCount(0); setError('') }}>
                   ← Convert Another PDF
                 </button>
-                <button className="pri-btn" onClick={() => downloadExcel(sheets, file!.name)}>
-                  ⬇ Download .xls
+                <button className="pri-btn" onClick={() => doDownload(format, sheets, file!.name)}>
+                  ⬇ Download {FORMAT_META[format].ext.toUpperCase()}
                 </button>
               </div>
             </>
