@@ -527,43 +527,95 @@ export default function QuizCreatorPage() {
 
                 {/* Questions */}
                 {(quizData.questions as any[]).map((q: any, qi: number) => {
-                  const isMCQ      = q.type === 'mcq'
-                  const userAns    = answers[qi]
-                  const isRevealed = revealed[qi]
-                  const isCorrect  = isMCQ && submitted && userAns === q.answer
-                  const isWrong    = isMCQ && submitted && !!userAns && userAns !== q.answer
-                  const cardClass  = submitted
-                    ? (isMCQ ? (isCorrect ? 'correct' : isWrong ? 'wrong' : '') : (isRevealed ? 'revealed' : ''))
-                    : ''
-                  const opts: string[] = Array.isArray(q.options) ? q.options : []
+                  // Defensive field extraction — handle any casing/naming Claude might use
+                  const questionText: string = String(q.question || q.Question || q.text || q.stem || '')
+                  const answerText:   string = String(q.answer   || q.Answer   || q.correct_answer || q.correctAnswer || '')
+                  const explText:     string = String(q.explanation || q.Explanation || q.rationale || '')
+                  const opts: string[] = Array.isArray(q.options)  ? q.options
+                                       : Array.isArray(q.choices)  ? q.choices
+                                       : Array.isArray(q.Options)  ? q.Options
+                                       : []
+
+                  // MCQ = type is 'mcq' OR has options array with items
+                  const isMCQ = q.type === 'mcq' || opts.length > 0
+
+                  const userAns    = answers[qi] ?? ''
+                  const isRevealed = !!revealed[qi]
+                  const isCorrect  = isMCQ && submitted && userAns === answerText
+                  const isWrong    = isMCQ && submitted && !!userAns && userAns !== answerText
+
+                  const cardBorder = submitted
+                    ? isMCQ
+                      ? isCorrect ? '2px solid #16a34a' : isWrong ? '2px solid #dc2626' : '1.5px solid #e8e8e8'
+                      : isRevealed ? '2px solid #7c3aed' : '1.5px solid #e8e8e8'
+                    : '1.5px solid #e8e8e8'
 
                   return (
-                    <div key={qi} className={`q-card ${cardClass}`}>
-                      <div className="q-head">
-                        <div className={`q-num${isCorrect ? ' correct' : isWrong ? ' wrong' : ''}`}>{qi + 1}</div>
-                        <div style={{ flex: 1 }}>
-                          <div className={`q-badge ${isMCQ ? 'mcq' : 'short'}`}>
+                    <div key={qi} style={{
+                      background: '#fff',
+                      border: cardBorder,
+                      borderRadius: 14,
+                      overflow: 'hidden',
+                      marginBottom: 0,
+                      animation: 'fadeup .28s ease',
+                    }}>
+                      {/* Header */}
+                      <div style={{ display:'flex', alignItems:'flex-start', gap:11, padding:'14px 18px 10px' }}>
+                        <div style={{
+                          width:26, height:26, borderRadius:8, flexShrink:0, marginTop:1,
+                          background: isCorrect ? '#16a34a' : isWrong ? '#dc2626' : '#7c3aed',
+                          color:'#fff', fontSize:11, fontWeight:800,
+                          display:'flex', alignItems:'center', justifyContent:'center',
+                        }}>{qi + 1}</div>
+                        <div style={{ flex:1 }}>
+                          <div style={{
+                            display:'inline-flex', alignItems:'center', gap:4,
+                            padding:'2px 8px', borderRadius:10, marginBottom:6,
+                            background: isMCQ ? '#ede9fe' : '#fce7f3',
+                            color: isMCQ ? '#7c3aed' : '#be185d',
+                            fontSize:9, fontWeight:700,
+                          }}>
                             {isMCQ ? '⬤ Multiple Choice' : '✍ Short Answer'}
                           </div>
-                          <div className="q-text">{q.question}</div>
+                          <div style={{ fontSize:13, fontWeight:600, color:'#1d1d1f', lineHeight:1.55 }}>
+                            {questionText || <span style={{color:'#aaa',fontStyle:'italic'}}>No question text</span>}
+                          </div>
                         </div>
                       </div>
 
-                      {isMCQ && opts.length > 0 && (
-                        <div className="options">
+                      {/* MCQ Options */}
+                      {isMCQ && (
+                        <div style={{ padding:'0 18px 10px', display:'flex', flexDirection:'column', gap:6 }}>
+                          {opts.length === 0 && (
+                            <div style={{fontSize:11,color:'#aaa',fontStyle:'italic',padding:'6px 0'}}>No options available — regenerate the quiz.</div>
+                          )}
                           {opts.map((opt: string, oi: number) => {
-                            let cls = ''
-                            if (userAns === opt) cls = 'sel'
-                            if (submitted) {
-                              if (opt === q.answer) cls = 'right'
-                              else if (userAns === opt) cls = 'err'
-                              else cls = ''
-                            }
+                            const isRight = submitted && opt === answerText
+                            const isErr   = submitted && userAns === opt && opt !== answerText
+                            const isSel   = !submitted && userAns === opt
+                            const bg    = isRight ? '#dcfce7' : isErr ? '#fee2e2' : isSel ? '#ede9fe' : '#fafafa'
+                            const border = isRight ? '1.5px solid #16a34a' : isErr ? '1.5px solid #dc2626' : isSel ? '1.5px solid #7c3aed' : '1.5px solid #e8e8e8'
+                            const col   = isRight ? '#15803d' : isErr ? '#b91c1c' : isSel ? '#7c3aed' : '#1d1d1f'
+                            const ltrBg = isRight ? 'rgba(22,163,74,.2)' : isErr ? 'rgba(220,38,38,.2)' : isSel ? 'rgba(124,58,237,.2)' : 'rgba(0,0,0,.07)'
+                            const ltrCol = isRight ? '#15803d' : isErr ? '#b91c1c' : isSel ? '#7c3aed' : 'rgba(0,0,0,.5)'
                             return (
-                              <button key={oi} className={`opt ${cls}`}
+                              <button key={oi}
                                 disabled={submitted}
-                                onClick={() => selectOption(qi, opt)}>
-                                <span className="opt-letter">{LETTERS[oi]}</span>
+                                onClick={() => selectOption(qi, opt)}
+                                style={{
+                                  width:'100%', textAlign:'left', padding:'10px 14px',
+                                  borderRadius:9, border, background:bg,
+                                  fontSize:12, fontWeight:600, color:col,
+                                  cursor: submitted ? 'default' : 'pointer',
+                                  display:'flex', alignItems:'center', gap:10,
+                                  lineHeight:1.45, transition:'all .14s',
+                                }}>
+                                <span style={{
+                                  width:22, height:22, borderRadius:6, flexShrink:0,
+                                  background:ltrBg, color:ltrCol,
+                                  fontSize:10, fontWeight:800,
+                                  display:'flex', alignItems:'center', justifyContent:'center',
+                                }}>{LETTERS[oi]}</span>
                                 {opt}
                               </button>
                             )
@@ -571,31 +623,56 @@ export default function QuizCreatorPage() {
                         </div>
                       )}
 
+                      {/* Short Answer */}
                       {!isMCQ && (
-                        <div className="short-area">
-                          <textarea className="short-input" rows={3}
+                        <div style={{ padding:'0 18px 12px' }}>
+                          <textarea
+                            rows={3}
                             placeholder="Type your answer here…"
                             disabled={submitted}
                             value={answers[qi] ?? ''}
-                            onChange={e => setAnswers(prev => ({ ...prev, [qi]: e.target.value }))}/>
+                            onChange={e => setAnswers(prev => ({ ...prev, [qi]: e.target.value }))}
+                            style={{
+                              width:'100%', padding:'10px 12px', borderRadius:9,
+                              border:'1.5px solid #e8e8e8', fontSize:12,
+                              fontFamily:'system-ui,sans-serif', color:'#1d1d1f',
+                              resize:'vertical', minHeight:80, outline:'none',
+                              background: submitted ? '#f9f9f9' : '#fff',
+                            }}
+                          />
                           {!isRevealed && (
-                            <button className="reveal-btn" onClick={() => revealShort(qi)}>
+                            <button
+                              onClick={() => revealShort(qi)}
+                              style={{
+                                marginTop:8, padding:'7px 14px', borderRadius:8,
+                                border:'1.5px solid #7c3aed', background:'transparent',
+                                color:'#7c3aed', fontSize:11, fontWeight:700, cursor:'pointer',
+                              }}>
                               👁 {submitted ? 'Show Model Answer' : 'Reveal Answer'}
                             </button>
                           )}
                           {isRevealed && (
-                            <div className="model-ans">
-                              <strong>Model Answer</strong>
-                              {q.answer}
+                            <div style={{
+                              marginTop:8, padding:'10px 13px', background:'#fef9c3',
+                              borderRadius:8, fontSize:11, color:'#78350f', lineHeight:1.6,
+                              border:'1px solid #fde68a',
+                            }}>
+                              <strong style={{ display:'block', fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'.04em', marginBottom:3, color:'#92400e' }}>Model Answer</strong>
+                              {answerText}
                             </div>
                           )}
                         </div>
                       )}
 
-                      {((isMCQ && submitted) || (!isMCQ && isRevealed)) && (
-                        <div className="expl">
-                          <strong>Explanation</strong>
-                          {q.explanation}
+                      {/* Explanation */}
+                      {((isMCQ && submitted) || (!isMCQ && isRevealed)) && explText && (
+                        <div style={{
+                          margin:'0 18px 12px', padding:'10px 13px', background:'#f5f3ff',
+                          borderRadius:8, fontSize:11, color:'#4c1d95', lineHeight:1.6,
+                          border:'1px solid #e9d5ff',
+                        }}>
+                          <strong style={{ display:'block', fontSize:10, fontWeight:800, textTransform:'uppercase', letterSpacing:'.04em', marginBottom:3, color:'#7c3aed' }}>Explanation</strong>
+                          {explText}
                         </div>
                       )}
                     </div>
