@@ -43,6 +43,8 @@ const TOOLS = [
   { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor', cat:'Security' },
   { name:'PDF Summarizer AI', tag:'LIVE', href:'/pdf-summarizer', cat:'AI' },
   { name:'PDF Mind Map',      tag:'LIVE', href:'/mind-map',       cat:'AI' },
+  { name:'PDF → PowerPoint', tag:'LIVE', href:'/pdf-to-ppt',     cat:'Convert' },
+  { name:'PPT → PDF',        tag:'LIVE', href:'/ppt-to-pdf',     cat:'Convert' },
 ]
 
 // ─── global CSS ──────────────────────────────────────────────────────────────
