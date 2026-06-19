@@ -67,7 +67,9 @@ Return ONLY a valid JSON object — no markdown, no explanation:
 
 Rules:
 - Generate exactly ${questionCount} questions
+- CRITICAL: "type" must be exactly the string "mcq" or "short" — no other values
 - For MCQ: "answer" must be an EXACT copy of one of the strings in "options"
+- For MCQ: always include exactly 4 strings in "options"
 - Questions must be clearly grounded in the document — no invented facts
 - Vary question styles: don't repeat the same phrasing pattern
 - Short answers should require thinking, not just look-up

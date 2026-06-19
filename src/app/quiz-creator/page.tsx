@@ -269,8 +269,23 @@ export default function QuizCreatorPage() {
         throw new Error(j.error ?? `Server error ${res.status}`)
       }
 
-      const data: QuizData = await res.json()
-      if (!data.questions?.length) throw new Error('No questions generated.')
+      const raw: QuizData = await res.json()
+      if (!raw.questions?.length) throw new Error('No questions generated.')
+
+      // Normalize: Claude sometimes returns "multiple_choice" or "multiple-choice"
+      const data: QuizData = {
+        ...raw,
+        questions: raw.questions.map((q: any) => {
+          const isMCQ = q.type === 'mcq'
+            || (typeof q.type === 'string' && q.type.toLowerCase().includes('multi'))
+            || (Array.isArray(q.options) && q.options.length > 0)
+          return {
+            ...q,
+            type:    isMCQ ? 'mcq' : 'short',
+            options: isMCQ ? (Array.isArray(q.options) ? q.options : []) : undefined,
+          }
+        }),
+      }
       setQuizData(data)
       setProgress(100)
     } catch (e: any) {
@@ -552,7 +567,7 @@ export default function QuizCreatorPage() {
 
                       {q.type === 'mcq' && (
                         <div className="options">
-                          {q.options.map((opt, oi) => {
+                          {((q as MCQQuestion).options ?? []).map((opt, oi) => {
                             let cls = ''
                             if (userAns === opt) cls = 'sel'
                             if (submitted) {
