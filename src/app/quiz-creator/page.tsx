@@ -430,17 +430,6 @@ export default function QuizCreatorPage() {
           {/* ── Main ─────────────────────────────────────────────────── */}
           <main className="main">
 
-            {/* DEBUG strip — always visible when quiz is loaded */}
-            {quizData && (quizData.questions as any[])[0] && (
-              <div style={{ background:'#1a1a2e', padding:'8px 16px', fontSize:10, color:'#a8ff78', fontFamily:'monospace', lineHeight:1.5, flexShrink:0, overflowX:'auto', whiteSpace:'nowrap' }}>
-                <span style={{ color:'#ffd700', fontWeight:700 }}>DEBUG q[0]: </span>
-                keys=[{Object.keys((quizData.questions as any[])[0]).join(', ')}] &nbsp;|&nbsp;
-                type="{(quizData.questions as any[])[0].type}" &nbsp;|&nbsp;
-                question="{String((quizData.questions as any[])[0].question || '').slice(0,40)}..." &nbsp;|&nbsp;
-                options={JSON.stringify((quizData.questions as any[])[0].options)}
-              </div>
-            )}
-
             {/* Toolbar — shown when quiz is active */}
             {quizData && (
               <div className="toolbar">
