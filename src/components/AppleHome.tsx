@@ -46,6 +46,7 @@ const TOOLS = [
   { name:'PDF → PowerPoint', tag:'LIVE', href:'/pdf-to-ppt',     cat:'Convert' },
   { name:'PPT → PDF',        tag:'LIVE', href:'/ppt-to-pdf',     cat:'Convert' },
   { name:'Quiz Creator',     tag:'LIVE', href:'/quiz-creator',   cat:'AI' },
+  { name:'Add Page Numbers', tag:'LIVE', href:'/add-page-numbers', cat:'Edit' },
 ]
 
 // ─── global CSS ──────────────────────────────────────────────────────────────
