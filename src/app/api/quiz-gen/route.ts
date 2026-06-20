@@ -8,7 +8,6 @@ function extractJSON(raw: string): any {
   return JSON.parse(m ? m[1] : raw.trim())
 }
 
-// Extract options from any format Claude might return
 function extractOpts(q: any): string[] {
   for (const k of ['options','choices','Options','Choices','alternatives','possible_answers','answers','opts']) {
     if (Array.isArray(q[k]) && q[k].length > 0) return q[k].map(String)
@@ -58,6 +57,8 @@ Questions: ${questionCount}
 Type: ${typeMap[questionType]}
 Difficulty: ${diffMap[difficulty]}
 
+The document text below is marked with [PAGE N] markers so you can identify which page each section is on.
+
 --- DOCUMENT TEXT ---
 ${text.slice(0, 55000)}
 --- END ---
@@ -72,13 +73,17 @@ Return ONLY a valid JSON object — no markdown, no explanation:
       "question": "Clear, specific question drawn from document content?",
       "options": ["First option", "Second option", "Third option", "Fourth option"],
       "answer": "First option",
-      "explanation": "1-2 sentences explaining why this is correct and why others are wrong."
+      "explanation": "1-2 sentences explaining why this is correct and why others are wrong.",
+      "source_quote": "The exact verbatim sentence or phrase from the document this question is based on.",
+      "source_page": 2
     },
     {
       "type": "short",
       "question": "Open-ended question requiring a paragraph-length explanation?",
       "answer": "Model answer: 2-4 clear sentences covering the key points.",
-      "explanation": "Key concepts the answer should address."
+      "explanation": "Key concepts the answer should address.",
+      "source_quote": "The exact verbatim sentence or phrase from the document this question is based on.",
+      "source_page": 1
     }
   ]
 }
@@ -92,6 +97,8 @@ Rules:
 - Vary question styles: don't repeat the same phrasing pattern
 - Short answers should require thinking, not just look-up
 - All options for MCQ should be plausible (avoid obviously wrong distractors)
+- "source_quote": copy the EXACT verbatim sentence(s) from the document text that this question is based on — do not paraphrase
+- "source_page": use the [PAGE N] markers to identify the correct page number (integer, 1-indexed)
 - Output ONLY the JSON object`
 
     const client = new Anthropic({ apiKey })
@@ -119,11 +126,13 @@ Rules:
           if (idx >= 0 && idx < opts.length) answer = opts[idx]
         }
         return {
-          type:        isMCQ ? 'mcq' : 'short',
-          question:    String(q.question || q.Question || q.text || q.stem || ''),
-          options:     opts,
+          type:         isMCQ ? 'mcq' : 'short',
+          question:     String(q.question || q.Question || q.text || q.stem || ''),
+          options:      opts,
           answer,
-          explanation: String(q.explanation || q.Explanation || q.rationale || ''),
+          explanation:  String(q.explanation || q.Explanation || q.rationale || ''),
+          source_quote: String(q.source_quote || q.sourceQuote || q.source_text || q.source || ''),
+          source_page:  Math.max(1, Number(q.source_page || q.sourcePage || q.page || 1)),
         }
       }),
     }

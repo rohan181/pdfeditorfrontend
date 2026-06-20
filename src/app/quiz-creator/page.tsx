@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 
 type QType = 'mcq' | 'short' | 'mixed'
@@ -11,6 +11,13 @@ function fmtBytes(b: number) {
   if (b < 1024) return `${b} B`
   if (b < 1048576) return `${(b/1024).toFixed(1)} KB`
   return `${(b/1048576).toFixed(2)} MB`
+}
+
+interface RefPanel {
+  qi: number
+  quote: string
+  page: number
+  loading: boolean
 }
 
 export default function QuizCreator() {
@@ -28,11 +35,75 @@ export default function QuizCreator() {
   const [answers,    setAnswers]    = useState<Record<number,string>>({})
   const [revealed,   setRevealed]   = useState<Record<number,boolean>>({})
   const [submitted,  setSubmitted]  = useState(false)
-  const fileRef = useRef<HTMLInputElement>(null)
+  const [pageTexts,  setPageTexts]  = useState<{page:number,text:string}[]>([])
+  const [refPanel,   setRefPanel]   = useState<RefPanel | null>(null)
+
+  const fileRef      = useRef<HTMLInputElement>(null)
+  const pdfCanvasRef = useRef<HTMLCanvasElement>(null)
+  const renderingRef = useRef(false)
+
+  // Render PDF page and highlight matching text whenever a reference panel opens
+  useEffect(() => {
+    if (!refPanel?.loading || !file || renderingRef.current) return
+    renderingRef.current = true
+
+    const { page, quote } = refPanel
+
+    ;(async () => {
+      try {
+        const lib = await import('pdfjs-dist')
+        lib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${lib.version}/pdf.worker.min.js`
+
+        const bytes  = await file.arrayBuffer()
+        const doc    = await lib.getDocument({ data: bytes }).promise
+        const pdfPg  = await doc.getPage(page)
+
+        const naturalW = pdfPg.getViewport({ scale: 1 }).width
+        const maxW     = Math.min(window.innerWidth * 0.82 - 48, 860)
+        const scale    = Math.min(1.8, maxW / naturalW)
+        const vp       = pdfPg.getViewport({ scale })
+
+        const canvas   = pdfCanvasRef.current
+        if (!canvas) return
+        canvas.width   = vp.width
+        canvas.height  = vp.height
+        const ctx      = canvas.getContext('2d')!
+
+        await pdfPg.render({ canvasContext: ctx, viewport: vp }).promise
+
+        // Highlight words from the source quote
+        const normQuote = quote.toLowerCase().replace(/[^a-z0-9 ]/g, ' ')
+        const words = normQuote.split(/\s+/).filter(w => w.length > 4)
+
+        const tc = await pdfPg.getTextContent()
+        ctx.save()
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.42)'
+
+        for (const item of tc.items as any[]) {
+          if (!item.str || item.str.trim().length < 3) continue
+          const norm = item.str.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').trim()
+          const hit  = words.some(w => norm.includes(w))
+          if (!hit) continue
+
+          const [vpX, vpY] = vp.convertToViewportPoint(item.transform[4], item.transform[5])
+          const w = item.width  * scale
+          const h = item.height * scale
+          ctx.fillRect(vpX, vpY - h * 1.15, w, h * 1.35)
+        }
+        ctx.restore()
+      } catch (err) {
+        console.error('ref render:', err)
+      } finally {
+        renderingRef.current = false
+        setRefPanel(prev => prev ? { ...prev, loading: false } : null)
+      }
+    })()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refPanel?.loading, refPanel?.page])
 
   const loadFile = useCallback(async (f: File) => {
     if (!f.name.toLowerCase().endsWith('.pdf')) { setError('Please upload a PDF.'); return }
-    setError(''); setFile(f); setQuiz(null); setSubmitted(false); setAnswers({}); setRevealed({}); setProgress(0)
+    setError(''); setFile(f); setQuiz(null); setSubmitted(false); setAnswers({}); setRevealed({}); setProgress(0); setPageTexts([])
     try {
       const lib = await import('pdfjs-dist')
       lib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${lib.version}/pdf.worker.min.js`
@@ -48,21 +119,27 @@ export default function QuizCreator() {
 
   const generate = async () => {
     if (!file) return
-    setLoading(true); setQuiz(null); setError(''); setSubmitted(false); setAnswers({}); setRevealed({}); setProgress(10)
+    setLoading(true); setQuiz(null); setError(''); setSubmitted(false); setAnswers({}); setRevealed({}); setProgress(10); setPageTexts([])
     try {
       setStep('Reading PDF…')
       const lib = await import('pdfjs-dist')
       lib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${lib.version}/pdf.worker.min.js`
       const doc = await lib.getDocument({ data: await file.arrayBuffer() }).promise
-      let text = ''
+      const pts: {page:number, text:string}[] = []
+      const parts: string[] = []
+
       for (let p = 1; p <= doc.numPages; p++) {
-        const pg = await doc.getPage(p)
-        const tc = await pg.getTextContent()
-        text += (tc.items as any[]).map((i: any) => i.str).join(' ') + '\n'
+        const pg   = await doc.getPage(p)
+        const tc   = await pg.getTextContent()
+        const pgTx = (tc.items as any[]).map((i: any) => i.str).join(' ')
+        pts.push({ page: p, text: pgTx })
+        parts.push(`[PAGE ${p}]\n${pgTx}`)
         setProgress(10 + Math.round((p / doc.numPages) * 30))
       }
-      text = text.replace(/\s+/g, ' ').trim()
+
+      const text = parts.join('\n').replace(/\s+/g, ' ').trim()
       if (text.length < 30) throw new Error('No readable text found.')
+      setPageTexts(pts)
 
       setStep('Generating questions…'); setProgress(50)
       const res = await fetch('/api/quiz-gen', {
@@ -79,7 +156,30 @@ export default function QuizCreator() {
     } finally { setLoading(false); setStep('') }
   }
 
-  const reset = () => { setFile(null); setPages(0); setQuiz(null); setError(''); setProgress(0); setSubmitted(false); setAnswers({}); setRevealed({}) }
+  const reset = () => {
+    setFile(null); setPages(0); setQuiz(null); setError(''); setProgress(0)
+    setSubmitted(false); setAnswers({}); setRevealed({}); setPageTexts([]); setRefPanel(null)
+  }
+
+  const openRef = (qi: number) => {
+    if (!quiz) return
+    const q = quiz.questions[qi]
+    const quote = q.source_quote || q.question || ''
+
+    // Find the page that best matches the source quote
+    let bestPage = Math.max(1, Number(q.source_page) || 1)
+    if (pageTexts.length > 0 && quote.length > 10) {
+      const words = quote.toLowerCase().split(/\s+/).filter((w: string) => w.length > 4)
+      let bestScore = -1
+      for (const { page, text } of pageTexts) {
+        const t = text.toLowerCase()
+        const score = words.filter((w: string) => t.includes(w)).length
+        if (score > bestScore) { bestScore = score; bestPage = page }
+      }
+    }
+
+    setRefPanel({ qi, quote, page: bestPage, loading: true })
+  }
 
   // score
   let mcqTotal = 0, mcqCorrect = 0, mcqAnswered = 0
@@ -200,7 +300,7 @@ export default function QuizCreator() {
           </div>
 
           <div style={{ padding:'12px 16px', fontSize:10, color:'rgba(0,0,0,.35)', lineHeight:1.6 }}>
-            Claude reads up to 55 000 characters and generates real questions from your document.
+            Claude reads up to 55 000 characters and generates real questions from your document. Click 📍 on any MCQ to see the source passage.
           </div>
         </aside>
 
@@ -242,7 +342,7 @@ export default function QuizCreator() {
               <h1 style={{ fontSize:36, fontWeight:800, letterSpacing:'-.05em', color:'#1d1d1f', marginBottom:10, lineHeight:1.1 }}>PDF <span style={{ color:'#7c3aed' }}>Quiz Creator</span></h1>
               <p style={{ fontSize:14, color:'rgba(0,0,0,.42)', maxWidth:400, lineHeight:1.7, marginBottom:28 }}>Upload any PDF and Claude will create a custom quiz — multiple choice, short answer, or a mix.</p>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, maxWidth:460 }}>
-                {[['🎯','Multiple Choice','4 options, instant grading'],['✍️','Short Answer','Write & check model answer'],['📊','Instant Score','Explanations for every question']].map(([icon,t,d]) => (
+                {[['🎯','Multiple Choice','4 options, instant grading'],['✍️','Short Answer','Write & check model answer'],['📍','Source References','Jump to the PDF passage']].map(([icon,t,d]) => (
                   <div key={t} style={{ padding:'14px 10px', border:'1px solid #e8e8e8', borderRadius:12, background:'#fff' }}>
                     <div style={{ fontSize:20, marginBottom:5 }}>{icon}</div>
                     <div style={{ fontSize:10, fontWeight:700, color:'#1d1d1f', marginBottom:2 }}>{t}</div>
@@ -305,6 +405,7 @@ export default function QuizCreator() {
                 const isRev    = !!revealed[qi]
                 const correct  = isMCQ && submitted && userAns === q.answer
                 const wrong    = isMCQ && submitted && !!userAns && userAns !== q.answer
+                const hasRef   = isMCQ && !!q.source_quote
 
                 return (
                   <div key={qi} style={{
@@ -319,8 +420,19 @@ export default function QuizCreator() {
                         {qi+1}
                       </div>
                       <div style={{ flex:1 }}>
-                        <div style={{ display:'inline-block', padding:'3px 9px', borderRadius:10, fontSize:10, fontWeight:700, marginBottom:7, background: isMCQ?'#ede9fe':'#fce7f3', color: isMCQ?'#7c3aed':'#be185d' }}>
-                          {isMCQ ? '⬤ Multiple Choice' : '✍ Short Answer'}
+                        <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:7, flexWrap:'wrap' as const }}>
+                          <span style={{ display:'inline-block', padding:'3px 9px', borderRadius:10, fontSize:10, fontWeight:700, background: isMCQ?'#ede9fe':'#fce7f3', color: isMCQ?'#7c3aed':'#be185d' }}>
+                            {isMCQ ? '⬤ Multiple Choice' : '✍ Short Answer'}
+                          </span>
+                          {hasRef && (
+                            <button
+                              onClick={() => openRef(qi)}
+                              title="View source passage in PDF"
+                              style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'3px 9px', borderRadius:10, fontSize:10, fontWeight:700, border:'1.5px solid #d1fae5', background:'#ecfdf5', color:'#059669', cursor:'pointer' }}
+                            >
+                              📍 Source
+                            </button>
+                          )}
                         </div>
                         <div style={{ fontSize:14, fontWeight:600, color:'#1d1d1f', lineHeight:1.55 }}>{q.question}</div>
                       </div>
@@ -396,6 +508,62 @@ export default function QuizCreator() {
 
         </main>
       </div>
+
+      {/* ── Reference Modal ── */}
+      {refPanel && (
+        <div
+          onClick={() => setRefPanel(null)}
+          style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.55)', zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background:'#fff', borderRadius:18, width:'min(92vw, 880px)', maxHeight:'88vh', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 24px 60px rgba(0,0,0,.3)' }}
+          >
+            {/* Modal header */}
+            <div style={{ padding:'16px 20px', borderBottom:'1px solid #f0f0f0', display:'flex', alignItems:'flex-start', gap:14, flexShrink:0 }}>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:11, fontWeight:800, color:'#059669', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:6 }}>
+                  📍 Source Reference — Question {refPanel.qi + 1}  ·  Page {refPanel.page}
+                </div>
+                <div style={{ fontSize:13, color:'#374151', lineHeight:1.6, fontStyle:'italic', borderLeft:'3px solid #a7f3d0', paddingLeft:10 }}>
+                  "{refPanel.quote}"
+                </div>
+              </div>
+              <button
+                onClick={() => setRefPanel(null)}
+                style={{ width:30, height:30, borderRadius:8, border:'1px solid #e0e0e0', background:'#f9f9f9', cursor:'pointer', fontSize:16, color:'rgba(0,0,0,.5)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* PDF canvas area */}
+            <div style={{ flex:1, overflowY:'auto', background:'#6b7280', display:'flex', flexDirection:'column', alignItems:'center', padding:20, gap:0 }}>
+              {refPanel.loading && (
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:12, height:260 }}>
+                  <div style={{ width:36, height:36, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#fff', borderRadius:'50%', animation:'spin .8s linear infinite' }}/>
+                  <div style={{ fontSize:12, color:'rgba(255,255,255,.7)', fontWeight:600 }}>Rendering page {refPanel.page}…</div>
+                </div>
+              )}
+              {/* canvas always in DOM so ref attaches before useEffect fires */}
+              <canvas
+                ref={pdfCanvasRef}
+                style={{ maxWidth:'100%', borderRadius:6, boxShadow:'0 8px 32px rgba(0,0,0,.4)', display: refPanel.loading ? 'none' : 'block' }}
+              />
+            </div>
+
+            {/* Modal footer */}
+            <div style={{ padding:'10px 20px', borderTop:'1px solid #f0f0f0', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+              <div style={{ fontSize:11, color:'rgba(0,0,0,.4)' }}>
+                Yellow highlights show matching text from the source passage.
+              </div>
+              <button onClick={() => setRefPanel(null)} style={{ padding:'7px 16px', borderRadius:8, border:'none', background:'#1d1d1f', color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display:'none' }}
