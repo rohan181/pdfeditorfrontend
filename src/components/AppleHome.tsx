@@ -232,41 +232,14 @@ const CI = { hidden:{opacity:0,y:20,scale:.98}, visible:{ opacity:1,y:0,scale:1,
 // ══════════════════════════════════════════════════════════════════════════════
 //  CURSOR DOT
 // ══════════════════════════════════════════════════════════════════════════════
-function CursorDot() {
-  const x=useMotionValue(-40), y=useMotionValue(-40)
-  const sx=useSpring(x,{stiffness:600,damping:32}), sy=useSpring(y,{stiffness:600,damping:32})
-  const [visible,setVisible]=useState(false)
-  const [big,setBig]=useState(false)
-
-  useEffect(()=>{
-    const move=(e:MouseEvent)=>{ setVisible(true); x.set(e.clientX-4); y.set(e.clientY-4) }
-    const leave=()=>setVisible(false)
-    const over=(e:MouseEvent)=>{ const t=e.target as HTMLElement; setBig(!!(t.closest('a')||t.closest('button'))) }
-    window.addEventListener('mousemove',move)
-    window.addEventListener('mouseleave',leave)
-    window.addEventListener('mouseover',over)
-    return ()=>{ window.removeEventListener('mousemove',move); window.removeEventListener('mouseleave',leave); window.removeEventListener('mouseover',over) }
-  },[x,y])
-
-  return (
-    <motion.div
-      style={{ position:'fixed', top:0, left:0, zIndex:9999, pointerEvents:'none', x:sx, y:sy }}
-      animate={{ opacity:visible?1:0, scale:big?3:1 }}
-      transition={{ opacity:{ duration:.2 }, scale:SP }}
-    >
-      <div style={{ width:8, height:8, borderRadius:'50%', background:RED, boxShadow:`0 0 6px ${RED}` }}/>
-    </motion.div>
-  )
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  SCROLL % COUNTER
 // ══════════════════════════════════════════════════════════════════════════════
 function ScrollPct() {
   const { scrollYProgress } = useScroll()
-  const [pct, setPct] = useState(0)
-  useEffect(()=> scrollYProgress.on('change', v => setPct(Math.round(v*100))), [scrollYProgress])
-  return <span>{String(pct).padStart(2,'0')}%</span>
+  const pct = useTransform(scrollYProgress, v => String(Math.round(v * 100)).padStart(2, '0') + '%')
+  return <motion.span style={{fontVariantNumeric:'tabular-nums'}}>{pct}</motion.span>
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -998,33 +971,21 @@ const GSTEPS = [
 function Apple3DScroll() {
   const pin = useRef<HTMLDivElement>(null)
   const [step, setStep] = useState(0)
-  const [progress, setProgress] = useState(0)
 
-  useEffect(()=>{
-    const el = pin.current
-    if (!el) return
-    const onScroll = () => {
-      // re-read offsetTop each call so layout shifts don't break the math
-      const elTop = el.getBoundingClientRect().top + window.scrollY
-      const scrolled = window.scrollY - elTop
-      const total = el.offsetHeight - window.innerHeight
-      if (total <= 0) return
-      const p = Math.max(0, Math.min(1, scrolled / total))
-      setProgress(p)
-      setStep(p < .25 ? 0 : p < .5 ? 1 : p < .75 ? 2 : 3)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll, { passive: true })
-    // defer initial call so fonts/images have time to affect layout
-    const t = setTimeout(onScroll, 100)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      clearTimeout(t)
-    }
-  }, [])
+  // useScroll reads from the compositor thread — no getBoundingClientRect, no layout thrashing
+  const { scrollYProgress } = useScroll({ target: pin, offset: ['start start', 'end end'] })
 
-  const hintOpacity = Math.max(0, 1 - progress / 0.06)
+  // step only changes at 3 thresholds (25/50/75%) — not every pixel
+  useEffect(() => {
+    return scrollYProgress.on('change', p => {
+      const next = p < .25 ? 0 : p < .5 ? 1 : p < .75 ? 2 : 3
+      setStep(prev => prev === next ? prev : next)
+    })
+  }, [scrollYProgress])
+
+  // Motion values — drive DOM directly, zero React re-renders
+  const hintOpacity = useTransform(scrollYProgress, [0, 0.06], [1, 0])
+  const barWidth    = useTransform(scrollYProgress, [0, 1], ['0%', '100%'])
   const cur = GSTEPS[step]
   const ScreenComp = cur.Screen
 
@@ -1155,7 +1116,7 @@ function Apple3DScroll() {
         </div>
 
         {/* Scroll hint — hidden on mobile via CSS */}
-        <motion.div className="scr-hint" style={{opacity:hintOpacity,position:'absolute',bottom:'8%',left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,pointerEvents:'none'}}>
+        <motion.div className="scr-hint" style={{opacity:hintOpacity as any,position:'absolute',bottom:'8%',left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,pointerEvents:'none'}}>
           <motion.div animate={{y:[0,6,0]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}>
             <svg width="18" height="28" viewBox="0 0 18 28" fill="none"><rect x="1" y="1" width="16" height="26" rx="8" stroke="rgba(0,0,0,.18)" strokeWidth="1.5"/><motion.rect x="7.5" y="6" width="3" height="5" rx="1.5" fill="rgba(0,0,0,.3)" animate={{y:[0,7,0],opacity:[1,.2,1]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}/></svg>
           </motion.div>
@@ -1164,7 +1125,7 @@ function Apple3DScroll() {
 
         {/* Progress bar */}
         <div style={{height:2,background:'rgba(0,0,0,.05)',flexShrink:0,position:'relative'}}>
-          <motion.div animate={{width:`${progress*100}%`,background:cur.color}} transition={{duration:.1}} style={{position:'absolute',top:0,left:0,bottom:0}}/>
+          <motion.div style={{position:'absolute',top:0,left:0,bottom:0,width:barWidth,background:cur.color}}/>
         </div>
       </div>
     </div>
@@ -1490,7 +1451,6 @@ export default function AppleHome() {
   return (
     <div style={{background:'#fff'}}>
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
-      <CursorDot />
       <Nav />
       <Hero />
       <Apple3DScroll />
