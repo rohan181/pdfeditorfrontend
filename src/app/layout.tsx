@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   category: 'technology',
   metadataBase: new URL('https://editpdfai.com'),
   alternates: {
-    canonical: '/',
+    canonical: 'https://editpdfai.com',
   },
   robots: {
     index: true,
