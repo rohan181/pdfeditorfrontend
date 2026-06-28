@@ -1,6 +1,10 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { auth } from '@clerk/nextjs/server'
 
 export async function GET() {
+  const { userId } = await auth()
+  if (!userId) return Response.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim()
   const keyPreview = apiKey ? `${apiKey.slice(0, 20)}...` : 'NOT FOUND'
 

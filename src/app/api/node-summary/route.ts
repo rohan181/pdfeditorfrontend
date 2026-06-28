@@ -1,10 +1,20 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
+import { getUserSubscription, checkAndIncrementUsage } from '@/lib/subscription'
 
 export const maxDuration = 30
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth()
+    if (!userId) return Response.json({ error: 'Sign in to use AI features' }, { status: 401 })
+    const tier = await getUserSubscription(userId)
+    if (tier === 'free') {
+      const allowed = await checkAndIncrementUsage(userId, 5)
+      if (!allowed) return Response.json({ error: 'Daily limit reached. Upgrade to Pro for unlimited access.' }, { status: 429 })
+    }
+
     const apiKey = process.env.ANTHROPIC_API_KEY
     if (!apiKey) return Response.json({ error: 'ANTHROPIC_API_KEY not set' }, { status: 500 })
 

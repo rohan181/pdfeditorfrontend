@@ -1,10 +1,29 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-export function middleware(request: NextRequest) {
-  return NextResponse.next()
-}
+const isProtected = createRouteMatcher([
+  '/dashboard(.*)',
+  '/api/autofill(.*)',
+  '/api/chat-fill(.*)',
+  '/api/summarize(.*)',
+  '/api/translate-pdf(.*)',
+  '/api/ocr(.*)',
+  '/api/mind-map(.*)',
+  '/api/node-summary(.*)',
+  '/api/extract-doc(.*)',
+  '/api/improvise(.*)',
+  '/api/form-builder-ai(.*)',
+  '/api/scan-detect(.*)',
+  '/api/pdf-to-excel(.*)',
+  '/api/pdf-to-word(.*)',
+  '/api/pdf-to-ppt(.*)',
+  '/api/quiz-gen(.*)',
+  '/api/test-ai(.*)',
+])
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtected(req)) await auth.protect()
+})
 
 export const config = {
-  matcher: [],
+  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
 }

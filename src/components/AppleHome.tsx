@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect, useCallback } from 'react'
+import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import {
   motion, AnimatePresence,
@@ -48,10 +49,12 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   { name:'Quiz Creator',      tag:'LIVE', href:'/quiz-creator',       cat:'AI',       Icon:ClipboardList,   iconBg:'linear-gradient(135deg,#7c3aed,#6366f1)', desc:'Generate quizzes from PDF content' },
   { name:'PDF Translator',    tag:'LIVE', href:'/pdf-translator',     cat:'AI',       Icon:Languages,       iconBg:'linear-gradient(135deg,#6366f1,#06b6d4)', desc:'Translate PDFs to any language' },
   // ── Edit ────────────────────────────────────────────────────────────────────
+  { name:'PDF Viewer',         tag:'LIVE', href:'/pdf-viewer',         cat:'Edit',     Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#0a84ff,#34aadc)', desc:'View any PDF in your browser' },
   { name:'PDF Editor',        tag:'LIVE', href:'/pdf-editor',         cat:'Edit',     Icon:FilePen,         iconBg:'linear-gradient(135deg,#2563eb,#3b82f6)', desc:'Edit text, images and layout' },
   { name:'PDF Annotator',     tag:'LIVE', href:'/pdf-annotate',       cat:'Edit',     Icon:MessageSquareText, iconBg:'linear-gradient(135deg,#0ea5e9,#38bdf8)', desc:'Highlight, comment and annotate' },
   // ── Pages ───────────────────────────────────────────────────────────────────
   { name:'PDF Page Manager',  tag:'LIVE', href:'/pdf-page-manager',   cat:'Pages',    Icon:Layers,          iconBg:'linear-gradient(135deg,#f59e0b,#fbbf24)', desc:'Drag-and-drop page reordering' },
+  { name:'PDF Cropper',       tag:'LIVE', href:'/pdf-cropper',        cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Crop & trim PDF page margins' },
   { name:'Add Page Numbers',  tag:'LIVE', href:'/add-page-numbers',   cat:'Pages',    Icon:ListOrdered,     iconBg:'linear-gradient(135deg,#f97316,#fb923c)', desc:'Add custom page numbers to PDF' },
   { name:'Rotate PDF Pages',  tag:'LIVE', href:'/rotate-pdf',         cat:'Pages',    Icon:RotateCw,        iconBg:'linear-gradient(135deg,#ea580c,#f97316)', desc:'Rotate any pages to any angle' },
   { name:'Extract Pages',     tag:'LIVE', href:'/extract-pages',      cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Pull specific pages into a new PDF' },
@@ -62,6 +65,10 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   { name:'PDF → PowerPoint',  tag:'LIVE', href:'/pdf-to-ppt',         cat:'Convert',  Icon:Presentation,    iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Turn slides into editable PPT' },
   { name:'Excel / CSV → PDF', tag:'LIVE', href:'/excel-to-pdf',       cat:'Convert',  Icon:Table,           iconBg:'linear-gradient(135deg,#059669,#10b981)', desc:'Spreadsheets to perfect PDF' },
   { name:'PPT → PDF',         tag:'LIVE', href:'/ppt-to-pdf',         cat:'Convert',  Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#b45309,#d97706)', desc:'Presentations to PDF instantly' },
+  { name:'Word → PDF',         tag:'LIVE', href:'/word-to-pdf',        cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Convert Word .docx to PDF' },
+  { name:'TXT → PDF',          tag:'LIVE', href:'/txt-to-pdf',         cat:'Convert',  Icon:FileText,        iconBg:'linear-gradient(135deg,#6366f1,#818cf8)', desc:'Turn plain text into a PDF' },
+  { name:'RTF → PDF',          tag:'LIVE', href:'/rtf-to-pdf',         cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#b45309,#d97706)', desc:'Convert RTF documents to PDF' },
+  { name:'ODT → PDF',          tag:'LIVE', href:'/odt-to-pdf',         cat:'Convert',  Icon:FileText,        iconBg:'linear-gradient(135deg,#059669,#10b981)', desc:'Convert OpenDocument Text to PDF' },
   { name:'HTML → PDF',        tag:'LIVE', href:'/html-to-pdf',        cat:'Convert',  Icon:Code,            iconBg:'linear-gradient(135deg,#0891b2,#06b6d4)', desc:'Render HTML pages as PDF' },
   { name:'Image to PDF',      tag:'LIVE', href:'/image-to-pdf',       cat:'Convert',  Icon:ImagePlus,       iconBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', desc:'Turn photos & images into PDF' },
   { name:'PDF to Images',     tag:'LIVE', href:'/pdf-to-images',      cat:'Convert',  Icon:Images,          iconBg:'linear-gradient(135deg,#db2777,#ec4899)', desc:'Export every page as an image' },
@@ -87,7 +94,6 @@ const CSS = `
   @keyframes pdot     { 0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.7);opacity:.4} }
 
   *,*::before,*::after { box-sizing:border-box; }
-  html { scroll-behavior:smooth; }
   body { overflow-x:clip; }
 
   .grad-red {
@@ -100,6 +106,18 @@ const CSS = `
   .tool-row-light:hover { background:#f5f5f5 !important; }
   .tab-bar::-webkit-scrollbar { display:none; }
   .tab-bar { -ms-overflow-style:none; scrollbar-width:none; }
+
+  /* Mobile accordion — CSS grid trick, GPU-composited, no JS layout reads */
+  .mob-acc       { display:grid; grid-template-rows:0fr; transition:grid-template-rows .2s ease; }
+  .mob-acc.open  { grid-template-rows:1fr; }
+  .mob-acc > div { overflow:hidden; }
+
+  /* Chevron rotation via CSS — no Framer Motion needed */
+  .mob-chev      { display:flex; transition:transform .18s ease; }
+  .mob-chev.open { transform:rotate(90deg); }
+
+  /* Remove 300ms tap delay on all nav buttons */
+  .mob-cat-btn   { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 
   /* responsive */
   .r-feat    { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
@@ -161,7 +179,7 @@ const CSS = `
   }
 
   /* ── scroll gallery mobile ── */
-  .scr-sticky { position:-webkit-sticky; position:sticky; }
+  .scr-sticky { position:-webkit-sticky; position:sticky; will-change:transform; }
   @supports (height:100dvh){ .scr-sticky{ height:100dvh; } }
 
   @media(max-width:768px){
@@ -341,6 +359,7 @@ const NAV_LABELS: Record<string,string> = {
 }
 
 function Nav() {
+  const { isSignedIn, isLoaded } = useUser()
   const [openCat, setOpenCat] = useState<string|null>(null)
   const [mobOpen, setMobOpen] = useState(false)
   const [mobExp,  setMobExp]  = useState<string|null>(null)
@@ -414,11 +433,41 @@ function Nav() {
             </Link>
           </nav>
 
-          {/* CTA + mobile toggle */}
+          {/* CTA + auth + mobile toggle */}
           <div style={{display:'flex',alignItems:'center',gap:8,marginLeft:'auto',flexShrink:0}}>
+            {/* Auth buttons */}
+            {isLoaded && (
+              isSignedIn ? (
+                <div className="desk" style={{display:'flex',alignItems:'center',gap:8}}>
+                  <Link href="/dashboard"
+                    style={{...FI,fontSize:12.5,fontWeight:500,color:'rgba(0,0,0,.55)',
+                      textDecoration:'none',padding:'5px 10px',borderRadius:8}}>
+                    Dashboard
+                  </Link>
+                  <UserButton />
+                </div>
+              ) : (
+                <div className="desk" style={{display:'flex',alignItems:'center',gap:6}}>
+                  <SignInButton mode="modal">
+                    <button style={{...FI,fontSize:12.5,fontWeight:500,color:'rgba(0,0,0,.6)',
+                      background:'transparent',border:'none',padding:'6px 12px',borderRadius:8,
+                      cursor:'pointer',letterSpacing:'-0.01em'}}>
+                      Sign in
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button style={{...FI,fontSize:12.5,fontWeight:600,color:'#fff',
+                      background:'#1d1d1f',border:'none',padding:'6px 14px',borderRadius:99,
+                      cursor:'pointer',letterSpacing:'-0.02em'}}>
+                      Sign up
+                    </button>
+                  </SignUpButton>
+                </div>
+              )
+            )}
             <Link href="/ai-pdf-form-filler" className="desk"
               style={{...FI,alignItems:'center',gap:6,padding:'7px 16px',
-                background:'#1d1d1f',color:'#fff',borderRadius:99,fontSize:12.5,fontWeight:700,
+                background:RED,color:'#fff',borderRadius:99,fontSize:12.5,fontWeight:700,
                 textDecoration:'none',letterSpacing:'-0.02em',flexShrink:0}}>
               <motion.span style={{display:'flex',alignItems:'center',gap:6}}
                 whileHover={{gap:10}} transition={SP}>
@@ -554,12 +603,12 @@ function Nav() {
 
                     {/* Category tap row — big, thumb-friendly */}
                     <button onClick={()=>setMobExp(expanded ? null : cat.id)}
+                      className="mob-cat-btn"
                       style={{
                         width:'100%',display:'flex',alignItems:'center',gap:14,
                         padding:'14px 20px',minHeight:68,
                         background: expanded ? '#fff' : 'transparent',
                         border:'none',cursor:'pointer',textAlign:'left',
-                        WebkitTapHighlightColor:'transparent',
                       }}>
                       <div style={{
                         width:44,height:44,minWidth:44,borderRadius:13,
@@ -576,64 +625,56 @@ function Nav() {
                           {catTools.length} tools
                         </div>
                       </div>
-                      <motion.span style={{display:'flex',flexShrink:0}}
-                        animate={{rotate: expanded?90:0}} transition={{duration:.15}}>
+                      <span className={`mob-chev${expanded ? ' open' : ''}`} style={{flexShrink:0}}>
                         <ChevronRight size={20} color={expanded ? cat.color : 'rgba(0,0,0,.25)'} strokeWidth={2}/>
-                      </motion.span>
+                      </span>
                     </button>
 
-                    {/* Tool rows — single column, full-width, comfortably spaced */}
-                    <AnimatePresence>
-                      {expanded && (
-                        <motion.div
-                          initial={{height:0}} animate={{height:'auto'}}
-                          exit={{height:0}} transition={{duration:.22,ease:E}}
-                          style={{overflow:'hidden',background:'#fff'}}>
-                          <div style={{borderTop:`3px solid ${cat.color}20`}}>
-                            {catTools.map((tool, ti) => (
-                              <Link key={tool.name} href={tool.href}
-                                onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
-                                <div style={{
-                                  display:'flex',alignItems:'center',gap:14,
-                                  padding:'13px 20px 13px 20px',
-                                  borderBottom: ti < catTools.length-1 ? '1px solid #f5f5f5' : 'none',
-                                  background:'#fff',
-                                  WebkitTapHighlightColor:'transparent',
-                                }}>
-                                  {/* Icon */}
-                                  <div style={{
-                                    width:40,height:40,minWidth:40,borderRadius:11,
-                                    background:tool.iconBg,flexShrink:0,
-                                    display:'flex',alignItems:'center',justifyContent:'center',
-                                    boxShadow:`0 4px 10px ${cat.color}22`,
-                                  }}>
-                                    <tool.Icon size={19} color="#fff" strokeWidth={1.8}/>
-                                  </div>
-                                  {/* Text */}
-                                  <div style={{flex:1,minWidth:0}}>
-                                    <div style={{...FI,fontSize:14,fontWeight:600,color:'#1d1d1f'}}>
-                                      {tool.name}
-                                    </div>
-                                    <div style={{...FI,fontSize:12,color:'#9ca3af',marginTop:2,
-                                      overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                                      {tool.desc}
-                                    </div>
-                                  </div>
-                                  {/* Arrow */}
-                                  <div style={{
-                                    width:28,height:28,minWidth:28,borderRadius:8,
-                                    background:`${cat.color}12`,flexShrink:0,
-                                    display:'flex',alignItems:'center',justifyContent:'center',
-                                  }}>
-                                    <ArrowRight size={13} color={cat.color} strokeWidth={2.2}/>
-                                  </div>
+                    {/* Tool rows — CSS grid accordion, no JS animation */}
+                    <div className={`mob-acc${expanded ? ' open' : ''}`}>
+                      <div style={{borderTop:`3px solid ${cat.color}20`,background:'#fff'}}>
+                        {catTools.map((tool, ti) => (
+                          <Link key={tool.name} href={tool.href}
+                            onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
+                            <div style={{
+                              display:'flex',alignItems:'center',gap:14,
+                              padding:'13px 20px 13px 20px',
+                              borderBottom: ti < catTools.length-1 ? '1px solid #f5f5f5' : 'none',
+                              background:'#fff',
+                              WebkitTapHighlightColor:'transparent',
+                            }}>
+                              {/* Icon */}
+                              <div style={{
+                                width:40,height:40,minWidth:40,borderRadius:11,
+                                background:tool.iconBg,flexShrink:0,
+                                display:'flex',alignItems:'center',justifyContent:'center',
+                                boxShadow:`0 4px 10px ${cat.color}22`,
+                              }}>
+                                <tool.Icon size={19} color="#fff" strokeWidth={1.8}/>
+                              </div>
+                              {/* Text */}
+                              <div style={{flex:1,minWidth:0}}>
+                                <div style={{...FI,fontSize:14,fontWeight:600,color:'#1d1d1f'}}>
+                                  {tool.name}
                                 </div>
-                              </Link>
-                            ))}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                                <div style={{...FI,fontSize:12,color:'#9ca3af',marginTop:2,
+                                  overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                                  {tool.desc}
+                                </div>
+                              </div>
+                              {/* Arrow */}
+                              <div style={{
+                                width:28,height:28,minWidth:28,borderRadius:8,
+                                background:`${cat.color}12`,flexShrink:0,
+                                display:'flex',alignItems:'center',justifyContent:'center',
+                              }}>
+                                <ArrowRight size={13} color={cat.color} strokeWidth={2.2}/>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )
               })}
@@ -975,12 +1016,17 @@ function Apple3DScroll() {
   // useScroll reads from the compositor thread — no getBoundingClientRect, no layout thrashing
   const { scrollYProgress } = useScroll({ target: pin, offset: ['start start', 'end end'] })
 
-  // step only changes at 3 thresholds (25/50/75%) — not every pixel
+  // step only changes at 3 thresholds — throttle to one setState per animation frame
   useEffect(() => {
-    return scrollYProgress.on('change', p => {
-      const next = p < .25 ? 0 : p < .5 ? 1 : p < .75 ? 2 : 3
-      setStep(prev => prev === next ? prev : next)
+    let rafId = 0
+    const unsub = scrollYProgress.on('change', p => {
+      cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(() => {
+        const next = p < .25 ? 0 : p < .5 ? 1 : p < .75 ? 2 : 3
+        setStep(prev => prev === next ? prev : next)
+      })
     })
+    return () => { unsub(); cancelAnimationFrame(rafId) }
   }, [scrollYProgress])
 
   // Motion values — drive DOM directly, zero React re-renders
@@ -1020,10 +1066,10 @@ function Apple3DScroll() {
           <div className="scr-left" style={{width:300,flexShrink:0,position:'relative'}}>
 
             {/* Ghost step number */}
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="sync">
               <motion.div key={`ghost-${step}`}
                 initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-                transition={{duration:.4}}
+                transition={{duration:.25}}
                 style={{position:'absolute',top:-40,left:-8,zIndex:0,fontFamily:'var(--font-jakarta,system-ui)',
                   fontSize:180,fontWeight:800,color:'rgba(0,0,0,.04)',lineHeight:1,
                   letterSpacing:'-0.06em',userSelect:'none',pointerEvents:'none'}}>
@@ -1041,10 +1087,10 @@ function Apple3DScroll() {
               ))}
             </div>
 
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="sync">
               <motion.div key={step}
-                initial={{opacity:0,y:22}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-16}}
-                transition={{duration:.35,ease:E}}>
+                initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-10}}
+                transition={{duration:.22,ease:E}}>
                 <div style={{...MONO,fontSize:10,letterSpacing:'0.16em',textTransform:'uppercase',color:cur.color,marginBottom:10}}>
                   STEP {cur.n} — {cur.label}
                 </div>
@@ -1100,12 +1146,12 @@ function Apple3DScroll() {
 
               {/* Inner screen */}
               <div className="scr-screen" style={{position:'relative',height:390,overflow:'hidden',background:'#F5F5F7'}}>
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="sync">
                   <motion.div key={step}
-                    initial={{opacity:0,scale:.94,filter:'blur(8px)'}}
-                    animate={{opacity:1,scale:1,filter:'blur(0px)'}}
-                    exit={{opacity:0,scale:1.04,filter:'blur(8px)'}}
-                    transition={{duration:.4,ease:[0.22,1,0.36,1]}}
+                    initial={{opacity:0,scale:.96}}
+                    animate={{opacity:1,scale:1}}
+                    exit={{opacity:0,scale:1.02}}
+                    transition={{duration:.22,ease:[0.22,1,0.36,1]}}
                     style={{position:'absolute',inset:0}}>
                     <ScreenComp />
                   </motion.div>
@@ -1257,10 +1303,10 @@ function AllTools() {
         </motion.div>
 
         {/* ── Content ── */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="sync">
           <motion.div key={activeTab}
-            initial={{opacity:0, y:12}} animate={{opacity:1, y:0}} exit={{opacity:0, y:-8}}
-            transition={{duration:.28, ease:[.22,1,.36,1]}}>
+            initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} exit={{opacity:0}}
+            transition={{duration:.15, ease:[.22,1,.36,1]}}>
 
             {activeTab === 'All' ? (
               /* ── Grouped by category ── */

@@ -20,6 +20,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // ── Flagship tools ────────────────────────────────────────────────────────
     url('/ai-pdf-form-filler',  0.95, 'monthly'),
     url('/pdf-editor',          0.95, 'monthly'),
+    url('/pdf-viewer',          0.90, 'monthly'),
+    url('/pdf-cropper',         0.85, 'monthly'),
 
     // ── AI-powered tools ──────────────────────────────────────────────────────
     url('/pdf-ocr',             0.85, 'monthly'),
@@ -51,6 +53,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // ── Convert to PDF ────────────────────────────────────────────────────────
     url('/image-to-pdf',        0.80, 'monthly'),
     url('/excel-to-pdf',        0.75, 'monthly'),
+    url('/word-to-pdf',         0.80, 'monthly'),
+    url('/txt-to-pdf',          0.75, 'monthly'),
+    url('/rtf-to-pdf',          0.75, 'monthly'),
+    url('/odt-to-pdf',          0.75, 'monthly'),
     url('/html-to-pdf',         0.75, 'monthly'),
     url('/ppt-to-pdf',          0.75, 'monthly'),
 
