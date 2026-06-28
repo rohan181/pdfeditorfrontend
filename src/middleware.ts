@@ -1,7 +1,13 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
 
-const isProtected = createRouteMatcher([
+// Pages that require a signed-in session (redirect to sign-in if not authed)
+const isProtectedPage = createRouteMatcher([
   '/dashboard(.*)',
+])
+
+// API routes that require auth — return 401 JSON instead of redirecting
+const isProtectedApi = createRouteMatcher([
   '/api/autofill(.*)',
   '/api/chat-fill(.*)',
   '/api/summarize(.*)',
@@ -21,7 +27,19 @@ const isProtected = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, req) => {
-  if (isProtected(req)) await auth.protect()
+  if (isProtectedPage(req)) {
+    await auth.protect()
+    return
+  }
+  if (isProtectedApi(req)) {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Sign in to use AI features' },
+        { status: 401 },
+      )
+    }
+  }
 })
 
 export const config = {

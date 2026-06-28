@@ -360,7 +360,15 @@ export default function MindMapPage() {
         body:    JSON.stringify({ sources: usable.map(s => ({ name: s.name, text: s.text })) }),
       })
       setGenStep('Building graph…')
-      if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error ?? `HTTP ${res.status}`) }
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        const msg = res.status === 401
+          ? 'Please sign in to generate mind maps.'
+          : res.status === 429
+          ? 'Daily limit reached. Upgrade to Pro for unlimited access.'
+          : j.error ?? `Error ${res.status}`
+        throw new Error(msg)
+      }
       const data: MapAPI = await res.json()
       const laid = layout(data)
       setMapData(data)
