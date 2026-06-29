@@ -2,6 +2,19 @@ import { supabaseAdmin } from './supabase'
 
 export type SubscriptionTier = 'free' | 'pro' | 'team'
 
+// Returns a 403 Response if the user is not on Pro, null if they are.
+// Use at the top of every AI route handler.
+export async function requirePro(userId: string): Promise<Response | null> {
+  const tier = await getUserSubscription(userId)
+  if (tier !== 'pro') {
+    return Response.json(
+      { error: 'A Pro subscription is required to use AI features. Upgrade at /pricing' },
+      { status: 403 },
+    )
+  }
+  return null
+}
+
 export async function getUserSubscription(userId: string): Promise<SubscriptionTier> {
   const { data } = await supabaseAdmin
     .from('subscriptions')
