@@ -55,8 +55,8 @@ export default function PricingPage() {
   const router   = useRouter()
   const { isSignedIn } = useUser()
 
-  const monthly        = 12
-  const annualMonthly  = Math.round(monthly * 0.75) // $9
+  const monthly        = 0.50
+  const annualMonthly  = 0.38 // ~25% off
 
   async function handleUpgrade() {
     if (!isSignedIn) { router.push('/sign-up'); return }
@@ -182,13 +182,13 @@ export default function PricingPage() {
           <p style={{ fontSize: 12, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.07em', margin: '0 0 10px' }}>Pro</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, marginBottom: 4 }}>
             <span style={{ fontSize: 46, fontWeight: 800, color: '#fff', letterSpacing: '-.04em', lineHeight: 1 }}>
-              ${displayPrice}
+              ${displayPrice.toFixed(2)}
             </span>
             <span style={{ fontSize: 14, color: '#6b7280', paddingBottom: 6 }}>/month</span>
           </div>
           {annual && (
             <p style={{ fontSize: 13, color: '#0891b2', fontWeight: 600, margin: '2px 0 4px' }}>
-              Billed ${annualMonthly * 12}/year — save ${(monthly - annualMonthly) * 12}
+              Billed ${(annualMonthly * 12).toFixed(2)}/year — save ${((monthly - annualMonthly) * 12).toFixed(2)}
             </p>
           )}
           <p style={{ fontSize: 14, color: '#9ca3af', margin: '0 0 24px' }}>Unlimited AI for power users</p>
@@ -290,7 +290,7 @@ export default function PricingPage() {
             color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
           }}
         >
-          {loading ? 'Redirecting…' : `Upgrade to Pro — $${displayPrice}/mo`}
+          {loading ? 'Redirecting…' : `Upgrade to Pro — $${displayPrice.toFixed(2)}/mo`}
         </button>
         <p style={{ fontSize: 13, color: '#4b5563', marginTop: 14 }}>
           No contracts · Cancel anytime · Secured by Stripe
