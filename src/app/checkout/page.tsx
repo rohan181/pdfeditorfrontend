@@ -30,16 +30,16 @@ function CheckoutForm() {
     setLoading(true)
     setError(null)
 
-    const { error: stripeError } = await stripe.confirmPayment({
+    const { error: stripeError } = await stripe.confirmSetup({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/dashboard?upgraded=1`,
+        return_url: `${window.location.origin}/checkout/confirm`,
       },
     })
 
     // Only reaches here on error — success redirects automatically
     if (stripeError) {
-      setError(stripeError.message ?? 'Payment failed. Please try again.')
+      setError(stripeError.message ?? 'Payment setup failed. Please try again.')
       setLoading(false)
     }
   }
@@ -90,7 +90,7 @@ export default function CheckoutPage() {
     if (!isLoaded) return
     if (!isSignedIn) { router.push('/sign-in'); return }
 
-    fetch('/api/subscription/create-subscription', { method: 'POST' })
+    fetch('/api/subscription/create-setup-intent', { method: 'POST' })
       .then(async r => {
         const text = await r.text()
         try {
