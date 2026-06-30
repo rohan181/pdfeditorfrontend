@@ -91,13 +91,17 @@ export default function CheckoutPage() {
     if (!isSignedIn) { router.push('/sign-in'); return }
 
     fetch('/api/subscription/create-subscription', { method: 'POST' })
-      .then(r => r.json())
       .then(async r => {
-        const data = await r.json().catch(() => null)
-        if (data?.clientSecret) setClientSecret(data.clientSecret)
-        else setFetchError(data?.error ?? `Server error (${r.status})`)
+        const text = await r.text()
+        try {
+          const data = JSON.parse(text)
+          if (data.clientSecret) setClientSecret(data.clientSecret)
+          else setFetchError(data.error ?? `Server error (${r.status})`)
+        } catch {
+          setFetchError(`Server error (${r.status}): ${text.slice(0, 120)}`)
+        }
       })
-      .catch(() => setFetchError('Network error. Please try again.'))
+      .catch(err => setFetchError(`Network error: ${err?.message ?? 'unknown'}`))
   }, [isLoaded, isSignedIn, router])
 
   return (
