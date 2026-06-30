@@ -431,6 +431,13 @@ function Nav() {
                 All Tools
               </motion.span>
             </Link>
+            <Link href="/pricing" style={{textDecoration:'none'}}>
+              <motion.span whileHover={{color:'#0891b2'}}
+                style={{...FI,display:'inline-flex',alignItems:'center',gap:4,padding:'5px 10px',
+                  fontSize:12.5,fontWeight:600,color:'rgba(0,0,0,.52)',borderRadius:8}}>
+                Pricing
+              </motion.span>
+            </Link>
           </nav>
 
           {/* CTA + auth + mobile toggle */}
