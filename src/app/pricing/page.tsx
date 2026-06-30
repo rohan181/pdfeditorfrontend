@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 
 const FREE_FEATURES = [
-  '1 AI use per day',
+  '5 AI uses per day',
   'All 30+ PDF tools (unlimited)',
   'PDF edit, merge, split, compress',
   'E-signature & annotations',
@@ -26,7 +26,7 @@ const PRO_FEATURES = [
 
 const COMPARISON = [
   ['Core PDF tools',          true,        true         ],
-  ['AI uses per day',         '1',         'Unlimited'  ],
+  ['AI uses per day',         '5',         'Unlimited'  ],
   ['AI form autofill',        false,       true         ],
   ['AI summarizer',           false,       true         ],
   ['AI translator',           false,       true         ],

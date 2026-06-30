@@ -48,7 +48,7 @@ export default function UpgradeModal() {
           Daily limit reached
         </h2>
         <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.6 }}>
-          You've used your free AI credit for today.<br/>
+          You've used all 5 free AI credits for today.<br/>
           Upgrade to <strong style={{ color: '#0891b2' }}>Pro</strong> for unlimited access to all AI tools.
         </p>
 

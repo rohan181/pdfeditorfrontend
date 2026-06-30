@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     if (!userId) return Response.json({ error: 'Sign in to use AI features' }, { status: 401 })
     const tier = await getUserSubscription(userId)
     if (tier === 'free') {
-      const allowed = await checkAndIncrementUsage(userId, 1)
+      const allowed = await checkAndIncrementUsage(userId, 5)
       if (!allowed) return Response.json({ error: 'Daily limit reached. Upgrade to Pro for unlimited access at /pricing' }, { status: 429 })
     }
 
