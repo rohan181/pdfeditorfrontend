@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { getUserSubscription, checkAndIncrementUsage } from '@/lib/subscription'
+import { currentUser } from '@clerk/nextjs/server'
+import { getUserSubscription } from '@/lib/subscription'
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 
@@ -19,95 +20,171 @@ export default async function DashboardPage() {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
 
-  const [tier, usage] = await Promise.all([
+  const [tier, usage, user] = await Promise.all([
     getUserSubscription(userId),
     getTodayUsage(userId),
+    currentUser(),
   ])
 
-  const isPro = tier !== 'free'
-  const limit = 5
+  const isPro  = tier !== 'free'
+  const limit  = 5
+  const pct    = Math.min(100, (usage / limit) * 100)
+  const name   = user?.firstName ?? user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] ?? 'there'
+  const email  = user?.emailAddresses?.[0]?.emailAddress ?? ''
+  const avatar = user?.imageUrl
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-      <div className="max-w-2xl mx-auto">
-        <Link href="/" className="text-sm text-slate-500 hover:text-slate-700 mb-6 inline-block">
+    <div style={{ minHeight: '100vh', background: '#f5f5f7', fontFamily: 'var(--font-dm,system-ui,sans-serif)' }}>
+
+      {/* Nav */}
+      <nav style={{ maxWidth: 900, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+          <div style={{ width: 30, height: 30, background: '#1d1d1f', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="white"/>
+              <polyline points="14 2 14 8 20 8" stroke="#1d1d1f" strokeWidth="2"/>
+            </svg>
+          </div>
+          <span style={{ fontSize: 16, fontWeight: 800, color: '#1d1d1f', letterSpacing: '-.04em' }}>
+            Edit<span style={{ color: '#0891b2' }}>PDF</span> AI
+          </span>
+        </Link>
+        <Link href="/" style={{ fontSize: 13, color: '#6b7280', textDecoration: 'none', fontWeight: 500 }}>
           ← Back to tools
         </Link>
+      </nav>
 
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Dashboard</h1>
-        <p className="text-slate-500 mb-8">Manage your EditPDF AI subscription and usage.</p>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '8px 24px 64px' }}>
 
-        {/* Plan card */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-slate-800">Current Plan</h2>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-              isPro
-                ? 'bg-violet-100 text-violet-700'
-                : 'bg-slate-100 text-slate-600'
-            }`}>
-              {isPro ? 'Pro' : 'Free'}
-            </span>
-          </div>
-
-          {!isPro && (
-            <div className="mb-4">
-              <div className="flex justify-between text-sm text-slate-600 mb-1">
-                <span>AI uses today</span>
-                <span>{usage} / {limit}</span>
-              </div>
-              <div className="w-full bg-slate-100 rounded-full h-2">
-                <div
-                  className="bg-violet-500 h-2 rounded-full transition-all"
-                  style={{ width: `${Math.min(100, (usage / limit) * 100)}%` }}
-                />
-              </div>
-              {usage >= limit && (
-                <p className="text-amber-600 text-sm mt-2">
-                  Daily limit reached. Upgrade for unlimited AI access.
-                </p>
-              )}
+        {/* Profile header */}
+        <div style={{ background: '#fff', borderRadius: 20, padding: '28px 28px', border: '1.5px solid #e5e7eb', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 20, boxShadow: '0 4px 20px rgba(0,0,0,.05)' }}>
+          {avatar ? (
+            <img src={avatar} alt={name} style={{ width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+          ) : (
+            <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#1d1d1f', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ color: '#fff', fontSize: 22, fontWeight: 700 }}>{name[0]?.toUpperCase()}</span>
             </div>
           )}
-
-          {isPro ? (
-            <p className="text-slate-600 text-sm">Unlimited AI operations. Enjoy unrestricted access to all tools.</p>
-          ) : (
-            <p className="text-slate-600 text-sm">
-              Free plan includes {limit} AI operations per day. All core PDF tools are always free.
-            </p>
-          )}
+          <div style={{ flex: 1 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1d1d1f', margin: '0 0 4px', letterSpacing: '-.03em' }}>
+              Hey, {name} 👋
+            </h1>
+            <p style={{ fontSize: 14, color: '#9ca3af', margin: 0 }}>{email}</p>
+          </div>
+          <span style={{
+            padding: '6px 16px', borderRadius: 100, fontSize: 13, fontWeight: 700,
+            background: isPro ? 'linear-gradient(135deg,#0891b2,#0e7490)' : '#f3f4f6',
+            color: isPro ? '#fff' : '#6b7280',
+          }}>
+            {isPro ? '✦ Pro' : 'Free'}
+          </span>
         </div>
 
-        {/* Upgrade CTA */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20 }}>
+
+          {/* My Plan */}
+          <div style={{ background: '#fff', borderRadius: 20, padding: '24px', border: '1.5px solid #e5e7eb', boxShadow: '0 4px 20px rgba(0,0,0,.05)' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1d1d1f', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 28, height: 28, background: '#f0f9ff', borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#0891b2"/></svg>
+              </span>
+              My Plan
+            </h2>
+
+            <div style={{ background: isPro ? 'linear-gradient(135deg,#0891b2,#0e7490)' : '#f9fafb', borderRadius: 14, padding: '18px 20px', marginBottom: 16 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: isPro ? 'rgba(255,255,255,.7)' : '#9ca3af', textTransform: 'uppercase', letterSpacing: '.06em', margin: '0 0 4px' }}>
+                Current plan
+              </p>
+              <p style={{ fontSize: 24, fontWeight: 800, color: isPro ? '#fff' : '#1d1d1f', margin: '0 0 4px', letterSpacing: '-.03em' }}>
+                {isPro ? 'Pro' : 'Free'}
+              </p>
+              <p style={{ fontSize: 13, color: isPro ? 'rgba(255,255,255,.7)' : '#6b7280', margin: 0 }}>
+                {isPro ? 'Unlimited AI · All tools' : `${limit} AI uses per day`}
+              </p>
+            </div>
+
+            {!isPro && (
+              <>
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 13, color: '#6b7280', fontWeight: 500 }}>AI uses today</span>
+                    <span style={{ fontSize: 13, color: usage >= limit ? '#ef4444' : '#374151', fontWeight: 700 }}>{usage} / {limit}</span>
+                  </div>
+                  <div style={{ background: '#f3f4f6', borderRadius: 100, height: 6, overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', borderRadius: 100, background: usage >= limit ? '#ef4444' : '#0891b2', transition: 'width .3s' }} />
+                  </div>
+                  {usage >= limit && (
+                    <p style={{ fontSize: 12, color: '#ef4444', marginTop: 6, fontWeight: 500 }}>Daily limit reached — resets at midnight</p>
+                  )}
+                </div>
+                <Link href="/pricing" style={{
+                  display: 'block', textAlign: 'center', padding: '12px 0', borderRadius: 12,
+                  background: '#1d1d1f', color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none',
+                }}>
+                  Upgrade to Pro — $0.50/mo
+                </Link>
+              </>
+            )}
+
+            {isPro && (
+              <form action="/api/subscription/portal" method="POST">
+                <button type="submit" style={{
+                  width: '100%', padding: '12px 0', borderRadius: 12,
+                  background: '#f3f4f6', color: '#374151', border: 'none',
+                  fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                }}>
+                  Manage subscription
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Quick access */}
+          <div style={{ background: '#fff', borderRadius: 20, padding: '24px', border: '1.5px solid #e5e7eb', boxShadow: '0 4px 20px rgba(0,0,0,.05)' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1d1d1f', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 28, height: 28, background: '#f5f3ff', borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+              Quick Access
+            </h2>
+            {[
+              { label: 'AI Form Filler',   href: '/ai-pdf-form-filler', color: '#7c3aed' },
+              { label: 'PDF Summarizer',   href: '/pdf-summarizer',      color: '#0891b2' },
+              { label: 'PDF Translator',   href: '/pdf-translator',      color: '#16a34a' },
+              { label: 'PDF Mind Map',     href: '/mind-map',            color: '#f97316' },
+              { label: 'PDF → Word',       href: '/pdf-to-word',         color: '#2563eb' },
+              { label: 'Quiz Creator',     href: '/quiz-creator',        color: '#dc2626' },
+            ].map(({ label, href, color }) => (
+              <Link key={href} href={href} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '11px 14px', borderRadius: 10, marginBottom: 8,
+                background: '#fafafa', textDecoration: 'none', border: '1px solid #f3f4f6',
+              }}>
+                <span style={{ fontSize: 14, fontWeight: 600, color: '#1d1d1f' }}>{label}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color, background: `${color}15`, padding: '2px 8px', borderRadius: 100 }}>AI</span>
+              </Link>
+            ))}
+          </div>
+
+        </div>
+
+        {/* Upgrade banner for free users */}
         {!isPro && (
-          <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl p-6 text-white mb-6">
-            <h2 className="font-bold text-lg mb-1">Upgrade to Pro</h2>
-            <p className="text-violet-100 text-sm mb-4">
-              Unlimited AI operations, priority processing, and all future features.
-            </p>
-            <Link
-              href="/pricing"
-              className="inline-block bg-white text-violet-700 font-semibold px-5 py-2 rounded-xl text-sm hover:bg-violet-50 transition"
-            >
-              View pricing →
+          <div style={{ marginTop: 20, background: '#1d1d1f', borderRadius: 20, padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(8,145,178,.3),transparent 70%)', pointerEvents: 'none' }} />
+            <div>
+              <p style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 6px', letterSpacing: '-.03em' }}>Go unlimited with Pro</p>
+              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Unlimited AI uses, all tools, priority processing — just $0.50/mo</p>
+            </div>
+            <Link href="/pricing" style={{
+              padding: '12px 28px', borderRadius: 12, background: 'linear-gradient(135deg,#0891b2,#0e7490)',
+              color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none', flexShrink: 0,
+            }}>
+              Upgrade now →
             </Link>
           </div>
         )}
 
-        {isPro && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 className="font-semibold text-slate-800 mb-3">Subscription</h2>
-            <form action="/api/subscription/portal" method="POST">
-              <button
-                type="submit"
-                className="bg-slate-900 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-slate-700 transition"
-              >
-                Manage subscription
-              </button>
-            </form>
-          </div>
-        )}
       </div>
     </div>
   )
