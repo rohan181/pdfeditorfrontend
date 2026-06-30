@@ -22,16 +22,12 @@ export async function POST() {
 
     const stripe = new Stripe(stripeKey)
 
-    // Cancel at period end so they keep access until billing cycle ends
+    // Cancel at period end — user keeps Pro access until the billing cycle ends
+    // Supabase stays 'active'; the customer.subscription.deleted webhook
+    // will flip it to 'canceled' when Stripe actually ends the subscription
     await stripe.subscriptions.update(data.stripe_sub_id, {
       cancel_at_period_end: true,
     })
-
-    // Update Supabase to reflect cancellation pending
-    await supabaseAdmin
-      .from('subscriptions')
-      .update({ status: 'canceled' })
-      .eq('user_id', userId)
 
     return Response.json({ success: true })
   } catch (err) {
