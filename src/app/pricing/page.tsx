@@ -50,7 +50,6 @@ const FAQS = [
 
 export default function PricingPage() {
   const [annual, setAnnual]   = useState(false)
-  const [loading, setLoading] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const router   = useRouter()
   const { isSignedIn } = useUser()
@@ -58,22 +57,9 @@ export default function PricingPage() {
   const monthly        = 1.00
   const annualMonthly  = 0.75 // ~25% off
 
-  async function handleUpgrade() {
+  function handleUpgrade() {
     if (!isSignedIn) { router.push('/sign-up'); return }
-    setLoading(true)
-    try {
-      const priceId = process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID ?? ''
-      const res  = await fetch('/api/subscription/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId }),
-      })
-      const data = await res.json()
-      if (data.url) window.location.href = data.url
-      else alert(data.error ?? 'Something went wrong')
-    } finally {
-      setLoading(false)
-    }
+    router.push('/checkout')
   }
 
   const displayPrice = annual ? annualMonthly : monthly
@@ -203,15 +189,13 @@ export default function PricingPage() {
 
           <button
             onClick={handleUpgrade}
-            disabled={loading}
             style={{
               width: '100%', padding: '14px 0', borderRadius: 12, border: 'none',
               background: 'linear-gradient(135deg,#0891b2,#0e7490)',
-              color: '#fff', fontSize: 15, fontWeight: 700,
-              cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? .7 : 1,
+              color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
             }}
           >
-            {loading ? 'Redirecting to Stripe…' : isSignedIn ? 'Upgrade to Pro' : 'Get started'}
+            {isSignedIn ? 'Upgrade to Pro' : 'Get started'}
           </button>
           <p style={{ textAlign: 'center', fontSize: 12, color: '#4b5563', marginTop: 12, margin: '12px 0 0' }}>
             No contracts · Cancel anytime · Secured by Stripe
@@ -283,14 +267,13 @@ export default function PricingPage() {
         </p>
         <button
           onClick={handleUpgrade}
-          disabled={loading}
           style={{
             padding: '14px 36px', borderRadius: 12, border: 'none',
             background: 'linear-gradient(135deg,#0891b2,#0e7490)',
             color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
           }}
         >
-          {loading ? 'Redirecting…' : `Upgrade to Pro — $${displayPrice.toFixed(2)}/mo`}
+          {`Upgrade to Pro — $${displayPrice.toFixed(2)}/mo`}
         </button>
         <p style={{ fontSize: 13, color: '#4b5563', marginTop: 14 }}>
           No contracts · Cancel anytime · Secured by Stripe
