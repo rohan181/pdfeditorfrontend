@@ -41,11 +41,18 @@ export async function POST() {
       expand: ['latest_invoice.payment_intent'],
     })
 
-    const invoice = subscription.latest_invoice as Stripe.Invoice & { payment_intent: Stripe.PaymentIntent }
-    const clientSecret = invoice.payment_intent?.client_secret
+    const invoice = subscription.latest_invoice as Stripe.Invoice & { payment_intent: Stripe.PaymentIntent } | null
+    const clientSecret = invoice?.payment_intent?.client_secret ?? null
+
+    console.log('[create-subscription] sub status:', subscription.status)
+    console.log('[create-subscription] invoice id:', invoice?.id ?? 'null')
+    console.log('[create-subscription] payment_intent id:', invoice?.payment_intent?.id ?? 'null')
+    console.log('[create-subscription] client_secret present:', !!clientSecret)
 
     if (!clientSecret) {
-      return Response.json({ error: 'Could not get payment intent from Stripe' }, { status: 500 })
+      return Response.json({
+        error: `No client secret — sub status: ${subscription.status}, invoice: ${invoice?.id ?? 'null'}, pi: ${invoice?.payment_intent?.id ?? 'null'}`,
+      }, { status: 500 })
     }
 
     // Pre-create Supabase record so the webhook can update it by stripe_customer_id
