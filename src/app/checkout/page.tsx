@@ -92,9 +92,10 @@ export default function CheckoutPage() {
 
     fetch('/api/subscription/create-subscription', { method: 'POST' })
       .then(r => r.json())
-      .then(data => {
-        if (data.clientSecret) setClientSecret(data.clientSecret)
-        else setFetchError(data.error ?? 'Failed to initialize checkout')
+      .then(async r => {
+        const data = await r.json().catch(() => null)
+        if (data?.clientSecret) setClientSecret(data.clientSecret)
+        else setFetchError(data?.error ?? `Server error (${r.status})`)
       })
       .catch(() => setFetchError('Network error. Please try again.'))
   }, [isLoaded, isSignedIn, router])
