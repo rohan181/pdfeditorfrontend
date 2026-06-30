@@ -32,26 +32,38 @@ export async function POST() {
       customerId = customer.id
     }
 
-    // Create subscription (payment_behavior: default_incomplete gives us a client_secret)
+    // Create subscription with default_incomplete so it requires payment confirmation
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
       payment_behavior: 'default_incomplete',
-      payment_settings: { save_default_payment_method: 'on_subscription' },
-      expand: ['latest_invoice.payment_intent'],
+      payment_settings: {
+        save_default_payment_method: 'on_subscription',
+        payment_method_types: ['card'],
+      },
+      collection_method: 'charge_automatically',
     })
 
-    const invoice = subscription.latest_invoice as Stripe.Invoice & { payment_intent: Stripe.PaymentIntent } | null
-    const clientSecret = invoice?.payment_intent?.client_secret ?? null
+    // Retrieve the invoice directly to get the payment_intent
+    const invoiceId = subscription.latest_invoice as string
+    if (!invoiceId) {
+      return Response.json({ error: 'No invoice on subscription' }, { status: 500 })
+    }
 
-    console.log('[create-subscription] sub status:', subscription.status)
-    console.log('[create-subscription] invoice id:', invoice?.id ?? 'null')
-    console.log('[create-subscription] payment_intent id:', invoice?.payment_intent?.id ?? 'null')
-    console.log('[create-subscription] client_secret present:', !!clientSecret)
+    const invoice = await stripe.invoices.retrieve(invoiceId, {
+      expand: ['payment_intent'],
+    })
+
+    const paymentIntent = (invoice as unknown as { payment_intent: Stripe.PaymentIntent | null }).payment_intent
+    const clientSecret = paymentIntent?.client_secret ?? null
+
+    console.log('[create-subscription] sub:', subscription.id, 'status:', subscription.status)
+    console.log('[create-subscription] invoice:', invoice.id, 'status:', invoice.status)
+    console.log('[create-subscription] pi:', paymentIntent?.id ?? 'null', 'secret present:', !!clientSecret)
 
     if (!clientSecret) {
       return Response.json({
-        error: `No client secret — sub status: ${subscription.status}, invoice: ${invoice?.id ?? 'null'}, pi: ${invoice?.payment_intent?.id ?? 'null'}`,
+        error: `No client secret — invoice status: ${invoice.status}, pi: ${paymentIntent?.id ?? 'null'}, pi_status: ${paymentIntent?.status ?? 'null'}`,
       }, { status: 500 })
     }
 
