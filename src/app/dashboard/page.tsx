@@ -127,15 +127,24 @@ export default async function DashboardPage() {
             )}
 
             {isPro && (
-              <form action="/api/subscription/portal" method="POST">
-                <button type="submit" style={{
-                  width: '100%', padding: '12px 0', borderRadius: 12,
-                  background: '#f3f4f6', color: '#374151', border: 'none',
-                  fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <form action="/api/subscription/portal" method="POST">
+                  <button type="submit" style={{
+                    width: '100%', padding: '12px 0', borderRadius: 12,
+                    background: '#f3f4f6', color: '#374151', border: 'none',
+                    fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  }}>
+                    Manage subscription
+                  </button>
+                </form>
+                <a href="/cancel" style={{
+                  display: 'block', textAlign: 'center', padding: '11px 0', borderRadius: 12,
+                  border: '1.5px solid #fee2e2', color: '#ef4444', background: '#fff',
+                  fontSize: 14, fontWeight: 600, textDecoration: 'none',
                 }}>
-                  Manage subscription
-                </button>
-              </form>
+                  Cancel subscription
+                </a>
+              </div>
             )}
           </div>
 
