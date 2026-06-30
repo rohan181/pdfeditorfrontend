@@ -55,8 +55,8 @@ export default function PricingPage() {
   const router   = useRouter()
   const { isSignedIn } = useUser()
 
-  const monthly        = 0.10
-  const annualMonthly  = 0.08 // ~25% off
+  const monthly        = 1.00
+  const annualMonthly  = 0.75 // ~25% off
 
   async function handleUpgrade() {
     if (!isSignedIn) { router.push('/sign-up'); return }

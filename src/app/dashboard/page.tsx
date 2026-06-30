@@ -121,7 +121,7 @@ export default async function DashboardPage() {
                   display: 'block', textAlign: 'center', padding: '12px 0', borderRadius: 12,
                   background: '#1d1d1f', color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none',
                 }}>
-                  Upgrade to Pro — $0.10/mo
+                  Upgrade to Pro — $1.00/mo
                 </Link>
               </>
             )}
@@ -174,7 +174,7 @@ export default async function DashboardPage() {
             <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(8,145,178,.3),transparent 70%)', pointerEvents: 'none' }} />
             <div>
               <p style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 6px', letterSpacing: '-.03em' }}>Go unlimited with Pro</p>
-              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Unlimited AI uses, all tools, priority processing — just $0.10/mo</p>
+              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Unlimited AI uses, all tools, priority processing — just $1.00/mo</p>
             </div>
             <Link href="/pricing" style={{
               padding: '12px 28px', borderRadius: 12, background: 'linear-gradient(135deg,#0891b2,#0e7490)',
