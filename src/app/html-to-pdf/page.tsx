@@ -1,6 +1,8 @@
 'use client'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import SiteNav from '@/components/SiteNav'
+import SiteFooter from '@/components/SiteFooter'
 
 type PageSize   = 'a4' | 'letter' | 'legal'
 type Orient     = 'portrait' | 'landscape'
@@ -225,36 +227,7 @@ export default function HtmlToPdf() {
   return (
     <div style={S.page}>
       {/* Nav */}
-      <nav style={S.nav}>
-        <Link href="/" style={{ display:'inline-flex', alignItems:'center', gap:8, textDecoration:'none' }}>
-          <div style={{ width:27, height:27, background:'#1d1d1f', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="white"/>
-              <polyline points="14 2 14 8 20 8" stroke="#1d1d1f" strokeWidth="2"/>
-            </svg>
-          </div>
-          <span style={{ fontSize:14, fontWeight:700, color:'#1d1d1f', letterSpacing:'-.04em' }}>
-            Edit<span style={{ color:'#7c3aed' }}>PDF</span> AI
-          </span>
-        </Link>
-        <span style={{ fontSize:11, color:'rgba(0,0,0,.2)' }}>›</span>
-        <span style={{ fontSize:13, fontWeight:700, color:'#1d1d1f' }}>HTML → PDF</span>
-        <div style={{ flex:1 }}/>
-        {/* Quick-action buttons in nav */}
-        <button
-          onClick={printToPDF}
-          style={{ padding:'6px 13px', borderRadius:8, fontSize:12, fontWeight:700, border:'1.5px solid #e0e0e0', background:'#fff', color:'#374151', cursor:'pointer' }}
-        >
-          🖨 Print to PDF
-        </button>
-        <button
-          onClick={convertToPDF}
-          disabled={loading}
-          style={{ padding:'6px 13px', borderRadius:8, fontSize:12, fontWeight:700, border:'none', background: loading ? '#e0e0e0' : '#7c3aed', color: loading ? '#aaa' : '#fff', cursor: loading ? 'not-allowed' : 'pointer' }}
-        >
-          {loading ? `${progress}%…` : '⬇ Convert & Download'}
-        </button>
-      </nav>
+      <SiteNav />
 
       {/* Progress bar */}
       {loading && (

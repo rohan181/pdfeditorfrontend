@@ -1,6 +1,8 @@
 'use client'
 import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import SiteNav from '@/components/SiteNav'
+import SiteFooter from '@/components/SiteFooter'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -10,9 +12,9 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
-.pg{min-height:100vh;background:#f5f5f7}
+.pg{min-height:100vh;background:#f5f5f7;padding-top:56px;}
 
-.nav{height:52px;background:rgba(255,255,255,.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,.08);display:flex;align-items:center;padding:0 20px;gap:10px;position:sticky;top:0;z-index:100}
+
 .logo{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
 .logo-mark{width:27px;height:27px;background:#1d1d1f;border-radius:7px;display:flex;align-items:center;justify-content:center}
 .logo-name{font-size:14px;font-weight:700;color:#1d1d1f;letter-spacing:-.04em}
@@ -383,21 +385,7 @@ export default function ExcelToPDFPage() {
       <div className="pg">
 
         {/* Nav */}
-        <nav className="nav">
-          <Link href="/" className="logo">
-            <div className="logo-mark">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="white"/>
-                <polyline points="14 2 14 8 20 8" stroke="#1d1d1f" strokeWidth="2"/>
-              </svg>
-            </div>
-            <span className="logo-name">Edit<em>PDF</em> AI</span>
-          </Link>
-          <span className="nav-sep">›</span>
-          <span className="nav-title">Excel / CSV to PDF</span>
-          <div className="nav-sp"/>
-          <Link href="/" className="back">← All Tools</Link>
-        </nav>
+        <SiteNav />
 
         <div className="wrap">
 

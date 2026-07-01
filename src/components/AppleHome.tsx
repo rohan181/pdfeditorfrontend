@@ -114,7 +114,7 @@ const CSS = `
 
   /* Chevron rotation via CSS — no Framer Motion needed */
   .mob-chev      { display:flex; transition:transform .18s ease; }
-  .mob-chev.open { transform:rotate(90deg); }
+  .mob-chev.open { transform:rotate(180deg); }
 
   /* Remove 300ms tap delay on all nav buttons */
   .mob-cat-btn   { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
@@ -264,9 +264,22 @@ function ScrollPct() {
 //  BROWSER UI MOCKUP
 // ══════════════════════════════════════════════════════════════════════════════
 function BrowserUI() {
+  const tools = [
+    { Icon:MousePointer2, label:'Edit',     color:'#6366f1', active:true  },
+    { Icon:Sparkles,      label:'AI',       color:'#7c3aed', active:false },
+    { Icon:PenTool,       label:'Sign',     color:RED,       active:false },
+    { Icon:FileType,      label:'Convert',  color:'#2563eb', active:false },
+    { Icon:Minimize2,     label:'Compress', color:'#f97316', active:false },
+  ]
+  const tasks = [
+    { label:'AI Summarize',   color:'#7c3aed', d:'0.2s' },
+    { label:'E-Sign',         color:RED,       d:'0.7s' },
+    { label:'PDF → Word',     color:'#2563eb', d:'1.2s' },
+    { label:'Compress',       color:'#f97316', d:'1.7s' },
+  ]
   return (
     <div style={{borderRadius:16,border:'1px solid rgba(0,0,0,.08)',overflow:'hidden',boxShadow:'0 24px 80px -16px rgba(0,0,0,.12)'}}>
-      {/* Chrome */}
+      {/* Chrome bar */}
       <div style={{background:'#F5F5F7',borderBottom:'1px solid rgba(0,0,0,.07)',height:36,display:'flex',alignItems:'center',padding:'0 14px',gap:10}}>
         <div style={{display:'flex',gap:5}}>
           {['#ff5f57','#febc2e','#28c840'].map(c=><div key={c} style={{width:9,height:9,borderRadius:'50%',background:c}}/>)}
@@ -279,70 +292,66 @@ function BrowserUI() {
         </div>
       </div>
       {/* App body */}
-      <div style={{height:380,background:'#fff',display:'grid',gridTemplateColumns:'40px 1fr 180px',gridTemplateRows:'32px 1fr',...FI}}>
-        <div style={{gridColumn:'1/-1',background:'#F5F5F7',borderBottom:'1px solid rgba(0,0,0,.06)',display:'flex',alignItems:'center',padding:'0 10px',gap:5}}>
-          {[MousePointer2,ScanLine,PenLine,Layers].map((Icon,i)=>(
-            <div key={i} style={{width:22,height:22,borderRadius:5,display:'flex',alignItems:'center',justifyContent:'center',background:i===0?'#1d1d1f':'transparent',color:i===0?'#fff':'rgba(0,0,0,.3)'}}>
-              <Icon size={10} strokeWidth={1.8}/>
-            </div>
-          ))}
-          <div style={{flex:1}}/>
-          <div style={{display:'flex',alignItems:'center',gap:4,padding:'2px 9px',background:RED,borderRadius:99}}>
-            <Zap size={8} color="#fff" strokeWidth={2.5}/><span style={{fontSize:8.5,color:'#fff',fontWeight:700}}>AI FILL</span>
-          </div>
-        </div>
-        <div style={{background:'#F5F5F7',borderRight:'1px solid rgba(0,0,0,.06)',display:'flex',flexDirection:'column',alignItems:'center',padding:'9px 0',gap:4}}>
-          {[MousePointer2,ScanLine,PenLine].map((Icon,i)=>(
-            <div key={i} style={{width:24,height:24,borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',background:i===0?'rgba(0,0,0,.08)':'transparent',color:i===0?'#1d1d1f':'rgba(0,0,0,.25)'}}>
-              <Icon size={11} strokeWidth={1.8}/>
+      <div style={{height:380,background:'#fff',display:'grid',gridTemplateColumns:'44px 1fr 168px',...FI}}>
+        {/* Left sidebar — tool icons */}
+        <div style={{background:'#F5F5F7',borderRight:'1px solid rgba(0,0,0,.06)',display:'flex',flexDirection:'column',alignItems:'center',padding:'10px 0',gap:3}}>
+          {tools.map(({Icon,label,color,active})=>(
+            <div key={label} title={label} style={{width:30,height:30,borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',
+              background:active?color:'transparent',marginBottom:1}}>
+              <Icon size={13} color={active?'#fff':color} strokeWidth={active?2.5:1.8}/>
             </div>
           ))}
         </div>
-        {/* PDF */}
-        <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'14px 10px',overflow:'hidden'}}>
-          <div style={{background:'#fff',borderRadius:4,boxShadow:'0 4px 20px rgba(0,0,0,.1)',width:'100%',maxWidth:260,padding:'16px 14px',position:'relative',overflow:'hidden',border:'1px solid #f0f0f0'}}>
-            <div style={{position:'absolute',left:0,right:0,height:2,background:'linear-gradient(90deg,transparent,rgba(99,102,241,.85) 35%,rgba(167,139,250,1) 50%,rgba(99,102,241,.85) 65%,transparent)',boxShadow:'0 0 10px rgba(99,102,241,.5)',animation:'ocrscan 2.8s linear infinite',zIndex:5}}/>
-            <div style={{fontSize:7.5,fontWeight:800,letterSpacing:'0.1em',color:'#1d1d1f',marginBottom:2}}>INVOICE #2025-089</div>
-            <div style={{fontSize:6.5,color:'#ccc',marginBottom:10}}>Acme Corporation · NET 30</div>
+        {/* Center — PDF document */}
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'14px 10px',background:'#fafafa'}}>
+          <div style={{background:'#fff',borderRadius:6,boxShadow:'0 4px 20px rgba(0,0,0,.1)',width:'100%',maxWidth:240,padding:'16px 14px',border:'1px solid #f0f0f0'}}>
+            {/* Doc header */}
+            <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:10}}>
+              <div style={{width:18,height:22,background:'#f0f0f0',borderRadius:2,flexShrink:0}}/>
+              <div>
+                <div style={{height:5,width:80,background:'#1d1d1f',borderRadius:2,marginBottom:3}}/>
+                <div style={{height:4,width:50,background:'#e0e0e0',borderRadius:2}}/>
+              </div>
+            </div>
             <div style={{height:1,background:'#f0f0f0',marginBottom:10}}/>
-            {[['Bill To','Acme Corp.','0.2s','0.48s'],['Amount','$12,400.00','1.0s','1.28s'],['Due Date','Dec 30, 2025','1.8s','2.08s']].map(([label,val,d1,d2])=>(
-              <div key={label} style={{marginBottom:8}}>
-                <div style={{fontSize:6,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:2}}>{label}</div>
-                <div style={{position:'relative',height:20,border:'1px solid #e8eaed',borderRadius:4,display:'flex',alignItems:'center',padding:'0 6px',overflow:'hidden'}}>
-                  <span style={{fontSize:8,color:'#1d1d1f',fontWeight:500,animation:`fin .35s ${d1} both`,opacity:0}}>{val}</span>
-                  <span style={{position:'absolute',right:5,fontSize:10,animation:`chk .35s ${d2} both`,opacity:0,color:'#22c55e'}}>✓</span>
-                </div>
-              </div>
+            {/* Text lines */}
+            {[90,75,85,60,80,55,70].map((w,i)=>(
+              <div key={i} style={{height:6,borderRadius:3,marginBottom:7,
+                background: i===1 ? 'rgba(99,102,241,.2)' : i===4 ? 'rgba(226,75,74,.15)' : '#f0f0f0',
+                width:`${w}%`,
+                boxShadow: i===1 ? '0 0 0 2px rgba(99,102,241,.1)' : i===4 ? '0 0 0 2px rgba(226,75,74,.08)' : 'none',
+              }}/>
             ))}
-            <div>
-              <div style={{fontSize:6,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:2}}>Signature</div>
-              <div style={{height:26,border:'1px dashed #e8eaed',borderRadius:4,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <svg width="110" height="20" viewBox="0 0 110 20" fill="none">
-                  <path d="M5 14 C13 4 20 18 28 10 C36 3 45 16 55 8 C64 2 73 15 82 8 C90 3 98 14 106 10"
-                    stroke={RED} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="340"
-                    style={{animation:'sigdraw 3.5s ease-in-out infinite'}}/>
-                </svg>
-              </div>
+            {/* Signature line */}
+            <div style={{marginTop:10,borderTop:'1px dashed #e8e8e8',paddingTop:8}}>
+              <svg width="110" height="18" viewBox="0 0 110 18" fill="none">
+                <path d="M5 12 C13 3 20 16 28 8 C36 2 45 14 55 6 C64 1 73 13 82 6 C90 2 98 12 106 8"
+                  stroke={RED} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="340"
+                  style={{animation:'sigdraw 3.5s ease-in-out infinite'}}/>
+              </svg>
             </div>
           </div>
         </div>
-        {/* AI panel */}
-        <div style={{background:'#F5F5F7',borderLeft:'1px solid rgba(0,0,0,.06)',padding:'10px 9px',display:'flex',flexDirection:'column',gap:7}}>
-          <div style={{...MONO,fontSize:8,fontWeight:700,color:'rgba(0,0,0,.4)',letterSpacing:'0.1em',textTransform:'uppercase'}}>AI ASSIST</div>
-          {[{t:'3 fields found',s:'done',d:'0.3s'},{t:'Mapping data',s:'done',d:'1.0s'},{t:'Filling…',s:'active',d:'1.8s'}].map(({t,s,d})=>(
-            <div key={t} style={{display:'flex',alignItems:'center',gap:5,animation:`fin .35s ${d} both`,opacity:0}}>
-              <div style={{width:5,height:5,borderRadius:'50%',flexShrink:0,background:s==='done'?'#22c55e':RED,...(s==='active'?{animation:'pdot 1.6s ease-in-out infinite'}:{})}}/>
-              <span style={{fontSize:8,color:'rgba(0,0,0,.45)'}}>{t}</span>
+        {/* Right panel — tools list */}
+        <div style={{background:'#F5F5F7',borderLeft:'1px solid rgba(0,0,0,.06)',padding:'11px 9px',display:'flex',flexDirection:'column',gap:6}}>
+          <div style={{...MONO,fontSize:8,fontWeight:700,color:'rgba(0,0,0,.4)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:2}}>35+ Tools</div>
+          {tasks.map(({label,color,d})=>(
+            <div key={label} style={{display:'flex',alignItems:'center',gap:6,padding:'6px 7px',background:'#fff',borderRadius:7,border:'1px solid rgba(0,0,0,.06)',animation:`fin .35s ${d} both`,opacity:0}}>
+              <div style={{width:6,height:6,borderRadius:'50%',background:color,flexShrink:0}}/>
+              <span style={{fontSize:8.5,color:'#374151',fontWeight:600}}>{label}</span>
             </div>
           ))}
-          <div style={{marginTop:'auto',borderTop:'1px solid rgba(0,0,0,.06)',paddingTop:7}}>
+          <div style={{marginTop:'auto',borderTop:'1px solid rgba(0,0,0,.06)',paddingTop:8}}>
+            <div style={{...MONO,fontSize:7.5,color:'rgba(0,0,0,.3)',marginBottom:5}}>AI uses today</div>
             <div style={{height:3,background:'rgba(0,0,0,.07)',borderRadius:99,overflow:'hidden',marginBottom:4}}>
-              <div style={{height:'100%',width:'96%',background:'#22c55e',borderRadius:99}}/>
+              <motion.div animate={{width:['0%','40%']}} transition={{duration:1.2,delay:.5,ease:[0.22,1,0.36,1]}}
+                style={{height:'100%',background:'#7c3aed',borderRadius:99}}/>
             </div>
-            <div style={{fontSize:8.5,color:'rgba(0,0,0,.5)',fontWeight:700}}>96% ready</div>
+            <div style={{fontSize:8,color:'rgba(0,0,0,.4)',fontWeight:600}}>2 / 5 used</div>
           </div>
-          <div style={{height:28,background:'#1d1d1f',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
-            <Download size={9} color="#fff" strokeWidth={2.5}/><span style={{...FI,fontSize:8.5,color:'#fff',fontWeight:700}}>Download</span>
+          <div style={{height:26,background:'#1d1d1f',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+            <Download size={9} color="#fff" strokeWidth={2.5}/>
+            <span style={{...FI,fontSize:8.5,color:'#fff',fontWeight:700}}>Export</span>
           </div>
         </div>
       </div>
@@ -351,43 +360,54 @@ function BrowserUI() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  NAV  — mega-menu on desktop · accordion on mobile
+//  NAV
 // ══════════════════════════════════════════════════════════════════════════════
-// Short labels so all 6 fit in the bar even at ~960 px
-const NAV_LABELS: Record<string,string> = {
-  AI:'AI', Edit:'Edit', Pages:'Pages', Convert:'Convert', Protect:'Protect', Organize:'Organize',
-}
+const NAV_POPULAR: { name:string; href:string; Icon:LucideIcon; color:string; desc:string }[] = [
+  { name:'PDF Editor',        href:'/pdf-editor',        Icon:FilePen,   color:'#2563eb', desc:'Edit text & images' },
+  { name:'PDF Merger',        href:'/pdf-merger',        Icon:Merge,     color:'#7c3aed', desc:'Combine multiple PDFs' },
+  { name:'PDF Compressor',    href:'/pdf-compressor',    Icon:Minimize2, color:'#d97706', desc:'Shrink file size' },
+  { name:'PDF → Word',        href:'/pdf-to-word',       Icon:FileType,  color:'#16a34a', desc:'Convert to editable Word' },
+  { name:'PDF Splitter',      href:'/pdf-splitter',      Icon:Split,     color:'#e11d48', desc:'Split into parts' },
+  { name:'PDF Password Lock', href:'/pdf-password-lock', Icon:KeyRound,  color:'#dc2626', desc:'Encrypt & protect' },
+  { name:'PDF Watermarker',   href:'/pdf-watermark',     Icon:Stamp,     color:'#0891b2', desc:'Add watermarks' },
+  { name:'Image to PDF',      href:'/image-to-pdf',      Icon:ImagePlus, color:'#7c3aed', desc:'Photos & images to PDF' },
+  { name:'Page Manager',      href:'/pdf-page-manager',  Icon:Layers,    color:'#f97316', desc:'Reorder & manage pages' },
+  { name:'PDF to Images',     href:'/pdf-to-images',     Icon:Images,    color:'#db2777', desc:'Export pages as images' },
+]
+
+const NAV_LINKS = [
+  { label:'AI Tools', href:'/ai-pdf-form-filler', highlight:true },
+  { label:'Pricing',  href:'/pricing' },
+  { label:'Privacy',  href:'/privacy' },
+  { label:'Support',  href:'/support' },
+]
 
 function Nav() {
   const { isSignedIn, isLoaded } = useUser()
-  const [openCat, setOpenCat] = useState<string|null>(null)
-  const [mobOpen, setMobOpen] = useState(false)
-  const [mobExp,  setMobExp]  = useState<string|null>(null)
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const [mobOpen,   setMobOpen]   = useState(false)
+  const [mobToolsExp, setMobToolsExp] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout>|null>(null)
 
-  const activeCat  = CATS.find(c => c.id === openCat)
-  const megaTools  = activeCat ? TOOLS.filter(t => t.cat === activeCat.id) : []
-
-  const open  = (id:string) => { clearTimeout(closeTimer.current!); setOpenCat(id) }
-  const close = ()          => { closeTimer.current = setTimeout(()=>setOpenCat(null), 120) }
-  const keep  = ()          => { clearTimeout(closeTimer.current!) }
+  const openMenu  = () => { clearTimeout(closeTimer.current!); setToolsOpen(true) }
+  const closeMenu = () => { closeTimer.current = setTimeout(()=>setToolsOpen(false), 120) }
+  const keepMenu  = () => { clearTimeout(closeTimer.current!) }
 
   const { scrollY } = useScroll()
   const navBg = useTransform(scrollY,[0,80],['rgba(255,255,255,0)','rgba(255,255,255,0.96)'])
 
   return (
     <>
-      {/* ── Fixed header bar ── */}
-      <motion.header
-        style={{position:'fixed',inset:'0 0 auto',zIndex:300,height:56,
-          background:navBg,backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',
-          borderBottom:'1px solid rgba(0,0,0,.07)'}}>
+      {/* Fixed header */}
+      <motion.header style={{position:'fixed',inset:'0 0 auto',zIndex:300,height:56,
+        background:navBg,backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',
+        borderBottom:'1px solid rgba(0,0,0,.07)'}}>
         <div style={{maxWidth:1280,margin:'0 auto',padding:'0 20px',height:'100%',
-          display:'flex',alignItems:'center',gap:0}}>
+          display:'flex',alignItems:'center'}}>
 
           {/* Logo */}
           <Link href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',
-            marginRight:20,flexShrink:0}}>
+            marginRight:28,flexShrink:0}}>
             <motion.div whileHover={{rotate:12,scale:1.1}} transition={SP}
               style={{width:28,height:28,background:'#1d1d1f',borderRadius:7,display:'flex',
                 alignItems:'center',justifyContent:'center'}}>
@@ -398,51 +418,43 @@ function Nav() {
             </span>
           </Link>
 
-          {/* Desktop nav — compact labels, icon + short text */}
-          <nav className="desk" style={{alignItems:'center',gap:1,flex:1}}>
-            {CATS.map(cat => {
-              const isOpen = openCat === cat.id
-              return (
-                <button key={cat.id}
-                  onMouseEnter={()=>open(cat.id)}
-                  onMouseLeave={close}
-                  style={{
-                    display:'flex',alignItems:'center',gap:5,
-                    padding:'5px 10px',background: isOpen ? `${cat.color}10` : 'transparent',
-                    border:'none',borderRadius:8,cursor:'pointer',outline:'none',
-                    fontSize:12.5,fontWeight:isOpen?600:500,
-                    color: isOpen ? cat.color : 'rgba(0,0,0,.52)',
-                    ...FI,transition:'all .13s',flexShrink:0,
-                  }}>
-                  <cat.Icon size={13} strokeWidth={isOpen?2.2:1.9} color={isOpen ? cat.color : 'rgba(0,0,0,.4)'}/>
-                  {NAV_LABELS[cat.id]}
-                  <motion.span style={{display:'flex',alignItems:'center',opacity:.6}}
-                    animate={{rotate: isOpen?180:0}} transition={{duration:.14}}>
-                    <ChevronDown size={10} strokeWidth={2.5}/>
-                  </motion.span>
-                </button>
-              )
-            })}
-            <div style={{width:1,height:16,background:'rgba(0,0,0,.1)',margin:'0 6px',flexShrink:0}}/>
-            <Link href="#tools" style={{textDecoration:'none'}}>
-              <motion.span whileHover={{color:'#1d1d1f'}}
-                style={{...FI,display:'inline-flex',alignItems:'center',gap:4,padding:'5px 10px',
-                  fontSize:12.5,fontWeight:500,color:'rgba(0,0,0,.45)',borderRadius:8}}>
-                All Tools
-              </motion.span>
-            </Link>
-            <Link href="/pricing" style={{textDecoration:'none'}}>
-              <motion.span whileHover={{color:'#0891b2'}}
-                style={{...FI,display:'inline-flex',alignItems:'center',gap:4,padding:'5px 10px',
-                  fontSize:12.5,fontWeight:600,color:'rgba(0,0,0,.52)',borderRadius:8}}>
-                Pricing
-              </motion.span>
-            </Link>
+          {/* Desktop nav */}
+          <nav className="desk" style={{alignItems:'center',gap:2,flex:1}}>
+
+            {/* Tools dropdown trigger */}
+            <div onMouseEnter={openMenu} onMouseLeave={closeMenu} style={{position:'relative'}}>
+              <button style={{
+                display:'flex',alignItems:'center',gap:4,
+                padding:'5px 11px',background:toolsOpen?'rgba(0,0,0,.05)':'transparent',
+                border:'none',borderRadius:8,cursor:'pointer',outline:'none',
+                fontSize:13,fontWeight:toolsOpen?600:500,
+                color:toolsOpen?'#1d1d1f':'rgba(0,0,0,.55)',
+                ...FI,transition:'all .12s',flexShrink:0,
+              }}>
+                Tools
+                <motion.span style={{display:'flex',alignItems:'center',opacity:.6}}
+                  animate={{rotate:toolsOpen?180:0}} transition={{duration:.14}}>
+                  <ChevronDown size={11} strokeWidth={2.5}/>
+                </motion.span>
+              </button>
+            </div>
+
+            {/* Plain links */}
+            {NAV_LINKS.map(({label,href,highlight})=>(
+              <Link key={label} href={href} style={{textDecoration:'none'}}>
+                <motion.span whileHover={{color:highlight?'#7c3aed':'#1d1d1f'}}
+                  style={{...FI,display:'inline-flex',alignItems:'center',gap:4,
+                    padding:'5px 11px',fontSize:13,fontWeight:500,borderRadius:8,
+                    color:highlight?'#7c3aed':'rgba(0,0,0,.52)'}}>
+                  {highlight && <Sparkles size={11} strokeWidth={2}/>}
+                  {label}
+                </motion.span>
+              </Link>
+            ))}
           </nav>
 
           {/* CTA + auth + mobile toggle */}
           <div style={{display:'flex',alignItems:'center',gap:8,marginLeft:'auto',flexShrink:0}}>
-            {/* Auth buttons */}
             {isLoaded && (
               isSignedIn ? (
                 <div className="desk" style={{display:'flex',alignItems:'center',gap:8}}>
@@ -451,34 +463,34 @@ function Nav() {
                       textDecoration:'none',padding:'5px 10px',borderRadius:8}}>
                     Dashboard
                   </Link>
-                  <UserButton />
+                  <UserButton/>
                 </div>
               ) : (
                 <div className="desk" style={{display:'flex',alignItems:'center',gap:6}}>
                   <SignInButton mode="modal">
                     <button style={{...FI,fontSize:12.5,fontWeight:500,color:'rgba(0,0,0,.6)',
-                      background:'transparent',border:'none',padding:'6px 12px',borderRadius:8,
-                      cursor:'pointer',letterSpacing:'-0.01em'}}>
+                      background:'transparent',border:'none',padding:'6px 12px',
+                      borderRadius:8,cursor:'pointer'}}>
                       Sign in
                     </button>
                   </SignInButton>
                   <SignUpButton mode="modal">
                     <button style={{...FI,fontSize:12.5,fontWeight:600,color:'#fff',
-                      background:'#1d1d1f',border:'none',padding:'6px 14px',borderRadius:99,
-                      cursor:'pointer',letterSpacing:'-0.02em'}}>
+                      background:'#1d1d1f',border:'none',padding:'6px 14px',
+                      borderRadius:99,cursor:'pointer',letterSpacing:'-0.02em'}}>
                       Sign up
                     </button>
                   </SignUpButton>
                 </div>
               )
             )}
-            <Link href="/ai-pdf-form-filler" className="desk"
+            <Link href="/pdf-editor" className="desk"
               style={{...FI,alignItems:'center',gap:6,padding:'7px 16px',
-                background:RED,color:'#fff',borderRadius:99,fontSize:12.5,fontWeight:700,
+                background:'#1d1d1f',color:'#fff',borderRadius:99,fontSize:12.5,fontWeight:700,
                 textDecoration:'none',letterSpacing:'-0.02em',flexShrink:0}}>
               <motion.span style={{display:'flex',alignItems:'center',gap:6}}
                 whileHover={{gap:10}} transition={SP}>
-                Open Editor <ArrowRight size={12} strokeWidth={2.5}/>
+                <Upload size={12} strokeWidth={2.5}/> Upload PDF
               </motion.span>
             </Link>
             <motion.button className="mob" whileTap={{scale:.9}} onClick={()=>setMobOpen(o=>!o)}
@@ -489,9 +501,7 @@ function Nav() {
                 <motion.span key={mobOpen?'x':'m'}
                   initial={{rotate:-90,opacity:0}} animate={{rotate:0,opacity:1}}
                   exit={{rotate:90,opacity:0}} transition={{duration:.15}}>
-                  {mobOpen
-                    ? <X size={16} color="#1d1d1f" strokeWidth={2}/>
-                    : <Menu size={16} color="#1d1d1f" strokeWidth={2}/>}
+                  {mobOpen?<X size={16} color="#1d1d1f" strokeWidth={2}/>:<Menu size={16} color="#1d1d1f" strokeWidth={2}/>}
                 </motion.span>
               </AnimatePresence>
             </motion.button>
@@ -499,87 +509,49 @@ function Nav() {
         </div>
       </motion.header>
 
-      {/* ── Mega-menu panel — fixed below header, never clips ── */}
+      {/* Tools dropdown */}
       <AnimatePresence>
-        {openCat && activeCat && (
+        {toolsOpen && (
           <>
-            {/* Backdrop — click closes */}
             <motion.div
-              initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-              transition={{duration:.15}}
-              onClick={()=>setOpenCat(null)}
+              initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.15}}
+              onClick={()=>setToolsOpen(false)}
               style={{position:'fixed',inset:'56px 0 0',zIndex:298,
-                background:'rgba(0,0,0,.22)',backdropFilter:'blur(2px)'}}
+                background:'rgba(0,0,0,.18)',backdropFilter:'blur(2px)'}}
             />
-            {/* Panel */}
             <motion.div
-              key={openCat}
               initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}}
               transition={{duration:.18,ease:[.22,1,.36,1]}}
-              onMouseEnter={keep} onMouseLeave={close}
+              onMouseEnter={keepMenu} onMouseLeave={closeMenu}
               style={{position:'fixed',top:56,left:0,right:0,zIndex:299,
                 background:'#fff',borderBottom:'1px solid rgba(0,0,0,.07)',
-                boxShadow:'0 16px 48px rgba(0,0,0,.12)'}}>
-
+                boxShadow:'0 16px 48px rgba(0,0,0,.1)'}}>
               <div style={{maxWidth:1280,margin:'0 auto',padding:'20px 24px 24px'}}>
-
-                {/* Category header row */}
-                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:18,
-                  paddingBottom:14,borderBottom:`2px solid ${activeCat.color}18`}}>
-                  <div style={{width:38,height:38,borderRadius:11,background:activeCat.light,
-                    display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                    <activeCat.Icon size={19} color={activeCat.color} strokeWidth={1.8}/>
-                  </div>
-                  <div>
-                    <div style={{...FI,fontSize:14,fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.02em'}}>
-                      {activeCat.label}
-                    </div>
-                    <div style={{...FI,fontSize:11,color:'#9ca3af',marginTop:1}}>{activeCat.desc}</div>
-                  </div>
-                  <div style={{...MONO,fontSize:10,fontWeight:700,color:activeCat.color,
-                    background:activeCat.light,padding:'3px 10px',borderRadius:99,marginLeft:6}}>
-                    {megaTools.length} tools
-                  </div>
-                  <Link href={`#cat-${activeCat.id}`} onClick={()=>setOpenCat(null)}
-                    style={{...FI,marginLeft:'auto',display:'flex',alignItems:'center',gap:5,
-                      fontSize:12,fontWeight:600,color:activeCat.color,textDecoration:'none',
-                      padding:'6px 14px',borderRadius:99,background:activeCat.light,flexShrink:0}}>
-                    See all <ArrowRight size={11} strokeWidth={2.5}/>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+                  <div style={{...FI,fontSize:10.5,fontWeight:700,color:'#9ca3af',
+                    letterSpacing:'0.1em',textTransform:'uppercase'}}>Popular Tools</div>
+                  <Link href="#tools" onClick={()=>setToolsOpen(false)}
+                    style={{...FI,display:'flex',alignItems:'center',gap:5,
+                      fontSize:12,fontWeight:600,color:'#2563eb',textDecoration:'none'}}>
+                    See all 35+ tools <ArrowRight size={11} strokeWidth={2.5}/>
                   </Link>
                 </div>
-
-                {/* Tools grid — 4 cols max, auto for small counts */}
-                <div style={{
-                  display:'grid',
-                  gridTemplateColumns:`repeat(${Math.min(megaTools.length, 4)},1fr)`,
-                  gap:6,
-                }}>
-                  {megaTools.map(tool => (
-                    <Link key={tool.name} href={tool.href}
-                      onClick={()=>setOpenCat(null)} style={{textDecoration:'none'}}>
-                      <motion.div
-                        whileHover={{background:'#f5f5f7',scale:1.01}}
-                        transition={{duration:.1}}
-                        style={{display:'flex',alignItems:'center',gap:11,
-                          padding:'10px 12px',borderRadius:12,cursor:'pointer'}}>
-                        {/* Icon chip — fixed size, never clips */}
-                        <div style={{
-                          width:36,height:36,minWidth:36,borderRadius:10,
-                          background:tool.iconBg,flexShrink:0,
-                          display:'flex',alignItems:'center',justifyContent:'center',
-                          boxShadow:`0 4px 10px ${activeCat.color}28`,
-                        }}>
-                          <tool.Icon size={17} color="#fff" strokeWidth={1.8}/>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:3}}>
+                  {NAV_POPULAR.map(tool=>(
+                    <Link key={tool.name} href={tool.href} onClick={()=>setToolsOpen(false)} style={{textDecoration:'none'}}>
+                      <motion.div whileHover={{background:'#f5f5f7'}} transition={{duration:.1}}
+                        style={{display:'flex',alignItems:'center',gap:10,
+                          padding:'9px 11px',borderRadius:10,cursor:'pointer'}}>
+                        <div style={{width:32,height:32,minWidth:32,borderRadius:9,
+                          background:`${tool.color}14`,display:'flex',alignItems:'center',
+                          justifyContent:'center',flexShrink:0}}>
+                          <tool.Icon size={15} color={tool.color} strokeWidth={1.9}/>
                         </div>
-                        <div style={{minWidth:0,flex:1}}>
-                          <div style={{...FI,fontSize:12.5,fontWeight:600,color:'#1d1d1f',
-                            overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                            {tool.name}
-                          </div>
-                          <div style={{...FI,fontSize:10.5,color:'#9ca3af',marginTop:2,
-                            overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                            {tool.desc}
-                          </div>
+                        <div style={{minWidth:0}}>
+                          <div style={{...FI,fontSize:12,fontWeight:600,color:'#1d1d1f',
+                            overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tool.name}</div>
+                          <div style={{...FI,fontSize:10.5,color:'#9ca3af',marginTop:1.5,
+                            overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tool.desc}</div>
                         </div>
                       </motion.div>
                     </Link>
@@ -591,7 +563,7 @@ function Nav() {
         )}
       </AnimatePresence>
 
-      {/* ── Mobile menu — full-screen drawer ── */}
+      {/* Mobile drawer */}
       <AnimatePresence>
         {mobOpen && (
           <motion.div
@@ -599,107 +571,70 @@ function Nav() {
             transition={{duration:.2,ease:E}}
             style={{position:'fixed',inset:'56px 0 0',zIndex:290,
               background:'#f7f7f8',display:'flex',flexDirection:'column'}}>
+            <div style={{flex:1,overflowY:'auto'}}>
 
-            {/* Scrollable category list */}
-            <div style={{flex:1,overflowY:'auto',WebkitOverflowScrolling:'touch' as any}}>
-              {CATS.map((cat) => {
-                const catTools = TOOLS.filter(t => t.cat === cat.id)
-                const expanded = mobExp === cat.id
-                return (
-                  <div key={cat.id} style={{borderBottom:'1px solid rgba(0,0,0,.06)'}}>
-
-                    {/* Category tap row — big, thumb-friendly */}
-                    <button onClick={()=>setMobExp(expanded ? null : cat.id)}
-                      className="mob-cat-btn"
-                      style={{
-                        width:'100%',display:'flex',alignItems:'center',gap:14,
-                        padding:'14px 20px',minHeight:68,
-                        background: expanded ? '#fff' : 'transparent',
-                        border:'none',cursor:'pointer',textAlign:'left',
-                      }}>
-                      <div style={{
-                        width:44,height:44,minWidth:44,borderRadius:13,
-                        background: expanded ? cat.color : cat.light,
-                        display:'flex',alignItems:'center',justifyContent:'center',
-                        flexShrink:0,transition:'background .15s',
-                      }}>
-                        <cat.Icon size={21} color={expanded ? '#fff' : cat.color} strokeWidth={1.8}/>
-                      </div>
-                      <div style={{flex:1,minWidth:0,textAlign:'left'}}>
-                        <div style={{...FI,fontSize:16,fontWeight:700,color:'#1d1d1f',
-                          letterSpacing:'-0.02em'}}>{cat.label}</div>
-                        <div style={{...FI,fontSize:12,color:'#9ca3af',marginTop:2}}>
-                          {catTools.length} tools
+              {/* Tools expandable */}
+              <div style={{borderBottom:'1px solid rgba(0,0,0,.06)'}}>
+                <button onClick={()=>setMobToolsExp(v=>!v)} className="mob-cat-btn"
+                  style={{width:'100%',display:'flex',alignItems:'center',
+                    padding:'16px 20px',background:'transparent',border:'none',cursor:'pointer'}}>
+                  <span style={{...FI,fontSize:16,fontWeight:700,color:'#1d1d1f',flex:1,textAlign:'left'}}>Tools</span>
+                  <span className={`mob-chev${mobToolsExp?' open':''}`}>
+                    <ChevronDown size={18} color="rgba(0,0,0,.35)" strokeWidth={2}/>
+                  </span>
+                </button>
+                <div className={`mob-acc${mobToolsExp?' open':''}`}>
+                  <div style={{background:'#fff',borderTop:'1px solid rgba(0,0,0,.06)'}}>
+                    {NAV_POPULAR.map((tool,ti)=>(
+                      <Link key={tool.name} href={tool.href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
+                        <div style={{display:'flex',alignItems:'center',gap:12,padding:'13px 20px',
+                          borderBottom:ti<NAV_POPULAR.length-1?'1px solid #f3f4f6':'none',
+                          WebkitTapHighlightColor:'transparent'}}>
+                          <div style={{width:38,height:38,minWidth:38,borderRadius:10,
+                            background:`${tool.color}14`,display:'flex',alignItems:'center',
+                            justifyContent:'center',flexShrink:0}}>
+                            <tool.Icon size={17} color={tool.color} strokeWidth={1.9}/>
+                          </div>
+                          <div style={{flex:1}}>
+                            <div style={{...FI,fontSize:14,fontWeight:600,color:'#1d1d1f'}}>{tool.name}</div>
+                            <div style={{...FI,fontSize:12,color:'#9ca3af',marginTop:2}}>{tool.desc}</div>
+                          </div>
+                          <ArrowRight size={14} color="rgba(0,0,0,.18)" strokeWidth={2}/>
                         </div>
+                      </Link>
+                    ))}
+                    <Link href="#tools" onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+                        padding:'13px 20px',...FI,fontSize:13,fontWeight:700,color:'#2563eb',
+                        borderTop:'1px solid #f3f4f6'}}>
+                        See all 35+ tools <ArrowRight size={13} strokeWidth={2.5}/>
                       </div>
-                      <span className={`mob-chev${expanded ? ' open' : ''}`} style={{flexShrink:0}}>
-                        <ChevronRight size={20} color={expanded ? cat.color : 'rgba(0,0,0,.25)'} strokeWidth={2}/>
-                      </span>
-                    </button>
-
-                    {/* Tool rows — CSS grid accordion, no JS animation */}
-                    <div className={`mob-acc${expanded ? ' open' : ''}`}>
-                      <div style={{borderTop:`3px solid ${cat.color}20`,background:'#fff'}}>
-                        {catTools.map((tool, ti) => (
-                          <Link key={tool.name} href={tool.href}
-                            onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
-                            <div style={{
-                              display:'flex',alignItems:'center',gap:14,
-                              padding:'13px 20px 13px 20px',
-                              borderBottom: ti < catTools.length-1 ? '1px solid #f5f5f5' : 'none',
-                              background:'#fff',
-                              WebkitTapHighlightColor:'transparent',
-                            }}>
-                              {/* Icon */}
-                              <div style={{
-                                width:40,height:40,minWidth:40,borderRadius:11,
-                                background:tool.iconBg,flexShrink:0,
-                                display:'flex',alignItems:'center',justifyContent:'center',
-                                boxShadow:`0 4px 10px ${cat.color}22`,
-                              }}>
-                                <tool.Icon size={19} color="#fff" strokeWidth={1.8}/>
-                              </div>
-                              {/* Text */}
-                              <div style={{flex:1,minWidth:0}}>
-                                <div style={{...FI,fontSize:14,fontWeight:600,color:'#1d1d1f'}}>
-                                  {tool.name}
-                                </div>
-                                <div style={{...FI,fontSize:12,color:'#9ca3af',marginTop:2,
-                                  overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                                  {tool.desc}
-                                </div>
-                              </div>
-                              {/* Arrow */}
-                              <div style={{
-                                width:28,height:28,minWidth:28,borderRadius:8,
-                                background:`${cat.color}12`,flexShrink:0,
-                                display:'flex',alignItems:'center',justifyContent:'center',
-                              }}>
-                                <ArrowRight size={13} color={cat.color} strokeWidth={2.2}/>
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
+                    </Link>
                   </div>
-                )
-              })}
+                </div>
+              </div>
+
+              {/* Plain links */}
+              {NAV_LINKS.map(({label,href,highlight})=>(
+                <Link key={label} href={href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,padding:'16px 20px',
+                    borderBottom:'1px solid rgba(0,0,0,.06)',...FI,fontSize:16,fontWeight:600,
+                    color:highlight?'#7c3aed':'#1d1d1f',WebkitTapHighlightColor:'transparent'}}>
+                    {highlight && <Sparkles size={14} strokeWidth={2} color="#7c3aed"/>}
+                    {label}
+                  </div>
+                </Link>
+              ))}
             </div>
 
-            {/* Sticky bottom CTA — always visible */}
-            <div style={{
-              background:'#fff',
-              borderTop:'1px solid rgba(0,0,0,.08)',
-              padding:'12px 16px',
-              paddingBottom:'calc(12px + env(safe-area-inset-bottom))',
-              flexShrink:0,
-            }}>
-              <Link href="/ai-pdf-form-filler" onClick={()=>setMobOpen(false)}
+            {/* Bottom CTA */}
+            <div style={{background:'#fff',borderTop:'1px solid rgba(0,0,0,.08)',
+              padding:'12px 16px',paddingBottom:'calc(12px + env(safe-area-inset-bottom))',flexShrink:0}}>
+              <Link href="/pdf-editor" onClick={()=>setMobOpen(false)}
                 style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:8,
                   padding:'16px',background:'#1d1d1f',color:'#fff',borderRadius:14,
-                  fontSize:16,fontWeight:700,textDecoration:'none'}}>
-                Open Editor Free <ArrowRight size={16} strokeWidth={2.5}/>
+                  fontSize:16,fontWeight:700,textDecoration:'none',letterSpacing:'-0.02em'}}>
+                <Upload size={18} strokeWidth={2.5}/> Upload PDF
               </Link>
             </div>
           </motion.div>
@@ -737,43 +672,43 @@ function Hero() {
             <motion.div initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.1}}
               style={{display:'flex',alignItems:'center',gap:10,marginBottom:32}}>
               <span style={{width:5,height:5,borderRadius:'50%',background:RED,display:'inline-block',animation:'pdot 2s ease-in-out infinite'}}/>
-              <span style={{...MONO,fontSize:10.5,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase'}}>AI PDF Platform · Free · No Account</span>
+              <span style={{...MONO,fontSize:10.5,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase'}}>AI PDF Platform · Free Tools · No Account Needed</span>
             </motion.div>
 
             {/* Headline — "Edit any PDF. In seconds." with shimmer on "seconds." */}
             <motion.h1 variants={MV} initial="hidden" animate="visible"
               style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(40px,5.8vw,96px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.95,margin:'0 0 24px',display:'flex',flexWrap:'wrap',gap:'0 .22em'}}>
-              {['Edit','any','PDF.','In'].map((w,i)=>(
+              {['Edit,','Sign,','Fill','&','Convert','PDFs'].map((w,i)=>(
                 <span key={i} style={{display:'inline-block',overflow:'hidden',lineHeight:1.06}}>
                   <motion.span style={{display:'inline-block'}} variants={WV}>{w}</motion.span>
                 </span>
               ))}
               <span style={{display:'inline-block',overflow:'hidden',lineHeight:1.06}}>
-                <motion.span className="grad-red" style={{display:'inline-block'}} variants={WV}>seconds.</motion.span>
+                <motion.span className="grad-red" style={{display:'inline-block'}} variants={WV}>Online</motion.span>
               </span>
             </motion.h1>
 
             {/* Sub */}
             <motion.p initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.7}}
               style={{...FI,fontSize:'clamp(15px,1.6vw,18px)',color:'#6E6E73',lineHeight:1.65,maxWidth:400,margin:'0 0 32px',letterSpacing:'-0.01em',fontWeight:400}}>
-              Edit, sign, fill and convert PDFs — all in your browser, completely free.
+              Edit, sign, compress, merge, convert and fill PDFs online. Free tools need no account — sign in for unlimited AI.
             </motion.p>
 
             {/* CTAs */}
             <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.85}}
               className="hero-ctas">
               <Mag>
-                <Link href="/ai-pdf-form-filler"
-                  style={{...FI,display:'inline-flex',alignItems:'center',gap:8,padding:'14px 28px',background:'#1d1d1f',color:'#fff',borderRadius:99,fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:'0 4px 28px rgba(0,0,0,.16)'}}>
-                  <motion.span style={{display:'flex',alignItems:'center',gap:8}} whileHover={{gap:14}} transition={SP}>
-                    Try free now <ArrowRight size={15} strokeWidth={2.5}/>
+                <Link href="/pdf-editor"
+                  style={{...FI,display:'inline-flex',alignItems:'center',gap:10,padding:'16px 32px',background:RED,color:'#fff',borderRadius:99,fontSize:16,fontWeight:800,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:`0 6px 32px ${RED}55`}}>
+                  <motion.span style={{display:'flex',alignItems:'center',gap:10}} whileHover={{gap:16}} transition={SP}>
+                    <Upload size={16} strokeWidth={2.5}/> Upload PDF
                   </motion.span>
                 </Link>
               </Mag>
               <Mag>
                 <a href="#tools"
                   style={{...FI,display:'inline-flex',alignItems:'center',gap:6,padding:'14px 22px',background:'transparent',color:'rgba(0,0,0,.5)',border:'1px solid rgba(0,0,0,.12)',borderRadius:99,fontSize:15,fontWeight:500,textDecoration:'none',letterSpacing:'-0.01em'}}>
-                  29 tools <ChevronRight size={14} strokeWidth={2}/>
+                  Explore Tools <ChevronRight size={14} strokeWidth={2}/>
                 </a>
               </Mag>
             </motion.div>
@@ -782,7 +717,7 @@ function Hero() {
             <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.5,delay:1.05}}
               className="hero-trust">
               <span style={{color:'#f59e0b',fontSize:12,letterSpacing:2}}>★★★★★</span>
-              {['Free forever','No signup','100% private','In-browser'].map((t,i)=>(
+              {['Free PDF tools','No account needed','Sign in for unlimited AI'].map((t,i)=>(
                 <span key={t} style={{display:'flex',alignItems:'center',gap:6}}>
                   {i>0&&<span style={{width:3,height:3,borderRadius:'50%',background:'#ddd',display:'inline-block'}}/>}
                   <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.06em',textTransform:'uppercase'}}>{t}</span>
@@ -798,9 +733,9 @@ function Hero() {
 
             {/* Feature chips */}
             {([
-              { label:'AI Form Fill', Icon:Zap,      color:'#6366f1', delay:1.0, pos:{ top:'-16px',  left:'-20px'  } },
-              { label:'E-Sign',       Icon:PenLine,  color:RED,       delay:1.2, pos:{ bottom:'70px', left:'-24px'  } },
-              { label:'OCR Scan',     Icon:ScanLine, color:'#22c55e', delay:1.4, pos:{ top:'38%',     right:'-22px' } },
+              { label:'AI Summarize', Icon:Sparkles,  color:'#7c3aed', delay:1.0, pos:{ top:'-16px',  left:'-20px'  } },
+              { label:'E-Sign',       Icon:PenLine,   color:RED,       delay:1.2, pos:{ bottom:'70px', left:'-24px'  } },
+              { label:'PDF → Word',   Icon:FileType,  color:'#2563eb', delay:1.4, pos:{ top:'38%',     right:'-22px' } },
             ] as const).map(({label,Icon,color,delay,pos})=>(
               <motion.div key={label}
                 initial={{opacity:0,scale:0.8,y:8}} animate={{opacity:1,scale:1,y:0}}
@@ -836,19 +771,11 @@ function Hero() {
           <ScrollPct/>
         </div>
         <div className="desk" style={{gap:24}}>
-          {['29 Tools','Free Forever','No Account','100% Private'].map(t=>(
+          {['35+ Tools','Free PDF Tools','AI: 5/day Free','Pro: Unlimited AI'].map(t=>(
             <span key={t} style={{...MONO,fontSize:10,color:'#bbb',letterSpacing:'0.08em',textTransform:'uppercase'}}>{t}</span>
           ))}
         </div>
-        <motion.div animate={{y:[0,5,0]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}
-          style={{display:'flex',alignItems:'center',gap:7}}>
-          <span style={{...MONO,fontSize:10,color:'#999',letterSpacing:'0.1em',textTransform:'uppercase'}}>Scroll</span>
-          <svg width="14" height="18" viewBox="0 0 14 18" fill="none">
-            <rect x=".75" y=".75" width="12.5" height="16.5" rx="6.25" stroke="rgba(0,0,0,.2)" strokeWidth="1.5"/>
-            <motion.rect x="5.5" y="4" width="3" height="4" rx="1.5" fill="rgba(0,0,0,.25)"
-              animate={{y:[0,5,0],opacity:[1,.2,1]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}/>
-          </svg>
-        </motion.div>
+        <span style={{...MONO,fontSize:10,color:'#bbb',letterSpacing:'0.08em',textTransform:'uppercase'}}>Popular tools below</span>
       </motion.div>
     </section>
   )
@@ -871,137 +798,130 @@ function ScreenDrop() {
             <Upload size={24} color="#818cf8" strokeWidth={1.5}/>
           </motion.div>
           <div style={{...FI,fontSize:17,fontWeight:600,color:'#1d1d1f',marginBottom:7,letterSpacing:'-0.02em'}}>Drop your PDF here</div>
-          <div style={{...FI,fontSize:13,color:'#6E6E73',marginBottom:24,lineHeight:1.6}}>or click to browse · any size · stays private</div>
+          <div style={{...FI,fontSize:13,color:'#6E6E73',marginBottom:24,lineHeight:1.6}}>or click to browse · up to 100 MB · stays in your browser</div>
           <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'11px 26px',background:'#6366f1',borderRadius:99,fontSize:13,fontWeight:600,color:'#fff',cursor:'default'}}>
             <Upload size={13} strokeWidth={2}/> Choose PDF File
           </div>
         </motion.div>
-        <div style={{...MONO,fontSize:9,color:'#bbb',letterSpacing:'0.1em',textTransform:'uppercase'}}>PDF · Any size · Runs in your browser</div>
+        <div style={{...MONO,fontSize:9,color:'#bbb',letterSpacing:'0.1em',textTransform:'uppercase'}}>PDF · Up to 100 MB · Runs in your browser</div>
       </div>
     </div>
   )
 }
 
-function ScreenScan() {
+function ScreenAI() {
+  const aiTools = [
+    { Icon:Sparkles,     label:'AI Summarize',  color:'#7c3aed', delay:0    },
+    { Icon:FormInput,    label:'Form Autofill',  color:'#0891b2', delay:.12  },
+    { Icon:ScanText,     label:'OCR Scanner',    color:'#16a34a', delay:.24  },
+    { Icon:Languages,    label:'AI Translate',   color:'#f97316', delay:.36  },
+    { Icon:BrainCircuit, label:'Mind Map',        color:RED,       delay:.48  },
+  ]
   return (
     <div className="scr-doc" style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
-      <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'22px 18px',position:'relative',overflow:'hidden',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
-        <motion.div
-          animate={{top:['-2%','102%']}}
-          transition={{duration:2.2,repeat:Infinity,ease:'linear',repeatDelay:.6}}
-          style={{position:'absolute',left:0,right:0,height:2,background:'linear-gradient(90deg,transparent,rgba(99,102,241,.9) 30%,rgba(167,139,250,1) 50%,rgba(99,102,241,.9) 70%,transparent)',boxShadow:'0 0 14px rgba(99,102,241,.4)',zIndex:5,pointerEvents:'none'}}/>
-
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-          <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#1d1d1f'}}>INVOICE #2025-089</div>
-          <motion.div animate={{opacity:[1,.35,1]}} transition={{duration:1.1,repeat:Infinity}}
-            style={{display:'flex',alignItems:'center',gap:5,padding:'3px 9px',background:'rgba(99,102,241,.07)',border:'1px solid rgba(99,102,241,.18)',borderRadius:99}}>
-            <span style={{width:5,height:5,borderRadius:'50%',background:'#6366f1',display:'inline-block'}}/>
-            <span style={{...MONO,fontSize:8,color:'#6366f1',letterSpacing:'0.06em'}}>SCANNING</span>
+      <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'20px 18px',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
+          <div style={{width:26,height:26,borderRadius:7,background:'linear-gradient(135deg,#7c3aed,#a78bfa)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <Sparkles size={12} color="#fff" strokeWidth={2}/>
+          </div>
+          <span style={{...FI,fontSize:12,fontWeight:700,color:'#1d1d1f'}}>AI Tools</span>
+          <div style={{marginLeft:'auto',display:'flex',gap:3}}>
+            {[0,1,2].map(i=>(
+              <motion.div key={i} animate={{opacity:[.3,1,.3]}} transition={{duration:1.2,delay:i*.2,repeat:Infinity}}
+                style={{width:4,height:4,borderRadius:'50%',background:'#7c3aed'}}/>
+            ))}
+          </div>
+        </div>
+        <div style={{height:1,background:'#f0f0f0',marginBottom:10}}/>
+        {aiTools.map(({Icon,label,color,delay})=>(
+          <motion.div key={label}
+            initial={{opacity:0,x:-8}} animate={{opacity:1,x:0}}
+            transition={{delay,duration:.35}}
+            style={{display:'flex',alignItems:'center',gap:9,padding:'7px 10px',borderRadius:8,background:`${color}06`,border:`1px solid ${color}18`,marginBottom:7}}>
+            <div style={{width:22,height:22,borderRadius:6,background:`${color}15`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <Icon size={11} color={color} strokeWidth={2}/>
+            </div>
+            <span style={{...FI,fontSize:11,fontWeight:600,color:'#374151'}}>{label}</span>
+            <motion.span animate={{opacity:[.5,1,.5]}} transition={{duration:1.4,delay,repeat:Infinity}}
+              style={{marginLeft:'auto',...MONO,fontSize:8.5,color,letterSpacing:'0.05em'}}>READY</motion.span>
           </motion.div>
-        </div>
-        <div style={{height:1,background:'#f0f0f0',marginBottom:14}}/>
-
-        {[{label:'Bill To',delay:0},{label:'Amount',delay:.5},{label:'Due Date',delay:1}].map(({label,delay})=>(
-          <div key={label} style={{marginBottom:11}}>
-            <div style={{fontSize:7,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:3}}>{label}</div>
-            <motion.div
-              animate={{borderColor:['rgba(99,102,241,.15)','rgba(99,102,241,.7)','rgba(99,102,241,.15)'],background:['rgba(99,102,241,.01)','rgba(99,102,241,.05)','rgba(99,102,241,.01)']}}
-              transition={{duration:1.8,repeat:Infinity,delay,ease:'easeInOut'}}
-              style={{height:26,borderRadius:6,border:'1.5px solid rgba(99,102,241,.15)',display:'flex',alignItems:'center',padding:'0 10px',gap:8}}>
-              <motion.div animate={{width:['10%','70%','10%']}} transition={{duration:1.8,repeat:Infinity,delay,ease:'easeInOut'}}
-                style={{height:6,borderRadius:99,background:'rgba(99,102,241,.2)'}}/>
-            </motion.div>
-          </div>
         ))}
-
-        <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:.8,duration:.5}}
-          style={{marginTop:10,display:'flex',alignItems:'center',gap:6,padding:'7px 11px',background:'rgba(99,102,241,.05)',border:'1px solid rgba(99,102,241,.12)',borderRadius:8}}>
-          <ScanLine size={11} color="#6366f1" strokeWidth={2}/>
-          <span style={{...FI,fontSize:11,color:'#6366f1',fontWeight:500}}>3 fields detected</span>
-        </motion.div>
       </div>
     </div>
   )
 }
 
-function ScreenFill() {
+function ScreenEditSign() {
   return (
     <div className="scr-doc" style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
-      <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'22px 18px',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-          <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#1d1d1f'}}>INVOICE #2025-089</div>
-          <div style={{display:'flex',alignItems:'center',gap:5,padding:'3px 9px',background:'rgba(226,75,74,.07)',border:'1px solid rgba(226,75,74,.18)',borderRadius:99}}>
-            <Zap size={8} color={RED} strokeWidth={2.5}/>
-            <span style={{...MONO,fontSize:8,color:RED,letterSpacing:'0.06em'}}>AI FILLING</span>
+      <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'20px 18px',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
+        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:14,padding:'7px 10px',background:'#f9fafb',borderRadius:10,border:'1px solid #f0f0f0'}}>
+          {[
+            {Icon:MousePointer2,color:'#6366f1',active:true},
+            {Icon:FileText,color:'#374151',active:false},
+            {Icon:PenLine,color:'#374151',active:false},
+            {Icon:Layers,color:'#374151',active:false},
+          ].map(({Icon,color,active},i)=>(
+            <div key={i} style={{width:26,height:26,borderRadius:6,background:active?'rgba(99,102,241,.08)':'transparent',border:active?'1px solid rgba(99,102,241,.2)':'1px solid transparent',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <Icon size={12} color={active?'#6366f1':color} strokeWidth={2}/>
+            </div>
+          ))}
+          <div style={{flex:1}}/>
+          <div style={{display:'flex',alignItems:'center',gap:5,padding:'3px 8px',background:'rgba(226,75,74,.07)',border:'1px solid rgba(226,75,74,.18)',borderRadius:99}}>
+            <PenTool size={8} color={RED} strokeWidth={2}/>
+            <span style={{...MONO,fontSize:8,color:RED,letterSpacing:'0.06em'}}>SIGN</span>
           </div>
         </div>
-        <div style={{height:1,background:'#f0f0f0',marginBottom:14}}/>
-
-        {[
-          {label:'Bill To',  val:'Acme Corporation', d1:'.2s', d2:'.45s', done:true},
-          {label:'Amount',   val:'$12,400.00',        d1:'.9s', d2:'1.15s',done:true},
-          {label:'Due Date', val:'Dec 30, 2025',      d1:'1.7s',d2:'1.95s',done:false},
-        ].map(({label,val,d1,d2,done})=>(
-          <div key={label} style={{marginBottom:11}}>
-            <div style={{fontSize:7,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:3}}>{label}</div>
-            <div style={{position:'relative',height:26,borderRadius:6,border:`1.5px solid ${done?'rgba(34,197,94,.3)':'rgba(226,75,74,.35)'}`,background:done?'rgba(34,197,94,.03)':'rgba(226,75,74,.02)',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 9px',overflow:'hidden'}}>
-              <span style={{...FI,fontSize:9.5,color:'#1d1d1f',fontWeight:500,animation:`fin .38s ${d1} both`,opacity:0}}>{val}</span>
-              {done && <span style={{fontSize:13,animation:`chk .38s ${d2} both`,opacity:0,color:'#22c55e',flexShrink:0}}>✓</span>}
-              {!done && <motion.span animate={{opacity:[1,0,1]}} transition={{duration:.65,repeat:Infinity}} style={{...FI,fontSize:14,color:RED,lineHeight:1,flexShrink:0}}>|</motion.span>}
-            </div>
-          </div>
+        {[100,85,92,70,88,60].map((w,i)=>(
+          <motion.div key={i}
+            initial={{opacity:0}} animate={{opacity:1}} transition={{delay:i*.07}}
+            style={{height:8,borderRadius:99,background:i===2?'rgba(99,102,241,.18)':'#f0f0f0',width:`${w}%`,marginBottom:8,
+              boxShadow:i===2?'0 0 0 2px rgba(99,102,241,.1)':'none'}}/>
         ))}
-
-        <div style={{marginTop:12,display:'flex',alignItems:'center',gap:10}}>
-          <div style={{flex:1,height:4,background:'#f0f0f0',borderRadius:99,overflow:'hidden'}}>
-            <motion.div initial={{width:'0%'}} animate={{width:'66%'}} transition={{duration:.9,delay:.4,ease:[0.22,1,0.36,1]}}
-              style={{height:'100%',background:'#22c55e',borderRadius:99}}/>
-          </div>
-          <span style={{...MONO,fontSize:9,color:'rgba(0,0,0,.38)',whiteSpace:'nowrap'}}>2 / 3 filled</span>
+        <div style={{marginTop:12,padding:'9px 12px',border:'1px dashed #e4e4e7',borderRadius:8,background:'#fafafa'}}>
+          <div style={{fontSize:7,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>Signature</div>
+          <svg width="140" height="24" viewBox="0 0 140 24" fill="none">
+            <path d="M6 16 C16 4 24 20 34 12 C44 4 56 18 68 9 C79 2 90 16 100 9 C109 3 120 15 130 11"
+              stroke={RED} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="400"
+              style={{animation:'sigdraw 3.5s ease-in-out infinite'}}/>
+          </svg>
         </div>
       </div>
     </div>
   )
 }
 
-function ScreenDone() {
+function ScreenExport() {
+  const formats = [
+    { label:'PDF → Word',   ext:'DOCX', color:'#2563eb', Icon:FileType        },
+    { label:'PDF → Excel',  ext:'XLSX', color:'#16a34a', Icon:FileSpreadsheet },
+    { label:'Compress PDF', ext:'PDF',  color:'#f97316', Icon:Minimize2       },
+    { label:'Merge PDFs',   ext:'PDF',  color:'#7c3aed', Icon:Merge           },
+  ]
   return (
     <div className="scr-doc" style={{height:'100%',background:'#F5F5F7',display:'flex',alignItems:'center',justifyContent:'center',padding:28}}>
-      <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'22px 18px',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-          <div style={{...FI,fontSize:9.5,fontWeight:800,letterSpacing:'0.1em',color:'#1d1d1f'}}>INVOICE #2025-089</div>
-          <div style={{display:'flex',alignItems:'center',gap:5,padding:'3px 9px',background:'rgba(34,197,94,.07)',border:'1px solid rgba(34,197,94,.2)',borderRadius:99}}>
-            <CheckCircle2 size={9} color="#22c55e" strokeWidth={2.5}/>
-            <span style={{...MONO,fontSize:8,color:'#22c55e',letterSpacing:'0.06em'}}>COMPLETE</span>
-          </div>
+      <div style={{background:'#fff',borderRadius:16,width:'100%',maxWidth:420,padding:'20px 18px',boxShadow:'0 8px 32px rgba(0,0,0,.10)',border:'1px solid #e8e8e8'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
+          <Download size={14} color="#22c55e" strokeWidth={2}/>
+          <span style={{...FI,fontSize:12,fontWeight:700,color:'#1d1d1f'}}>Export & Convert</span>
         </div>
-        <div style={{height:1,background:'#f0f0f0',marginBottom:14}}/>
-
-        {[['Bill To','Acme Corporation'],['Amount','$12,400.00'],['Due Date','Dec 30, 2025']].map(([label,val])=>(
-          <div key={label} style={{marginBottom:11}}>
-            <div style={{fontSize:7,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:3}}>{label}</div>
-            <div style={{height:26,borderRadius:6,border:'1.5px solid rgba(34,197,94,.3)',background:'rgba(34,197,94,.03)',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 9px'}}>
-              <span style={{...FI,fontSize:9.5,color:'#1d1d1f',fontWeight:500}}>{val}</span>
-              <CheckCircle2 size={13} color="#22c55e" strokeWidth={2.5}/>
+        <div style={{height:1,background:'#f0f0f0',marginBottom:10}}/>
+        {formats.map(({label,ext,color,Icon},i)=>(
+          <motion.div key={label}
+            initial={{opacity:0,y:6}} animate={{opacity:1,y:0}}
+            transition={{delay:i*.1,duration:.35}}
+            style={{display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:9,border:`1px solid ${color}18`,background:`${color}05`,marginBottom:8}}>
+            <div style={{width:28,height:28,borderRadius:7,background:`${color}12`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <Icon size={13} color={color} strokeWidth={2}/>
             </div>
-          </div>
+            <span style={{...FI,fontSize:11,fontWeight:600,color:'#374151'}}>{label}</span>
+            <span style={{marginLeft:'auto',...MONO,fontSize:8.5,color,background:`${color}12`,padding:'2px 6px',borderRadius:4}}>{ext}</span>
+          </motion.div>
         ))}
-
-        <div style={{marginBottom:14}}>
-          <div style={{fontSize:7,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:3}}>Signature</div>
-          <div style={{height:32,border:'1px dashed #e4e4e7',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <svg width="120" height="22" viewBox="0 0 120 22" fill="none">
-              <path d="M5 14 C13 4 20 18 28 10 C36 3 46 16 56 8 C65 2 74 15 83 8 C91 3 100 14 108 10"
-                stroke={RED} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="340"
-                style={{animation:'sigdraw 3.5s ease-in-out infinite'}}/>
-            </svg>
-          </div>
-        </div>
-
-        <motion.div whileHover={{scale:1.02}} whileTap={{scale:.97}} transition={SP}
-          style={{height:40,background:'#22c55e',borderRadius:99,display:'flex',alignItems:'center',justifyContent:'center',gap:7,cursor:'pointer',boxShadow:'0 4px 16px rgba(34,197,94,.25)'}}>
-          <Download size={14} color="#fff" strokeWidth={2.5}/>
-          <span style={{...FI,fontSize:13,color:'#fff',fontWeight:700}}>Download filled PDF</span>
+        <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:.5}}
+          style={{marginTop:4,height:36,background:'#22c55e',borderRadius:99,display:'flex',alignItems:'center',justifyContent:'center',gap:7,boxShadow:'0 4px 14px rgba(34,197,94,.25)'}}>
+          <Download size={13} color="#fff" strokeWidth={2.5}/>
+          <span style={{...FI,fontSize:12,color:'#fff',fontWeight:700}}>Download</span>
         </motion.div>
       </div>
     </div>
@@ -1009,10 +929,10 @@ function ScreenDone() {
 }
 
 const GSTEPS = [
-  { n:'01', color:'#818cf8', label:'Upload',   headline:'Drop it.',      body:'Any PDF, any size, any format. Drag it in.',                         Screen:ScreenDrop },
-  { n:'02', color:'#a78bfa', label:'Scan',     headline:'AI reads it.',  body:'Every field detected, every data point mapped in milliseconds.',     Screen:ScreenScan },
-  { n:'03', color:RED,       label:'Fill',     headline:'Fills itself.', body:'Your data flows in automatically — accurate, instant, perfect.',     Screen:ScreenFill },
-  { n:'04', color:'#22c55e', label:'Download', headline:'Done.',         body:'Filled, signed and ready. One click to download.',                   Screen:ScreenDone },
+  { n:'01', color:'#818cf8', label:'Upload',      headline:'Upload your PDF',           body:'Upload most PDFs instantly. Drag it in or click to browse — no account needed.',   Screen:ScreenDrop     },
+  { n:'02', color:'#a78bfa', label:'AI Tools',    headline:'Use AI tools instantly',    body:'Summarize, fill forms, OCR scan, translate, and more — all AI-powered.',            Screen:ScreenAI       },
+  { n:'03', color:RED,       label:'Edit & Sign', headline:'Edit, annotate, or sign',   body:'Add text, highlights, comments, and your e-signature in seconds.',                   Screen:ScreenEditSign },
+  { n:'04', color:'#22c55e', label:'Export',      headline:'Download your file',         body:'Convert to Word, Excel, or compress. Your finished file is ready to download.',  Screen:ScreenExport   },
 ]
 
 // ── Scroll gallery ─────────────────────────────────────────────────────────────
@@ -1049,7 +969,7 @@ function Apple3DScroll() {
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.55,ease:E}}>
           <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>How it works</div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,4vw,56px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>
-            Four steps.<br/><span style={{color:'#bbb'}}>Zero effort.</span>
+            How it works.<br/><span style={{color:'#bbb'}}>Four simple steps.</span>
           </h2>
         </motion.div>
       </div>
@@ -1168,12 +1088,9 @@ function Apple3DScroll() {
           </div>
         </div>
 
-        {/* Scroll hint — hidden on mobile via CSS */}
-        <motion.div className="scr-hint" style={{opacity:hintOpacity as any,position:'absolute',bottom:'8%',left:'50%',transform:'translateX(-50%)',display:'flex',flexDirection:'column',alignItems:'center',gap:6,pointerEvents:'none'}}>
-          <motion.div animate={{y:[0,6,0]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}>
-            <svg width="18" height="28" viewBox="0 0 18 28" fill="none"><rect x="1" y="1" width="16" height="26" rx="8" stroke="rgba(0,0,0,.18)" strokeWidth="1.5"/><motion.rect x="7.5" y="6" width="3" height="5" rx="1.5" fill="rgba(0,0,0,.3)" animate={{y:[0,7,0],opacity:[1,.2,1]}} transition={{duration:1.6,repeat:Infinity,ease:'easeInOut'}}/></svg>
-          </motion.div>
-          <span style={{...MONO,fontSize:9.5,color:'#bbb',letterSpacing:'0.12em',textTransform:'uppercase'}}>Scroll to explore</span>
+        {/* Section label — replaces scroll hint */}
+        <motion.div className="scr-hint" style={{opacity:hintOpacity as any,position:'absolute',bottom:'8%',left:'50%',transform:'translateX(-50%)',pointerEvents:'none'}}>
+          <span style={{...MONO,fontSize:9.5,color:'rgba(0,0,0,.28)',letterSpacing:'0.12em',textTransform:'uppercase',whiteSpace:'nowrap'}}>Start with one of our most-used tools</span>
         </motion.div>
 
         {/* Progress bar */}
@@ -1200,58 +1117,73 @@ function ToolCard({ tool, catColor }: { tool: typeof TOOLS[0]; catColor: string 
       transition={{ duration:.18, ease:[.22,1,.36,1] }}
       style={{
         background:'#fff', border:'1.5px solid #e8e8e8', borderRadius:18,
-        padding:'20px 18px 16px', display:'flex', flexDirection:'column', gap:12,
+        padding:'20px 18px 18px', display:'flex', flexDirection:'column', gap:10,
         cursor:isLive?'pointer':'default', height:'100%', position:'relative', overflow:'hidden',
         boxShadow:'0 2px 8px rgba(0,0,0,.04)',
       }}>
-      {/* Subtle top-left gradient wash */}
+      {/* Subtle gradient wash */}
       <div style={{position:'absolute',top:0,left:0,width:80,height:80,borderRadius:'0 0 80px 0',
         background:tool.iconBg,opacity:.07,pointerEvents:'none'}}/>
 
       {/* Icon chip */}
       <div style={{
-        width:48, height:48, borderRadius:14, background:tool.iconBg, flexShrink:0,
+        width:44, height:44, borderRadius:13, background:tool.iconBg, flexShrink:0,
         display:'flex', alignItems:'center', justifyContent:'center',
-        boxShadow:`0 6px 16px ${catColor}30`,
+        boxShadow:`0 6px 16px ${catColor}28`,
       }}>
-        <Icon size={22} color="#fff" strokeWidth={1.8}/>
+        <Icon size={20} color="#fff" strokeWidth={1.8}/>
       </div>
 
       {/* Text */}
       <div style={{flex:1}}>
-        <div style={{...FI, fontSize:14, fontWeight:700, color:'#1d1d1f', letterSpacing:'-0.02em', marginBottom:5, lineHeight:1.25}}>
+        <div style={{...FI, fontSize:13.5, fontWeight:700, color:'#1d1d1f', letterSpacing:'-0.02em', marginBottom:4, lineHeight:1.25}}>
           {tool.name}
         </div>
-        <div style={{...FI, fontSize:12, color:'#9ca3af', lineHeight:1.5}}>{tool.desc}</div>
+        <div style={{...FI, fontSize:11.5, color:'#9ca3af', lineHeight:1.5}}>{tool.desc}</div>
       </div>
 
-      {/* Footer row */}
-      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between', paddingTop:8, borderTop:'1px solid #f3f4f6'}}>
-        <span style={{...MONO, fontSize:9, fontWeight:700, color:catColor, textTransform:'uppercase', letterSpacing:'.07em',
-          background:`${catColor}12`, padding:'2px 7px', borderRadius:99}}>
-          {tool.cat}
+      {/* Action button */}
+      <div style={{
+        marginTop:4, padding:'9px 0', borderRadius:10, textAlign:'center',
+        background: isLive ? `${catColor}12` : '#f3f4f6',
+        border: `1.5px solid ${isLive ? catColor+'28' : '#e5e7eb'}`,
+        display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+      }}>
+        <span style={{...FI, fontSize:12, fontWeight:700, color: isLive ? catColor : '#9ca3af'}}>
+          {isLive ? 'Open Tool' : 'Coming Soon'}
         </span>
-        {isLive && (
-          <div style={{width:26, height:26, borderRadius:8, background:`${catColor}10`,
-            display:'flex', alignItems:'center', justifyContent:'center'}}>
-            <ArrowUpRight size={13} color={catColor} strokeWidth={2.2}/>
-          </div>
-        )}
+        {isLive && <ArrowUpRight size={12} color={catColor} strokeWidth={2.5}/>}
       </div>
     </motion.div>
   )
   return isLive
-    ? <Link href={tool.href} style={{textDecoration:'none', display:'block'}}>{card}</Link>
-    : <div>{card}</div>
+    ? <Link href={tool.href} style={{textDecoration:'none', display:'block', height:'100%'}}>{card}</Link>
+    : <div style={{height:'100%'}}>{card}</div>
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
 //  ALL TOOLS
 // ══════════════════════════════════════════════════════════════════════════════
+const TOOL_FILTERS = [
+  { label:'All',      catId:'All',     color:'#1d1d1f', Icon:Layers   },
+  { label:'Edit',     catId:'Edit',    color:'#2563eb', Icon:FilePen  },
+  { label:'AI',       catId:'AI',      color:'#7c3aed', Icon:Sparkles },
+  { label:'Convert',  catId:'Convert', color:'#16a34a', Icon:FileType },
+  { label:'Sign',     catId:'Protect', color:'#dc2626', Icon:PenTool  },
+  { label:'Organize', catId:'Organize',color:'#d97706', Icon:Merge    },
+]
+
 function AllTools() {
   const [activeTab, setActiveTab] = useState('All')
-  const activeCat = CATS.find(c => c.id === activeTab)
-  const visibleTools = activeTab === 'All' ? TOOLS : TOOLS.filter(t => t.cat === activeTab)
+  const [search, setSearch] = useState('')
+
+  const activeFilter = TOOL_FILTERS.find(f => f.label === activeTab) ?? TOOL_FILTERS[0]
+  const activeCat    = CATS.find(c => c.id === activeFilter.catId)
+
+  const baseTools    = activeFilter.catId === 'All' ? TOOLS : TOOLS.filter(t => t.cat === activeFilter.catId)
+  const q            = search.trim().toLowerCase()
+  const visibleTools = q ? TOOLS.filter(t => t.name.toLowerCase().includes(q)) : baseTools
+  const isSearching  = q.length > 0
 
   return (
     <section id="tools" style={{background:'#f8f8fa', borderTop:'1px solid #f0f0f0', padding:'88px 28px 100px'}}>
@@ -1259,28 +1191,57 @@ function AllTools() {
 
         {/* ── Section header ── */}
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'100px'}} transition={{duration:.5,ease:E}}
-          style={{marginBottom:40}}>
+          style={{marginBottom:32}}>
           <div style={{...MONO, fontSize:10, color:'rgba(0,0,0,.35)', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:14}}>
-            Tool Registry
+            All Tools
           </div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)', fontSize:'clamp(28px,3.5vw,46px)', fontWeight:800, color:'#1d1d1f', letterSpacing:'-0.05em', lineHeight:.96, margin:0}}>
-            29 tools. One platform.
+            35+ tools. One platform.
           </h2>
         </motion.div>
 
-        {/* ── Category tab bar ── */}
-        <motion.div initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:.4,delay:.1,ease:E}}
+        {/* ── Search bar ── */}
+        <motion.div initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:.4,ease:E}}
+          style={{marginBottom:20}}>
+          <div style={{position:'relative', maxWidth:480}}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}>
+              <circle cx="11" cy="11" r="8" stroke="#9ca3af" strokeWidth="2"/>
+              <path d="m21 21-4.35-4.35" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search tools: compress, merge, sign, OCR…"
+              style={{
+                width:'100%', padding:'11px 14px 11px 40px',
+                borderRadius:12, border:'1.5px solid #e5e7eb',
+                background:'#fff', fontSize:14, color:'#1d1d1f',
+                fontFamily:'var(--font-dm,system-ui,sans-serif)',
+                outline:'none', boxSizing:'border-box',
+                boxShadow:'0 1px 4px rgba(0,0,0,.06)',
+                transition:'border-color .15s',
+              } as React.CSSProperties}
+              onFocus={e => { e.currentTarget.style.borderColor = '#0891b2' }}
+              onBlur={e  => { e.currentTarget.style.borderColor = '#e5e7eb' }}
+            />
+            {search && (
+              <button onClick={() => setSearch('')} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',padding:2,color:'#9ca3af',display:'flex'}}>
+                <X size={14} strokeWidth={2}/>
+              </button>
+            )}
+          </div>
+        </motion.div>
+
+        {/* ── Filter tabs ── */}
+        <motion.div initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:.4,delay:.05,ease:E}}
           className="tab-bar"
-          style={{display:'flex', gap:8, overflowX:'auto', paddingBottom:8, marginBottom:52}}>
-          {/* All tab */}
-          {['All', ...CATS.map(c=>c.id)].map((id)=>{
-            const cat = CATS.find(c=>c.id===id)
-            const active = activeTab === id
-            const color = cat?.color ?? '#1d1d1f'
-            const label = id === 'All' ? 'All Tools' : (cat?.label ?? id)
-            const TabIcon = cat?.Icon ?? Layers
+          style={{display:'flex', gap:8, overflowX:'auto', paddingBottom:8, marginBottom:48}}>
+          {TOOL_FILTERS.map(({label, catId, color, Icon:TabIcon}) => {
+            const active = activeTab === label
+            const count  = catId === 'All' ? TOOLS.length : TOOLS.filter(t => t.cat === catId).length
             return (
-              <motion.button key={id} onClick={()=>setActiveTab(id)}
+              <motion.button key={label} onClick={() => { setActiveTab(label); setSearch('') }}
                 whileTap={{scale:.94}} transition={SP}
                 style={{
                   display:'flex', alignItems:'center', gap:6,
@@ -1291,10 +1252,7 @@ function AllTools() {
                   boxShadow: active ? `0 4px 16px ${color}40` : '0 1px 4px rgba(0,0,0,.08)',
                   outline:'none', transition:'color .15s, background .15s',
                 }}>
-                {id === 'All'
-                  ? <Layers size={14} strokeWidth={2}/>
-                  : <TabIcon size={14} strokeWidth={2}/>
-                }
+                <TabIcon size={14} strokeWidth={2}/>
                 {label}
                 <span style={{
                   fontSize:10, fontWeight:800, padding:'1px 6px', borderRadius:99,
@@ -1302,7 +1260,7 @@ function AllTools() {
                   color: active ? '#fff' : color,
                   minWidth:20, textAlign:'center',
                 }}>
-                  {id === 'All' ? TOOLS.length : TOOLS.filter(t=>t.cat===id).length}
+                  {count}
                 </span>
               </motion.button>
             )
@@ -1311,18 +1269,42 @@ function AllTools() {
 
         {/* ── Content ── */}
         <AnimatePresence mode="sync">
-          <motion.div key={activeTab}
+          <motion.div key={activeTab + q}
             initial={{opacity:0, y:8}} animate={{opacity:1, y:0}} exit={{opacity:0}}
             transition={{duration:.15, ease:[.22,1,.36,1]}}>
 
-            {activeTab === 'All' ? (
+            {isSearching ? (
+              /* ── Search results ── */
+              <div>
+                <div style={{...MONO, fontSize:11, color:'#9ca3af', letterSpacing:'0.06em', marginBottom:20}}>
+                  {visibleTools.length} result{visibleTools.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
+                </div>
+                {visibleTools.length === 0 ? (
+                  <div style={{textAlign:'center', padding:'60px 0', color:'#9ca3af', fontSize:15}}>
+                    No tools found. Try &ldquo;compress&rdquo;, &ldquo;sign&rdquo;, or &ldquo;word&rdquo;.
+                  </div>
+                ) : (
+                  <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(192px,1fr))', gap:14}}>
+                    {visibleTools.map((tool, i) => {
+                      const cat = CATS.find(c => c.id === tool.cat)
+                      return (
+                        <motion.div key={tool.name}
+                          initial={{opacity:0,y:10}} animate={{opacity:1,y:0}}
+                          transition={{delay:i*.03, duration:.25, ease:[.22,1,.36,1] as [number,number,number,number]}}>
+                          <ToolCard tool={tool} catColor={cat?.color ?? '#1d1d1f'}/>
+                        </motion.div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : activeFilter.catId === 'All' ? (
               /* ── Grouped by category ── */
               <div style={{display:'flex', flexDirection:'column', gap:64}}>
                 {CATS.map(cat => {
                   const catTools = TOOLS.filter(t => t.cat === cat.id)
                   return (
                     <div key={cat.id} id={`cat-${cat.id}`}>
-                      {/* Category header */}
                       <div style={{display:'flex', alignItems:'center', gap:14, marginBottom:24, paddingBottom:18, borderBottom:`2px solid ${cat.color}20`}}>
                         <div style={{width:44, height:44, borderRadius:13,
                           background:`linear-gradient(135deg,${cat.color}18,${cat.color}08)`,
@@ -1339,11 +1321,8 @@ function AllTools() {
                           {catTools.length} tools
                         </div>
                       </div>
-                      {/* Tool cards — plain grid, no whileInView inside AnimatePresence */}
                       <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(192px,1fr))', gap:14}}>
-                        {catTools.map(tool => (
-                          <ToolCard key={tool.name} tool={tool} catColor={cat.color}/>
-                        ))}
+                        {catTools.map(tool => <ToolCard key={tool.name} tool={tool} catColor={cat.color}/>)}
                       </div>
                     </div>
                   )
@@ -1366,7 +1345,7 @@ function AllTools() {
                   </div>
                 )}
                 <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(192px,1fr))', gap:14}}>
-                  {visibleTools.map((tool,i) => (
+                  {visibleTools.map((tool, i) => (
                     <motion.div key={tool.name}
                       initial={{opacity:0,y:16}} animate={{opacity:1,y:0}}
                       transition={{delay:i*.04, duration:.3, ease:[.22,1,.36,1] as [number,number,number,number]}}>
@@ -1394,20 +1373,84 @@ function CTA() {
         <motion.div initial={{opacity:0,y:22}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'100px'}} transition={{duration:.65,ease:E}}>
           <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:24}}>Get started</div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(44px,7vw,100px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:'0 0 40px'}}>
-            Ready to edit<br/><span className="grad-red">smarter?</span>
+            Ready to edit<br/><span className="grad-red">your PDF?</span>
           </h2>
           <div style={{display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
             <Mag>
-              <Link href="/ai-pdf-form-filler"
+              <Link href="/pdf-editor"
                 style={{...FI,display:'inline-flex',alignItems:'center',gap:9,padding:'15px 34px',background:'#1d1d1f',color:'#fff',borderRadius:99,fontSize:16,fontWeight:700,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:'0 4px 24px rgba(0,0,0,.14)'}}>
                 <motion.span style={{display:'flex',alignItems:'center',gap:9}} whileHover={{gap:16}} transition={SP}>
-                  Open free editor <ArrowRight size={16} strokeWidth={2.5}/>
+                  <Upload size={16} strokeWidth={2.5}/> Upload PDF Now
                 </motion.span>
               </Link>
             </Mag>
-            <span style={{...MONO,fontSize:11,color:'#999',letterSpacing:'0.08em',textTransform:'uppercase'}}>No account · No credit card · Any browser</span>
+            <span style={{...MONO,fontSize:11,color:'#999',letterSpacing:'0.08em',textTransform:'uppercase'}}>Start with your PDF — no signup required</span>
           </div>
         </motion.div>
+      </div>
+    </section>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  POPULAR TOOLS
+// ══════════════════════════════════════════════════════════════════════════════
+function PopularTools() {
+  const popular = [
+    { label:'Edit PDF',      href:'/pdf-editor',         Icon:FilePen,        color:'#6366f1' },
+    { label:'Compress PDF',  href:'/pdf-compressor',     Icon:Minimize2,      color:'#f97316' },
+    { label:'Merge PDF',     href:'/pdf-merger',         Icon:Merge,          color:'#0891b2' },
+    { label:'Split PDF',     href:'/pdf-splitter',       Icon:Split,          color:'#16a34a' },
+    { label:'Sign PDF',      href:'/pdf-signer',         Icon:PenTool,        color:RED        },
+    { label:'PDF to Word',   href:'/pdf-to-word',        Icon:FileType,       color:'#2563eb' },
+    { label:'AI Form Filler',href:'/ai-pdf-form-filler', Icon:Sparkles,       color:'#7c3aed' },
+  ]
+  return (
+    <section style={{background:'#fff',padding:'72px 28px 60px',borderTop:'1px solid #f0f0f0'}}>
+      <div style={{maxWidth:1100,margin:'0 auto'}}>
+        <motion.div initial={{opacity:0,y:14}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.5,ease:E}}
+          style={{marginBottom:36}}>
+          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
+            Most used
+          </div>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,38px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',lineHeight:1,margin:0}}>
+            Popular tools
+          </h2>
+        </motion.div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:12}}>
+          {popular.map(({label,href,Icon,color},i)=>(
+            <motion.div key={href}
+              initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}}
+              viewport={{once:true,margin:'60px'}} transition={{duration:.35,delay:i*.05,ease:E}}>
+              <Link href={href} style={{
+                display:'inline-flex',alignItems:'center',gap:10,
+                padding:'13px 20px',borderRadius:14,textDecoration:'none',
+                background:'#f8f8fa',border:'1.5px solid #ebebeb',
+                transition:'all .18s',
+              }}
+              onMouseEnter={e=>{
+                const el = e.currentTarget as HTMLAnchorElement
+                el.style.background = `${color}08`
+                el.style.borderColor = `${color}30`
+                el.style.transform = 'translateY(-2px)'
+                el.style.boxShadow = `0 6px 20px ${color}18`
+              }}
+              onMouseLeave={e=>{
+                const el = e.currentTarget as HTMLAnchorElement
+                el.style.background = '#f8f8fa'
+                el.style.borderColor = '#ebebeb'
+                el.style.transform = 'none'
+                el.style.boxShadow = 'none'
+              }}>
+                <div style={{width:32,height:32,borderRadius:9,background:`${color}12`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <Icon size={15} color={color} strokeWidth={2}/>
+                </div>
+                <span style={{...FI,fontSize:14,fontWeight:700,color:'#1d1d1f',whiteSpace:'nowrap'}}>{label}</span>
+                <ChevronRight size={13} color="#bbb" strokeWidth={2}/>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -1417,15 +1460,36 @@ function CTA() {
 //  FOOTER
 // ══════════════════════════════════════════════════════════════════════════════
 function Footer() {
-  const footerCols = [
-    { title:'AI Tools',       color:'#7c3aed', links:[['AI Form Filler','/ai-pdf-form-filler'],['PDF OCR Scanner','/pdf-ocr'],['PDF Summarizer','/pdf-summarizer'],['PDF Mind Map','/mind-map'],['Quiz Creator','/quiz-creator'],['PDF Translator','/pdf-translator']] },
-    { title:'Edit & Convert', color:'#16a34a', links:[['PDF Editor','/pdf-editor'],['PDF Annotator','/pdf-annotate'],['PDF → Word','/pdf-to-word'],['PDF → Excel','/pdf-to-excel'],['HTML → PDF','/html-to-pdf'],['Image to PDF','/image-to-pdf']] },
-    { title:'Protect & More', color:'#dc2626', links:[['PDF Password Lock','/pdf-password-lock'],['PDF Watermarker','/pdf-watermark'],['PDF E-Signer','/pdf-signer'],['PDF Compressor','/pdf-compressor'],['PDF Merger','/pdf-merger'],['PDF Splitter','/pdf-splitter']] },
+  const toolCols = [
+    { title:'AI Tools', color:'#7c3aed', links:[
+      ['AI Form Filler','/ai-pdf-form-filler'],
+      ['PDF OCR Scanner','/pdf-ocr'],
+      ['PDF Summarizer','/pdf-summarizer'],
+      ['PDF Mind Map','/mind-map'],
+      ['Quiz Creator','/quiz-creator'],
+      ['PDF Translator','/pdf-translator'],
+    ]},
+    { title:'PDF Tools', color:'#2563eb', links:[
+      ['PDF Editor','/pdf-editor'],
+      ['PDF Merger','/pdf-merger'],
+      ['PDF Compressor','/pdf-compressor'],
+      ['PDF Splitter','/pdf-splitter'],
+      ['PDF Watermarker','/pdf-watermark'],
+      ['Image to PDF','/image-to-pdf'],
+    ]},
+    { title:'Company', color:'#374151', links:[
+      ['Pricing','/pricing'],
+      ['Privacy Policy','/privacy'],
+      ['Terms of Service','/terms'],
+      ['Contact','/contact'],
+      ['Support','mailto:support@editpdfai.com'],
+      ['All Tools','/#tools'],
+    ]},
   ]
   return (
-    <footer style={{background:'#f5f5f7',borderTop:'1px solid #e5e5ea',padding:'56px 28px 32px'}}>
+    <footer style={{background:'#f5f5f7',borderTop:'1px solid #e5e5ea',padding:'56px 28px 0'}}>
       <div style={{maxWidth:1200,margin:'0 auto'}}>
-        <div className="footer-grid" style={{display:'grid',gridTemplateColumns:'1.4fr 1fr 1fr 1fr',gap:48,alignItems:'start',marginBottom:40}}>
+        <div className="footer-grid" style={{display:'grid',gridTemplateColumns:'1.5fr 1fr 1fr 1fr',gap:48,alignItems:'start',marginBottom:48}}>
 
           {/* Brand */}
           <div>
@@ -1437,11 +1501,21 @@ function Footer() {
                 Edit<span style={{color:RED}}>PDF</span> AI
               </span>
             </Link>
-            <p style={{...FI,fontSize:13,color:'#6b7280',lineHeight:1.7,maxWidth:210,margin:'0 0 18px'}}>
-              AI-powered PDF editing. 29 tools. Free forever.
+            <p style={{...FI,fontSize:13,color:'#6b7280',lineHeight:1.7,maxWidth:220,margin:'0 0 16px'}}>
+              35+ AI-powered PDF tools. Edit, convert, protect and sign — free to use, no signup required.
             </p>
-            {/* Category badges */}
-            <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:24}}>
+
+            {/* Privacy assurance */}
+            <div style={{display:'flex',alignItems:'flex-start',gap:8,padding:'10px 12px',
+              background:'rgba(22,163,74,.06)',border:'1px solid rgba(22,163,74,.16)',
+              borderRadius:10,marginBottom:20,maxWidth:240}}>
+              <Lock size={13} color="#16a34a" strokeWidth={2.2} style={{flexShrink:0,marginTop:1}}/>
+              <p style={{...FI,fontSize:11.5,color:'#374151',lineHeight:1.55,margin:0}}>
+                <strong style={{color:'#15803d'}}>Your files stay private.</strong> PDFs are processed in your browser. AI features use text context only — no raw file is uploaded.
+              </p>
+            </div>
+
+            <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:20}}>
               {CATS.map(c=>(
                 <span key={c.id} style={{display:'inline-flex',alignItems:'center',gap:4,...MONO,
                   fontSize:9,fontWeight:700,padding:'3px 8px',borderRadius:99,
@@ -1456,7 +1530,7 @@ function Footer() {
           </div>
 
           {/* Link columns */}
-          {footerCols.map(({title,color,links})=>(
+          {toolCols.map(({title,color,links})=>(
             <div key={title}>
               <div style={{...MONO,fontSize:10,fontWeight:700,color,letterSpacing:'0.1em',
                 textTransform:'uppercase',marginBottom:16}}>
@@ -1478,22 +1552,57 @@ function Footer() {
           ))}
         </div>
 
-        {/* Bottom divider */}
-        <div style={{borderTop:'1px solid #e5e5ea',paddingTop:20,display:'flex',
+        {/* Bottom bar */}
+        <div style={{borderTop:'1px solid #e5e5ea',padding:'16px 0 20px',display:'flex',
           alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
-          <span style={{...MONO,fontSize:10,color:'#9ca3af',letterSpacing:'0.04em'}}>
-            BUILT WITH AI · FAST · FREE
-          </span>
-          <Link href="/ai-pdf-form-filler"
+          <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+            <span style={{...MONO,fontSize:10,color:'#9ca3af',letterSpacing:'0.04em'}}>
+              35+ TOOLS · FREE · AI-POWERED
+            </span>
+            <div style={{display:'flex',gap:12}}>
+              {[['Privacy','/privacy'],['Terms','/terms'],['Contact','/contact']].map(([l,h])=>(
+                <Link key={l} href={h}
+                  style={{...FI,fontSize:11,color:'#9ca3af',textDecoration:'none',fontWeight:500}}
+                  onMouseEnter={e=>(e.currentTarget.style.color='#374151')}
+                  onMouseLeave={e=>(e.currentTarget.style.color='#9ca3af')}>
+                  {l}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <Link href="/pdf-editor"
             style={{...FI,display:'inline-flex',alignItems:'center',gap:6,
-              fontSize:12,fontWeight:700,color:'#1d1d1f',textDecoration:'none',
-              padding:'6px 14px',borderRadius:99,border:'1.5px solid #e5e5ea',
-              background:'#fff',letterSpacing:'-0.02em'}}>
-            Try for free <ArrowRight size={11} strokeWidth={2.5}/>
+              fontSize:12,fontWeight:700,color:'#fff',textDecoration:'none',
+              padding:'7px 16px',borderRadius:99,background:'#1d1d1f',
+              letterSpacing:'-0.02em'}}>
+            <Upload size={11} strokeWidth={2.5}/> Upload PDF
           </Link>
         </div>
       </div>
     </footer>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  PRIVACY NOTE
+// ══════════════════════════════════════════════════════════════════════════════
+function PrivacyNote() {
+  return (
+    <section style={{background:'#f5f5f7',padding:'40px 24px'}}>
+      <div style={{maxWidth:680,margin:'0 auto',display:'flex',alignItems:'flex-start',gap:16}}>
+        <div style={{flexShrink:0,width:36,height:36,borderRadius:10,background:'#e8f4f8',display:'flex',alignItems:'center',justifyContent:'center',marginTop:2}}>
+          <Lock size={16} color="#0891b2" strokeWidth={2}/>
+        </div>
+        <div>
+          <p style={{fontFamily:'var(--font-dm,system-ui,sans-serif)',fontSize:15,fontWeight:700,color:'#1d1d1f',margin:'0 0 4px',letterSpacing:'-0.02em'}}>
+            Your privacy, clearly explained
+          </p>
+          <p style={{fontFamily:'var(--font-dm,system-ui,sans-serif)',fontSize:14,color:'#6b7280',margin:0,lineHeight:1.65}}>
+            Your PDF stays in your browser. For AI features, only the required text context is sent for processing.
+          </p>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -1507,7 +1616,9 @@ export default function AppleHome() {
       <Nav />
       <Hero />
       <Apple3DScroll />
+      <PopularTools />
       <AllTools />
+      <PrivacyNote />
       <CTA />
       <Footer />
     </div>

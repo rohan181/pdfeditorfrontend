@@ -22,7 +22,7 @@ const jsonLd = {
   applicationCategory: 'ProductivityApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-  description: 'AI-powered PDF editor with 17 tools. Edit, sign, annotate and AI-fill PDF forms online.',
+  description: 'AI-powered PDF editor with 35+ tools. Edit, sign, annotate and AI-fill PDF forms online.',
 }
 
 export default function HomePage() {

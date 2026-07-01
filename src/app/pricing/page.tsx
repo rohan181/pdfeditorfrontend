@@ -6,7 +6,7 @@ import { useUser } from '@clerk/nextjs'
 
 const FREE_FEATURES = [
   '5 AI uses per day',
-  'All 30+ PDF tools (unlimited)',
+  'All 35+ PDF tools (unlimited)',
   'PDF edit, merge, split, compress',
   'E-signature & annotations',
   'PDF password protection',
@@ -20,28 +20,50 @@ const PRO_FEATURES = [
   'PDF Mind Map generator',
   'AI OCR & scan detection',
   'AI quiz creator',
-  'All 30+ PDF tools (unlimited)',
+  'All 35+ PDF tools (unlimited)',
   'Priority processing',
 ]
 
-const COMPARISON = [
-  ['Core PDF tools',          true,        true         ],
-  ['AI uses per day',         '5',         'Unlimited'  ],
-  ['AI form autofill',        false,       true         ],
-  ['AI summarizer',           false,       true         ],
-  ['AI translator',           false,       true         ],
-  ['PDF Mind Map',            false,       true         ],
-  ['PDF → Word / Excel / PPT',false,       true         ],
-  ['AI OCR',                  false,       true         ],
-  ['AI quiz creator',         false,       true         ],
-  ['Priority processing',     false,       true         ],
+const COMPARISON_GROUPS = [
+  {
+    group: 'Core PDF Tools',
+    note: 'Always free — no limits',
+    rows: [
+      ['PDF editor & annotator',  true,    true   ],
+      ['Merge & split PDFs',      true,    true   ],
+      ['Compress PDFs',           true,    true   ],
+      ['E-signature',             true,    true   ],
+      ['PDF password lock',       true,    true   ],
+    ],
+  },
+  {
+    group: 'AI Tools',
+    note: 'Free plan: 5 uses/day · Pro: unlimited',
+    rows: [
+      ['AI form autofill',        '5/day', '∞ Unlimited'],
+      ['AI summarizer',           '5/day', '∞ Unlimited'],
+      ['AI translator',           '5/day', '∞ Unlimited'],
+      ['AI OCR scanner',          '5/day', '∞ Unlimited'],
+      ['PDF mind map',            '5/day', '∞ Unlimited'],
+      ['AI quiz creator',         '5/day', '∞ Unlimited'],
+    ],
+  },
+  {
+    group: 'Limits & Extras',
+    note: '',
+    rows: [
+      ['AI uses per day',         '5',     'Unlimited'  ],
+      ['PDF → Word / Excel / PPT',false,   true         ],
+      ['Priority processing',     false,   true         ],
+    ],
+  },
 ]
 
 const FAQS = [
   { q: 'Can I cancel anytime?',
     a: 'Yes. Cancel from your account settings at any time — your Pro access continues until the end of the billing period, then reverts to Free.' },
   { q: 'What counts as an AI use?',
-    a: 'Each AI action (autofill, summarize, translate, mind map, OCR, quiz, etc.) counts as one use. Non-AI PDF tools (merge, split, compress, sign) are always unlimited and never counted.' },
+    a: 'One AI use means one AI-powered action, such as AI form fill, PDF summary, translation, OCR scan, mind map, or quiz generation. Non-AI PDF tools (merge, split, compress, sign) are always unlimited and never counted.' },
   { q: 'Is there a free trial?',
     a: 'Every account starts with 1 free AI use per day. There\'s no time-limited trial — use the free tier as long as you like before upgrading.' },
   { q: 'What payment methods are accepted?',
@@ -50,7 +72,7 @@ const FAQS = [
 
 export default function PricingPage() {
   const [annual, setAnnual]   = useState(false)
-  const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [openFaq, setOpenFaq] = useState<number | null>(1)
   const router   = useRouter()
   const { isSignedIn } = useUser()
 
@@ -97,8 +119,8 @@ export default function PricingPage() {
         <h1 style={{ fontSize: 'clamp(30px,5vw,52px)', fontWeight: 800, color: '#1d1d1f', margin: '0 0 14px', letterSpacing: '-.04em', lineHeight: 1.1 }}>
           One plan. Everything included.
         </h1>
-        <p style={{ fontSize: 17, color: '#6b7280', maxWidth: 460, margin: '0 auto 36px', lineHeight: 1.6 }}>
-          All PDF tools are free forever.<br/>Upgrade Pro for unlimited AI.
+        <p style={{ fontSize: 17, color: '#6b7280', maxWidth: 520, margin: '0 auto 36px', lineHeight: 1.6 }}>
+          Free includes all core PDF tools and 5 AI uses per day. Pro unlocks unlimited AI tools.
         </p>
 
         {/* Toggle */}
@@ -159,9 +181,12 @@ export default function PricingPage() {
           {/* glow blob */}
           <div style={{ position: 'absolute', top: -80, right: -80, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle,rgba(8,145,178,.35),transparent 70%)', pointerEvents: 'none' }} />
 
-          <div style={{ position: 'absolute', top: 20, right: 20 }}>
+          <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
             <span style={{ background: 'linear-gradient(135deg,#0891b2,#0e7490)', color: '#fff', borderRadius: 100, fontSize: 10, fontWeight: 800, padding: '4px 10px', letterSpacing: '.05em' }}>
               MOST POPULAR
+            </span>
+            <span style={{ background: 'rgba(251,191,36,.15)', color: '#f59e0b', border: '1px solid rgba(251,191,36,.3)', borderRadius: 100, fontSize: 10, fontWeight: 700, padding: '3px 9px', letterSpacing: '.04em' }}>
+              🎉 Launch price
             </span>
           </div>
 
@@ -197,36 +222,80 @@ export default function PricingPage() {
           >
             {isSignedIn ? 'Upgrade to Pro' : 'Get started'}
           </button>
-          <p style={{ textAlign: 'center', fontSize: 12, color: '#4b5563', marginTop: 12, margin: '12px 0 0' }}>
-            No contracts · Cancel anytime · Secured by Stripe
-          </p>
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              { icon: '✓', text: 'Cancel anytime — no questions asked' },
+              { icon: '🔒', text: 'Secure checkout by Stripe' },
+              { icon: '✓', text: 'No hidden fees. Price stays $1.00/mo.' },
+            ].map(({ icon, text }) => (
+              <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: '#0891b2', flexShrink: 0 }}>{icon}</span>
+                <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>{text}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* ── Feature comparison ── */}
       <div style={{ maxWidth: 820, margin: '0 auto', padding: '0 24px 64px' }}>
-        <h2 style={{ fontSize: 24, fontWeight: 800, color: '#1d1d1f', textAlign: 'center', marginBottom: 28, letterSpacing: '-.03em' }}>
-          What's included
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: '#1d1d1f', textAlign: 'center', marginBottom: 8, letterSpacing: '-.03em' }}>
+          What&apos;s included
         </h2>
+        <p style={{ textAlign: 'center', fontSize: 14, color: '#9ca3af', marginBottom: 28 }}>
+          Free vs Pro — at a glance
+        </p>
         <div style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', border: '1.5px solid #e5e7eb' }}>
-          {/* header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px 110px', padding: '12px 24px', background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-            {['Feature','Free','Pro'].map((h, i) => (
-              <span key={h} style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', textAlign: i > 0 ? 'center' : 'left', color: i === 2 ? '#0891b2' : '#9ca3af' }}>{h}</span>
-            ))}
+          {/* Column header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px 130px', padding: '12px 24px', background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', color: '#9ca3af' }}>Feature</span>
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', textAlign: 'center', color: '#9ca3af' }}>Free</span>
+            <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.07em', textAlign: 'center', color: '#0891b2' }}>Pro ✦</span>
           </div>
-          {COMPARISON.map(([label, free, pro], i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 110px 110px', padding: '13px 24px', borderBottom: i < COMPARISON.length - 1 ? '1px solid #f3f4f6' : 'none', background: i % 2 === 0 ? '#fff' : '#fafafa', alignItems: 'center' }}>
-              <span style={{ fontSize: 14, color: '#374151', fontWeight: 500 }}>{label as string}</span>
-              <span style={{ textAlign: 'center', fontSize: 13 }}>
-                {free === true  ? <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
-                 : free === false ? <span style={{ color: '#d1d5db' }}>—</span>
-                 : <span style={{ color: '#6b7280', fontWeight: 600 }}>{free as string}</span>}
-              </span>
-              <span style={{ textAlign: 'center', fontSize: 13 }}>
-                {pro === true ? <span style={{ color: '#0891b2', fontWeight: 700 }}>✓</span>
-                 : <span style={{ color: '#0891b2', fontWeight: 700 }}>{pro as string}</span>}
-              </span>
+
+          {COMPARISON_GROUPS.map(({ group, note, rows }) => (
+            <div key={group}>
+              {/* Group header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 110px 130px', padding: '10px 24px', background: '#f0f9ff', borderTop: '1px solid #e0f2fe', borderBottom: '1px solid #e0f2fe' }}>
+                <div>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: '#0891b2', textTransform: 'uppercase', letterSpacing: '.06em' }}>{group}</span>
+                  {note && <span style={{ fontSize: 11, color: '#94a3b8', marginLeft: 8, fontWeight: 500 }}>{note}</span>}
+                </div>
+                <span />
+                <span />
+              </div>
+
+              {/* Feature rows */}
+              {rows.map(([label, free, pro], i) => (
+                <div key={i} style={{
+                  display: 'grid', gridTemplateColumns: '1fr 110px 130px',
+                  padding: '12px 24px',
+                  borderBottom: i < rows.length - 1 ? '1px solid #f3f4f6' : 'none',
+                  alignItems: 'center',
+                  background: '#fff',
+                }}>
+                  <span style={{ fontSize: 13.5, color: '#374151', fontWeight: 500 }}>{label as string}</span>
+
+                  {/* Free cell */}
+                  <span style={{ textAlign: 'center', fontSize: 13 }}>
+                    {free === true  ? <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span>
+                     : free === false ? <span style={{ color: '#d1d5db', fontSize: 16 }}>—</span>
+                     : <span style={{ color: '#6b7280', fontWeight: 600, fontSize: 12 }}>{free as string}</span>}
+                  </span>
+
+                  {/* Pro cell — highlighted */}
+                  <span style={{
+                    textAlign: 'center', fontSize: 13,
+                    background: 'rgba(8,145,178,.04)',
+                    margin: '0 -24px', padding: '0 24px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {pro === true
+                      ? <span style={{ color: '#0891b2', fontWeight: 800, fontSize: 15 }}>✓</span>
+                      : <span style={{ color: '#0891b2', fontWeight: 700, fontSize: 12 }}>{pro as string}</span>}
+                  </span>
+                </div>
+              ))}
             </div>
           ))}
         </div>

@@ -2,6 +2,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { PDFDocument, rgb, BlendMode } from 'pdf-lib'
+import SiteNav from '@/components/SiteNav'
+import SiteFooter from '@/components/SiteFooter'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -13,7 +15,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .wrap{max-width:720px;margin:0 auto;padding:0 28px;width:100%}
 .editor-pg{height:100vh;overflow:hidden;display:flex;flex-direction:column;background:#fff}
 
-.nav{height:54px;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,.08);display:flex;align-items:center;flex-shrink:0;z-index:200}
+
 .nav-in{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 20px}
 .logo{display:inline-flex;align-items:center;gap:9px;text-decoration:none}
 .logo-mark{width:28px;height:28px;background:#1d1d1f;border-radius:7px;display:flex;align-items:center;justify-content:center}
@@ -601,26 +603,7 @@ export default function PDFRedactorPage() {
 
   // ── Shared nav ──────────────────────────────────────────────────────────────
   const Nav = (
-    <nav className="nav">
-      <div className="nav-in">
-        <Link href="/" className="logo">
-          <div className="logo-mark">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8l6 6v12a2 2 0 0 1-2 2z"/><path d="M14 2v6h6"/>
-            </svg>
-          </div>
-          <span className="logo-name">Edit<em>PDF</em> AI</span>
-        </Link>
-        {file ? (
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-            <span style={{ fontSize:12, color:'rgba(0,0,0,.4)', maxWidth:220, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{file.name}</span>
-            <button className="new-file-btn" style={{ padding:'5px 12px', fontSize:12 }} onClick={reset}>✕ Close</button>
-          </div>
-        ) : (
-          <Link href="/" className="back">← All Tools</Link>
-        )}
-      </div>
-    </nav>
+    <SiteNav />
   )
 
   // ── Upload page ──────────────────────────────────────────────────────────────

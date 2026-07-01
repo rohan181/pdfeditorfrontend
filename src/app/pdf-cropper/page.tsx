@@ -1,6 +1,8 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import SiteNav from '@/components/SiteNav'
+import SiteFooter from '@/components/SiteFooter'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -11,10 +13,10 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 @keyframes fadeup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
-.pg{height:100vh;height:100dvh;background:#f5f5f7;display:flex;flex-direction:column;overflow:hidden}
+.pg{height:100vh;height:100dvh;background:#f5f5f7;display:flex;flex-direction:column;overflow:hidden;padding-top:56px;}
 
 /* ── Nav ── */
-.nav{height:52px;background:rgba(255,255,255,.94);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;padding:0 24px;gap:10px;position:sticky;top:0;z-index:200;flex-shrink:0}
+
 .logo{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
 .logo-mark{width:28px;height:28px;background:linear-gradient(135deg,#1d1d1f,#444);border-radius:8px;display:flex;align-items:center;justify-content:center}
 .logo-name{font-size:14px;font-weight:700;color:#1d1d1f;letter-spacing:-.04em}
@@ -635,21 +637,7 @@ export default function PDFCropperPage() {
       <div className="pg">
 
         {/* Nav */}
-        <nav className="nav">
-          <Link href="/" className="logo">
-            <div className="logo-mark">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="white"/>
-                <polyline points="14 2 14 8 20 8" stroke="#1d1d1f" strokeWidth="2"/>
-              </svg>
-            </div>
-            <span className="logo-name">Edit<em>PDF</em> AI</span>
-          </Link>
-          <span className="nav-sep">›</span>
-          <span className="nav-tool">PDF Cropper</span>
-          <div className="nav-sp"/>
-          <Link href="/" className="back">← All Tools</Link>
-        </nav>
+        <SiteNav />
 
         {loading ? (
           <div className="upload-wrap">

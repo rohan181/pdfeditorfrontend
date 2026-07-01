@@ -3,6 +3,8 @@ import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib'
 import * as pdfjsLib from 'pdfjs-dist'
+import SiteNav from '@/components/SiteNav'
+import SiteFooter from '@/components/SiteFooter'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
 
@@ -10,61 +12,44 @@ const LANDING_CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 :root{
-  --bg:#060612;--fg:#f0f4ff;--fg2:rgba(240,244,255,.65);--fg3:rgba(240,244,255,.35);
-  --b:rgba(255,255,255,.07);--bh:rgba(255,255,255,.13);
-  --p:#8b5cf6;--p2:#7c3aed;--pl:#a78bfa;
-  --accent:#fbbf24;--accent2:#f59e0b;--acl:#fde68a;
+  --bg:#ffffff;--fg:#1d1d1f;--fg2:rgba(29,29,31,.65);--fg3:rgba(29,29,31,.42);
+  --b:rgba(0,0,0,.08);--bh:rgba(0,0,0,.14);
+  --p:#d97706;--p2:#b45309;--pl:#f59e0b;
+  --accent:#f59e0b;--accent2:#d97706;--acl:#92400e;
   --fd:var(--font-jakarta,'Plus Jakarta Sans',sans-serif);
   --fu:var(--font-dm,'DM Sans',sans-serif);
   --fm:var(--font-mono,'JetBrains Mono',monospace);
 }
-.pg{min-height:100vh;background:var(--bg);color:var(--fg);font-family:var(--fu);overflow-x:hidden}
+.pg{min-height:100vh;background:#f5f5f7;color:var(--fg);font-family:var(--fu);overflow-x:hidden}
 .wrap{max-width:1200px;margin:0 auto;padding:0 32px}
 .amb{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.ag1{position:absolute;width:900px;height:900px;top:-350px;left:-250px;background:radial-gradient(circle,rgba(251,191,36,.16) 0%,transparent 65%);filter:blur(90px);animation:orb1 28s ease-in-out infinite alternate}
-.ag2{position:absolute;width:700px;height:700px;top:20%;right:-180px;background:radial-gradient(circle,rgba(139,92,246,.14) 0%,transparent 65%);filter:blur(80px);animation:orb2 35s ease-in-out infinite alternate}
-.ag3{position:absolute;width:600px;height:600px;bottom:5%;left:15%;background:radial-gradient(circle,rgba(251,191,36,.1) 0%,transparent 65%);filter:blur(80px);animation:orb1 42s ease-in-out infinite alternate-reverse}
-.agr{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.022) 1px,transparent 1px);background-size:30px 30px}
+.ag1{position:absolute;width:900px;height:900px;top:-350px;left:-250px;background:radial-gradient(circle,rgba(245,158,11,.06) 0%,transparent 65%);filter:blur(90px);animation:orb1 28s ease-in-out infinite alternate}
+.ag2{position:absolute;width:700px;height:700px;top:20%;right:-180px;background:radial-gradient(circle,rgba(139,92,246,.04) 0%,transparent 65%);filter:blur(80px);animation:orb2 35s ease-in-out infinite alternate}
+.ag3{position:absolute;width:600px;height:600px;bottom:5%;left:15%;background:radial-gradient(circle,rgba(245,158,11,.04) 0%,transparent 65%);filter:blur(80px);animation:orb1 42s ease-in-out infinite alternate-reverse}
+.agr{position:absolute;inset:0;background-image:radial-gradient(rgba(0,0,0,.04) 1px,transparent 1px);background-size:30px 30px}
 @keyframes orb1{0%{transform:translate(0,0) scale(1)}100%{transform:translate(60px,45px) scale(1.08)}}
 @keyframes orb2{0%{transform:translate(0,0) scale(1.05)}100%{transform:translate(-45px,55px) scale(1)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes tflow{0%{background-position:0% center}100%{background-position:260% center}}
-.nav{position:sticky;top:0;z-index:200;height:62px;background:rgba(6,6,18,.88);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--b);display:flex;align-items:center}
-.nav-in{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%}
-.wm{display:inline-flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
-.wm-mark{width:30px;height:30px;background:linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%);border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(139,92,246,.45);flex-shrink:0}
-.wm-inner{width:15px;height:18px;background:rgba(255,255,255,.95);clip-path:polygon(0% 0%,68% 0%,100% 26%,100% 100%,0% 100%)}
-.wm-name{font-family:var(--fd);font-size:17px;font-weight:800;color:var(--fg);letter-spacing:-.03em}
-.wm-name em{font-style:normal;color:var(--pl)}
-.wm-badge{font-family:var(--fm);font-size:8px;font-weight:700;letter-spacing:.12em;color:var(--pl);background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.25);padding:2px 7px;border-radius:4px;margin-left:2px}
-.nav-r{display:flex;align-items:center;gap:10px}
-.back-link{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--fg3);text-decoration:none;padding:6px 12px;border-radius:7px;border:1px solid var(--b);transition:all .15s;font-weight:500}
-.back-link:hover{color:var(--fg2);background:rgba(255,255,255,.04);border-color:var(--bh)}
-.hero{position:relative;z-index:1;padding:80px 0 64px;text-align:center}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:20px;font-family:var(--fm);font-size:9.5px;letter-spacing:.16em;color:var(--acl);margin-bottom:28px}
+.hero{position:relative;z-index:1;padding:calc(56px + 80px) 0 64px;text-align:center;background:#fff}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:20px;font-family:var(--fm);font-size:9.5px;letter-spacing:.16em;color:#92400e;margin-bottom:28px}
 .bdot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:blink 2s ease-in-out infinite}
 .hero-h1{font-family:var(--fd);font-weight:800;letter-spacing:-.05em;line-height:.95;margin-bottom:24px}
 .h1-top{display:block;font-size:clamp(14px,2vw,20px);color:var(--fg3);font-weight:500;letter-spacing:-.01em;margin-bottom:12px;font-family:var(--fu)}
-.h1-main{display:block;font-size:clamp(48px,8vw,92px);background:linear-gradient(115deg,#f0f4ff 10%,#fbbf24 40%,#f59e0b 65%,#f0f4ff 100%);background-size:260% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:tflow 6s linear infinite}
+.h1-main{display:block;font-size:clamp(48px,8vw,92px);background:linear-gradient(115deg,#1d1d1f 10%,#f59e0b 40%,#d97706 65%,#1d1d1f 100%);background-size:260% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:tflow 6s linear infinite}
 .hero-sub{font-size:clamp(15px,1.8vw,17px);color:var(--fg2);line-height:1.78;max-width:640px;margin:0 auto 40px}
 .hero-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:48px}
-.hpill{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(255,255,255,.04);border:1px solid var(--b);border-radius:20px;font-size:12px;color:var(--fg3)}
+.hpill{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:20px;font-size:12px;color:var(--fg3)}
 .hpill strong{color:var(--fg2);font-weight:600}
-.upload-zone{position:relative;border:2px dashed rgba(251,191,36,.3);border-radius:20px;padding:80px 32px;text-align:center;background:rgba(251,191,36,.03);transition:border-color .2s,background .2s;cursor:pointer;max-width:680px;margin:0 auto 80px}
-.upload-zone:hover,.upload-zone.drag{border-color:rgba(251,191,36,.6);background:rgba(251,191,36,.06)}
+.upload-zone{position:relative;border:2px dashed rgba(245,158,11,.3);border-radius:20px;padding:80px 32px;text-align:center;background:rgba(245,158,11,.03);transition:border-color .2s,background .2s;cursor:pointer;max-width:680px;margin:0 auto 80px}
+.upload-zone:hover,.upload-zone.drag{border-color:rgba(245,158,11,.55);background:rgba(245,158,11,.06)}
 .upload-icon{font-size:52px;margin-bottom:18px;display:block}
-.upload-title{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--fg);margin-bottom:10px}
+.upload-title{font-family:var(--fd);font-size:22px;font-weight:700;color:#1d1d1f;margin-bottom:10px}
 .upload-sub{font-size:14px;color:var(--fg3);line-height:1.6;margin-bottom:28px}
-.upload-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:11px;font-family:var(--fd);font-size:15px;font-weight:700;color:#000;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 28px rgba(251,191,36,.38);border:none}
-.upload-btn:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(251,191,36,.5)}
+.upload-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:11px;font-family:var(--fd);font-size:15px;font-weight:700;color:#fff;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 28px rgba(245,158,11,.3);border:none}
+.upload-btn:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(245,158,11,.4)}
 .upload-note{font-family:var(--fm);font-size:10px;letter-spacing:.06em;color:var(--fg3);margin-top:18px}
-.foot{position:relative;z-index:1;border-top:1px solid var(--b);padding:36px 0}
-.foot-in{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.foot-nav{display:flex;gap:20px;flex-wrap:wrap}
-.foot-nav a{font-size:12.5px;color:var(--fg3);text-decoration:none;font-weight:500;transition:color .15s}
-.foot-nav a:hover{color:var(--fg2)}
-.foot-copy{font-family:var(--fm);font-size:9px;letter-spacing:.08em;color:var(--fg3)}
-@media(max-width:700px){.wrap{padding:0 20px}.hero{padding:60px 0 40px}}
+@media(max-width:700px){.wrap{padding:0 20px}.hero{padding:calc(56px + 60px) 0 40px}}
 @keyframes spin{to{transform:rotate(360deg)}}
 `
 
@@ -343,20 +328,7 @@ export default function PDFWatermarkPage() {
           <div className="amb" aria-hidden="true">
             <div className="ag1" /><div className="ag2" /><div className="ag3" /><div className="agr" />
           </div>
-          <nav className="nav">
-            <div className="nav-in wrap">
-              <Link href="/" className="wm" aria-label="EditPDF AI home">
-                <span className="wm-mark"><span className="wm-inner" /></span>
-                <span className="wm-name">Edit<em>PDF</em></span>
-                <span className="wm-badge">AI</span>
-              </Link>
-              <div className="nav-r">
-                <Link href="/ai-pdf-form-filler" className="back-link">AI Form Filler</Link>
-                <Link href="/pdf-editor" className="back-link">PDF Editor</Link>
-                <Link href="/" className="back-link">← All Tools</Link>
-              </div>
-            </div>
-          </nav>
+          <SiteNav />
           <header className="hero">
             <div className="wrap">
               <div className="hero-badge"><span className="bdot" /><span>PDF WATERMARKER · FREE · NO SIGNUP</span></div>
@@ -390,47 +362,13 @@ export default function PDFWatermarkPage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                   Choose PDF File
                 </button>
-                <p className="upload-note">PDF · ANY SIZE · 100% PRIVATE</p>
+                <p className="upload-note">PDF · UP TO 100 MB · 100% PRIVATE</p>
                 <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" style={{ display:'none' }}
                   onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
               </div>
             </div>
           </section>
-          {/* ── Other Tools bar ── */}
-          <section style={{ position:'relative', zIndex:1, borderTop:'1px solid rgba(255,255,255,.07)', padding:'48px 0' }}>
-            <div className="wrap">
-              <p style={{ fontFamily:'var(--font-dm,system-ui)', fontSize:11, fontWeight:600, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(240,244,255,.35)', marginBottom:20 }}>Try our other tools</p>
-              <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-                {[
-                  { name:'AI Form Filler', href:'/ai-pdf-form-filler', desc:'Auto-fill any PDF form with AI' },
-                  { name:'PDF Editor',     href:'/pdf-editor',         desc:'Add text, images, signatures & more' },
-                ].map(({ name, href, desc }) => (
-                  <Link key={name} href={href} style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 18px', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.1)', borderRadius:12, textDecoration:'none', transition:'all .15s', flex:'1', minWidth:220 }}
-                    onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background='rgba(255,255,255,.09)';(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,.2)'}}
-                    onMouseLeave={e=>{(e.currentTarget as HTMLElement).style.background='rgba(255,255,255,.05)';(e.currentTarget as HTMLElement).style.borderColor='rgba(255,255,255,.1)'}}>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontFamily:'var(--font-dm,system-ui)', fontSize:13.5, fontWeight:700, color:'rgba(240,244,255,.9)', letterSpacing:'-0.02em' }}>{name}</div>
-                      <div style={{ fontFamily:'var(--font-dm,system-ui)', fontSize:11, color:'rgba(240,244,255,.4)', marginTop:2 }}>{desc}</div>
-                    </div>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(240,244,255,.4)" strokeWidth="2" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <footer className="foot">
-            <div className="wrap foot-in">
-              <Link href="/" className="wm"><span className="wm-mark"><span className="wm-inner" /></span><span className="wm-name">Edit<em>PDF</em></span><span className="wm-badge">AI</span></Link>
-              <nav className="foot-nav">
-                <Link href="/ai-pdf-form-filler">AI Form Filler</Link>
-                <Link href="/pdf-editor">PDF Editor</Link>
-                <Link href="/pdf-watermark">Watermarker</Link>
-                <Link href="/">All Tools</Link>
-              </nav>
-              <p className="foot-copy" suppressHydrationWarning>© {new Date().getFullYear()} EDITPDF AI</p>
-            </div>
-          </footer>
+          <SiteFooter />
         </div>
       </>
     )

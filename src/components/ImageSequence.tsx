@@ -55,14 +55,14 @@ function DocUpload() {
             </svg>
           </motion.div>
           <div style={{ ...FI, fontSize: 13, fontWeight: 600, color: '#111', letterSpacing: '-0.02em', marginBottom: 4 }}>Drop your PDF here</div>
-          <div style={{ ...FI, fontSize: 10.5, color: '#aaa', marginBottom: 14 }}>any size · stays private</div>
+          <div style={{ ...FI, fontSize: 10.5, color: '#aaa', marginBottom: 14 }}>up to 100 MB · stays private</div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 16px', background: '#6366f1', borderRadius: 99 }}>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             <span style={{ ...FI, fontSize: 10.5, fontWeight: 600, color: '#fff' }}>Choose PDF File</span>
           </div>
         </motion.div>
         <div style={{ display: 'flex', gap: 5, marginTop: 12, justifyContent: 'center' }}>
-          {['PDF','Any size','Private'].map(t => <span key={t} style={{ ...MONO, fontSize: 8.5, color: '#ccc', background: '#f5f5f5', padding: '2px 7px', borderRadius: 99 }}>{t}</span>)}
+          {['PDF','Up to 100 MB','Private'].map(t => <span key={t} style={{ ...MONO, fontSize: 8.5, color: '#ccc', background: '#f5f5f5', padding: '2px 7px', borderRadius: 99 }}>{t}</span>)}
         </div>
       </div>
     </div>
@@ -212,7 +212,7 @@ const SCENES: Array<{
 }> = [
   {
     id: 0, tag: '01', sublabel: 'Start Here', headline: 'Drop it in.',
-    description: 'Any PDF, any size. Opens instantly — no uploads, no waiting, fully private.',
+    description: 'Upload most PDFs up to 100 MB. Opens instantly — no uploads, no waiting, fully private.',
     bg: [
       // 1. Solid black floor
       '#000',

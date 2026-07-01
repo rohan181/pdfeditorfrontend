@@ -1,6 +1,8 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import SiteNav from '@/components/SiteNav'
+import SiteFooter from '@/components/SiteFooter'
 
 // ─── palette (one colour per PDF) ────────────────────────────────────────────
 const COLORS = ['#0891b2','#7c3aed','#16a34a','#dc2626','#d97706','#db2777','#2563eb','#059669']
@@ -99,7 +101,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .pg{height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#f5f5f7}
 
 /* Nav */
-.nav{height:52px;background:rgba(255,255,255,.96);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,0,0,.08);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;z-index:100}
+
 .logo{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
 .logo-mark{width:27px;height:27px;background:#1d1d1f;border-radius:7px;display:flex;align-items:center;justify-content:center}
 .logo-name{font-size:14px;font-weight:700;color:#1d1d1f;letter-spacing:-.04em}
@@ -426,14 +428,7 @@ export default function MindMapPage() {
       {/* ── LANDING (no sources yet) ─────────────────────────────────────── */}
       {sources.length === 0 && !loading && !extracting ? (
         <div className="pg">
-          <nav className="nav">
-            <Link href="/" className="logo">
-              <div className="logo-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="white"/><polyline points="14 2 14 8 20 8" stroke="#1d1d1f" strokeWidth="2"/></svg></div>
-              <span className="logo-name">Edit<em>PDF</em> AI</span>
-            </Link>
-            <span className="nav-sep">›</span>
-            <span className="nav-title">PDF Mind Map</span>
-          </nav>
+          <SiteNav />
           <div className="landing">
             <div className="landing-inner">
               <div className="landing-title">PDF Mind Map</div>
