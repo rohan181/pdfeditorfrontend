@@ -225,14 +225,19 @@ export default function PricingPage() {
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {[
               { icon: '✓', text: 'Cancel anytime — no questions asked' },
-              { icon: '🔒', text: 'Secure checkout by Stripe' },
-              { icon: '✓', text: 'No hidden fees. Price stays $1.00/mo.' },
+              { icon: '🔒', text: 'Secure checkout by Stripe. No hidden fees.' },
+              { icon: '✓', text: '7-day refund if you\'re not satisfied' },
             ].map(({ icon, text }) => (
               <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 11, color: '#0891b2', flexShrink: 0 }}>{icon}</span>
                 <span style={{ fontSize: 12, color: '#6b7280', fontWeight: 500 }}>{text}</span>
               </div>
             ))}
+          </div>
+          <div style={{ marginTop: 14, padding: '10px 14px', background: 'rgba(251,191,36,.08)', border: '1px solid rgba(251,191,36,.3)', borderRadius: 10 }}>
+            <p style={{ fontSize: 11.5, color: '#92400e', margin: 0, lineHeight: 1.55 }}>
+              <strong style={{ color: '#78350f' }}>Limited-time launch price.</strong> Early subscribers lock in $1/month for as long as their subscription stays active. Price will increase for new subscribers in the future.
+            </p>
           </div>
         </div>
       </div>

@@ -40,48 +40,48 @@ const CATS = [
 ]
 
 // ─── tools ───────────────────────────────────────────────────────────────────
-const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon; iconBg:string; desc:string }[] = [
+const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon; iconBg:string; desc:string; tier:'free'|'ai'|'pro' }[] = [
   // ── AI ──────────────────────────────────────────────────────────────────────
-  { name:'AI Form Filler',    tag:'LIVE', href:'/ai-pdf-form-filler', cat:'AI',       Icon:WandSparkles,    iconBg:'linear-gradient(135deg,#7c3aed,#a855f7)', desc:'Auto-fill any PDF form with AI' },
-  { name:'PDF OCR Scanner',   tag:'LIVE', href:'/pdf-ocr',            cat:'AI',       Icon:ScanText,        iconBg:'linear-gradient(135deg,#6366f1,#818cf8)', desc:'Extract text from scanned PDFs' },
-  { name:'PDF Summarizer',    tag:'LIVE', href:'/pdf-summarizer',     cat:'AI',       Icon:Sparkles,        iconBg:'linear-gradient(135deg,#8b5cf6,#c084fc)', desc:'Get instant AI summaries' },
-  { name:'PDF Mind Map',      tag:'LIVE', href:'/mind-map',           cat:'AI',       Icon:BrainCircuit,    iconBg:'linear-gradient(135deg,#a855f7,#d946ef)', desc:'Visualise ideas from any PDF' },
-  { name:'Quiz Creator',      tag:'LIVE', href:'/quiz-creator',       cat:'AI',       Icon:ClipboardList,   iconBg:'linear-gradient(135deg,#7c3aed,#6366f1)', desc:'Generate quizzes from PDF content' },
-  { name:'PDF Translator',    tag:'LIVE', href:'/pdf-translator',     cat:'AI',       Icon:Languages,       iconBg:'linear-gradient(135deg,#6366f1,#06b6d4)', desc:'Translate PDFs to any language' },
+  { name:'AI Form Filler',    tag:'LIVE', href:'/ai-pdf-form-filler', cat:'AI',       Icon:WandSparkles,    iconBg:'linear-gradient(135deg,#7c3aed,#a855f7)', desc:'Auto-fill any PDF form with AI',        tier:'ai'   },
+  { name:'PDF OCR Scanner',   tag:'LIVE', href:'/pdf-ocr',            cat:'AI',       Icon:ScanText,        iconBg:'linear-gradient(135deg,#6366f1,#818cf8)', desc:'Extract text from scanned PDFs',        tier:'ai'   },
+  { name:'PDF Summarizer',    tag:'LIVE', href:'/pdf-summarizer',     cat:'AI',       Icon:Sparkles,        iconBg:'linear-gradient(135deg,#8b5cf6,#c084fc)', desc:'Get instant AI summaries',              tier:'ai'   },
+  { name:'PDF Mind Map',      tag:'LIVE', href:'/mind-map',           cat:'AI',       Icon:BrainCircuit,    iconBg:'linear-gradient(135deg,#a855f7,#d946ef)', desc:'Visualise ideas from any PDF',          tier:'ai'   },
+  { name:'Quiz Creator',      tag:'LIVE', href:'/quiz-creator',       cat:'AI',       Icon:ClipboardList,   iconBg:'linear-gradient(135deg,#7c3aed,#6366f1)', desc:'Generate quizzes from PDF content',     tier:'ai'   },
+  { name:'PDF Translator',    tag:'LIVE', href:'/pdf-translator',     cat:'AI',       Icon:Languages,       iconBg:'linear-gradient(135deg,#6366f1,#06b6d4)', desc:'Translate PDFs to any language',        tier:'ai'   },
   // ── Edit ────────────────────────────────────────────────────────────────────
-  { name:'PDF Viewer',         tag:'LIVE', href:'/pdf-viewer',         cat:'Edit',     Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#0a84ff,#34aadc)', desc:'View any PDF in your browser' },
-  { name:'PDF Editor',        tag:'LIVE', href:'/pdf-editor',         cat:'Edit',     Icon:FilePen,         iconBg:'linear-gradient(135deg,#2563eb,#3b82f6)', desc:'Edit text, images and layout' },
-  { name:'PDF Annotator',     tag:'LIVE', href:'/pdf-annotate',       cat:'Edit',     Icon:MessageSquareText, iconBg:'linear-gradient(135deg,#0ea5e9,#38bdf8)', desc:'Highlight, comment and annotate' },
+  { name:'PDF Viewer',        tag:'LIVE', href:'/pdf-viewer',         cat:'Edit',     Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#0a84ff,#34aadc)', desc:'View any PDF in your browser',          tier:'free' },
+  { name:'PDF Editor',        tag:'LIVE', href:'/pdf-editor',         cat:'Edit',     Icon:FilePen,         iconBg:'linear-gradient(135deg,#2563eb,#3b82f6)', desc:'Edit text, images and layout',          tier:'free' },
+  { name:'PDF Annotator',     tag:'LIVE', href:'/pdf-annotate',       cat:'Edit',     Icon:MessageSquareText, iconBg:'linear-gradient(135deg,#0ea5e9,#38bdf8)', desc:'Highlight, comment and annotate',     tier:'free' },
   // ── Pages ───────────────────────────────────────────────────────────────────
-  { name:'PDF Page Manager',  tag:'LIVE', href:'/pdf-page-manager',   cat:'Pages',    Icon:Layers,          iconBg:'linear-gradient(135deg,#f59e0b,#fbbf24)', desc:'Drag-and-drop page reordering' },
-  { name:'PDF Cropper',       tag:'LIVE', href:'/pdf-cropper',        cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Crop & trim PDF page margins' },
-  { name:'Add Page Numbers',  tag:'LIVE', href:'/add-page-numbers',   cat:'Pages',    Icon:ListOrdered,     iconBg:'linear-gradient(135deg,#f97316,#fb923c)', desc:'Add custom page numbers to PDF' },
-  { name:'Rotate PDF Pages',  tag:'LIVE', href:'/rotate-pdf',         cat:'Pages',    Icon:RotateCw,        iconBg:'linear-gradient(135deg,#ea580c,#f97316)', desc:'Rotate any pages to any angle' },
-  { name:'Extract Pages',     tag:'LIVE', href:'/extract-pages',      cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Pull specific pages into a new PDF' },
-  { name:'Delete Pages',      tag:'LIVE', href:'/delete-pages',       cat:'Pages',    Icon:Trash2,          iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Remove unwanted pages permanently' },
+  { name:'PDF Page Manager',  tag:'LIVE', href:'/pdf-page-manager',   cat:'Pages',    Icon:Layers,          iconBg:'linear-gradient(135deg,#f59e0b,#fbbf24)', desc:'Drag-and-drop page reordering',         tier:'free' },
+  { name:'PDF Cropper',       tag:'LIVE', href:'/pdf-cropper',        cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Crop & trim PDF page margins',          tier:'free' },
+  { name:'Add Page Numbers',  tag:'LIVE', href:'/add-page-numbers',   cat:'Pages',    Icon:ListOrdered,     iconBg:'linear-gradient(135deg,#f97316,#fb923c)', desc:'Add custom page numbers to PDF',        tier:'free' },
+  { name:'Rotate PDF Pages',  tag:'LIVE', href:'/rotate-pdf',         cat:'Pages',    Icon:RotateCw,        iconBg:'linear-gradient(135deg,#ea580c,#f97316)', desc:'Rotate any pages to any angle',         tier:'free' },
+  { name:'Extract Pages',     tag:'LIVE', href:'/extract-pages',      cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Pull specific pages into a new PDF',    tier:'free' },
+  { name:'Delete Pages',      tag:'LIVE', href:'/delete-pages',       cat:'Pages',    Icon:Trash2,          iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Remove unwanted pages permanently',     tier:'free' },
   // ── Convert ─────────────────────────────────────────────────────────────────
-  { name:'PDF → Word',        tag:'LIVE', href:'/pdf-to-word',        cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#16a34a,#22c55e)', desc:'Convert PDF to editable Word doc' },
-  { name:'PDF → Excel',       tag:'LIVE', href:'/pdf-to-excel',       cat:'Convert',  Icon:FileSpreadsheet, iconBg:'linear-gradient(135deg,#15803d,#16a34a)', desc:'Extract tables to spreadsheet' },
-  { name:'PDF → PowerPoint',  tag:'LIVE', href:'/pdf-to-ppt',         cat:'Convert',  Icon:Presentation,    iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Turn slides into editable PPT' },
-  { name:'Excel / CSV → PDF', tag:'LIVE', href:'/excel-to-pdf',       cat:'Convert',  Icon:Table,           iconBg:'linear-gradient(135deg,#059669,#10b981)', desc:'Spreadsheets to perfect PDF' },
-  { name:'PPT → PDF',         tag:'LIVE', href:'/ppt-to-pdf',         cat:'Convert',  Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#b45309,#d97706)', desc:'Presentations to PDF instantly' },
-  { name:'Word → PDF',         tag:'LIVE', href:'/word-to-pdf',        cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Convert Word .docx to PDF' },
-  { name:'TXT → PDF',          tag:'LIVE', href:'/txt-to-pdf',         cat:'Convert',  Icon:FileText,        iconBg:'linear-gradient(135deg,#6366f1,#818cf8)', desc:'Turn plain text into a PDF' },
-  { name:'RTF → PDF',          tag:'LIVE', href:'/rtf-to-pdf',         cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#b45309,#d97706)', desc:'Convert RTF documents to PDF' },
-  { name:'ODT → PDF',          tag:'LIVE', href:'/odt-to-pdf',         cat:'Convert',  Icon:FileText,        iconBg:'linear-gradient(135deg,#059669,#10b981)', desc:'Convert OpenDocument Text to PDF' },
-  { name:'HTML → PDF',        tag:'LIVE', href:'/html-to-pdf',        cat:'Convert',  Icon:Code,            iconBg:'linear-gradient(135deg,#0891b2,#06b6d4)', desc:'Render HTML pages as PDF' },
-  { name:'Image to PDF',      tag:'LIVE', href:'/image-to-pdf',       cat:'Convert',  Icon:ImagePlus,       iconBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', desc:'Turn photos & images into PDF' },
-  { name:'PDF to Images',     tag:'LIVE', href:'/pdf-to-images',      cat:'Convert',  Icon:Images,          iconBg:'linear-gradient(135deg,#db2777,#ec4899)', desc:'Export every page as an image' },
+  { name:'PDF → Word',        tag:'LIVE', href:'/pdf-to-word',        cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#16a34a,#22c55e)', desc:'Convert PDF to editable Word doc',      tier:'pro'  },
+  { name:'PDF → Excel',       tag:'LIVE', href:'/pdf-to-excel',       cat:'Convert',  Icon:FileSpreadsheet, iconBg:'linear-gradient(135deg,#15803d,#16a34a)', desc:'Extract tables to spreadsheet',         tier:'pro'  },
+  { name:'PDF → PowerPoint',  tag:'LIVE', href:'/pdf-to-ppt',         cat:'Convert',  Icon:Presentation,    iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Turn slides into editable PPT',         tier:'pro'  },
+  { name:'Excel / CSV → PDF', tag:'LIVE', href:'/excel-to-pdf',       cat:'Convert',  Icon:Table,           iconBg:'linear-gradient(135deg,#059669,#10b981)', desc:'Spreadsheets to perfect PDF',           tier:'free' },
+  { name:'PPT → PDF',         tag:'LIVE', href:'/ppt-to-pdf',         cat:'Convert',  Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#b45309,#d97706)', desc:'Presentations to PDF instantly',        tier:'free' },
+  { name:'Word → PDF',        tag:'LIVE', href:'/word-to-pdf',        cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Convert Word .docx to PDF',             tier:'free' },
+  { name:'TXT → PDF',         tag:'LIVE', href:'/txt-to-pdf',         cat:'Convert',  Icon:FileText,        iconBg:'linear-gradient(135deg,#6366f1,#818cf8)', desc:'Turn plain text into a PDF',            tier:'free' },
+  { name:'RTF → PDF',         tag:'LIVE', href:'/rtf-to-pdf',         cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#b45309,#d97706)', desc:'Convert RTF documents to PDF',          tier:'free' },
+  { name:'ODT → PDF',         tag:'LIVE', href:'/odt-to-pdf',         cat:'Convert',  Icon:FileText,        iconBg:'linear-gradient(135deg,#059669,#10b981)', desc:'Convert OpenDocument Text to PDF',      tier:'free' },
+  { name:'HTML → PDF',        tag:'LIVE', href:'/html-to-pdf',        cat:'Convert',  Icon:Code,            iconBg:'linear-gradient(135deg,#0891b2,#06b6d4)', desc:'Render HTML pages as PDF',              tier:'free' },
+  { name:'Image to PDF',      tag:'LIVE', href:'/image-to-pdf',       cat:'Convert',  Icon:ImagePlus,       iconBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', desc:'Turn photos & images into PDF',         tier:'free' },
+  { name:'PDF to Images',     tag:'LIVE', href:'/pdf-to-images',      cat:'Convert',  Icon:Images,          iconBg:'linear-gradient(135deg,#db2777,#ec4899)', desc:'Export every page as an image',         tier:'free' },
   // ── Protect ─────────────────────────────────────────────────────────────────
-  { name:'PDF Password Lock', tag:'LIVE', href:'/pdf-password-lock',  cat:'Protect',  Icon:KeyRound,        iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Encrypt with a strong password' },
-  { name:'PDF Watermarker',   tag:'LIVE', href:'/pdf-watermark',      cat:'Protect',  Icon:Stamp,           iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Add visible or hidden watermarks' },
-  { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor',       cat:'Protect',  Icon:EyeOff,          iconBg:'linear-gradient(135deg,#374151,#6b7280)', desc:'Permanently black out sensitive text' },
-  { name:'PDF E-Signer',      tag:'LIVE', href:'/pdf-signer',         cat:'Protect',  Icon:PenTool,         iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Sign and collect signatures' },
+  { name:'PDF Password Lock', tag:'LIVE', href:'/pdf-password-lock',  cat:'Protect',  Icon:KeyRound,        iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Encrypt with a strong password',        tier:'free' },
+  { name:'PDF Watermarker',   tag:'LIVE', href:'/pdf-watermark',      cat:'Protect',  Icon:Stamp,           iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Add visible or hidden watermarks',      tier:'free' },
+  { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor',       cat:'Protect',  Icon:EyeOff,          iconBg:'linear-gradient(135deg,#374151,#6b7280)', desc:'Permanently black out sensitive text',  tier:'free' },
+  { name:'PDF E-Signer',      tag:'LIVE', href:'/pdf-signer',         cat:'Protect',  Icon:PenTool,         iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Sign and collect signatures',           tier:'free' },
   // ── Organize ────────────────────────────────────────────────────────────────
-  { name:'PDF Compressor',    tag:'LIVE', href:'/pdf-compressor',     cat:'Organize', Icon:Minimize2,       iconBg:'linear-gradient(135deg,#d97706,#fbbf24)', desc:'Shrink file size without quality loss' },
-  { name:'PDF Merger',        tag:'LIVE', href:'/pdf-merger',         cat:'Organize', Icon:Merge,           iconBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', desc:'Combine multiple PDFs into one' },
-  { name:'PDF Splitter',      tag:'LIVE', href:'/pdf-splitter',       cat:'Organize', Icon:Split,           iconBg:'linear-gradient(135deg,#e11d48,#f43f5e)', desc:'Split one PDF into many files' },
-  { name:'PDF Form Builder',  tag:'LIVE', href:'/pdf-form-builder',   cat:'Organize', Icon:FormInput,       iconBg:'linear-gradient(135deg,#0369a1,#0ea5e9)', desc:'Create fillable PDF forms' },
+  { name:'PDF Compressor',    tag:'LIVE', href:'/pdf-compressor',     cat:'Organize', Icon:Minimize2,       iconBg:'linear-gradient(135deg,#d97706,#fbbf24)', desc:'Shrink file size without quality loss', tier:'free' },
+  { name:'PDF Merger',        tag:'LIVE', href:'/pdf-merger',         cat:'Organize', Icon:Merge,           iconBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', desc:'Combine multiple PDFs into one',        tier:'free' },
+  { name:'PDF Splitter',      tag:'LIVE', href:'/pdf-splitter',       cat:'Organize', Icon:Split,           iconBg:'linear-gradient(135deg,#e11d48,#f43f5e)', desc:'Split one PDF into many files',         tier:'free' },
+  { name:'PDF Form Builder',  tag:'LIVE', href:'/pdf-form-builder',   cat:'Organize', Icon:FormInput,       iconBg:'linear-gradient(135deg,#0369a1,#0ea5e9)', desc:'Create fillable PDF forms',             tier:'free' },
 ]
 
 // ─── global CSS ──────────────────────────────────────────────────────────────
@@ -255,9 +255,7 @@ const CI = { hidden:{opacity:0,y:20,scale:.98}, visible:{ opacity:1,y:0,scale:1,
 //  SCROLL % COUNTER
 // ══════════════════════════════════════════════════════════════════════════════
 function ScrollPct() {
-  const { scrollYProgress } = useScroll()
-  const pct = useTransform(scrollYProgress, v => String(Math.round(v * 100)).padStart(2, '0') + '%')
-  return <motion.span style={{fontVariantNumeric:'tabular-nums'}}>{pct}</motion.span>
+  return <span>SCROLL</span>
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -362,18 +360,71 @@ function BrowserUI() {
 // ══════════════════════════════════════════════════════════════════════════════
 //  NAV
 // ══════════════════════════════════════════════════════════════════════════════
-const NAV_POPULAR: { name:string; href:string; Icon:LucideIcon; color:string; desc:string }[] = [
-  { name:'PDF Editor',        href:'/pdf-editor',        Icon:FilePen,   color:'#2563eb', desc:'Edit text & images' },
-  { name:'PDF Merger',        href:'/pdf-merger',        Icon:Merge,     color:'#7c3aed', desc:'Combine multiple PDFs' },
-  { name:'PDF Compressor',    href:'/pdf-compressor',    Icon:Minimize2, color:'#d97706', desc:'Shrink file size' },
-  { name:'PDF → Word',        href:'/pdf-to-word',       Icon:FileType,  color:'#16a34a', desc:'Convert to editable Word' },
-  { name:'PDF Splitter',      href:'/pdf-splitter',      Icon:Split,     color:'#e11d48', desc:'Split into parts' },
-  { name:'PDF Password Lock', href:'/pdf-password-lock', Icon:KeyRound,  color:'#dc2626', desc:'Encrypt & protect' },
-  { name:'PDF Watermarker',   href:'/pdf-watermark',     Icon:Stamp,     color:'#0891b2', desc:'Add watermarks' },
-  { name:'Image to PDF',      href:'/image-to-pdf',      Icon:ImagePlus, color:'#7c3aed', desc:'Photos & images to PDF' },
-  { name:'Page Manager',      href:'/pdf-page-manager',  Icon:Layers,    color:'#f97316', desc:'Reorder & manage pages' },
-  { name:'PDF to Images',     href:'/pdf-to-images',     Icon:Images,    color:'#db2777', desc:'Export pages as images' },
+type NavTier = 'free'|'ai'|'pro'
+type AHNavTool = { name:string; href:string; tier:NavTier; Icon:LucideIcon; bg:string }
+type AHNavCat  = { label:string; href:string; color:string; Icon:LucideIcon; tools:AHNavTool[] }
+
+const NAV_CATS: AHNavCat[] = [
+  {
+    label:'Edit', href:'/pdf-editor', color:'#2563eb', Icon:FilePen,
+    tools:[
+      { name:'PDF Editor',    href:'/pdf-editor',   tier:'free', Icon:FilePen,          bg:'#2563eb' },
+      { name:'PDF Annotator', href:'/pdf-annotate', tier:'free', Icon:MessageSquareText, bg:'#0ea5e9' },
+      { name:'PDF Viewer',    href:'/pdf-viewer',   tier:'free', Icon:MonitorPlay,       bg:'#0a84ff' },
+      { name:'PDF Redactor',  href:'/pdf-redactor', tier:'free', Icon:EyeOff,            bg:'#374151' },
+      { name:'PDF Cropper',   href:'/pdf-cropper',  tier:'free', Icon:Scissors,          bg:'#0d9488' },
+      { name:'Rotate PDF',    href:'/rotate-pdf',   tier:'free', Icon:RotateCw,          bg:'#ea580c' },
+    ],
+  },
+  {
+    label:'AI Tools', href:'/ai-pdf-form-filler', color:'#7c3aed', Icon:Sparkles,
+    tools:[
+      { name:'AI Form Filler', href:'/ai-pdf-form-filler', tier:'ai',  Icon:WandSparkles,  bg:'#7c3aed' },
+      { name:'PDF Summarizer', href:'/pdf-summarizer',     tier:'ai',  Icon:Sparkles,      bg:'#8b5cf6' },
+      { name:'OCR Scanner',    href:'/pdf-ocr',            tier:'ai',  Icon:ScanText,      bg:'#6366f1' },
+      { name:'PDF Translator', href:'/pdf-translator',     tier:'ai',  Icon:Languages,     bg:'#0891b2' },
+      { name:'PDF Mind Map',   href:'/mind-map',           tier:'ai',  Icon:BrainCircuit,  bg:'#a855f7' },
+      { name:'Quiz Creator',   href:'/quiz-creator',       tier:'ai',  Icon:ClipboardList, bg:'#7c3aed' },
+    ],
+  },
+  {
+    label:'Convert', href:'/#tools', color:'#16a34a', Icon:FileType,
+    tools:[
+      { name:'PDF → Word',    href:'/pdf-to-word',   tier:'pro',  Icon:FileType,        bg:'#16a34a' },
+      { name:'PDF → Excel',   href:'/pdf-to-excel',  tier:'pro',  Icon:FileSpreadsheet, bg:'#15803d' },
+      { name:'PDF → PPT',     href:'/pdf-to-ppt',    tier:'pro',  Icon:Presentation,    bg:'#d97706' },
+      { name:'Image to PDF',  href:'/image-to-pdf',  tier:'free', Icon:ImagePlus,       bg:'#7c3aed' },
+      { name:'Word → PDF',    href:'/word-to-pdf',   tier:'free', Icon:FileType,        bg:'#2563eb' },
+      { name:'PDF to Images', href:'/pdf-to-images', tier:'free', Icon:Images,          bg:'#db2777' },
+    ],
+  },
+  {
+    label:'Protect', href:'/pdf-signer', color:'#dc2626', Icon:PenTool,
+    tools:[
+      { name:'Sign PDF',       href:'/pdf-signer',        tier:'free', Icon:PenTool,  bg:'#0d9488' },
+      { name:'Password Lock',  href:'/pdf-password-lock', tier:'free', Icon:KeyRound, bg:'#dc2626' },
+      { name:'Watermark',      href:'/pdf-watermark',     tier:'free', Icon:Stamp,    bg:'#2563eb' },
+      { name:'PDF Redactor',   href:'/pdf-redactor',      tier:'free', Icon:EyeOff,   bg:'#374151' },
+    ],
+  },
+  {
+    label:'Organize', href:'/#tools', color:'#d97706', Icon:Layers,
+    tools:[
+      { name:'Merge PDF',     href:'/pdf-merger',       tier:'free', Icon:Merge,    bg:'#7c3aed' },
+      { name:'Split PDF',     href:'/pdf-splitter',     tier:'free', Icon:Split,    bg:'#e11d48' },
+      { name:'Compress PDF',  href:'/pdf-compressor',   tier:'free', Icon:Minimize2,bg:'#d97706' },
+      { name:'Page Manager',  href:'/pdf-page-manager', tier:'free', Icon:Layers,   bg:'#f97316' },
+      { name:'Extract Pages', href:'/extract-pages',    tier:'free', Icon:Scissors, bg:'#0891b2' },
+      { name:'Delete Pages',  href:'/delete-pages',     tier:'free', Icon:Trash2,   bg:'#dc2626' },
+    ],
+  },
 ]
+
+const NAV_TIER_LABEL = {
+  free: { label:'Free',       bg:'rgba(22,163,74,.1)',  color:'#15803d' },
+  ai:   { label:'5 free/day', bg:'rgba(124,58,237,.1)', color:'#7c3aed' },
+  pro:  { label:'Pro',        bg:'rgba(8,145,178,.1)',  color:'#0e7490' },
+}
 
 const NAV_LINKS = [
   { label:'AI Tools', href:'/ai-pdf-form-filler', highlight:true },
@@ -387,6 +438,7 @@ function Nav() {
   const [toolsOpen, setToolsOpen] = useState(false)
   const [mobOpen,   setMobOpen]   = useState(false)
   const [mobToolsExp, setMobToolsExp] = useState(false)
+  const [mobCatOpen, setMobCatOpen] = useState<string|null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout>|null>(null)
 
   const openMenu  = () => { clearTimeout(closeTimer.current!); setToolsOpen(true) }
@@ -423,14 +475,16 @@ function Nav() {
 
             {/* Tools dropdown trigger */}
             <div onMouseEnter={openMenu} onMouseLeave={closeMenu} style={{position:'relative'}}>
-              <button style={{
-                display:'flex',alignItems:'center',gap:4,
-                padding:'5px 11px',background:toolsOpen?'rgba(0,0,0,.05)':'transparent',
-                border:'none',borderRadius:8,cursor:'pointer',outline:'none',
-                fontSize:13,fontWeight:toolsOpen?600:500,
-                color:toolsOpen?'#1d1d1f':'rgba(0,0,0,.55)',
-                ...FI,transition:'all .12s',flexShrink:0,
-              }}>
+              <button
+                onClick={()=>setToolsOpen(v=>!v)}
+                style={{
+                  display:'flex',alignItems:'center',gap:4,
+                  padding:'5px 11px',background:toolsOpen?'rgba(0,0,0,.05)':'transparent',
+                  border:'none',borderRadius:8,cursor:'pointer',outline:'none',
+                  fontSize:13,fontWeight:toolsOpen?600:500,
+                  color:toolsOpen?'#1d1d1f':'rgba(0,0,0,.55)',
+                  ...FI,transition:'all .12s',flexShrink:0,
+                }}>
                 Tools
                 <motion.span style={{display:'flex',alignItems:'center',opacity:.6}}
                   animate={{rotate:toolsOpen?180:0}} transition={{duration:.14}}>
@@ -526,36 +580,55 @@ function Nav() {
               style={{position:'fixed',top:56,left:0,right:0,zIndex:299,
                 background:'#fff',borderBottom:'1px solid rgba(0,0,0,.07)',
                 boxShadow:'0 16px 48px rgba(0,0,0,.1)'}}>
-              <div style={{maxWidth:1280,margin:'0 auto',padding:'20px 24px 24px'}}>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-                  <div style={{...FI,fontSize:10.5,fontWeight:700,color:'#9ca3af',
-                    letterSpacing:'0.1em',textTransform:'uppercase'}}>Popular Tools</div>
+              <div style={{maxWidth:1280,margin:'0 auto',padding:'20px 24px 20px'}}>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:4}}>
+                  {NAV_CATS.map(cat=>(
+                    <div key={cat.label}>
+                      <Link href={cat.href} onClick={()=>setToolsOpen(false)} style={{textDecoration:'none'}}>
+                        <div style={{display:'flex',alignItems:'center',gap:7,
+                          padding:'6px 8px 8px',marginBottom:4,
+                          borderBottom:`2px solid ${cat.color}22`}}>
+                          <div style={{width:24,height:24,borderRadius:7,background:`${cat.color}14`,
+                            display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                            <cat.Icon size={12} color={cat.color} strokeWidth={2}/>
+                          </div>
+                          <span style={{...FI,fontSize:11.5,fontWeight:800,color:cat.color,letterSpacing:'-0.01em'}}>{cat.label}</span>
+                        </div>
+                      </Link>
+                      {cat.tools.map(tool=>{
+                        const badge = NAV_TIER_LABEL[tool.tier]
+                        return (
+                          <Link key={tool.name} href={tool.href} onClick={()=>setToolsOpen(false)} style={{textDecoration:'none'}}>
+                            <motion.div whileHover={{background:'#f5f5f7'}} transition={{duration:.1}}
+                              style={{display:'flex',alignItems:'center',gap:8,
+                                padding:'5px 8px',borderRadius:8,cursor:'pointer'}}>
+                              <div style={{width:26,height:26,borderRadius:7,background:tool.bg,
+                                display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                                <tool.Icon size={13} color="#fff" strokeWidth={1.8}/>
+                              </div>
+                              <span style={{...FI,fontSize:12,fontWeight:600,color:'#1d1d1f',
+                                flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{tool.name}</span>
+                              {tool.tier!=='free'&&(
+                                <span style={{fontSize:8.5,fontWeight:700,letterSpacing:'0.04em',
+                                  padding:'1.5px 5px',borderRadius:99,
+                                  background:badge.bg,color:badge.color,whiteSpace:'nowrap',flexShrink:0}}>
+                                  {badge.label}
+                                </span>
+                              )}
+                            </motion.div>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+                <div style={{marginTop:12,paddingTop:10,borderTop:'1px solid #f0f0f0',
+                  display:'flex',justifyContent:'flex-end'}}>
                   <Link href="#tools" onClick={()=>setToolsOpen(false)}
                     style={{...FI,display:'flex',alignItems:'center',gap:5,
-                      fontSize:12,fontWeight:600,color:'#2563eb',textDecoration:'none'}}>
+                      fontSize:12,fontWeight:600,color:'#6b7280',textDecoration:'none'}}>
                     See all 35+ tools <ArrowRight size={11} strokeWidth={2.5}/>
                   </Link>
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:3}}>
-                  {NAV_POPULAR.map(tool=>(
-                    <Link key={tool.name} href={tool.href} onClick={()=>setToolsOpen(false)} style={{textDecoration:'none'}}>
-                      <motion.div whileHover={{background:'#f5f5f7'}} transition={{duration:.1}}
-                        style={{display:'flex',alignItems:'center',gap:10,
-                          padding:'9px 11px',borderRadius:10,cursor:'pointer'}}>
-                        <div style={{width:32,height:32,minWidth:32,borderRadius:9,
-                          background:`${tool.color}14`,display:'flex',alignItems:'center',
-                          justifyContent:'center',flexShrink:0}}>
-                          <tool.Icon size={15} color={tool.color} strokeWidth={1.9}/>
-                        </div>
-                        <div style={{minWidth:0}}>
-                          <div style={{...FI,fontSize:12,fontWeight:600,color:'#1d1d1f',
-                            overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tool.name}</div>
-                          <div style={{...FI,fontSize:10.5,color:'#9ca3af',marginTop:1.5,
-                            overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{tool.desc}</div>
-                        </div>
-                      </motion.div>
-                    </Link>
-                  ))}
                 </div>
               </div>
             </motion.div>
@@ -567,74 +640,131 @@ function Nav() {
       <AnimatePresence>
         {mobOpen && (
           <motion.div
-            initial={{opacity:0,y:-6}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}}
-            transition={{duration:.2,ease:E}}
+            initial={{opacity:0,x:'100%'}} animate={{opacity:1,x:0}} exit={{opacity:0,x:'100%'}}
+            transition={{duration:.22,ease:E}}
             style={{position:'fixed',inset:'56px 0 0',zIndex:290,
-              background:'#f7f7f8',display:'flex',flexDirection:'column'}}>
-            <div style={{flex:1,overflowY:'auto'}}>
+              background:'#fff',display:'flex',flexDirection:'column',overflowY:'auto'}}>
 
-              {/* Tools expandable */}
-              <div style={{borderBottom:'1px solid rgba(0,0,0,.06)'}}>
-                <button onClick={()=>setMobToolsExp(v=>!v)} className="mob-cat-btn"
-                  style={{width:'100%',display:'flex',alignItems:'center',
-                    padding:'16px 20px',background:'transparent',border:'none',cursor:'pointer'}}>
-                  <span style={{...FI,fontSize:16,fontWeight:700,color:'#1d1d1f',flex:1,textAlign:'left'}}>Tools</span>
-                  <span className={`mob-chev${mobToolsExp?' open':''}`}>
-                    <ChevronDown size={18} color="rgba(0,0,0,.35)" strokeWidth={2}/>
-                  </span>
-                </button>
-                <div className={`mob-acc${mobToolsExp?' open':''}`}>
-                  <div style={{background:'#fff',borderTop:'1px solid rgba(0,0,0,.06)'}}>
-                    {NAV_POPULAR.map((tool,ti)=>(
-                      <Link key={tool.name} href={tool.href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
-                        <div style={{display:'flex',alignItems:'center',gap:12,padding:'13px 20px',
-                          borderBottom:ti<NAV_POPULAR.length-1?'1px solid #f3f4f6':'none',
-                          WebkitTapHighlightColor:'transparent'}}>
-                          <div style={{width:38,height:38,minWidth:38,borderRadius:10,
-                            background:`${tool.color}14`,display:'flex',alignItems:'center',
-                            justifyContent:'center',flexShrink:0}}>
-                            <tool.Icon size={17} color={tool.color} strokeWidth={1.9}/>
-                          </div>
-                          <div style={{flex:1}}>
-                            <div style={{...FI,fontSize:14,fontWeight:600,color:'#1d1d1f'}}>{tool.name}</div>
-                            <div style={{...FI,fontSize:12,color:'#9ca3af',marginTop:2}}>{tool.desc}</div>
-                          </div>
-                          <ArrowRight size={14} color="rgba(0,0,0,.18)" strokeWidth={2}/>
+            {/* Tools section with per-category accordion */}
+            <div style={{borderBottom:'1px solid #f0f0f0'}}>
+              <button onClick={()=>setMobToolsExp(v=>!v)} className="mob-cat-btn"
+                style={{width:'100%',display:'flex',alignItems:'center',
+                  padding:'16px 20px',background:'transparent',border:'none',cursor:'pointer'}}>
+                <span style={{...FI,fontSize:15,fontWeight:700,color:'#1d1d1f',flex:1,textAlign:'left'}}>Tools</span>
+                <span className={`mob-chev${mobToolsExp?' open':''}`}>
+                  <ChevronDown size={18} color="rgba(0,0,0,.4)" strokeWidth={2}/>
+                </span>
+              </button>
+
+              <div className={`mob-acc${mobToolsExp?' open':''}`}>
+                <div style={{background:'#fafafa',borderTop:'1px solid #f0f0f0'}}>
+                  {NAV_CATS.map(cat=>(
+                    <div key={cat.label} style={{borderBottom:'1px solid #f3f4f6'}}>
+                      {/* Category row */}
+                      <button
+                        onClick={()=>setMobCatOpen(v=>v===cat.label?null:cat.label)}
+                        className="mob-cat-btn"
+                        style={{width:'100%',display:'flex',alignItems:'center',gap:12,
+                          padding:'13px 20px',background:'transparent',border:'none',cursor:'pointer'}}>
+                        <div style={{width:32,height:32,borderRadius:9,background:`${cat.color}15`,
+                          display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                          <cat.Icon size={15} color={cat.color} strokeWidth={1.9}/>
                         </div>
-                      </Link>
-                    ))}
-                    <Link href="#tools" onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
-                      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-                        padding:'13px 20px',...FI,fontSize:13,fontWeight:700,color:'#2563eb',
-                        borderTop:'1px solid #f3f4f6'}}>
-                        See all 35+ tools <ArrowRight size={13} strokeWidth={2.5}/>
+                        <span style={{...FI,fontSize:14,fontWeight:700,color:cat.color,flex:1,textAlign:'left'}}>{cat.label}</span>
+                        <span className={`mob-chev${mobCatOpen===cat.label?' open':''}`}>
+                          <ChevronDown size={15} color="rgba(0,0,0,.3)" strokeWidth={2}/>
+                        </span>
+                      </button>
+
+                      {/* Tools in this category */}
+                      <div className={`mob-acc${mobCatOpen===cat.label?' open':''}`}>
+                        <div style={{background:'#fff'}}>
+                          {cat.tools.map((tool,ti)=>{
+                            const badge = NAV_TIER_LABEL[tool.tier]
+                            return (
+                              <Link key={tool.name} href={tool.href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
+                                <div style={{display:'flex',alignItems:'center',gap:12,
+                                  padding:'11px 20px 11px 28px',
+                                  borderTop:ti===0?'1px solid #f3f4f6':'none',
+                                  borderBottom:'1px solid #f9fafb',
+                                  WebkitTapHighlightColor:'transparent'}}>
+                                  <div style={{width:30,height:30,borderRadius:8,background:tool.bg,
+                                    display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                                    <tool.Icon size={14} color="#fff" strokeWidth={1.8}/>
+                                  </div>
+                                  <span style={{...FI,fontSize:13.5,fontWeight:600,color:'#1d1d1f',flex:1}}>{tool.name}</span>
+                                  {tool.tier!=='free'&&(
+                                    <span style={{fontSize:9,fontWeight:700,letterSpacing:'0.05em',
+                                      padding:'2px 7px',borderRadius:99,
+                                      background:badge.bg,color:badge.color}}>
+                                      {badge.label}
+                                    </span>
+                                  )}
+                                  <ArrowRight size={13} color="rgba(0,0,0,.2)" strokeWidth={2}/>
+                                </div>
+                              </Link>
+                            )
+                          })}
+                        </div>
                       </div>
-                    </Link>
-                  </div>
+                    </div>
+                  ))}
+
+                  {/* See all link */}
+                  <Link href="/#tools" onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+                      padding:'14px 20px',...FI,fontSize:13,fontWeight:700,color:'#2563eb'}}>
+                      See all 35+ tools <ArrowRight size={13} strokeWidth={2.5}/>
+                    </div>
+                  </Link>
                 </div>
               </div>
-
-              {/* Plain links */}
-              {NAV_LINKS.map(({label,href,highlight})=>(
-                <Link key={label} href={href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8,padding:'16px 20px',
-                    borderBottom:'1px solid rgba(0,0,0,.06)',...FI,fontSize:16,fontWeight:600,
-                    color:highlight?'#7c3aed':'#1d1d1f',WebkitTapHighlightColor:'transparent'}}>
-                    {highlight && <Sparkles size={14} strokeWidth={2} color="#7c3aed"/>}
-                    {label}
-                  </div>
-                </Link>
-              ))}
             </div>
 
-            {/* Bottom CTA */}
-            <div style={{background:'#fff',borderTop:'1px solid rgba(0,0,0,.08)',
-              padding:'12px 16px',paddingBottom:'calc(12px + env(safe-area-inset-bottom))',flexShrink:0}}>
+            {/* Plain links */}
+            {NAV_LINKS.map(({label,href,highlight})=>(
+              <Link key={label} href={href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,padding:'16px 20px',
+                  borderBottom:'1px solid #f0f0f0',...FI,fontSize:15,fontWeight:600,
+                  color:highlight?'#7c3aed':'#1d1d1f',WebkitTapHighlightColor:'transparent'}}>
+                  {highlight && <Sparkles size={15} strokeWidth={2} color="#7c3aed"/>}
+                  {label}
+                </div>
+              </Link>
+            ))}
+
+            {/* Auth */}
+            {isLoaded && (
+              <div style={{padding:'16px 20px',borderBottom:'1px solid #f0f0f0'}}>
+                {isSignedIn ? (
+                  <Link href="/dashboard" onClick={()=>setMobOpen(false)}
+                    style={{...FI,fontSize:14,fontWeight:600,color:'#1d1d1f',textDecoration:'none'}}>
+                    Dashboard →
+                  </Link>
+                ) : (
+                  <div style={{display:'flex',gap:10}}>
+                    <SignInButton mode="modal">
+                      <button style={{...FI,flex:1,padding:'12px',borderRadius:12,
+                        border:'1.5px solid #e5e7eb',background:'#fff',
+                        fontSize:14,fontWeight:600,color:'#1d1d1f',cursor:'pointer'}}>Sign in</button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <button style={{...FI,flex:1,padding:'12px',borderRadius:12,
+                        border:'none',background:'#1d1d1f',
+                        fontSize:14,fontWeight:600,color:'#fff',cursor:'pointer'}}>Sign up</button>
+                    </SignUpButton>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Upload CTA */}
+            <div style={{padding:'16px 20px',marginTop:'auto'}}>
               <Link href="/pdf-editor" onClick={()=>setMobOpen(false)}
                 style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:8,
                   padding:'16px',background:'#1d1d1f',color:'#fff',borderRadius:14,
-                  fontSize:16,fontWeight:700,textDecoration:'none',letterSpacing:'-0.02em'}}>
-                <Upload size={18} strokeWidth={2.5}/> Upload PDF
+                  fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.02em'}}>
+                <Upload size={16} strokeWidth={2.5}/> Upload PDF
               </Link>
             </div>
           </motion.div>
@@ -1108,9 +1238,16 @@ function Apple3DScroll() {
 // ══════════════════════════════════════════════════════════════════════════════
 //  TOOL CARD
 // ══════════════════════════════════════════════════════════════════════════════
+const TOOL_TIER_BADGE = {
+  free: { label:'Free',      bg:'rgba(22,163,74,.1)',  color:'#15803d' },
+  ai:   { label:'5 free/day',bg:'rgba(124,58,237,.1)', color:'#7c3aed' },
+  pro:  { label:'Pro',       bg:'rgba(8,145,178,.1)',  color:'#0e7490' },
+}
+
 function ToolCard({ tool, catColor }: { tool: typeof TOOLS[0]; catColor: string }) {
   const isLive = tool.tag === 'LIVE' && !!tool.href
   const Icon = tool.Icon
+  const badge = TOOL_TIER_BADGE[tool.tier]
   const card = (
     <motion.div
       whileHover={{ y:-4, boxShadow:`0 16px 40px rgba(0,0,0,.10), 0 0 0 1.5px ${catColor}30` }}
@@ -1125,13 +1262,23 @@ function ToolCard({ tool, catColor }: { tool: typeof TOOLS[0]; catColor: string 
       <div style={{position:'absolute',top:0,left:0,width:80,height:80,borderRadius:'0 0 80px 0',
         background:tool.iconBg,opacity:.07,pointerEvents:'none'}}/>
 
-      {/* Icon chip */}
-      <div style={{
-        width:44, height:44, borderRadius:13, background:tool.iconBg, flexShrink:0,
-        display:'flex', alignItems:'center', justifyContent:'center',
-        boxShadow:`0 6px 16px ${catColor}28`,
-      }}>
-        <Icon size={20} color="#fff" strokeWidth={1.8}/>
+      {/* Icon chip + tier badge row */}
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:6}}>
+        <div style={{
+          width:44, height:44, borderRadius:13, background:tool.iconBg, flexShrink:0,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          boxShadow:`0 6px 16px ${catColor}28`,
+        }}>
+          <Icon size={20} color="#fff" strokeWidth={1.8}/>
+        </div>
+        <span style={{
+          ...MONO, fontSize:9, fontWeight:700, letterSpacing:'0.05em',
+          padding:'3px 7px', borderRadius:99,
+          background:badge.bg, color:badge.color,
+          whiteSpace:'nowrap', flexShrink:0,
+        }}>
+          {badge.label}
+        </span>
       </div>
 
       {/* Text */}
@@ -1395,15 +1542,21 @@ function CTA() {
 // ══════════════════════════════════════════════════════════════════════════════
 //  POPULAR TOOLS
 // ══════════════════════════════════════════════════════════════════════════════
+const TIER_BADGE: Record<string, { label:string; bg:string; color:string }> = {
+  free:  { label:'Free',          bg:'rgba(22,163,74,.1)',    color:'#15803d' },
+  ai:    { label:'5 free/day',    bg:'rgba(124,58,237,.1)',   color:'#7c3aed' },
+  pro:   { label:'Pro',           bg:'rgba(8,145,178,.1)',    color:'#0e7490' },
+}
+
 function PopularTools() {
-  const popular = [
-    { label:'Edit PDF',      href:'/pdf-editor',         Icon:FilePen,        color:'#6366f1' },
-    { label:'Compress PDF',  href:'/pdf-compressor',     Icon:Minimize2,      color:'#f97316' },
-    { label:'Merge PDF',     href:'/pdf-merger',         Icon:Merge,          color:'#0891b2' },
-    { label:'Split PDF',     href:'/pdf-splitter',       Icon:Split,          color:'#16a34a' },
-    { label:'Sign PDF',      href:'/pdf-signer',         Icon:PenTool,        color:RED        },
-    { label:'PDF to Word',   href:'/pdf-to-word',        Icon:FileType,       color:'#2563eb' },
-    { label:'AI Form Filler',href:'/ai-pdf-form-filler', Icon:Sparkles,       color:'#7c3aed' },
+  const popular: { label:string; href:string; Icon:typeof FilePen; color:string; tier:string }[] = [
+    { label:'Edit PDF',      href:'/pdf-editor',         Icon:FilePen,   color:'#6366f1', tier:'free' },
+    { label:'Compress PDF',  href:'/pdf-compressor',     Icon:Minimize2, color:'#f97316', tier:'free' },
+    { label:'Merge PDF',     href:'/pdf-merger',         Icon:Merge,     color:'#0891b2', tier:'free' },
+    { label:'Split PDF',     href:'/pdf-splitter',       Icon:Split,     color:'#16a34a', tier:'free' },
+    { label:'Sign PDF',      href:'/pdf-signer',         Icon:PenTool,   color:RED,       tier:'free' },
+    { label:'PDF to Word',   href:'/pdf-to-word',        Icon:FileType,  color:'#2563eb', tier:'pro'  },
+    { label:'AI Form Filler',href:'/ai-pdf-form-filler', Icon:Sparkles,  color:'#7c3aed', tier:'ai'  },
   ]
   return (
     <section style={{background:'#fff',padding:'72px 28px 60px',borderTop:'1px solid #f0f0f0'}}>
@@ -1418,38 +1571,46 @@ function PopularTools() {
           </h2>
         </motion.div>
         <div style={{display:'flex',flexWrap:'wrap',gap:12}}>
-          {popular.map(({label,href,Icon,color},i)=>(
-            <motion.div key={href}
-              initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}}
-              viewport={{once:true,margin:'60px'}} transition={{duration:.35,delay:i*.05,ease:E}}>
-              <Link href={href} style={{
-                display:'inline-flex',alignItems:'center',gap:10,
-                padding:'13px 20px',borderRadius:14,textDecoration:'none',
-                background:'#f8f8fa',border:'1.5px solid #ebebeb',
-                transition:'all .18s',
-              }}
-              onMouseEnter={e=>{
-                const el = e.currentTarget as HTMLAnchorElement
-                el.style.background = `${color}08`
-                el.style.borderColor = `${color}30`
-                el.style.transform = 'translateY(-2px)'
-                el.style.boxShadow = `0 6px 20px ${color}18`
-              }}
-              onMouseLeave={e=>{
-                const el = e.currentTarget as HTMLAnchorElement
-                el.style.background = '#f8f8fa'
-                el.style.borderColor = '#ebebeb'
-                el.style.transform = 'none'
-                el.style.boxShadow = 'none'
-              }}>
-                <div style={{width:32,height:32,borderRadius:9,background:`${color}12`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  <Icon size={15} color={color} strokeWidth={2}/>
-                </div>
-                <span style={{...FI,fontSize:14,fontWeight:700,color:'#1d1d1f',whiteSpace:'nowrap'}}>{label}</span>
-                <ChevronRight size={13} color="#bbb" strokeWidth={2}/>
-              </Link>
-            </motion.div>
-          ))}
+          {popular.map(({label,href,Icon,color,tier},i)=>{
+            const badge = TIER_BADGE[tier]
+            return (
+              <motion.div key={href}
+                initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}}
+                viewport={{once:true,margin:'60px'}} transition={{duration:.35,delay:i*.05,ease:E}}>
+                <Link href={href} style={{
+                  display:'inline-flex',alignItems:'center',gap:10,
+                  padding:'11px 18px',borderRadius:14,textDecoration:'none',
+                  background:'#f8f8fa',border:'1.5px solid #ebebeb',
+                  transition:'all .18s',
+                }}
+                onMouseEnter={e=>{
+                  const el = e.currentTarget as HTMLAnchorElement
+                  el.style.background = `${color}08`
+                  el.style.borderColor = `${color}30`
+                  el.style.transform = 'translateY(-2px)'
+                  el.style.boxShadow = `0 6px 20px ${color}18`
+                }}
+                onMouseLeave={e=>{
+                  const el = e.currentTarget as HTMLAnchorElement
+                  el.style.background = '#f8f8fa'
+                  el.style.borderColor = '#ebebeb'
+                  el.style.transform = 'none'
+                  el.style.boxShadow = 'none'
+                }}>
+                  <div style={{width:32,height:32,borderRadius:9,background:`${color}12`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    <Icon size={15} color={color} strokeWidth={2}/>
+                  </div>
+                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
+                    <span style={{...FI,fontSize:13.5,fontWeight:700,color:'#1d1d1f',whiteSpace:'nowrap',lineHeight:1}}>{label}</span>
+                    <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.06em',padding:'1.5px 6px',borderRadius:99,background:badge.bg,color:badge.color,width:'fit-content'}}>
+                      {badge.label}
+                    </span>
+                  </div>
+                  <ChevronRight size={13} color="#bbb" strokeWidth={2}/>
+                </Link>
+              </motion.div>
+            )
+          })}
         </div>
       </div>
     </section>
@@ -1607,6 +1768,124 @@ function PrivacyNote() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+//  UPLOAD BOX
+// ══════════════════════════════════════════════════════════════════════════════
+function UploadBox() {
+  return (
+    <section style={{background:'#fff',padding:'0 28px 64px'}}>
+      <div style={{maxWidth:560,margin:'0 auto'}}>
+        <Link href="/pdf-editor" style={{textDecoration:'none',display:'block'}}>
+          <motion.div
+            whileHover={{borderColor:'rgba(99,102,241,.55)',background:'rgba(99,102,241,.03)',y:-2}}
+            transition={{duration:.18}}
+            style={{border:'2px dashed rgba(0,0,0,.12)',borderRadius:20,padding:'36px 32px',
+              textAlign:'center',cursor:'pointer',transition:'border-color .18s,background .18s'}}>
+            <motion.div
+              animate={{y:[0,-5,0]}}
+              transition={{duration:2.4,repeat:Infinity,ease:'easeInOut'}}
+              style={{width:52,height:52,borderRadius:15,background:'rgba(99,102,241,.08)',
+                display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px'}}>
+              <Upload size={22} color="#6366f1" strokeWidth={1.6}/>
+            </motion.div>
+            <p style={{...FI,fontSize:16,fontWeight:700,color:'#1d1d1f',margin:'0 0 6px',letterSpacing:'-0.02em'}}>
+              Drop your PDF here to start
+            </p>
+            <p style={{...FI,fontSize:13,color:'#9ca3af',margin:'0 0 20px',lineHeight:1.6}}>
+              or click to browse · up to 100 MB · processed in your browser
+            </p>
+            <span style={{...FI,display:'inline-flex',alignItems:'center',gap:8,
+              padding:'10px 24px',background:'#1d1d1f',color:'#fff',
+              borderRadius:99,fontSize:13.5,fontWeight:700,letterSpacing:'-0.02em'}}>
+              <Upload size={13} strokeWidth={2.5}/> Upload PDF
+            </span>
+          </motion.div>
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  PRICING PREVIEW
+// ══════════════════════════════════════════════════════════════════════════════
+function PricingPreview() {
+  const FREE_ITEMS = ['35+ PDF tools — all free','No account required','Edit, merge, split, compress','Sign & watermark PDFs']
+  const PRO_ITEMS  = ['Everything in Free','Unlimited AI uses per day','PDF → Word / Excel / PPT','Priority processing']
+  return (
+    <section style={{background:'#f5f5f7',padding:'72px 28px',borderTop:'1px solid #ebebeb'}}>
+      <div style={{maxWidth:820,margin:'0 auto'}}>
+        <motion.div initial={{opacity:0,y:14}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.5,ease:E}}
+          style={{marginBottom:36,textAlign:'center'}}>
+          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
+            Pricing
+          </div>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,36px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',lineHeight:1,margin:'0 0 8px'}}>
+            Free forever. Pro for power users.
+          </h2>
+          <p style={{...FI,fontSize:15,color:'#6b7280',margin:0}}>
+            All core PDF tools are free — no card, no account. Upgrade for unlimited AI.
+          </p>
+        </motion.div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:16}}>
+          {/* Free */}
+          <motion.div initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:.4,ease:E}}
+            style={{background:'#fff',borderRadius:20,padding:'28px 28px 24px',border:'1.5px solid #e5e7eb'}}>
+            <div style={{marginBottom:20}}>
+              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#15803d',background:'rgba(22,163,74,.1)',padding:'3px 8px',borderRadius:99}}>FREE</span>
+              <div style={{...FI,fontSize:28,fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>$0<span style={{fontSize:14,fontWeight:500,color:'#9ca3af'}}>/month</span></div>
+              <div style={{...FI,fontSize:13,color:'#6b7280'}}>No credit card needed</div>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:24}}>
+              {FREE_ITEMS.map(item=>(
+                <div key={item} style={{display:'flex',alignItems:'center',gap:9}}>
+                  <CheckCircle2 size={14} color="#16a34a" strokeWidth={2}/>
+                  <span style={{...FI,fontSize:13.5,color:'#374151'}}>{item}</span>
+                </div>
+              ))}
+            </div>
+            <Link href="/pdf-editor"
+              style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:7,
+                padding:'11px 0',borderRadius:12,background:'#f3f4f6',
+                color:'#1d1d1f',fontSize:13.5,fontWeight:700,textDecoration:'none',letterSpacing:'-0.01em'}}>
+              Start free — no signup
+            </Link>
+          </motion.div>
+          {/* Pro */}
+          <motion.div initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:.4,delay:.07,ease:E}}
+            style={{background:'#1d1d1f',borderRadius:20,padding:'28px 28px 24px',border:'1.5px solid #1d1d1f',position:'relative',overflow:'hidden'}}>
+            <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle,rgba(8,145,178,.25),transparent)',pointerEvents:'none'}}/>
+            <div style={{marginBottom:20}}>
+              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#0891b2',background:'rgba(8,145,178,.18)',padding:'3px 8px',borderRadius:99}}>PRO · LAUNCH PRICE</span>
+              <div style={{...FI,fontSize:28,fontWeight:800,color:'#fff',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>$1<span style={{fontSize:14,fontWeight:500,color:'rgba(255,255,255,.5)'}}>/month</span></div>
+              <div style={{...FI,fontSize:13,color:'rgba(255,255,255,.5)'}}>Lock in early — price rises for new subscribers</div>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:24}}>
+              {PRO_ITEMS.map(item=>(
+                <div key={item} style={{display:'flex',alignItems:'center',gap:9}}>
+                  <CheckCircle2 size={14} color="#0891b2" strokeWidth={2}/>
+                  <span style={{...FI,fontSize:13.5,color:'rgba(255,255,255,.85)'}}>{item}</span>
+                </div>
+              ))}
+            </div>
+            <Link href="/pricing"
+              style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:7,
+                padding:'11px 0',borderRadius:12,background:'#0891b2',
+                color:'#fff',fontSize:13.5,fontWeight:700,textDecoration:'none',letterSpacing:'-0.01em'}}>
+              Get Pro — $1/month
+            </Link>
+          </motion.div>
+        </div>
+        <div style={{textAlign:'center',marginTop:20}}>
+          <Link href="/pricing" style={{...FI,fontSize:13,color:'#9ca3af',textDecoration:'none',fontWeight:500}}>
+            See full pricing & feature comparison →
+          </Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 //  ROOT
 // ══════════════════════════════════════════════════════════════════════════════
 export default function AppleHome() {
@@ -1615,10 +1894,12 @@ export default function AppleHome() {
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
       <Nav />
       <Hero />
-      <Apple3DScroll />
       <PopularTools />
+      <UploadBox />
+      <Apple3DScroll />
       <AllTools />
       <PrivacyNote />
+      <PricingPreview />
       <CTA />
       <Footer />
     </div>

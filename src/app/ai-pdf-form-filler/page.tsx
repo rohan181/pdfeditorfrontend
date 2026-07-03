@@ -107,7 +107,7 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 
 /* Ticker */
 .ticker{position:relative;z-index:1;overflow:hidden;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0;padding:11px 0;background:#fafafa}
-.tktr{display:inline-flex;width:max-content;animation:roll 52s linear infinite}
+.tktr{display:inline-flex;width:max-content;animation:roll 90s linear infinite}
 .ti{display:inline-flex;align-items:center;gap:10px;padding:0 24px}
 .tis{font-size:8px;color:var(--p);opacity:.4}
 .tin{font-family:var(--fm);font-size:9px;letter-spacing:.1em;color:var(--fg3)}
@@ -236,7 +236,7 @@ const FAQS = [
   { q: 'Can I add a digital signature?', a: 'Yes. Draw a freehand signature, type your name, or upload a signature image. Place it anywhere with drag-and-drop precision.' },
 ]
 
-const TICKS = ['AI Form Filling','Digital Signatures','OCR Support','No Signup','Instant Export']
+const TICKS = ['AI Form Filling','OCR Support','Digital Signature','Instant Export']
 
 const DEMO = [
   { label: 'Upload PDF',       color: '#6366f1', desc: 'Drop any PDF — AcroForm, flat or scanned' },
@@ -322,7 +322,7 @@ export default function AIPDFFormFillerPage() {
             </p>
             <div className="cta-row">
               <button className="btn-p" onClick={openEditor}>
-                Fill a PDF — Free
+                Start AI Form Filler — 5 Free Uses/Day
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </button>
               <a className="btn-s2" href="#features">See features</a>
@@ -622,10 +622,10 @@ export default function AIPDFFormFillerPage() {
         <div className="wrap">
           <div className="cta-inner">
             <div className="cta-glow" />
-            <h2 className="cta-h">Start filling PDFs<br />right now — free</h2>
-            <p className="cta-sub">No signup. No install. Works in any browser.</p>
+            <h2 className="cta-h">Start filling PDFs<br />with AI right now</h2>
+            <p className="cta-sub">5 free AI uses per day. No signup. No install. Works in any browser.</p>
             <button className="btn-p" onClick={openEditor} style={{ margin: '0 auto' }}>
-              Open AI Form Filler — Free
+              Start AI Form Filler
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
           </div>
