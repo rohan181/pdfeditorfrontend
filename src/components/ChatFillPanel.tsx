@@ -136,8 +136,10 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
         }
       }
       syncCollected(newCollected)
-      // Apply extracted fields to PDF immediately
-      if (docNewlyFilled.length) onApply(docNewlyFilled)
+      // Place each field one by one with a small stagger
+      docNewlyFilled.forEach((field, i) => {
+        setTimeout(() => onApply([field]), i * 180)
+      })
 
       const docLabel = docsRef.current.find(d => d.id === docId)?.description.trim()
         || docsRef.current.find(d => d.id === docId)?.fileName
@@ -291,7 +293,6 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
         const newlyExtracted: FilledField[] = []
         for (const { name, value } of data.extracted) {
           const v = String(value ?? '')
-          // Skip empty-string extractions for signature fields (they'll be drawn)
           if (v === '' && data.signatureField === name) continue
           if (value !== undefined && value !== null && v !== '') {
             updated[name] = v
@@ -299,8 +300,10 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           }
         }
         syncCollected(updated)
-        // Apply each extracted field to the PDF immediately
-        if (newlyExtracted.length) onApply(newlyExtracted)
+        // Place each field one by one with a small stagger so they appear sequentially
+        newlyExtracted.forEach((field, i) => {
+          setTimeout(() => onApply([field]), i * 180)
+        })
       }
 
       // Signature field requested — prompt user to sign
