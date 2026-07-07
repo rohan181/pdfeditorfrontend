@@ -1151,14 +1151,17 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     const cw = canvas.width
     const ch = canvas.height
 
-    // canvas is rendered at scale * devicePixelRatio; base coords = canvas / renderScale
-    const dpr         = window.devicePixelRatio || 1
-    const renderScale = scale * dpr
-    const pageH_base  = ch / renderScale   // = slot.baseHeight in PDF points
-
-    // ── Try Python pipeline first ────────────────────────────────────────────
     const slot = slots[slotIdx]
     const src  = sources.find(s => s.id === slot?.sourceId)
+
+    // Derive the exact pixels-per-PDF-point from canvas vs slot dimensions.
+    // This is more reliable than scale * dpr because renderSlot clamps dpr on
+    // large canvases to stay under the iOS 3 MP limit, so the effective DPR
+    // is not always window.devicePixelRatio.
+    const pdfW_pts   = slot?.baseWidth  ?? 595
+    const pdfH_pts   = slot?.baseHeight ?? 842
+    const pxPerPtX   = cw / pdfW_pts    // actual canvas pixels per PDF point (x)
+    const pxPerPtY   = ch / pdfH_pts    // actual canvas pixels per PDF point (y)
 
     if (src?.bytes) {
       try {
@@ -1183,19 +1186,8 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
             bbox: { page: number; x0: number; y0: number; x1: number; y1: number }
           }[] = data.fields
 
-          // Page height in PDF points (needed to flip PyMuPDF y-axis to PDF bottom-origin)
-          let pdfPageH = pageH_base
-          try {
-            const { getDocument } = await import('pdfjs-dist')
-            const task = getDocument({ data: src.bytes })
-            const doc  = await task.promise
-            const page = await doc.getPage(slotIdx + 1)
-            pdfPageH   = page.getViewport({ scale: 1 }).height
-            doc.destroy()
-          } catch { /* use renderScale-derived fallback */ }
-
-          // PyMuPDF uses y=0 at top; applyAutoFill expects ann.rect format (y=0 at bottom).
-          // Convert: y1_pdf = pdfPageH - pymupdf_y1,  y2_pdf = pdfPageH - pymupdf_y0
+          // slot.baseHeight == PDF page height at scale=1 (same units as PyMuPDF points)
+          // PyMuPDF y=0 is at top; ann.rect format needs y=0 at bottom → flip
           const detectedFields: DetectedField[] = pyFields
             .filter(f => f.bbox)
             .map(f => ({
@@ -1203,12 +1195,12 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
               type: (f.field_type ?? 'text') as DetectedField['type'],
               rect: [
                 f.bbox.x0,
-                pdfPageH - f.bbox.y1,   // bottom of field in PDF bottom-origin
+                pdfH_pts - f.bbox.y1,
                 f.bbox.x1,
-                pdfPageH - f.bbox.y0,   // top of field in PDF bottom-origin
+                pdfH_pts - f.bbox.y0,
               ] as [number, number, number, number],
               pageNum:    f.bbox.page + 1,
-              pageHeight: pdfPageH,
+              pageHeight: pdfH_pts,
             }))
 
           if (detectedFields.length > 0) {
@@ -1228,9 +1220,10 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     }
 
     // ── Fallback: Claude Vision (canvas screenshot → percentage coords) ──────
-    // Vision gives % of canvas dims with y=0 at top.
-    // applyAutoFill expects [x1, y1, x2, y2] in scale=1 PDF points, y=0 at bottom.
-    // Conversion: divide by renderScale to get base coords, then flip y-axis.
+    // Vision returns % of canvas dims (y=0 top).
+    // Convert to ann.rect format: PDF points (scale=1), y=0 at bottom.
+    // Use pxPerPtX/Y derived from canvas.width / slot.baseWidth so the result
+    // is correct even when renderSlot clamps DPR on large pages.
     try {
       const res = await fetch('/api/vision-detect', {
         method: 'POST',
@@ -1248,22 +1241,19 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       if (raw.length === 0) { setIsDetecting(false); return null }
 
       const detectedFields: DetectedField[] = raw.map(f => {
-        // canvas pixel coords (y=0 top)
-        const xPx = (f.x / 100) * cw
-        const yPx = (f.y / 100) * ch
-        const wPx = (f.w / 100) * cw
-        const hPx = (f.h / 100) * ch
-        // convert to base PDF points (scale=1, y=0 bottom)
-        const x1 = xPx / renderScale
-        const x2 = (xPx + wPx) / renderScale
-        const y1 = (ch - (yPx + hPx)) / renderScale   // bottom of field
-        const y2 = (ch - yPx) / renderScale             // top of field
+        // Percentage → canvas pixels → PDF points via actual pxPerPt ratio
+        const xPx = (f.x / 100) * cw,  yPx = (f.y / 100) * ch
+        const wPx = (f.w / 100) * cw,  hPx = (f.h / 100) * ch
+        const x1  = xPx / pxPerPtX,    x2  = (xPx + wPx) / pxPerPtX
+        // Flip y-axis: canvas y=0 top → PDF y=0 bottom
+        const y1  = (ch - (yPx + hPx)) / pxPerPtY   // bottom of field
+        const y2  = (ch - yPx)         / pxPerPtY   // top of field
         return {
           name: f.label,
           type: f.type as DetectedField['type'],
           rect: [x1, y1, x2, y2] as [number, number, number, number],
           pageNum:    slotIdx + 1,
-          pageHeight: pageH_base,
+          pageHeight: pdfH_pts,
         }
       })
 
@@ -1274,7 +1264,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     } finally {
       setIsDetecting(false)
     }
-  }, [slotIdx, slots, sources, scale])
+  }, [slotIdx, slots, sources])
 
   const openChatFill = useCallback(async () => {
     setShowChatFill(true)
