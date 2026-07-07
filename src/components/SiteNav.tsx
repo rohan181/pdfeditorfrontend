@@ -290,7 +290,7 @@ export default function SiteNav() {
             <motion.div
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ duration: .25, ease: E }}
-              style={{ position: 'fixed', top: 56, right: 0, bottom: 0, width: '100%', maxWidth: 360, zIndex: 290, background: '#fff', display: 'flex', flexDirection: 'column', overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              style={{ position: 'fixed', top: 56, right: 0, bottom: 0, width: '100%', maxWidth: 360, zIndex: 290, background: '#fff', display: 'flex', flexDirection: 'column', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
 
               {/* ── Tools section ── */}
               <div style={{ borderBottom: '1px solid #f0f0f0' }}>

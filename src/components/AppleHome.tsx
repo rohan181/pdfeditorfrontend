@@ -168,7 +168,7 @@ const CSS = `
   }
 
   /* ── scroll gallery mobile ── */
-  .scr-sticky { position:-webkit-sticky; position:sticky; will-change:transform; }
+  .scr-sticky { position:-webkit-sticky; position:sticky; }
   @supports (height:100dvh){ .scr-sticky{ height:100dvh; } }
 
   @media(max-width:768px){
@@ -644,7 +644,7 @@ function Nav() {
               transition={{duration:.25,ease:E}}
               style={{position:'fixed',top:56,right:0,bottom:0,width:'100%',maxWidth:360,
                 zIndex:290,background:'#fff',display:'flex',flexDirection:'column',
-                overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
+                overflowY:'auto',WebkitOverflowScrolling:'touch',overscrollBehavior:'contain'}}>
 
               {/* Tools section */}
               <div style={{borderBottom:'1px solid #f0f0f0'}}>
@@ -778,9 +778,6 @@ function Nav() {
 //  HERO — split: text left · browser mockup right
 // ══════════════════════════════════════════════════════════════════════════════
 function Hero() {
-  const { scrollY } = useScroll()
-  const textY = useTransform(scrollY, [0, 500], [0, -60])
-
   return (
     <section style={{background:'#fff',minHeight:'100svh',display:'flex',flexDirection:'column',justifyContent:'center',position:'relative',overflow:'hidden',paddingTop:54}}>
 
@@ -793,7 +790,7 @@ function Hero() {
       <div style={{position:'absolute',top:'30%',right:'20%',width:400,height:400,borderRadius:'50%',background:'radial-gradient(circle, rgba(226,75,74,.05) 0%, transparent 70%)',filter:'blur(60px)',pointerEvents:'none'}}/>
 
       {/* Content grid */}
-      <motion.div style={{y:textY,maxWidth:1200,margin:'0 auto',padding:'0 clamp(16px,5vw,48px)',width:'100%',position:'relative',zIndex:2}}>
+      <div style={{maxWidth:1200,margin:'0 auto',padding:'0 clamp(16px,5vw,48px)',width:'100%',position:'relative',zIndex:2}}>
         <div className="hero-grid">
 
           {/* ── LEFT: text ── */}
@@ -891,7 +888,7 @@ function Hero() {
           </div>
 
         </div>
-      </motion.div>
+      </div>
 
       {/* Bottom bar */}
       <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.5,delay:1.2}}
@@ -1104,7 +1101,7 @@ function Apple3DScroll() {
         </motion.div>
       </div>
 
-      <div ref={pin} style={{height:'400vh',position:'relative'}}>
+      <div ref={pin} style={{height:'400vh',position:'relative',overscrollBehavior:'none'}}>
       <div className="scr-sticky" style={{top:0,height:'100vh',background:'#F5F5F7',overflow:'hidden',display:'flex',flexDirection:'column'}}>
 
         {/* Dot grid */}

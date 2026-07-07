@@ -256,6 +256,9 @@ export default function AIPDFFormFillerPage() {
     return () => clearInterval(id)
   }, [])
 
+  // Always restore scroll on unmount in case editor was open during navigation
+  useEffect(() => () => { document.body.style.overflow = '' }, [])
+
   const openEditor = () => { setEditorOpen(true); document.body.style.overflow = 'hidden' }
   const closeEditor = () => { setEditorOpen(false); document.body.style.overflow = '' }
 

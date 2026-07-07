@@ -538,10 +538,10 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
 
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: '#0369a1', marginBottom: 5 }}>
-                Detecting form fields…
+                AI is reading your form…
               </div>
               <div style={{ fontSize: 11.5, color: '#7dd3fc', lineHeight: 1.55 }}>
-                Scanning your PDF for text boxes,<br />checkboxes and signature areas
+                Detecting fields, underlines &amp; signature<br />areas — usually done in 3–5 seconds
               </div>
             </div>
 

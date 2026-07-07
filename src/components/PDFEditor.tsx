@@ -1137,13 +1137,145 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     setShowAutoFill(true)
   }, [loadPageFields])
 
+  // ── Chat Fill field detection ─────────────────────────────────────────────────
+  // Strategy 1: Python pipeline server (multi-strategy: dash + vector + whitespace + vision).
+  //             Requires `uvicorn server:app` running at NEXT_PUBLIC_PIPELINE_URL or localhost:8787.
+  // Strategy 2: Claude Vision fallback (page screenshot → Claude detects all field types).
+  //             Used automatically when the Python server is unreachable.
+  const detectFieldsForChat = useCallback(async (): Promise<DetectedField[] | null> => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+    setIsDetecting(true)
+
+    const pageImageBase64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
+    const cw = canvas.width
+    const ch = canvas.height
+
+    // ── Try Python pipeline first ────────────────────────────────────────────
+    const slot = slots[slotIdx]
+    const src  = sources.find(s => s.id === slot?.sourceId)
+
+    if (src?.bytes) {
+      try {
+        const uint8    = new Uint8Array(src.bytes)
+        const blob     = new Blob([uint8], { type: 'application/pdf' })
+        const formData = new FormData()
+        formData.append('file', blob, src.name ?? 'form.pdf')
+        formData.append('run_ocr',          'true')
+        formData.append('run_vision',       'true')
+        formData.append('vision_threshold', '2')
+
+        const res = await fetch('/api/pdf-pipeline/detect', {
+          method: 'POST',
+          body: formData,
+        })
+        const data = await res.json()
+
+        // 503 with fallback:true means the Python server is offline — fall through
+        if (res.ok && !data.fallback && data.fields?.length) {
+          // Pipeline fields use PDF points — convert to canvas pixels
+          // PDF page size in points comes from the field bbox; we need page pt dimensions.
+          // Render scale: canvas pixels / PDF points = scale factor used when rendering.
+          // We derive it from the first field that has bbox data.
+          const pyFields: {
+            label: string; field_name: string; field_type: string;
+            bbox: { page: number; x0: number; y0: number; x1: number; y1: number }
+          }[] = data.fields
+
+          // Page size in PDF points — read from the source document
+          let pdfPageW = 595, pdfPageH = 842  // A4 fallback
+          try {
+            const { getDocument } = await import('pdfjs-dist')
+            const task = getDocument({ data: src.bytes })
+            const doc  = await task.promise
+            const page = await doc.getPage(slotIdx + 1)
+            const vp   = page.getViewport({ scale: 1 })
+            pdfPageW   = vp.width
+            pdfPageH   = vp.height
+            doc.destroy()
+          } catch { /* use fallback */ }
+
+          const scaleX = cw / pdfPageW
+          const scaleY = ch / pdfPageH
+
+          const detectedFields: DetectedField[] = pyFields
+            .filter(f => f.bbox)
+            .map(f => ({
+              name: f.label || f.field_name || 'field',
+              type: (f.field_type ?? 'text') as DetectedField['type'],
+              rect: [
+                Math.round(f.bbox.x0 * scaleX),
+                Math.round(f.bbox.y0 * scaleY),
+                Math.round((f.bbox.x1 - f.bbox.x0) * scaleX),
+                Math.round((f.bbox.y1 - f.bbox.y0) * scaleY),
+              ] as [number, number, number, number],
+              pageNum:    f.bbox.page + 1,
+              pageHeight: ch,
+            }))
+
+          if (detectedFields.length > 0) {
+            setAutoFillFields(detectedFields)
+            setAutoFillPageImage(pageImageBase64)
+            setAiExistingFilled({})
+            setIsDetecting(false)
+            return detectedFields
+          }
+        }
+        // else: fall through to vision fallback
+        if (!res.ok && !data.fallback) {
+          console.warn('[pdf-pipeline/detect]', data.error)
+        }
+      } catch (err) {
+        console.warn('[pdf-pipeline/detect] fetch error, falling back to vision:', err)
+      }
+    }
+
+    // ── Fallback: Claude Vision (page screenshot → percentage coords) ────────
+    try {
+      const res = await fetch('/api/vision-detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pageImageBase64, pageWidth: cw, pageHeight: ch }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        console.error('[vision-detect]', data.error)
+        setIsDetecting(false)
+        return null
+      }
+
+      const raw: { label: string; type: string; x: number; y: number; w: number; h: number }[] = data.fields ?? []
+      if (raw.length === 0) { setIsDetecting(false); return null }
+
+      const detectedFields: DetectedField[] = raw.map(f => ({
+        name: f.label,
+        type: f.type as DetectedField['type'],
+        rect: [
+          Math.round((f.x / 100) * cw),
+          Math.round((f.y / 100) * ch),
+          Math.round((f.w / 100) * cw),
+          Math.round((f.h / 100) * ch),
+        ] as [number, number, number, number],
+        pageNum:    slotIdx + 1,
+        pageHeight: ch,
+      }))
+
+      setAutoFillFields(detectedFields)
+      setAutoFillPageImage(pageImageBase64)
+      setAiExistingFilled({})
+      return detectedFields
+    } finally {
+      setIsDetecting(false)
+    }
+  }, [slotIdx, slots, sources])
+
   const openChatFill = useCallback(async () => {
     const fields = await loadPageFields()
     setShowChatFill(true)
     if (!fields || fields.length === 0) {
-      detectScannedFields().catch(console.error)
+      detectFieldsForChat().catch(console.error)
     }
-  }, [loadPageFields, detectScannedFields])
+  }, [loadPageFields, detectFieldsForChat])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
     // fieldName → new elements built for that field this run

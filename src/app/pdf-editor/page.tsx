@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import PDFEditor from '@/components/PDFEditor'
 import SiteNav from '@/components/SiteNav'
@@ -134,6 +134,9 @@ const FAQS = [
 
 export default function PDFEditorPage() {
   const [editorOpen, setEditorOpen] = useState(false)
+
+  // Always restore scroll on unmount in case editor was open during navigation
+  useEffect(() => () => { document.body.style.overflow = '' }, [])
 
   const openEditor = () => {
     setEditorOpen(true)
