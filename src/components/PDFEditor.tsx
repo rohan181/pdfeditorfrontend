@@ -1151,6 +1151,11 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     const cw = canvas.width
     const ch = canvas.height
 
+    // canvas is rendered at scale * devicePixelRatio; base coords = canvas / renderScale
+    const dpr         = window.devicePixelRatio || 1
+    const renderScale = scale * dpr
+    const pageH_base  = ch / renderScale   // = slot.baseHeight in PDF points
+
     // ── Try Python pipeline first ────────────────────────────────────────────
     const slot = slots[slotIdx]
     const src  = sources.find(s => s.id === slot?.sourceId)
@@ -1173,44 +1178,37 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
         // 503 with fallback:true means the Python server is offline — fall through
         if (res.ok && !data.fallback && data.fields?.length) {
-          // Pipeline fields use PDF points — convert to canvas pixels
-          // PDF page size in points comes from the field bbox; we need page pt dimensions.
-          // Render scale: canvas pixels / PDF points = scale factor used when rendering.
-          // We derive it from the first field that has bbox data.
           const pyFields: {
             label: string; field_name: string; field_type: string;
             bbox: { page: number; x0: number; y0: number; x1: number; y1: number }
           }[] = data.fields
 
-          // Page size in PDF points — read from the source document
-          let pdfPageW = 595, pdfPageH = 842  // A4 fallback
+          // Page height in PDF points (needed to flip PyMuPDF y-axis to PDF bottom-origin)
+          let pdfPageH = pageH_base
           try {
             const { getDocument } = await import('pdfjs-dist')
             const task = getDocument({ data: src.bytes })
             const doc  = await task.promise
             const page = await doc.getPage(slotIdx + 1)
-            const vp   = page.getViewport({ scale: 1 })
-            pdfPageW   = vp.width
-            pdfPageH   = vp.height
+            pdfPageH   = page.getViewport({ scale: 1 }).height
             doc.destroy()
-          } catch { /* use fallback */ }
+          } catch { /* use renderScale-derived fallback */ }
 
-          const scaleX = cw / pdfPageW
-          const scaleY = ch / pdfPageH
-
+          // PyMuPDF uses y=0 at top; applyAutoFill expects ann.rect format (y=0 at bottom).
+          // Convert: y1_pdf = pdfPageH - pymupdf_y1,  y2_pdf = pdfPageH - pymupdf_y0
           const detectedFields: DetectedField[] = pyFields
             .filter(f => f.bbox)
             .map(f => ({
               name: f.label || f.field_name || 'field',
               type: (f.field_type ?? 'text') as DetectedField['type'],
               rect: [
-                Math.round(f.bbox.x0 * scaleX),
-                Math.round(f.bbox.y0 * scaleY),
-                Math.round((f.bbox.x1 - f.bbox.x0) * scaleX),
-                Math.round((f.bbox.y1 - f.bbox.y0) * scaleY),
+                f.bbox.x0,
+                pdfPageH - f.bbox.y1,   // bottom of field in PDF bottom-origin
+                f.bbox.x1,
+                pdfPageH - f.bbox.y0,   // top of field in PDF bottom-origin
               ] as [number, number, number, number],
               pageNum:    f.bbox.page + 1,
-              pageHeight: ch,
+              pageHeight: pdfPageH,
             }))
 
           if (detectedFields.length > 0) {
@@ -1221,7 +1219,6 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
             return detectedFields
           }
         }
-        // else: fall through to vision fallback
         if (!res.ok && !data.fallback) {
           console.warn('[pdf-pipeline/detect]', data.error)
         }
@@ -1230,7 +1227,10 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       }
     }
 
-    // ── Fallback: Claude Vision (page screenshot → percentage coords) ────────
+    // ── Fallback: Claude Vision (canvas screenshot → percentage coords) ──────
+    // Vision gives % of canvas dims with y=0 at top.
+    // applyAutoFill expects [x1, y1, x2, y2] in scale=1 PDF points, y=0 at bottom.
+    // Conversion: divide by renderScale to get base coords, then flip y-axis.
     try {
       const res = await fetch('/api/vision-detect', {
         method: 'POST',
@@ -1247,18 +1247,25 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       const raw: { label: string; type: string; x: number; y: number; w: number; h: number }[] = data.fields ?? []
       if (raw.length === 0) { setIsDetecting(false); return null }
 
-      const detectedFields: DetectedField[] = raw.map(f => ({
-        name: f.label,
-        type: f.type as DetectedField['type'],
-        rect: [
-          Math.round((f.x / 100) * cw),
-          Math.round((f.y / 100) * ch),
-          Math.round((f.w / 100) * cw),
-          Math.round((f.h / 100) * ch),
-        ] as [number, number, number, number],
-        pageNum:    slotIdx + 1,
-        pageHeight: ch,
-      }))
+      const detectedFields: DetectedField[] = raw.map(f => {
+        // canvas pixel coords (y=0 top)
+        const xPx = (f.x / 100) * cw
+        const yPx = (f.y / 100) * ch
+        const wPx = (f.w / 100) * cw
+        const hPx = (f.h / 100) * ch
+        // convert to base PDF points (scale=1, y=0 bottom)
+        const x1 = xPx / renderScale
+        const x2 = (xPx + wPx) / renderScale
+        const y1 = (ch - (yPx + hPx)) / renderScale   // bottom of field
+        const y2 = (ch - yPx) / renderScale             // top of field
+        return {
+          name: f.label,
+          type: f.type as DetectedField['type'],
+          rect: [x1, y1, x2, y2] as [number, number, number, number],
+          pageNum:    slotIdx + 1,
+          pageHeight: pageH_base,
+        }
+      })
 
       setAutoFillFields(detectedFields)
       setAutoFillPageImage(pageImageBase64)
@@ -1267,7 +1274,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     } finally {
       setIsDetecting(false)
     }
-  }, [slotIdx, slots, sources])
+  }, [slotIdx, slots, sources, scale])
 
   const openChatFill = useCallback(async () => {
     const fields = await loadPageFields()
