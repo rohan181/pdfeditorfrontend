@@ -107,17 +107,6 @@ const CSS = `
   .tab-bar::-webkit-scrollbar { display:none; }
   .tab-bar { -ms-overflow-style:none; scrollbar-width:none; }
 
-  /* Mobile accordion — CSS grid trick, GPU-composited, no JS layout reads */
-  .mob-acc       { display:grid; grid-template-rows:0fr; transition:grid-template-rows .2s ease; }
-  .mob-acc.open  { grid-template-rows:1fr; }
-  .mob-acc > div { overflow:hidden; }
-
-  /* Chevron rotation via CSS — no Framer Motion needed */
-  .mob-chev      { display:flex; transition:transform .18s ease; }
-  .mob-chev.open { transform:rotate(180deg); }
-
-  /* Remove 300ms tap delay on all nav buttons */
-  .mob-cat-btn   { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 
   /* responsive */
   .r-feat    { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
@@ -547,18 +536,20 @@ function Nav() {
                 <Upload size={12} strokeWidth={2.5}/> Upload PDF
               </motion.span>
             </Link>
-            <motion.button className="mob" whileTap={{scale:.9}} onClick={()=>setMobOpen(o=>!o)}
-              style={{width:36,height:36,borderRadius:8,border:'1px solid rgba(0,0,0,.12)',
-                background:'#fff',alignItems:'center',justifyContent:'center',
-                cursor:'pointer',flexShrink:0}}>
+            <button className="mob" onClick={()=>setMobOpen(o=>!o)}
+              aria-label={mobOpen?'Close menu':'Open menu'}
+              style={{width:44,height:44,borderRadius:10,border:'1.5px solid rgba(0,0,0,.12)',
+                background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',
+                cursor:'pointer',flexShrink:0,
+                WebkitTapHighlightColor:'transparent',touchAction:'manipulation'}}>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span key={mobOpen?'x':'m'}
                   initial={{rotate:-90,opacity:0}} animate={{rotate:0,opacity:1}}
                   exit={{rotate:90,opacity:0}} transition={{duration:.15}}>
-                  {mobOpen?<X size={16} color="#1d1d1f" strokeWidth={2}/>:<Menu size={16} color="#1d1d1f" strokeWidth={2}/>}
+                  {mobOpen?<X size={18} color="#1d1d1f" strokeWidth={2}/>:<Menu size={18} color="#1d1d1f" strokeWidth={2}/>}
                 </motion.span>
               </AnimatePresence>
-            </motion.button>
+            </button>
           </div>
         </div>
       </motion.header>
@@ -639,135 +630,144 @@ function Nav() {
       {/* Mobile drawer */}
       <AnimatePresence>
         {mobOpen && (
-          <motion.div
-            initial={{opacity:0,x:'100%'}} animate={{opacity:1,x:0}} exit={{opacity:0,x:'100%'}}
-            transition={{duration:.22,ease:E}}
-            style={{position:'fixed',inset:'56px 0 0',zIndex:290,
-              background:'#fff',display:'flex',flexDirection:'column',overflowY:'auto'}}>
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+              onClick={()=>{ setMobOpen(false); setMobToolsExp(false); setMobCatOpen(null) }}
+              style={{position:'fixed',inset:'56px 0 0',zIndex:280,background:'rgba(0,0,0,.3)'}}
+            />
 
-            {/* Tools section with per-category accordion */}
-            <div style={{borderBottom:'1px solid #f0f0f0'}}>
-              <button onClick={()=>setMobToolsExp(v=>!v)} className="mob-cat-btn"
-                style={{width:'100%',display:'flex',alignItems:'center',
-                  padding:'16px 20px',background:'transparent',border:'none',cursor:'pointer'}}>
-                <span style={{...FI,fontSize:15,fontWeight:700,color:'#1d1d1f',flex:1,textAlign:'left'}}>Tools</span>
-                <span className={`mob-chev${mobToolsExp?' open':''}`}>
-                  <ChevronDown size={18} color="rgba(0,0,0,.4)" strokeWidth={2}/>
-                </span>
-              </button>
+            {/* Panel */}
+            <motion.div
+              initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}}
+              transition={{duration:.25,ease:E}}
+              style={{position:'fixed',top:56,right:0,bottom:0,width:'100%',maxWidth:360,
+                zIndex:290,background:'#fff',display:'flex',flexDirection:'column',
+                overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
 
-              <div className={`mob-acc${mobToolsExp?' open':''}`}>
-                <div style={{background:'#fafafa',borderTop:'1px solid #f0f0f0'}}>
-                  {NAV_CATS.map(cat=>(
-                    <div key={cat.label} style={{borderBottom:'1px solid #f3f4f6'}}>
-                      {/* Category row */}
-                      <button
-                        onClick={()=>setMobCatOpen(v=>v===cat.label?null:cat.label)}
-                        className="mob-cat-btn"
-                        style={{width:'100%',display:'flex',alignItems:'center',gap:12,
-                          padding:'13px 20px',background:'transparent',border:'none',cursor:'pointer'}}>
-                        <div style={{width:32,height:32,borderRadius:9,background:`${cat.color}15`,
-                          display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                          <cat.Icon size={15} color={cat.color} strokeWidth={1.9}/>
-                        </div>
-                        <span style={{...FI,fontSize:14,fontWeight:700,color:cat.color,flex:1,textAlign:'left'}}>{cat.label}</span>
-                        <span className={`mob-chev${mobCatOpen===cat.label?' open':''}`}>
-                          <ChevronDown size={15} color="rgba(0,0,0,.3)" strokeWidth={2}/>
-                        </span>
-                      </button>
+              {/* Tools section */}
+              <div style={{borderBottom:'1px solid #f0f0f0'}}>
+                <button
+                  onClick={()=>setMobToolsExp(v=>!v)}
+                  style={{width:'100%',display:'flex',alignItems:'center',height:52,
+                    padding:'0 20px',background:'transparent',border:'none',cursor:'pointer',
+                    WebkitTapHighlightColor:'transparent',touchAction:'manipulation'}}>
+                  <span style={{...FI,fontSize:15,fontWeight:700,color:'#1d1d1f',flex:1,textAlign:'left'}}>Tools</span>
+                  <span style={{display:'flex',transition:'transform .2s',transform:mobToolsExp?'rotate(180deg)':'rotate(0deg)'}}>
+                    <ChevronDown size={18} color="rgba(0,0,0,.4)" strokeWidth={2}/>
+                  </span>
+                </button>
 
-                      {/* Tools in this category */}
-                      <div className={`mob-acc${mobCatOpen===cat.label?' open':''}`}>
-                        <div style={{background:'#fff'}}>
-                          {cat.tools.map((tool,ti)=>{
+                {/* Animated tools panel */}
+                <div style={{overflow:'hidden',maxHeight:mobToolsExp?2000:0,transition:'max-height .3s ease'}}>
+                  <div style={{background:'#f9fafb',borderTop:'1px solid #f0f0f0'}}>
+                    {NAV_CATS.map(cat=>(
+                      <div key={cat.label} style={{borderBottom:'1px solid #f0f0f0'}}>
+                        {/* Category row */}
+                        <button
+                          onClick={()=>setMobCatOpen(v=>v===cat.label?null:cat.label)}
+                          style={{width:'100%',display:'flex',alignItems:'center',gap:12,
+                            height:52,padding:'0 20px',background:'transparent',border:'none',
+                            cursor:'pointer',WebkitTapHighlightColor:'transparent',touchAction:'manipulation'}}>
+                          <div style={{width:34,height:34,borderRadius:10,background:`${cat.color}15`,
+                            display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                            <cat.Icon size={16} color={cat.color} strokeWidth={1.9}/>
+                          </div>
+                          <span style={{...FI,fontSize:14,fontWeight:700,color:cat.color,flex:1,textAlign:'left'}}>{cat.label}</span>
+                          <span style={{display:'flex',transition:'transform .2s',transform:mobCatOpen===cat.label?'rotate(180deg)':'rotate(0deg)'}}>
+                            <ChevronDown size={16} color="rgba(0,0,0,.3)" strokeWidth={2}/>
+                          </span>
+                        </button>
+
+                        {/* Tools list */}
+                        <div style={{overflow:'hidden',maxHeight:mobCatOpen===cat.label?1000:0,transition:'max-height .25s ease',background:'#fff'}}>
+                          {cat.tools.map(tool=>{
                             const badge = NAV_TIER_LABEL[tool.tier]
                             return (
-                              <Link key={tool.name} href={tool.href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
+                              <Link key={tool.name} href={tool.href} onClick={()=>{ setMobOpen(false); setMobToolsExp(false); setMobCatOpen(null) }} style={{textDecoration:'none',display:'block'}}>
                                 <div style={{display:'flex',alignItems:'center',gap:12,
-                                  padding:'11px 20px 11px 28px',
-                                  borderTop:ti===0?'1px solid #f3f4f6':'none',
-                                  borderBottom:'1px solid #f9fafb',
-                                  WebkitTapHighlightColor:'transparent'}}>
-                                  <div style={{width:30,height:30,borderRadius:8,background:tool.bg,
+                                  height:52,padding:'0 20px 0 24px',
+                                  borderTop:'1px solid #f5f6f8',
+                                  WebkitTapHighlightColor:'transparent',touchAction:'manipulation'}}>
+                                  <div style={{width:32,height:32,borderRadius:9,background:tool.bg,
                                     display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                                    <tool.Icon size={14} color="#fff" strokeWidth={1.8}/>
+                                    <tool.Icon size={15} color="#fff" strokeWidth={1.8}/>
                                   </div>
-                                  <span style={{...FI,fontSize:13.5,fontWeight:600,color:'#1d1d1f',flex:1}}>{tool.name}</span>
+                                  <span style={{...FI,fontSize:14,fontWeight:600,color:'#1d1d1f',flex:1}}>{tool.name}</span>
                                   {tool.tier!=='free'&&(
-                                    <span style={{fontSize:9,fontWeight:700,letterSpacing:'0.05em',
-                                      padding:'2px 7px',borderRadius:99,
-                                      background:badge.bg,color:badge.color}}>
+                                    <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:99,background:badge.bg,color:badge.color,flexShrink:0}}>
                                       {badge.label}
                                     </span>
                                   )}
-                                  <ArrowRight size={13} color="rgba(0,0,0,.2)" strokeWidth={2}/>
+                                  <ArrowRight size={14} color="rgba(0,0,0,.2)" strokeWidth={2}/>
                                 </div>
                               </Link>
                             )
                           })}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
 
-                  {/* See all link */}
-                  <Link href="/#tools" onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
-                    <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,
-                      padding:'14px 20px',...FI,fontSize:13,fontWeight:700,color:'#2563eb'}}>
-                      See all 35+ tools <ArrowRight size={13} strokeWidth={2.5}/>
-                    </div>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Plain links */}
-            {NAV_LINKS.map(({label,href,highlight})=>(
-              <Link key={label} href={href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none'}}>
-                <div style={{display:'flex',alignItems:'center',gap:8,padding:'16px 20px',
-                  borderBottom:'1px solid #f0f0f0',...FI,fontSize:15,fontWeight:600,
-                  color:highlight?'#7c3aed':'#1d1d1f',WebkitTapHighlightColor:'transparent'}}>
-                  {highlight && <Sparkles size={15} strokeWidth={2} color="#7c3aed"/>}
-                  {label}
-                </div>
-              </Link>
-            ))}
-
-            {/* Auth */}
-            {isLoaded && (
-              <div style={{padding:'16px 20px',borderBottom:'1px solid #f0f0f0'}}>
-                {isSignedIn ? (
-                  <Link href="/dashboard" onClick={()=>setMobOpen(false)}
-                    style={{...FI,fontSize:14,fontWeight:600,color:'#1d1d1f',textDecoration:'none'}}>
-                    Dashboard →
-                  </Link>
-                ) : (
-                  <div style={{display:'flex',gap:10}}>
-                    <SignInButton mode="modal">
-                      <button style={{...FI,flex:1,padding:'12px',borderRadius:12,
-                        border:'1.5px solid #e5e7eb',background:'#fff',
-                        fontSize:14,fontWeight:600,color:'#1d1d1f',cursor:'pointer'}}>Sign in</button>
-                    </SignInButton>
-                    <SignUpButton mode="modal">
-                      <button style={{...FI,flex:1,padding:'12px',borderRadius:12,
-                        border:'none',background:'#1d1d1f',
-                        fontSize:14,fontWeight:600,color:'#fff',cursor:'pointer'}}>Sign up</button>
-                    </SignUpButton>
+                    {/* See all */}
+                    <Link href="/#tools" onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+                        height:48,...FI,fontSize:13,fontWeight:700,color:'#2563eb'}}>
+                        See all 35+ tools <ArrowRight size={13} strokeWidth={2.5}/>
+                      </div>
+                    </Link>
                   </div>
-                )}
+                </div>
               </div>
-            )}
 
-            {/* Upload CTA */}
-            <div style={{padding:'16px 20px',marginTop:'auto'}}>
-              <Link href="/pdf-editor" onClick={()=>setMobOpen(false)}
-                style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:8,
-                  padding:'16px',background:'#1d1d1f',color:'#fff',borderRadius:14,
-                  fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.02em'}}>
-                <Upload size={16} strokeWidth={2.5}/> Upload PDF
-              </Link>
-            </div>
-          </motion.div>
+              {/* Plain links */}
+              {NAV_LINKS.map(({label,href,highlight})=>(
+                <Link key={label} href={href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,height:52,padding:'0 20px',
+                    borderBottom:'1px solid #f0f0f0',...FI,fontSize:15,fontWeight:600,
+                    color:highlight?'#7c3aed':'#1d1d1f',WebkitTapHighlightColor:'transparent'}}>
+                    {highlight && <Sparkles size={15} strokeWidth={2} color="#7c3aed"/>}
+                    {label}
+                  </div>
+                </Link>
+              ))}
+
+              {/* Auth */}
+              {isLoaded && (
+                <div style={{padding:'16px 20px',borderBottom:'1px solid #f0f0f0'}}>
+                  {isSignedIn ? (
+                    <Link href="/dashboard" onClick={()=>setMobOpen(false)}
+                      style={{...FI,fontSize:15,fontWeight:600,color:'#1d1d1f',textDecoration:'none'}}>
+                      Dashboard →
+                    </Link>
+                  ) : (
+                    <div style={{display:'flex',gap:10}}>
+                      <SignInButton mode="modal">
+                        <button style={{...FI,flex:1,padding:'13px',borderRadius:12,
+                          border:'1.5px solid #e5e7eb',background:'#fff',
+                          fontSize:15,fontWeight:600,color:'#1d1d1f',cursor:'pointer',WebkitTapHighlightColor:'transparent'}}>Sign in</button>
+                      </SignInButton>
+                      <SignUpButton mode="modal">
+                        <button style={{...FI,flex:1,padding:'13px',borderRadius:12,
+                          border:'none',background:'#1d1d1f',
+                          fontSize:15,fontWeight:600,color:'#fff',cursor:'pointer',WebkitTapHighlightColor:'transparent'}}>Sign up</button>
+                      </SignUpButton>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Upload CTA */}
+              <div style={{padding:'16px 20px',marginTop:'auto'}}>
+                <Link href="/pdf-editor" onClick={()=>setMobOpen(false)}
+                  style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+                    padding:'16px',background:'#1d1d1f',color:'#fff',borderRadius:14,
+                    fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.02em'}}>
+                  <Upload size={16} strokeWidth={2.5}/> Upload PDF
+                </Link>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>
