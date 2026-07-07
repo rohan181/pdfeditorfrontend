@@ -86,8 +86,8 @@ RESPONSE FORMAT — always reply with a raw JSON object, no markdown, no code fe
 
 Rules:
 - "message": plain conversational text only — NO JSON, NO curly braces, NO code blocks inside the message string.
-- "extracted": fields you can confidently extract from the user's latest reply. [] if nothing new.
-- "signatureField": if the NEXT unfilled field is a signature/initials field, set this to the exact field name (string). Otherwise null.
+- "extracted": fields you can confidently extract from the user's latest reply. [] if nothing new. CRITICAL: the "name" in each extracted entry MUST be copied EXACTLY (character-for-character) from the FORM FIELDS list above — do NOT rephrase, abbreviate, or change capitalisation.
+- "signatureField": if the NEXT unfilled field is a signature/initials field, set this to the exact field name (string, copied verbatim from FORM FIELDS). Otherwise null.
 - "done": true only when all unfilled fields collected or user says stop.
 - Values must be bare (no "Label: value" — just the value).
 - Checkbox fields: "tick" if checked/yes, "" (empty string) if unchecked or unsure. Never "cross" or "no".

@@ -1245,22 +1245,24 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       if (raw.length === 0) { setIsDetecting(false); return null }
 
       const detectedFields: DetectedField[] = raw.map(f => {
-        // % of detection image → PDF points (divide by DETECT_SCALE cancels out)
-        const x1 = (f.x / 100) * pdfW
-        const x2 = ((f.x + f.w) / 100) * pdfW
+        // % of detection image → PDF points (pdfW/H are scale=1 page dimensions)
+        const x1   = (f.x / 100) * pdfW
+        const x2   = ((f.x + f.w) / 100) * pdfW
         const yTop = (f.y / 100) * pdfH
         const yBot = ((f.y + f.h) / 100) * pdfH
-        // Flip to PDF bottom-origin format expected by applyAutoFill
+        // Flip to PDF bottom-origin (ann.rect format) expected by applyAutoFill
         return {
-          name: f.label,
-          type: f.type as DetectedField['type'],
-          rect: [x1, pdfH - yBot, x2, pdfH - yTop] as [number, number, number, number],
-          pageNum:    slotIdx + 1,
+          name:       f.label,
+          type:       f.type as DetectedField['type'],
+          rect:       [x1, pdfH - yBot, x2, pdfH - yTop] as [number, number, number, number],
+          pageNum:    slot?.pageNum ?? slotIdx + 1,
           pageHeight: pdfH,
         }
       })
 
+      console.log('[ChatFill] detected fields:', detectedFields.map(f => `${f.name} → rect[${f.rect.map(v => Math.round(v)).join(',')}]`))
       setAutoFillFields(detectedFields)
+      setAutoFillPageImage(pageImageBase64)
       setAiExistingFilled({})
       return detectedFields
     } finally {
@@ -1365,15 +1367,39 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       const els: PDFElement[] = []
       const isSigValue = value.startsWith('data:image')
 
-      // Exact match first, then case-insensitive, then for signatures find any sig field
+      // Normalise: lowercase, strip trailing punctuation, collapse whitespace
+      const norm = (s: string) => s.toLowerCase().replace(/[:\-_]+$/, '').replace(/\s+/g, ' ').trim()
+      // Word-overlap score: how many words in common (used as last-resort fuzzy match)
+      const wordOverlap = (a: string, b: string) => {
+        const wa = new Set(norm(a).split(' '))
+        const wb = norm(b).split(' ')
+        return wb.filter(w => wa.has(w)).length
+      }
+
       let field = autoFillFields.find(f => f.name === name)
-      if (!field) field = autoFillFields.find(f => f.name.toLowerCase() === name.toLowerCase())
+      let matchKind = 'exact'
+      if (!field) { field = autoFillFields.find(f => f.name.toLowerCase() === name.toLowerCase()); matchKind = 'case' }
+      if (!field) { field = autoFillFields.find(f => norm(f.name) === norm(name)); matchKind = 'norm' }
+      if (!field) {
+        // Last resort: best word-overlap match (at least 1 word in common)
+        let best: DetectedField | undefined, bestScore = 0
+        autoFillFields.forEach(f => {
+          const s = wordOverlap(f.name, name)
+          if (s > bestScore) { bestScore = s; best = f }
+        })
+        if (bestScore > 0) { field = best; matchKind = `word(${bestScore})` }
+      }
       if (!field && isSigValue) {
-        // Fall back to the first signature field not yet covered by an existing element
         field = autoFillFields.find(f =>
-          f.type === 'signature' &&
-          !(aiFieldElementsRef.current.get(f.name)?.length)
+          f.type === 'signature' && !(aiFieldElementsRef.current.get(f.name)?.length)
         ) ?? autoFillFields.find(f => f.type === 'signature')
+        if (field) matchKind = 'sig-fallback'
+      }
+
+      if (field) {
+        console.log(`[AutoFill] "${name}" → matched "${field.name}" via ${matchKind}, rect=[${field.rect.map(v => Math.round(v)).join(',')}] pageH=${Math.round(field.pageHeight)}`)
+      } else {
+        console.warn(`[AutoFill] "${name}" → NO MATCH (${autoFillFields.length} fields: ${autoFillFields.map(f => f.name).join(', ')}) — placing at center`)
       }
 
       if (!field) {
@@ -1409,6 +1435,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       const pdfH = Math.max(16, y2 - y1)
       const upNudge = Math.max(1, pdfH * 0.1)
       const pdfY = field.pageHeight - y2 - upNudge
+      console.log(`[AutoFill] placing "${name}" at x=${Math.round(x1)} y=${Math.round(pdfY)} w=${Math.round(pdfW)} h=${Math.round(pdfH)} slot="${slot.id}"`)
 
       // ── Signature ────────────────────────────────────────────────────────
       if (field.type === 'signature' || value.startsWith('data:image')) {
