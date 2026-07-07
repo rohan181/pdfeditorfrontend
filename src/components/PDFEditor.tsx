@@ -1143,122 +1143,124 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
   // Strategy 2: Claude Vision fallback (page screenshot → Claude detects all field types).
   //             Used automatically when the Python server is unreachable.
   const detectFieldsForChat = useCallback(async (): Promise<DetectedField[] | null> => {
-    const canvas = canvasRef.current
-    if (!canvas) return null
     setIsDetecting(true)
-
-    const pageImageBase64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
-    const cw = canvas.width
-    const ch = canvas.height
 
     const slot = slots[slotIdx]
     const src  = sources.find(s => s.id === slot?.sourceId)
 
-    // Derive the exact pixels-per-PDF-point from canvas vs slot dimensions.
-    // This is more reliable than scale * dpr because renderSlot clamps dpr on
-    // large canvases to stay under the iOS 3 MP limit, so the effective DPR
-    // is not always window.devicePixelRatio.
-    const pdfW_pts   = slot?.baseWidth  ?? 595
-    const pdfH_pts   = slot?.baseHeight ?? 842
-    const pxPerPtX   = cw / pdfW_pts    // actual canvas pixels per PDF point (x)
-    const pxPerPtY   = ch / pdfH_pts    // actual canvas pixels per PDF point (y)
-
+    // ── Python pipeline (offline fallback handled automatically) ─────────────
     if (src?.bytes) {
       try {
-        const uint8    = new Uint8Array(src.bytes)
-        const blob     = new Blob([uint8], { type: 'application/pdf' })
+        const blob     = new Blob([src.bytes], { type: 'application/pdf' })
         const formData = new FormData()
         formData.append('file', blob, src.name ?? 'form.pdf')
         formData.append('run_ocr',          'true')
         formData.append('run_vision',       'true')
         formData.append('vision_threshold', '2')
 
-        const res = await fetch('/api/pdf-pipeline/detect', {
-          method: 'POST',
-          body: formData,
-        })
+        const res  = await fetch('/api/pdf-pipeline/detect', { method: 'POST', body: formData })
         const data = await res.json()
 
-        // 503 with fallback:true means the Python server is offline — fall through
         if (res.ok && !data.fallback && data.fields?.length) {
+          const pdfH = slot?.baseHeight ?? 842
           const pyFields: {
             label: string; field_name: string; field_type: string;
             bbox: { page: number; x0: number; y0: number; x1: number; y1: number }
           }[] = data.fields
 
-          // slot.baseHeight == PDF page height at scale=1 (same units as PyMuPDF points)
-          // PyMuPDF y=0 is at top; ann.rect format needs y=0 at bottom → flip
+          // PyMuPDF y=0 at top → flip to PDF bottom-origin for applyAutoFill
           const detectedFields: DetectedField[] = pyFields
             .filter(f => f.bbox)
             .map(f => ({
               name: f.label || f.field_name || 'field',
               type: (f.field_type ?? 'text') as DetectedField['type'],
-              rect: [
-                f.bbox.x0,
-                pdfH_pts - f.bbox.y1,
-                f.bbox.x1,
-                pdfH_pts - f.bbox.y0,
-              ] as [number, number, number, number],
+              rect: [f.bbox.x0, pdfH - f.bbox.y1, f.bbox.x1, pdfH - f.bbox.y0] as [number, number, number, number],
               pageNum:    f.bbox.page + 1,
-              pageHeight: pdfH_pts,
+              pageHeight: pdfH,
             }))
 
           if (detectedFields.length > 0) {
             setAutoFillFields(detectedFields)
-            setAutoFillPageImage(pageImageBase64)
             setAiExistingFilled({})
             setIsDetecting(false)
             return detectedFields
           }
         }
-        if (!res.ok && !data.fallback) {
-          console.warn('[pdf-pipeline/detect]', data.error)
-        }
+        if (!res.ok && !data.fallback) console.warn('[pdf-pipeline/detect]', data.error)
       } catch (err) {
         console.warn('[pdf-pipeline/detect] fetch error, falling back to vision:', err)
       }
     }
 
-    // ── Fallback: Claude Vision (canvas screenshot → percentage coords) ──────
-    // Vision returns % of canvas dims (y=0 top).
-    // Convert to ann.rect format: PDF points (scale=1), y=0 at bottom.
-    // Use pxPerPtX/Y derived from canvas.width / slot.baseWidth so the result
-    // is correct even when renderSlot clamps DPR on large pages.
+    // ── Claude Vision fallback ────────────────────────────────────────────────
+    // Render the page to a DEDICATED off-screen canvas at a fixed scale=2 with
+    // NO devicePixelRatio scaling. This means:
+    //   canvas.width  = pdfPageWidth  * 2
+    //   canvas.height = pdfPageHeight * 2
+    // So converting vision % coords to PDF points is just:
+    //   x_pt = (f.x/100) * (canvas.width  / 2)  =  (f.x/100) * pdfPageWidth
+    //   y_pt = (f.y/100) * (canvas.height / 2)  =  (f.y/100) * pdfPageHeight
+    // No DPR, no renderScale, no clamping — completely deterministic.
     try {
-      const res = await fetch('/api/vision-detect', {
+      const DETECT_SCALE = 2
+
+      let pageImageBase64 = ''
+      let pdfW = slot?.baseWidth  ?? 595
+      let pdfH = slot?.baseHeight ?? 842
+
+      if (src) {
+        try {
+          const page   = await src.doc.getPage(slotIdx + 1)
+          const vp     = page.getViewport({ scale: DETECT_SCALE })
+          pdfW = vp.width  / DETECT_SCALE
+          pdfH = vp.height / DETECT_SCALE
+
+          const detCanvas     = document.createElement('canvas')
+          detCanvas.width     = Math.round(vp.width)
+          detCanvas.height    = Math.round(vp.height)
+          const detCtx        = detCanvas.getContext('2d')!
+          await page.render({ canvasContext: detCtx, viewport: vp }).promise
+          pageImageBase64     = detCanvas.toDataURL('image/jpeg', 0.88).split(',')[1]
+        } catch (err) {
+          console.warn('[detectFieldsForChat] off-screen render failed, using display canvas:', err)
+        }
+      }
+
+      // Last resort: use the display canvas if off-screen render failed
+      if (!pageImageBase64) {
+        const canvas = canvasRef.current
+        if (!canvas) { setIsDetecting(false); return null }
+        pageImageBase64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1]
+      }
+
+      const res  = await fetch('/api/vision-detect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pageImageBase64, pageWidth: cw, pageHeight: ch }),
+        body: JSON.stringify({ pageImageBase64, pageWidth: Math.round(pdfW * DETECT_SCALE), pageHeight: Math.round(pdfH * DETECT_SCALE) }),
       })
       const data = await res.json()
-      if (!res.ok || data.error) {
-        console.error('[vision-detect]', data.error)
-        setIsDetecting(false)
-        return null
-      }
+      if (!res.ok || data.error) { console.error('[vision-detect]', data.error); setIsDetecting(false); return null }
 
       const raw: { label: string; type: string; x: number; y: number; w: number; h: number }[] = data.fields ?? []
       if (raw.length === 0) { setIsDetecting(false); return null }
 
       const detectedFields: DetectedField[] = raw.map(f => {
-        // Percentage → canvas pixels → PDF points via actual pxPerPt ratio
-        const xPx = (f.x / 100) * cw,  yPx = (f.y / 100) * ch
-        const wPx = (f.w / 100) * cw,  hPx = (f.h / 100) * ch
-        const x1  = xPx / pxPerPtX,    x2  = (xPx + wPx) / pxPerPtX
-        // Flip y-axis: canvas y=0 top → PDF y=0 bottom
-        const y1  = (ch - (yPx + hPx)) / pxPerPtY   // bottom of field
-        const y2  = (ch - yPx)         / pxPerPtY   // top of field
+        // % of detection image → PDF points (divide by DETECT_SCALE cancels out)
+        const x1 = (f.x / 100) * pdfW
+        const x2 = ((f.x + f.w) / 100) * pdfW
+        const yTop = (f.y / 100) * pdfH
+        const yBot = ((f.y + f.h) / 100) * pdfH
+        // Flip to PDF bottom-origin format expected by applyAutoFill
         return {
           name: f.label,
           type: f.type as DetectedField['type'],
-          rect: [x1, y1, x2, y2] as [number, number, number, number],
+          rect: [x1, pdfH - yBot, x2, pdfH - yTop] as [number, number, number, number],
           pageNum:    slotIdx + 1,
-          pageHeight: pdfH_pts,
+          pageHeight: pdfH,
         }
       })
 
       setAutoFillFields(detectedFields)
-      setAutoFillPageImage(pageImageBase64)
       setAiExistingFilled({})
       return detectedFields
     } finally {
