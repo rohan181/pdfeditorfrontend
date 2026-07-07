@@ -1277,12 +1277,92 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
   }, [slotIdx, slots, sources, scale])
 
   const openChatFill = useCallback(async () => {
-    const fields = await loadPageFields()
     setShowChatFill(true)
-    if (!fields || fields.length === 0) {
+
+    // 1. Already an AcroForm? Use it directly — positions are perfect.
+    const existingFields = await loadPageFields()
+    if (existingFields && existingFields.length > 0) return
+
+    const slot = slots[slotIdx]
+    const src  = sources.find(s => s.id === slot?.sourceId)
+    if (!src?.bytes) {
+      // No PDF bytes to work with — fall back to vision
       detectFieldsForChat().catch(console.error)
+      return
     }
-  }, [loadPageFields, detectFieldsForChat])
+
+    setIsDetecting(true)
+
+    // 2. Ask the pipeline to convert the PDF into a real AcroForm (stages 1–4).
+    try {
+      const blob     = new Blob([src.bytes], { type: 'application/pdf' })
+      const formData = new FormData()
+      formData.append('file', blob, src.name ?? 'form.pdf')
+      formData.append('run_ocr',          'true')
+      formData.append('run_vision',       'true')
+      formData.append('vision_threshold', '2')
+
+      const res  = await fetch('/api/pdf-pipeline/make-fillable', { method: 'POST', body: formData })
+      const data = await res.json()
+
+      if (res.ok && !data.fallback && data.pdf_base64) {
+        // Decode base64 → ArrayBuffer
+        const bin     = atob(data.pdf_base64)
+        const newU8   = new Uint8Array(bin.length)
+        for (let i = 0; i < bin.length; i++) newU8[i] = bin.charCodeAt(i)
+        const newAb   = newU8.buffer
+
+        // Load the AcroForm PDF with PDF.js
+        const { getDocument } = await import('pdfjs-dist')
+        const newDoc  = await getDocument({ data: newAb }).promise
+
+        // Swap source so the page re-renders with the fillable PDF
+        setSources(prev => prev.map(s => s.id === src.id ? { ...s, doc: newDoc, bytes: newAb } : s))
+
+        // Extract AcroForm field positions directly from the new doc
+        // (don't wait for state re-render; read straight from the doc object)
+        const currentPage = await newDoc.getPage(slotIdx + 1)
+        const viewport    = currentPage.getViewport({ scale: 1 })
+        const annotations = await currentPage.getAnnotations()
+
+        const detectedFields: DetectedField[] = []
+        const typeMap: Record<string, string> = {
+          Tx: 'text', Btn: 'checkbox', Ch: 'dropdown', Sig: 'signature',
+        }
+        annotations.forEach((ann: any) => {
+          if (ann.subtype !== 'Widget' || !ann.fieldName) return
+          const isComb      = ann.fieldType === 'Tx' && !!(ann.fieldFlags & (1 << 24))
+          const fieldName   = ann.alternativeText || ann.fieldName
+          const isSigByName = /\b(signature|sign here|sign|initials?)\b/i.test(fieldName)
+          const fieldType   = ann.fieldType === 'Sig' || isSigByName ? 'signature'
+            : ann.fieldType === 'Btn' ? 'checkbox'
+            : ann.fieldType === 'Ch'  ? 'dropdown'
+            : isComb ? 'char_box' : 'text'
+          detectedFields.push({
+            name: fieldName,
+            type: fieldType,
+            rect: ann.rect,
+            pageNum:    slotIdx + 1,
+            pageHeight: viewport.height,
+            ...(isComb && ann.maxLen ? { isComb: true, maxLen: ann.maxLen } : {}),
+          })
+        })
+
+        if (detectedFields.length > 0) {
+          setAutoFillFields(detectedFields)
+          setAiExistingFilled({})
+          setIsDetecting(false)
+          return
+        }
+      }
+    } catch (err) {
+      console.warn('[make-fillable] pipeline unavailable, falling back to vision:', err)
+    }
+
+    // 3. Pipeline unavailable or returned no fields — fall back to vision detection
+    setIsDetecting(false)
+    detectFieldsForChat().catch(console.error)
+  }, [loadPageFields, detectFieldsForChat, slots, slotIdx, sources])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
     // fieldName → new elements built for that field this run
