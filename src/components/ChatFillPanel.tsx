@@ -36,12 +36,13 @@ interface Props {
   onApply: (filled: FilledField[]) => void
   onClose: () => void
   pageLabel?: string
+  isDetecting?: boolean
 }
 
 let _idCounter = 0
 const nextId = () => `cdoc-${++_idCounter}`
 
-export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBase64, pdfDocBase64, onApply, onClose, pageLabel }: Props) {
+export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBase64, pdfDocBase64, onApply, onClose, pageLabel, isDetecting = false }: Props) {
   const [history, setHistory] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -502,9 +503,79 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           </div>
         )}
 
+        {/* Detection loading state — shown while OpenCV/scanned detection is running */}
+        {fields.length === 0 && isDetecting && (
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', padding: '32px 20px', gap: 20,
+          }}>
+            {/* Animated scanner */}
+            <div style={{ position: 'relative', width: 140, height: 100, flexShrink: 0 }}>
+              {/* Fake form lines */}
+              {[18, 38, 58, 78].map((y, i) => (
+                <div key={i} style={{
+                  position: 'absolute', left: 10, right: 10, top: y, height: 10,
+                  borderRadius: 3,
+                  background: i % 2 === 0 ? '#e0f2fe' : '#f0f9ff',
+                  border: '1px solid #bae6fd',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(90deg,transparent 0%,rgba(14,165,233,0.35) 50%,transparent 100%)',
+                    animation: `scanGlow 1.6s ease-in-out ${i * 0.2}s infinite`,
+                  }} />
+                </div>
+              ))}
+              {/* Scan line sweeping top to bottom */}
+              <div style={{
+                position: 'absolute', left: 10, right: 10, height: 2,
+                background: 'linear-gradient(90deg,transparent,#0ea5e9,transparent)',
+                boxShadow: '0 0 8px rgba(14,165,233,0.8)',
+                animation: 'scanLine 1.4s linear infinite',
+              }} />
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#0369a1', marginBottom: 5 }}>
+                Detecting form fields…
+              </div>
+              <div style={{ fontSize: 11.5, color: '#7dd3fc', lineHeight: 1.55 }}>
+                Scanning your PDF for text boxes,<br />checkboxes and signature areas
+              </div>
+            </div>
+
+            {/* Dot progress */}
+            <div style={{ display: 'flex', gap: 6 }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{
+                  width: 7, height: 7, borderRadius: '50%', background: '#0ea5e9',
+                  animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+                }} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* No fields found after detection */}
+        {fields.length === 0 && !isDetecting && !loading && history.length === 0 && (
+          <div style={{
+            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+            justifyContent: 'center', padding: '32px 20px', gap: 12, textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 32 }}>🔍</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>No fields detected</div>
+            <div style={{ fontSize: 11.5, color: '#94a3b8', lineHeight: 1.6, maxWidth: 260 }}>
+              No form fields were found on this page. Try uploading a reference document below
+              and AI will extract your info and type it in directly.
+            </div>
+          </div>
+        )}
+
         {/* Messages */}
         <div style={{
-          flex: 1, overflowY: 'auto', padding: '10px 12px',
+          flex: 1, overflowY: 'auto',
+          padding: fields.length === 0 && (isDetecting || history.length === 0) ? 0 : '10px 12px',
           display: 'flex', flexDirection: 'column', gap: 10,
         }}>
           {history
@@ -736,6 +807,16 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
         @keyframes slideInField {
           from { transform: translateY(10px); opacity: 0; }
           to   { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes scanLine {
+          0%   { top: 8px;  opacity: 0; }
+          10%  { opacity: 1; }
+          90%  { opacity: 1; }
+          100% { top: 88px; opacity: 0; }
+        }
+        @keyframes scanGlow {
+          0%,100% { transform: translateX(-100%); }
+          50%      { transform: translateX(100%); }
         }
       `}</style>
 

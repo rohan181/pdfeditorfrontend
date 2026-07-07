@@ -3581,6 +3581,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
           pageLabel={`Page ${slotIdx + 1} of ${slots.length}`}
           pageImageBase64={autoFillPageImage}
           pdfDocBase64={autoFillPdfBase64}
+          isDetecting={isDetecting}
         />
       )}
 
