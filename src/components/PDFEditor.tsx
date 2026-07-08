@@ -1544,13 +1544,16 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       if (!field) { field = autoFillFields.find(f => f.name.toLowerCase() === name.toLowerCase()); matchKind = 'case' }
       if (!field) { field = autoFillFields.find(f => norm(f.name) === norm(name)); matchKind = 'norm' }
       if (!field) {
-        // Last resort: best word-overlap match (at least 1 word in common)
+        // Last resort: best word-overlap match.
+        // Require ≥2 matching words to prevent "Date" matching "Date of Birth".
+        // Single-word queries must match via exact/case/norm above.
         let best: DetectedField | undefined, bestScore = 0
         autoFillFields.forEach(f => {
           const s = wordOverlap(f.name, name)
           if (s > bestScore) { bestScore = s; best = f }
         })
-        if (bestScore > 0) { field = best; matchKind = `word(${bestScore})` }
+        const queryWordCount = norm(name).split(' ').length
+        if (best && bestScore >= 2 && queryWordCount >= 2) { field = best; matchKind = `word(${bestScore})` }
       }
       if (!field && isSigValue) {
         field = autoFillFields.find(f =>
@@ -1643,7 +1646,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
       // ── Regular text ──────────────────────────────────────────────────────
       } else {
-        const fontSize = Math.max(7, Math.min(13, Math.round(pdfH * 0.55)))
+        const fontSize = Math.max(9, Math.min(14, Math.round(pdfH * 0.72)))
         const baseElemH = pdfH + upNudge
 
         // ── Date DD/MM/YYYY handling ──────────────────────────────────────────
