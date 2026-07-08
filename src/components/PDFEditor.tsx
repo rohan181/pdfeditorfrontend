@@ -1308,11 +1308,12 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
         const textFields = await detectFieldsFromTextLayer(page, pdfW, pdfH, pageNum)
         if (textFields && textFields.length > 0) {
-          console.log('[ChatFill] text-layer detected:', textFields.map(f => `${f.name} rect=[${f.rect.map(v => Math.round(v)).join(',')}]`))
-          setAutoFillFields(textFields)
+          const tagged = textFields.map(f => ({ ...f, fieldSource: 'textLayer' as const }))
+          console.log('[ChatFill] text-layer detected:', tagged.map(f => `${f.name} rect=[${f.rect.map(v => Math.round(v)).join(',')}]`))
+          setAutoFillFields(tagged)
           setAiExistingFilled({})
           setIsDetecting(false)
-          return textFields
+          return tagged
         }
         console.log('[ChatFill] text-layer: no fields found (likely scanned PDF), trying pipeline…')
       } catch (err) {
@@ -1453,8 +1454,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     const slot = slots[slotIdx]
     const src  = sources.find(s => s.id === slot?.sourceId)
 
-    // 2. Client-side: detect fields from text layer + stamp AcroForm with pdf-lib.
-    //    Works on Vercel with no Python server. Exact positions, instant.
+    // 2. Client-side: detect fields from text layer (exact positions, no server needed).
     if (src?.bytes) {
       setIsDetecting(true)
       try {
@@ -1467,49 +1467,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         const textFields = await detectFieldsFromTextLayer(page, pdfW, pdfH, pageNum)
 
         if (textFields && textFields.length > 0) {
-          // Stamp real AcroForm widgets using pdf-lib so PDF.js can read them back
-          const { PDFDocument, rgb } = await import('pdf-lib')
-          const pdfDoc = await PDFDocument.load(src.bytes)
-          const form   = pdfDoc.getForm()
-          const libPage = pdfDoc.getPage(pageNum - 1)   // pdf-lib is 0-indexed
-
-          for (const f of textFields) {
-            const [x1, yBottom, x2, yTop] = f.rect
-            const w = Math.max(4, x2 - x1)
-            const h = Math.max(6, yTop - yBottom)
-            try {
-              if (f.type === 'checkbox') {
-                const cb = form.createCheckBox(f.name)
-                cb.addToPage(libPage, {
-                  x: x1, y: yBottom, width: w, height: h,
-                  borderColor: rgb(0.4, 0.4, 0.4), borderWidth: 0.5,
-                })
-              } else {
-                const tf = form.createTextField(f.name)
-                tf.setFontSize(0)
-                tf.addToPage(libPage, {
-                  x: x1, y: yBottom, width: w, height: h,
-                  borderColor: rgb(0.4, 0.4, 0.4), borderWidth: 0.5,
-                  backgroundColor: rgb(1, 1, 1),
-                })
-              }
-            } catch { /* skip if name clash */ }
-          }
-
-          // pdfDoc.save() returns Uint8Array — slice to get a clean ArrayBuffer
-          // (the raw .buffer may have extra padding from the allocator)
-          const pdfBytes = await pdfDoc.save()
-          const newBytes = pdfBytes.buffer.slice(
-            pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength
-          ) as ArrayBuffer
-          const { getDocument } = await import('pdfjs-dist')
-          const newDoc  = await getDocument({ data: newBytes }).promise
-
-          // Swap in the new fillable PDF so the page re-renders with widget overlays
-          setSources(prev => prev.map(s => s.id === src.id ? { ...s, doc: newDoc, bytes: newBytes } : s))
-
-          // Use textFields positions directly — these come straight from the PDF text layer
-          // and are more accurate than reading back through the AcroForm round-trip.
+          // Use textFields positions directly from the PDF text layer.
+          // We do NOT stamp AcroForm widgets here: doing so would make PDF.js render
+          // white/blue widget overlay boxes that visually cover the placed text elements.
           const taggedFields: DetectedField[] = textFields.map(f => ({ ...f, fieldSource: 'textLayer' as const }))
           console.log('[ChatFill] text-layer fields:', taggedFields.map(f => f.name).join(', '))
           setAutoFillFields(taggedFields)
