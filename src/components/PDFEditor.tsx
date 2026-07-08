@@ -338,6 +338,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
   const [showOrganise, setShowOrganise] = useState(false)
   const [showAutoFill, setShowAutoFill] = useState(false)
   const [autoFillFields, setAutoFillFields] = useState<DetectedField[]>([])
+  const autoFillFieldsRef = useRef<DetectedField[]>([])
   const [aiExistingFilled, setAiExistingFilled] = useState<Record<string, string>>({})
   const [autoFillPageImage, setAutoFillPageImage] = useState('')
   const [autoFillPdfBase64, setAutoFillPdfBase64] = useState('')
@@ -1505,16 +1506,19 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         return wb.filter(w => wa.has(w)).length
       }
 
-      let field = autoFillFields.find(f => f.name === name)
+      // Always read the latest detected fields from the ref — avoids stale-closure issues
+      // when applyAutoFill is called asynchronously (e.g. via setTimeout in ChatFillPanel).
+      const latestFields = autoFillFieldsRef.current
+      let field = latestFields.find(f => f.name === name)
       let matchKind = 'exact'
-      if (!field) { field = autoFillFields.find(f => f.name.toLowerCase() === name.toLowerCase()); matchKind = 'case' }
-      if (!field) { field = autoFillFields.find(f => norm(f.name) === norm(name)); matchKind = 'norm' }
+      if (!field) { field = latestFields.find(f => f.name.toLowerCase() === name.toLowerCase()); matchKind = 'case' }
+      if (!field) { field = latestFields.find(f => norm(f.name) === norm(name)); matchKind = 'norm' }
       if (!field) {
         // Last resort: best word-overlap match.
         // Require ≥2 matching words to prevent "Date" matching "Date of Birth".
         // Single-word queries must match via exact/case/norm above.
         let best: DetectedField | undefined, bestScore = 0
-        autoFillFields.forEach(f => {
+        latestFields.forEach(f => {
           const s = wordOverlap(f.name, name)
           if (s > bestScore) { bestScore = s; best = f }
         })
@@ -1522,9 +1526,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         if (best && bestScore >= 2 && queryWordCount >= 2) { field = best; matchKind = `word(${bestScore})` }
       }
       if (!field && isSigValue) {
-        field = autoFillFields.find(f =>
+        field = latestFields.find(f =>
           f.type === 'signature' && !(aiFieldElementsRef.current.get(f.name)?.length)
-        ) ?? autoFillFields.find(f => f.type === 'signature')
+        ) ?? latestFields.find(f => f.type === 'signature')
         if (field) matchKind = 'sig-fallback'
       }
 
@@ -1553,7 +1557,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       }
 
       const slot = slots.find(s => s.type === 'pdf' && s.pageNum === field.pageNum)
-      if (!slot) return
+        ?? slots.find(s => s.pageNum === field.pageNum)
+        ?? slots[slotIdx]
+      if (!slot) { console.warn(`[AutoFill] no slot for field "${name}" pageNum=${field.pageNum}`); return }
 
       const [x1, y1, x2, y2] = field.rect
       const pdfW   = Math.max(16, x2 - x1)
@@ -1565,8 +1571,8 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       const textRef = field.fieldSource === 'textLayer'
         ? y1 + 2
         : (y1 + y2) / 2
-      const pdfY = field.pageHeight - textRef - fontSize * 0.75
-      console.log(`[AutoFill] placing "${name}" src=${field.fieldSource} at x=${Math.round(x1)} y=${Math.round(pdfY)} fs=${fontSize} slot="${slot.id}"`)
+      const pdfY = Math.max(0, field.pageHeight - textRef - fontSize * 0.75)
+      console.log(`[AutoFill] placing "${name}" src=${field.fieldSource} rect=[${[x1,y1,x2,y2].map(v=>Math.round(v)).join(',')}] pdfY=${Math.round(pdfY)} fs=${fontSize} fields=${latestFields.length}`)
 
       const elemH = Math.max(pdfH, fontSize + 4)
 
@@ -1689,7 +1695,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       return next
     })
     setToolMode('select')
-  }, [autoFillFields, slots, slotIdx, pushHistory])
+  }, [slots, slotIdx, pushHistory])
 
   // ── Pan tool helpers (also triggered by middle mouse button) ────────────────
   const handlePanDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -2047,6 +2053,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
   // Keep stable refs in sync so undo/redo navigation always has latest values
   useEffect(() => { slotsRef.current  = slots   }, [slots])
   useEffect(() => { slotIdxRef.current = slotIdx }, [slotIdx])
+  useEffect(() => { autoFillFieldsRef.current = autoFillFields }, [autoFillFields])
 
   // ── Auto fit-to-screen when a PDF first loads ────────────────────────────
   const prevSlotsLen = useRef(0)
