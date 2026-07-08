@@ -1137,18 +1137,168 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     setShowAutoFill(true)
   }, [loadPageFields])
 
+  // ── PDF.js text-layer field detection (exact coordinates, no AI) ─────────────
+  // Reads the PDF text content and finds fields from:
+  //  1. Runs of underscores / dashes  ( _________  --------  )
+  //  2. Labels ending in ":" followed by blank space (whitespace-after-label)
+  // Returns null if the page has no text layer (scanned/image PDF).
+  const detectFieldsFromTextLayer = useCallback(async (
+    page: any,
+    pdfW: number,
+    pdfH: number,
+    pageNum: number,
+  ): Promise<DetectedField[] | null> => {
+    let content: any
+    try {
+      content = await page.getTextContent()
+    } catch { return null }
+
+    const items: { str: string; tx: number; ty: number; w: number; h: number }[] = []
+    for (const item of content.items as any[]) {
+      if (!item.str) continue
+      const [, , , , tx, ty] = item.transform as number[]
+      const h = item.height ?? 10
+      if (h <= 0) continue
+      items.push({ str: item.str, tx, ty, w: item.width ?? 0, h })
+    }
+
+    if (items.length === 0) return null  // scanned page — no text layer
+
+    // Group items into lines using 5pt buckets (3pt was too tight for mixed-size fonts)
+    type LineItem = { str: string; tx: number; ty: number; w: number; h: number }
+    const byLine = new Map<number, LineItem[]>()
+    for (const it of items) {
+      const lineKey = Math.round(it.ty / 5) * 5
+      if (!byLine.has(lineKey)) byLine.set(lineKey, [])
+      byLine.get(lineKey)!.push(it)
+    }
+    const lines: LineItem[][] = Array.from(byLine.entries())
+      .sort(([a], [b]) => b - a)   // descending ty = top-to-bottom (PDF y=0 at bottom)
+      .map(([, its]) => its.sort((a: LineItem, b: LineItem) => a.tx - b.tx))
+
+    const DASH_RE  = /^[\-_\.]{3,}$/
+    const LABEL_RE = /[:\-–]\s*$/
+    const fields: DetectedField[] = []
+    const nameCount = new Map<string, number>()
+    // Track x-ranges already covered by Strategy A so Strategy B won't duplicate them
+    const coveredRanges: Array<{ x1: number; x2: number; ty: number }> = []
+
+    const uniqueName = (base: string) => {
+      const clean = base.trim() || 'Field'
+      const n = (nameCount.get(clean) ?? 0) + 1
+      nameCount.set(clean, n)
+      return n === 1 ? clean : `${clean} ${n}`
+    }
+
+    // Build a rect centred vertically around the text glyph.
+    // ty   = baseline in PDF coords (y=0 at bottom)
+    // h    = glyph height (cap height above baseline)
+    // rectY2 = cap height → applyAutoFill places element TOP above the baseline ✓
+    // rectY1 = slightly below baseline (for descenders + padding)
+    const FIELD_PAD = 2
+    const makeRect = (x1: number, x2: number, ty: number, h: number): [number, number, number, number] => {
+      const rectY1 = ty - FIELD_PAD       // just below baseline
+      const rectY2 = ty + h + FIELD_PAD   // cap height + padding
+      return [x1, rectY1, x2, rectY2]
+    }
+
+    for (const line of lines) {
+      // ── Strategy A: runs of underscores / dashes ──────────────────────────
+      for (const it of line) {
+        if (!DASH_RE.test(it.str.trim())) continue
+        if (it.w < 15) continue
+
+        // Nearest non-dash word to the left on the same line = the label
+        const label = line
+          .filter((o: LineItem) => o.tx < it.tx - 2 && !DASH_RE.test(o.str.trim()))
+          .sort((a: LineItem, b: LineItem) => b.tx - a.tx)[0]
+          ?.str.replace(/[:\-–\s]+$/, '').trim() ?? 'Field'
+
+        const x1 = it.tx
+        const x2 = it.tx + it.w
+        coveredRanges.push({ x1, x2, ty: it.ty })
+        fields.push({
+          name:       uniqueName(label),
+          type:       'text',
+          rect:       makeRect(x1, x2, it.ty, it.h),
+          pageNum,
+          pageHeight: pdfH,
+        })
+      }
+
+      // ── Strategy B: whitespace after "Label:" ─────────────────────────────
+      for (let i = 0; i < line.length; i++) {
+        const it = line[i]
+        if (!LABEL_RE.test(it.str)) continue
+
+        const labelText = it.str.replace(/[:\-–\s]+$/, '').trim()
+        const labelRight = it.tx + it.w
+        const next = line[i + 1]
+        const gapRight = next ? next.tx : pdfW * 0.92
+        const gap = gapRight - labelRight
+
+        if (gap < 25) continue  // not real blank space
+        // If the very next item is underscores, Strategy A already claimed it — skip
+        if (next && DASH_RE.test(next.str.trim())) continue
+
+        const x1 = labelRight + 2
+        const x2 = gapRight - 2
+
+        // Skip if Strategy A already placed a field covering this x-range on this line
+        const alreadyCovered = coveredRanges.some(
+          r => Math.abs(r.ty - it.ty) < 8 && r.x1 < x2 && r.x2 > x1
+        )
+        if (alreadyCovered) continue
+
+        fields.push({
+          name:       uniqueName(labelText),
+          type:       'text',
+          rect:       makeRect(x1, x2, it.ty, it.h),
+          pageNum,
+          pageHeight: pdfH,
+        })
+      }
+    }
+
+    return fields.length > 0 ? fields : null
+  }, [])
+
   // ── Chat Fill field detection ─────────────────────────────────────────────────
-  // Strategy 1: Python pipeline server (multi-strategy: dash + vector + whitespace + vision).
-  //             Requires `uvicorn server:app` running at NEXT_PUBLIC_PIPELINE_URL or localhost:8787.
-  // Strategy 2: Claude Vision fallback (page screenshot → Claude detects all field types).
-  //             Used automatically when the Python server is unreachable.
+  // Strategy 1: PDF.js text layer (exact coords, always available for non-scanned PDFs).
+  // Strategy 2: Python pipeline server (multi-strategy; requires server running).
+  // Strategy 3: Claude Vision fallback (for scanned/image PDFs with no text layer).
   const detectFieldsForChat = useCallback(async (): Promise<DetectedField[] | null> => {
     setIsDetecting(true)
 
     const slot = slots[slotIdx]
     const src  = sources.find(s => s.id === slot?.sourceId)
 
-    // ── Python pipeline (offline fallback handled automatically) ─────────────
+    // ── Strategy 1: PDF.js text layer (exact positions, no server, no AI) ───────
+    // Works for any PDF with a real text layer (i.e. not a scanned image PDF).
+    // Finds underscores (___) and "Label:" + blank-space patterns.
+    if (src) {
+      try {
+        const pageNum = slot?.pageNum ?? slotIdx + 1
+        const page    = await src.doc.getPage(pageNum)
+        const vp      = page.getViewport({ scale: 1 })
+        const pdfW    = vp.width
+        const pdfH    = vp.height
+
+        const textFields = await detectFieldsFromTextLayer(page, pdfW, pdfH, pageNum)
+        if (textFields && textFields.length > 0) {
+          console.log('[ChatFill] text-layer detected:', textFields.map(f => `${f.name} rect=[${f.rect.map(v => Math.round(v)).join(',')}]`))
+          setAutoFillFields(textFields)
+          setAiExistingFilled({})
+          setIsDetecting(false)
+          return textFields
+        }
+        console.log('[ChatFill] text-layer: no fields found (likely scanned PDF), trying pipeline…')
+      } catch (err) {
+        console.warn('[ChatFill] text-layer detection failed:', err)
+      }
+    }
+
+    // ── Strategy 2: Python pipeline (multi-strategy; requires server) ────────────
     if (src?.bytes) {
       try {
         const blob     = new Blob([src.bytes], { type: 'application/pdf' })
@@ -1193,6 +1343,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     }
 
     // ── Claude Vision fallback ────────────────────────────────────────────────
+    // Strategy 3 — Claude Vision (last resort: scanned PDFs with no text layer).
     // Render the page to a DEDICATED off-screen canvas at a fixed scale=2 with
     // NO devicePixelRatio scaling. This means:
     //   canvas.width  = pdfPageWidth  * 2
@@ -1268,7 +1419,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     } finally {
       setIsDetecting(false)
     }
-  }, [slotIdx, slots, sources])
+  }, [slotIdx, slots, sources, detectFieldsFromTextLayer])
 
   const openChatFill = useCallback(async () => {
     setShowChatFill(true)
@@ -1279,84 +1430,96 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
     const slot = slots[slotIdx]
     const src  = sources.find(s => s.id === slot?.sourceId)
-    if (!src?.bytes) {
-      // No PDF bytes to work with — fall back to vision
-      detectFieldsForChat().catch(console.error)
-      return
-    }
 
-    setIsDetecting(true)
+    // 2. Client-side: detect fields from text layer + stamp AcroForm with pdf-lib.
+    //    Works on Vercel with no Python server. Exact positions, instant.
+    if (src?.bytes) {
+      setIsDetecting(true)
+      try {
+        const pageNum = slot?.pageNum ?? slotIdx + 1
+        const page    = await src.doc.getPage(pageNum)
+        const vp      = page.getViewport({ scale: 1 })
+        const pdfW    = vp.width
+        const pdfH    = vp.height
 
-    // 2. Ask the pipeline to convert the PDF into a real AcroForm (stages 1–4).
-    try {
-      const blob     = new Blob([src.bytes], { type: 'application/pdf' })
-      const formData = new FormData()
-      formData.append('file', blob, src.name ?? 'form.pdf')
-      formData.append('run_ocr',          'true')
-      formData.append('run_vision',       'true')
-      formData.append('vision_threshold', '2')
+        const textFields = await detectFieldsFromTextLayer(page, pdfW, pdfH, pageNum)
 
-      const res  = await fetch('/api/pdf-pipeline/make-fillable', { method: 'POST', body: formData })
-      const data = await res.json()
+        if (textFields && textFields.length > 0) {
+          // Stamp real AcroForm widgets using pdf-lib so PDF.js can read them back
+          const { PDFDocument, rgb } = await import('pdf-lib')
+          const pdfDoc = await PDFDocument.load(src.bytes)
+          const form   = pdfDoc.getForm()
+          const libPage = pdfDoc.getPage(pageNum - 1)   // pdf-lib is 0-indexed
 
-      if (res.ok && !data.fallback && data.pdf_base64) {
-        // Decode base64 → ArrayBuffer
-        const bin     = atob(data.pdf_base64)
-        const newU8   = new Uint8Array(bin.length)
-        for (let i = 0; i < bin.length; i++) newU8[i] = bin.charCodeAt(i)
-        const newAb   = newU8.buffer
+          for (const f of textFields) {
+            const [x1, yBottom, x2, yTop] = f.rect
+            const w = Math.max(4, x2 - x1)
+            const h = Math.max(6, yTop - yBottom)
+            try {
+              if (f.type === 'checkbox') {
+                const cb = form.createCheckBox(f.name)
+                cb.addToPage(libPage, {
+                  x: x1, y: yBottom, width: w, height: h,
+                  borderColor: rgb(0.4, 0.4, 0.4), borderWidth: 0.5,
+                })
+              } else {
+                const tf = form.createTextField(f.name)
+                tf.setFontSize(0)
+                tf.addToPage(libPage, {
+                  x: x1, y: yBottom, width: w, height: h,
+                  borderColor: rgb(0.4, 0.4, 0.4), borderWidth: 0.5,
+                  backgroundColor: rgb(1, 1, 1),
+                })
+              }
+            } catch { /* skip if name clash */ }
+          }
 
-        // Load the AcroForm PDF with PDF.js
-        const { getDocument } = await import('pdfjs-dist')
-        const newDoc  = await getDocument({ data: newAb }).promise
+          // pdfDoc.save() returns Uint8Array — slice to get a clean ArrayBuffer
+          // (the raw .buffer may have extra padding from the allocator)
+          const pdfBytes = await pdfDoc.save()
+          const newBytes = pdfBytes.buffer.slice(
+            pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength
+          ) as ArrayBuffer
+          const { getDocument } = await import('pdfjs-dist')
+          const newDoc  = await getDocument({ data: newBytes }).promise
 
-        // Swap source so the page re-renders with the fillable PDF
-        setSources(prev => prev.map(s => s.id === src.id ? { ...s, doc: newDoc, bytes: newAb } : s))
+          // Swap in the new fillable PDF so the page re-renders with widget overlays
+          setSources(prev => prev.map(s => s.id === src.id ? { ...s, doc: newDoc, bytes: newBytes } : s))
 
-        // Extract AcroForm field positions directly from the new doc
-        // (don't wait for state re-render; read straight from the doc object)
-        const currentPage = await newDoc.getPage(slotIdx + 1)
-        const viewport    = currentPage.getViewport({ scale: 1 })
-        const annotations = await currentPage.getAnnotations()
-
-        const detectedFields: DetectedField[] = []
-        const typeMap: Record<string, string> = {
-          Tx: 'text', Btn: 'checkbox', Ch: 'dropdown', Sig: 'signature',
-        }
-        annotations.forEach((ann: any) => {
-          if (ann.subtype !== 'Widget' || !ann.fieldName) return
-          const isComb      = ann.fieldType === 'Tx' && !!(ann.fieldFlags & (1 << 24))
-          const fieldName   = ann.alternativeText || ann.fieldName
-          const isSigByName = /\b(signature|sign here|sign|initials?)\b/i.test(fieldName)
-          const fieldType   = ann.fieldType === 'Sig' || isSigByName ? 'signature'
-            : ann.fieldType === 'Btn' ? 'checkbox'
-            : ann.fieldType === 'Ch'  ? 'dropdown'
-            : isComb ? 'char_box' : 'text'
-          detectedFields.push({
-            name: fieldName,
-            type: fieldType,
-            rect: ann.rect,
-            pageNum:    slotIdx + 1,
-            pageHeight: viewport.height,
-            ...(isComb && ann.maxLen ? { isComb: true, maxLen: ann.maxLen } : {}),
+          // Read AcroForm positions back from the new doc (exact PDF coordinates)
+          const newPage   = await newDoc.getPage(pageNum)
+          const newVp     = newPage.getViewport({ scale: 1 })
+          const anns      = await newPage.getAnnotations()
+          const acroFields: DetectedField[] = []
+          anns.forEach((ann: any) => {
+            if (ann.subtype !== 'Widget' || !ann.fieldName) return
+            const isSig = /\b(signature|sign here|initials?)\b/i.test(ann.fieldName)
+            acroFields.push({
+              name:       ann.fieldName,
+              type:       isSig ? 'signature' : ann.fieldType === 'Btn' ? 'checkbox' : 'text',
+              rect:       ann.rect,
+              pageNum,
+              pageHeight: newVp.height,
+            })
           })
-        })
 
-        if (detectedFields.length > 0) {
-          setAutoFillFields(detectedFields)
-          setAiExistingFilled({})
-          setIsDetecting(false)
-          return
+          if (acroFields.length > 0) {
+            console.log('[ChatFill] client-side AcroForm:', acroFields.map(f => f.name).join(', '))
+            setAutoFillFields(acroFields)
+            setAiExistingFilled({})
+            setIsDetecting(false)
+            return
+          }
         }
+      } catch (err) {
+        console.warn('[openChatFill] client-side make-fillable failed:', err)
       }
-    } catch (err) {
-      console.warn('[make-fillable] pipeline unavailable, falling back to vision:', err)
+      setIsDetecting(false)
     }
 
-    // 3. Pipeline unavailable or returned no fields — fall back to vision detection
-    setIsDetecting(false)
+    // 3. Scanned PDF or no bytes — fall back to detection (pipeline → vision)
     detectFieldsForChat().catch(console.error)
-  }, [loadPageFields, detectFieldsForChat, slots, slotIdx, sources])
+  }, [loadPageFields, detectFieldsFromTextLayer, detectFieldsForChat, slots, slotIdx, sources])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
     // fieldName → new elements built for that field this run
