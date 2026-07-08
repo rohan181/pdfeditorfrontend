@@ -1010,6 +1010,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
             rect: ann.rect,
             pageNum: slot.pageNum!,
             pageHeight: viewport.height,
+            fieldSource: 'acroform',
             ...(isComb && ann.maxLen ? { isComb: true, maxLen: ann.maxLen } : {}),
           })
         })
@@ -1202,17 +1203,35 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       return [x1, rectY1, x2, rectY2]
     }
 
+    // Collect adjacent label words to the LEFT of startTx.
+    // Walks right-to-left, stopping when the gap between consecutive items exceeds
+    // 30pt — that boundary separates a different label/field group on the same line.
+    // Dash runs are skipped so they don't block traversal past covered fields.
+    const buildLabel = (line: LineItem[], startTx: number): string => {
+      const candidates = line
+        .filter(o => o.tx < startTx - 2 && !DASH_RE.test(o.str.trim()) && o.str.trim() !== '')
+        .sort((a, b) => b.tx - a.tx)   // right-to-left (nearest first)
+
+      const parts: string[] = []
+      let prevLeft = startTx
+      for (const item of candidates) {
+        const gap = prevLeft - (item.tx + item.w)
+        if (gap > 30 && parts.length > 0) break   // large gap = different label group
+        const clean = item.str.replace(/[:\-–\s]+$/, '').trim()
+        if (clean) parts.unshift(clean)            // prepend: we're walking right-to-left
+        prevLeft = item.tx
+      }
+      return parts.join(' ')
+    }
+
     for (const line of lines) {
       // ── Strategy A: runs of underscores / dashes ──────────────────────────
       for (const it of line) {
         if (!DASH_RE.test(it.str.trim())) continue
         if (it.w < 15) continue
 
-        // Nearest non-dash, non-whitespace word to the left on the same line = the label
-        const label = line
-          .filter((o: LineItem) => o.tx < it.tx - 2 && !DASH_RE.test(o.str.trim()) && o.str.trim() !== '')
-          .sort((a: LineItem, b: LineItem) => b.tx - a.tx)[0]
-          ?.str.replace(/[:\-–\s]+$/, '').trim() ?? 'Field'
+        // Collect all adjacent label words to the left (handles multi-word labels)
+        const label = buildLabel(line, it.tx) || 'Field'
 
         const x1 = it.tx
         const x2 = it.tx + it.w
@@ -1231,8 +1250,11 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         const it = line[i]
         if (!LABEL_RE.test(it.str)) continue
 
-        const labelText = it.str.replace(/[:\-–\s]+$/, '').trim()
-        const labelRight = it.tx + it.w
+        // Build full label: words to the left of this item + the item itself (stripped)
+        const labelSelf   = it.str.replace(/[:\-–\s]+$/, '').trim()
+        const labelPrefix = buildLabel(line, it.tx)
+        const labelText   = [labelPrefix, labelSelf].filter(Boolean).join(' ')
+        const labelRight  = it.tx + it.w
         const next = line[i + 1]
         const gapRight = next ? next.tx : pdfW * 0.92
         const gap = gapRight - labelRight
@@ -1486,30 +1508,14 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
           // Swap in the new fillable PDF so the page re-renders with widget overlays
           setSources(prev => prev.map(s => s.id === src.id ? { ...s, doc: newDoc, bytes: newBytes } : s))
 
-          // Read AcroForm positions back from the new doc (exact PDF coordinates)
-          const newPage   = await newDoc.getPage(pageNum)
-          const newVp     = newPage.getViewport({ scale: 1 })
-          const anns      = await newPage.getAnnotations()
-          const acroFields: DetectedField[] = []
-          anns.forEach((ann: any) => {
-            if (ann.subtype !== 'Widget' || !ann.fieldName) return
-            const isSig = /\b(signature|sign here|initials?)\b/i.test(ann.fieldName)
-            acroFields.push({
-              name:       ann.fieldName,
-              type:       isSig ? 'signature' : ann.fieldType === 'Btn' ? 'checkbox' : 'text',
-              rect:       ann.rect,
-              pageNum,
-              pageHeight: newVp.height,
-            })
-          })
-
-          if (acroFields.length > 0) {
-            console.log('[ChatFill] client-side AcroForm:', acroFields.map(f => f.name).join(', '))
-            setAutoFillFields(acroFields)
-            setAiExistingFilled({})
-            setIsDetecting(false)
-            return
-          }
+          // Use textFields positions directly — these come straight from the PDF text layer
+          // and are more accurate than reading back through the AcroForm round-trip.
+          const taggedFields: DetectedField[] = textFields.map(f => ({ ...f, fieldSource: 'textLayer' as const }))
+          console.log('[ChatFill] text-layer fields:', taggedFields.map(f => f.name).join(', '))
+          setAutoFillFields(taggedFields)
+          setAiExistingFilled({})
+          setIsDetecting(false)
+          return
         }
       } catch (err) {
         console.warn('[openChatFill] client-side make-fillable failed:', err)
@@ -1590,18 +1596,26 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       if (!slot) return
 
       const [x1, y1, x2, y2] = field.rect
-      const pdfW = Math.max(16, x2 - x1)
-      const pdfH = Math.max(16, y2 - y1)
-      const upNudge = Math.max(1, pdfH * 0.1)
-      const pdfY = field.pageHeight - y2 - upNudge
-      console.log(`[AutoFill] placing "${name}" at x=${Math.round(x1)} y=${Math.round(pdfY)} w=${Math.round(pdfW)} h=${Math.round(pdfH)} slot="${slot.id}"`)
+      const pdfW   = Math.max(16, x2 - x1)
+      const fieldH = y2 - y1                                        // actual detected height
+      const pdfH   = Math.max(fieldH, 10)                           // element min height
+      const fontSize = Math.max(9, Math.min(14, Math.round(fieldH * 0.72)))
+      // textLayer: y1 = ty - 2, so (y1+2) = original text baseline — align text ON the form line
+      // acroform:  use field centre so text sits mid-field (standard PDF form behaviour)
+      const textRef = field.fieldSource === 'textLayer'
+        ? y1 + 2
+        : (y1 + y2) / 2
+      const pdfY = field.pageHeight - textRef - fontSize * 0.75
+      console.log(`[AutoFill] placing "${name}" src=${field.fieldSource} at x=${Math.round(x1)} y=${Math.round(pdfY)} fs=${fontSize} slot="${slot.id}"`)
+
+      const elemH = Math.max(pdfH, fontSize + 4)
 
       // ── Signature ────────────────────────────────────────────────────────
       if (field.type === 'signature' || value.startsWith('data:image')) {
         if (!value.startsWith('data:image')) return
         els.push({
           id: uuidv4(), type: 'signature',
-          x: x1, y: pdfY, width: pdfW, height: pdfH + upNudge,
+          x: x1, y: pdfY, width: pdfW, height: elemH,
           src: value, pageSlotId: slot.id,
         } as SignatureElement)
 
@@ -1625,8 +1639,6 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       // ── Comb / character-box ──────────────────────────────────────────────
       } else if (field.isComb && field.maxLen && field.maxLen > 1) {
         const cellW = (x2 - x1) / field.maxLen
-        const fontSize = Math.max(8, Math.min(18, Math.round(pdfH * 0.68)))
-        const elemH = pdfH + upNudge
         value.replace(/[\s\/\-\.]/g, '').split('').slice(0, field.maxLen).forEach((char, i) => {
           els.push({
             id: uuidv4(), type: 'text',
@@ -1639,9 +1651,6 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
       // ── Regular text ──────────────────────────────────────────────────────
       } else {
-        const fontSize = Math.max(9, Math.min(14, Math.round(pdfH * 0.72)))
-        const baseElemH = pdfH + upNudge
-
         // ── Date DD/MM/YYYY handling ──────────────────────────────────────────
         const dateParts = value.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/)
         if (dateParts) {
@@ -1659,7 +1668,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
           if (partValue) {
             els.push({
               id: uuidv4(), type: 'text',
-              x: x1, y: pdfY, width: pdfW, height: baseElemH,
+              x: x1, y: pdfY, width: pdfW, height: elemH,
               text: partValue, fontSize, fontFamily: 'Inter', color: '#000',
               bold: false, italic: false, underline: false, align: 'center', bgColor: '',
               pageSlotId: slot.id,
@@ -1670,7 +1679,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
             const dateFontSize = Math.min(fontSize, Math.max(7, Math.floor(pdfW / (dateStr.length * 0.6))))
             els.push({
               id: uuidv4(), type: 'text',
-              x: x1, y: pdfY, width: pdfW, height: baseElemH,
+              x: x1, y: pdfY, width: pdfW, height: elemH,
               text: dateStr, fontSize: dateFontSize, fontFamily: 'Inter', color: '#000',
               bold: false, italic: false, underline: false, align: 'center', bgColor: '',
               pageSlotId: slot.id,
@@ -1684,11 +1693,10 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
           for (const line of value.split('\n')) {
             estimatedLines += Math.max(1, Math.ceil(line.length / charsPerLine))
           }
-          const elemH = Math.max(baseElemH, estimatedLines * lineH + 4)
-          const adjustedY = pdfY - (estimatedLines > 1 ? upNudge : 0)
+          const multiH = Math.max(elemH, estimatedLines * lineH + 4)
           els.push({
             id: uuidv4(), type: 'text',
-            x: x1, y: adjustedY, width: Math.max(40, pdfW), height: elemH,
+            x: x1, y: pdfY, width: Math.max(40, pdfW), height: multiH,
             text: value, fontSize, fontFamily: 'Inter', color: '#000',
             bold: false, italic: false, underline: false, align: 'left', bgColor: '',
             pageSlotId: slot.id,

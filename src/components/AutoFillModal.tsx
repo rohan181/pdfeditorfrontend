@@ -9,6 +9,7 @@ export interface DetectedField {
   pageHeight: number
   maxLen?: number
   isComb?: boolean
+  fieldSource?: 'textLayer' | 'acroform'  // how the field was detected
 }
 
 export interface FilledField {
