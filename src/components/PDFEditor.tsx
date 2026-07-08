@@ -1178,7 +1178,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       .sort(([a], [b]) => b - a)   // descending ty = top-to-bottom (PDF y=0 at bottom)
       .map(([, its]) => its.sort((a: LineItem, b: LineItem) => a.tx - b.tx))
 
-    const DASH_RE  = /^[\-_\.·•]{2,}$/   // 2+ chars: catches short State/ZIP boxes too
+    const DASH_RE  = /^[\-_\.]{3,}$/
     const LABEL_RE = /[:\-–]\s*$/
     const fields: DetectedField[] = []
     const nameCount = new Map<string, number>()
@@ -1249,7 +1249,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       // ── Strategy A: runs of underscores / dashes ──────────────────────────
       for (const it of line) {
         if (!DASH_RE.test(it.str.trim())) continue
-        if (it.w < 10) continue   // must be ≥10pt wide to be a fill line (not a hyphen)
+        if (it.w < 15) continue   // must be ≥15pt wide to be a fill line (not a hyphen)
 
         const x1 = it.tx
         const x2 = it.tx + it.w
@@ -1268,14 +1268,11 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         })
       }
 
-      // ── Strategy B: whitespace after "Label:" or large gap after any label word ──
+      // ── Strategy B: whitespace after "Label:" ─────────────────────────────
       for (let i = 0; i < line.length; i++) {
         const it = line[i]
         const hasExplicitMarker = LABEL_RE.test(it.str)
-        // Also catch unlabeled gaps: any non-dash word ≥2 chars followed by a gap ≥60pt
-        const couldBeLabel = hasExplicitMarker
-          || (!DASH_RE.test(it.str.trim()) && it.str.trim().length >= 2)
-        if (!couldBeLabel) continue
+        if (!hasExplicitMarker) continue
 
         // Build full label: words to the left of this item + the item itself (stripped)
         const labelSelf   = it.str.replace(/[:\-–\s]+$/, '').trim()
@@ -1286,10 +1283,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         const gapRight = next ? next.tx : pdfW * 0.92
         const gap = gapRight - labelRight
 
-        // Require a larger gap for items without an explicit colon/dash marker
-        // to avoid treating every word-to-word space as a field boundary.
-        const minGap = hasExplicitMarker ? 25 : 60
-        if (gap < minGap) continue
+        if (gap < 25) continue  // not real blank space
         // If the very next item is underscores, Strategy A already claimed it — skip
         if (next && DASH_RE.test(next.str.trim())) continue
 
@@ -1595,14 +1589,15 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       const fieldH = y2 - y1                                        // actual detected height
       const pdfH   = Math.max(fieldH, 10)                           // element min height
       const fontSize = Math.max(9, Math.min(14, Math.round(fieldH * 0.72)))
-      // textLayer: place text ABOVE the form line (underscore baseline = ty = y1+2).
-      //   pdfY = pageH - ty - ascender - gap  →  text baseline lands ~3pt above the underline.
+      // textLayer: place text just above the form line.
+      //   textRef = ty (underscore baseline in PDF y-from-bottom coords)
+      //   pdfY  = pageH - ty - ascender - 1  →  text baseline lands ~1pt above the underline.
       // acroform/vision: center text inside the detected field rectangle.
       const textRef = field.fieldSource === 'textLayer'
         ? y1 + 2
         : (y1 + y2) / 2
       const pdfY = field.fieldSource === 'textLayer'
-        ? Math.max(0, field.pageHeight - textRef - fontSize * 0.8 - 4)   // above the underline
+        ? Math.max(0, field.pageHeight - textRef - fontSize * 0.8 - 2)   // just above underline (~2px gap)
         : Math.max(0, field.pageHeight - textRef - fontSize * 0.75)        // centred in field
       console.log(`[AutoFill] placing "${name}" src=${field.fieldSource} rect=[${[x1,y1,x2,y2].map(v=>Math.round(v)).join(',')}] pdfY=${Math.round(pdfY)} fs=${fontSize} fields=${latestFields.length}`)
 
