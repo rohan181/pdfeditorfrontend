@@ -1155,7 +1155,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
     const items: { str: string; tx: number; ty: number; w: number; h: number }[] = []
     for (const item of content.items as any[]) {
-      if (!item.str) continue
+      if (!item.str || !item.str.trim()) continue   // skip empty / whitespace-only items
       const [, , , , tx, ty] = item.transform as number[]
       const h = item.height ?? 10
       if (h <= 0) continue
@@ -1208,9 +1208,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         if (!DASH_RE.test(it.str.trim())) continue
         if (it.w < 15) continue
 
-        // Nearest non-dash word to the left on the same line = the label
+        // Nearest non-dash, non-whitespace word to the left on the same line = the label
         const label = line
-          .filter((o: LineItem) => o.tx < it.tx - 2 && !DASH_RE.test(o.str.trim()))
+          .filter((o: LineItem) => o.tx < it.tx - 2 && !DASH_RE.test(o.str.trim()) && o.str.trim() !== '')
           .sort((a: LineItem, b: LineItem) => b.tx - a.tx)[0]
           ?.str.replace(/[:\-–\s]+$/, '').trim() ?? 'Field'
 
