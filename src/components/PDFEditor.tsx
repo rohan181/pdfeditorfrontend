@@ -1565,31 +1565,24 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       if (field) {
         console.log(`[AutoFill] "${name}" → matched "${field.name}" via ${matchKind}, rect=[${field.rect.map(v => Math.round(v)).join(',')}] pageH=${Math.round(field.pageHeight)}`)
       } else {
-        console.warn(`[AutoFill] "${name}" → NO MATCH (${autoFillFields.length} fields: ${autoFillFields.map(f => f.name).join(', ')}) — placing at center`)
+        console.warn(`[AutoFill] "${name}" → NO MATCH — skipping`)
       }
 
       if (!field) {
-        const slot = slots[slotIdx]
-        if (!slot) return
+        // For signatures without a detected field: place at center so it's not lost.
+        // For regular text: silently skip — prevents random text at page center which
+        // could visually land on top of a real field.
         if (isSigValue) {
-          // Signature with no matched field — place centred on current page
+          const slot = slots[slotIdx]
+          if (!slot) return
           els.push({
             id: uuidv4(), type: 'signature',
             x: slot.baseWidth / 2 - 100, y: slot.baseHeight / 2 - 25,
             width: 200, height: 50,
             src: value, pageSlotId: slot.id,
           } as SignatureElement)
-        } else {
-          els.push({
-            id: uuidv4(), type: 'text',
-            x: slot.baseWidth / 2 - 100, y: slot.baseHeight / 2,
-            width: 200, height: 30,
-            text: value, fontSize: 12, fontFamily: 'Inter', color: '#000',
-            bold: false, italic: false, underline: false, align: 'left', bgColor: '',
-            pageSlotId: slot.id,
-          } as TextElement)
+          perField.set(name, els)
         }
-        perField.set(name, els)
         return
       }
 
