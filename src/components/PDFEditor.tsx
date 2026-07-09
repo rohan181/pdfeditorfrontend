@@ -1675,8 +1675,8 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
           if (!slot) return
           els.push({
             id: uuidv4(), type: 'signature',
-            x: slot.baseWidth / 2 - 125, y: slot.baseHeight / 2 - 30,
-            width: 250, height: 60,
+            x: slot.baseWidth / 2 - 150, y: slot.baseHeight / 2 - 40,
+            width: 300, height: 80,
             src: value, pageSlotId: slot.id,
           } as SignatureElement)
           perField.set(name, els)
@@ -1714,16 +1714,13 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       // ── Signature ────────────────────────────────────────────────────────
       if (field.type === 'signature' || value.startsWith('data:image')) {
         if (!value.startsWith('data:image')) return
-        // Signatures need a proper visible height (~40-60pt). The detected field rect
-        // for text-layer signatures is just the underline height (~12pt), so we
-        // use a fixed minimum and place the sig so its BOTTOM aligns with the underline.
-        const sigH  = Math.max(50, pdfW * 0.25)   // tall enough to be visible
-        // el.y = bottom of element in PDF coords (y from bottom).
-        // For textLayer: put sig bottom at y1 (underline level), sig extends upward above it.
-        // For acroform/vision: put sig bottom at field bottom (y1), same logic.
-        const sigY  = Math.max(0, y1)
-        const sigW  = Math.min(pdfW * 2, 250)          // allow wider than the bare underline
-        const sigX  = Math.max(0, x1 - (sigW - pdfW) / 2)  // centre-expand horizontally
+        // element.y is CSS top (distance from TOP of page in pt), matching DraggableElement's
+        // `top: element.y * scale`. y1 from makeRect is in PDF bottom-origin coords, so we
+        // convert: sigY = pageHeight - y1 - sigH  → bottom of sig aligns with the field line.
+        const sigH = Math.max(60, pdfW * 0.3)
+        const sigW = Math.max(150, Math.min(pdfW * 2, 300))
+        const sigY = Math.max(0, field.pageHeight - y1 - sigH)
+        const sigX = Math.max(0, x1 - (sigW - pdfW) / 2)
         els.push({
           id: uuidv4(), type: 'signature',
           x: sigX, y: sigY, width: sigW, height: sigH,

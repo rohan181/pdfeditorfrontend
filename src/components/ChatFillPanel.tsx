@@ -261,19 +261,20 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
   }, [extractDoc])
 
   // ── AI conversation ───────────────────────────────────────────────────────
-  const sendToAI = useCallback(async (msgs: ChatMessage[], isFirstMessage = false) => {
+  // blockReextract=true: after signature confirmation, skip re-placing already-collected fields
+  const sendToAI = useCallback(async (msgs: ChatMessage[], isFirstMessage = false, blockReextract = false) => {
     setLoading(true)
     try {
+      const SIG_NAME_RE = /\b(sign|signature|initials?|authorized?|witness)\b/i
       const fieldsWithValues = fields.map(f => {
         const raw = collectedRef.current[f.name] || ''
-        // Never send a base64 image to the AI — replace with a human-readable placeholder.
-        // This keeps the prompt small and prevents the AI from treating the dataUrl as text.
         const value = raw.startsWith('data:image') ? '[SIGNED]' : raw
-        return { name: f.name, type: f.type, value }
+        // Ensure signature fields are labelled as 'signature' for the AI even if detected as 'text'
+        const type = f.type === 'signature' || SIG_NAME_RE.test(f.name) ? 'signature' : f.type
+        return { name: f.name, type, value }
       })
 
       // Build a Set of field names that are already signed (have a placed dataUrl).
-      // We will block the AI from re-placing these as text values.
       const signedFields = new Set(
         fields
           .filter(f => (collectedRef.current[f.name] || '').startsWith('data:image'))
@@ -310,14 +311,18 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           const v = String(value ?? '')
           if (v === '') continue                            // skip empty (incl. signature placeholder)
           if (value === undefined || value === null) continue
-          // Never re-place a field that already has a signature image placed on the PDF.
-          // The AI can't see the actual image, so it might return "[SIGNED]" or garbled text.
+          // Never re-place a signed field or echo back the placeholder
           if (signedFields.has(name)) continue
-          // Never place a dataUrl that the AI somehow echoed back
           if (v.startsWith('data:image') || v === '[SIGNED]') continue
-          // Only place on PDF if this is a genuinely new value (prevents re-placing after
-          // the AI re-extracts all collected fields following a signature confirmation).
           const prev = prevCollected[name]
+          // blockReextract: post-signature call — skip any field that was already collected.
+          // This stops the AI re-emitting every previously answered field when it confirms
+          // the signature and moves on to the next question.
+          if (blockReextract && prev && prev !== '') {
+            updated[name] = v  // keep tracking up to date but don't re-place
+            continue
+          }
+          // Normal flow: only place if value is new or genuinely changed
           if (!prev || prev.toLowerCase() !== v.toLowerCase()) {
             newlyExtracted.push({ name, value: v })
           }
@@ -399,7 +404,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
     const next = [...historyRef.current, sigMsg, confirmUser]
     syncHistory(next)
     setPendingSigField(null)
-    sendToAI(next)
+    sendToAI(next, false, true)  // blockReextract=true: don't re-place already-collected fields
   }
 
   function handleApply() {
