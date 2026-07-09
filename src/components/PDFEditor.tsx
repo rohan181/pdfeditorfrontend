@@ -1166,11 +1166,12 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
     if (items.length === 0) return null  // scanned page — no text layer
 
-    // Group items into lines using 5pt buckets (3pt was too tight for mixed-size fonts)
+    // Group items into lines using 8pt buckets — tolerates ±4pt baseline variation
+    // (mixed-size fonts, superscripts) while keeping lines spaced ≥12pt separate.
     type LineItem = { str: string; tx: number; ty: number; w: number; h: number }
     const byLine = new Map<number, LineItem[]>()
     for (const it of items) {
-      const lineKey = Math.round(it.ty / 5) * 5
+      const lineKey = Math.round(it.ty / 8) * 8
       if (!byLine.has(lineKey)) byLine.set(lineKey, [])
       byLine.get(lineKey)!.push(it)
     }
@@ -1249,7 +1250,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       // ── Strategy A: runs of underscores / dashes ──────────────────────────
       for (const it of line) {
         if (!DASH_RE.test(it.str.trim())) continue
-        if (it.w < 15) continue   // must be ≥15pt wide to be a fill line (not a hyphen)
+        if (it.w < 12) continue   // must be ≥12pt wide to be a fill line (not a hyphen)
 
         const x1 = it.tx
         const x2 = it.tx + it.w
@@ -1283,7 +1284,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         const gapRight = next ? next.tx : pdfW * 0.92
         const gap = gapRight - labelRight
 
-        if (gap < 25) continue  // not real blank space
+        if (gap < 20) continue  // not real blank space
         // If the very next item is underscores, Strategy A already claimed it — skip
         if (next && DASH_RE.test(next.str.trim())) continue
 
@@ -1596,9 +1597,12 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       const textRef = field.fieldSource === 'textLayer'
         ? y1 + 2
         : (y1 + y2) / 2
+      // With CSS lineHeight:1.4 + padding:1px, baseline from element top = (1px + fontSize_px)/scale
+      // = 0.67 + fontSize pt. So: pdfY + 0.67 + fontSize = (pageH - ty) - gap
+      // → pdfY = pageH - textRef - fontSize - (gap+0.67). Using gap=2.3pt → constant = 3.
       const pdfY = field.fieldSource === 'textLayer'
-        ? Math.max(0, field.pageHeight - textRef - fontSize * 0.8 - 2)   // just above underline (~2px gap)
-        : Math.max(0, field.pageHeight - textRef - fontSize * 0.75)        // centred in field
+        ? Math.max(0, field.pageHeight - textRef - fontSize - 3)   // baseline ~2.3pt above underline
+        : Math.max(0, field.pageHeight - textRef - fontSize * 0.75) // centred in field
       console.log(`[AutoFill] placing "${name}" src=${field.fieldSource} rect=[${[x1,y1,x2,y2].map(v=>Math.round(v)).join(',')}] pdfY=${Math.round(pdfY)} fs=${fontSize} fields=${latestFields.length}`)
 
       const elemH = Math.max(pdfH, fontSize + 4)
