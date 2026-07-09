@@ -1166,11 +1166,43 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
     if (items.length === 0) return null  // scanned page — no text layer
 
+    const DASH_CHAR_RE = /^[\-_\.]+$/   // single or multi char dash run
+    const DASH_RE      = /^[\-_\.]{3,}$/ // dash run ≥3 chars (field-line length)
+    const LABEL_RE     = /[:\-–]\s*$/
+    const SIG_RE       = /\b(sign|signature|initials?|authorized?)\b/i
+    const CB_RE        = /^[☐☑☒□■▢▪◻◼○●◯✓✗✘\[\]\(\)]+$/  // checkbox-like glyph
+
+    // ── Pre-process: merge adjacent single-char dash items on the same baseline ──
+    // Some PDFs encode "___________" as many separate "_" text items (one per char).
+    // Each individual item is too narrow (<12pt) and would be missed by Strategy A.
+    // Merge them into one wide item covering the full run.
+    type RawItem = { str: string; tx: number; ty: number; w: number; h: number }
+    const mergedItems: RawItem[] = []
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i]
+      if (DASH_CHAR_RE.test(it.str.trim()) && it.w > 0) {
+        let x2 = it.tx + it.w
+        let j  = i + 1
+        while (j < items.length) {
+          const nxt = items[j]
+          if (!DASH_CHAR_RE.test(nxt.str.trim())) break
+          if (Math.abs(nxt.ty - it.ty) > 4) break  // different baseline
+          if (nxt.tx - x2 > 6) break               // gap too large to be same run
+          x2 = nxt.tx + nxt.w
+          j++
+        }
+        mergedItems.push({ str: it.str.trim().repeat(3), tx: it.tx, ty: it.ty, w: x2 - it.tx, h: it.h })
+        i = j - 1
+      } else {
+        mergedItems.push(it)
+      }
+    }
+
     // Group items into lines using 8pt buckets — tolerates ±4pt baseline variation
     // (mixed-size fonts, superscripts) while keeping lines spaced ≥12pt separate.
     type LineItem = { str: string; tx: number; ty: number; w: number; h: number }
     const byLine = new Map<number, LineItem[]>()
-    for (const it of items) {
+    for (const it of mergedItems) {
       const lineKey = Math.round(it.ty / 8) * 8
       if (!byLine.has(lineKey)) byLine.set(lineKey, [])
       byLine.get(lineKey)!.push(it)
@@ -1178,9 +1210,6 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     const lines: LineItem[][] = Array.from(byLine.entries())
       .sort(([a], [b]) => b - a)   // descending ty = top-to-bottom (PDF y=0 at bottom)
       .map(([, its]) => its.sort((a: LineItem, b: LineItem) => a.tx - b.tx))
-
-    const DASH_RE  = /^[\-_\.]{3,}$/
-    const LABEL_RE = /[:\-–]\s*$/
     const fields: DetectedField[] = []
     const nameCount = new Map<string, number>()
     // Track x-ranges already covered by Strategy A so Strategy B won't duplicate them
@@ -1262,7 +1291,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         coveredRanges.push({ x1, x2, ty: it.ty })
         fields.push({
           name:       uniqueName(label),
-          type:       'text',
+          type:       SIG_RE.test(label) ? 'signature' : 'text',
           rect:       makeRect(x1, x2, it.ty, it.h),
           pageNum,
           pageHeight: pdfH,
@@ -1299,7 +1328,82 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
         fields.push({
           name:       uniqueName(labelText),
-          type:       'text',
+          type:       SIG_RE.test(labelText) ? 'signature' : 'text',
+          rect:       makeRect(x1, x2, it.ty, it.h),
+          pageNum,
+          pageHeight: pdfH,
+        })
+      }
+
+      // ── Strategy C: label word followed by large blank gap (no colon needed) ────
+      // Catches: "Name    ___" where "Name" has no ":" but a 80pt+ gap follows.
+      // Higher threshold (80pt) than Strategy B (20pt) to avoid false positives.
+      for (let i = 0; i < line.length; i++) {
+        const it = line[i]
+        // Must be a word-like label (starts with a letter, not a dash/symbol/number)
+        if (!/^[A-Za-z]/.test(it.str.trim())) continue
+        // Skip items already handled by Strategy B (ends in : - –)
+        if (LABEL_RE.test(it.str)) continue
+        // Skip dash items themselves
+        if (DASH_RE.test(it.str.trim())) continue
+        // Skip checkbox glyphs — handled by Strategy D below
+        if (CB_RE.test(it.str.trim())) continue
+
+        const labelRight = it.tx + it.w
+        const next = line[i + 1]
+
+        // Gap to next item (or right margin for last item on line)
+        const gapRight = next ? next.tx : pdfW * 0.92
+        const gap = gapRight - labelRight
+
+        // 80pt minimum — conservative to avoid treating sentence gaps as fields
+        if (gap < 80) continue
+        // Skip if next item starts a new dash field (Strategy A handles that)
+        if (next && DASH_RE.test(next.str.trim())) continue
+
+        const x1 = labelRight + 4
+        const x2 = gapRight - 4
+
+        // Skip if already covered by A or B
+        const alreadyCovered = coveredRanges.some(
+          r => Math.abs(r.ty - it.ty) < 8 && r.x1 < x2 && r.x2 > x1
+        )
+        if (alreadyCovered) continue
+
+        // Build the full label including this item and any words to its left
+        const labelFull = buildLabel(line, labelRight + 4)  // +4 so buildLabel includes `it`
+        if (!labelFull) continue  // safety: need at least one word
+
+        coveredRanges.push({ x1, x2, ty: it.ty })
+        fields.push({
+          name:       uniqueName(labelFull),
+          type:       SIG_RE.test(labelFull) ? 'signature' : 'text',
+          rect:       makeRect(x1, x2, it.ty, it.h),
+          pageNum,
+          pageHeight: pdfH,
+        })
+      }
+
+      // ── Strategy D: checkbox glyph detection ─────────────────────────────────
+      // Catches: ☐ Yes   ☐ No   □ Male   □ Female   [ ] Option
+      for (const it of line) {
+        if (!CB_RE.test(it.str.trim())) continue
+        // Label = the next word(s) to the RIGHT of the checkbox glyph
+        const afterCb = line.filter(o => o.tx > it.tx + it.w + 1 && o.tx < it.tx + it.w + 60)
+          .sort((a, b) => a.tx - b.tx)
+        const label = afterCb.map(o => o.str.replace(/[:\s]+$/, '').trim()).filter(Boolean).join(' ')
+          || buildLabel(line, it.tx)  // fallback: label to the left
+          || 'Option'
+        const x1 = it.tx
+        const x2 = it.tx + Math.max(it.w, 10)
+        const alreadyCovered = coveredRanges.some(
+          r => Math.abs(r.ty - it.ty) < 8 && r.x1 < x2 && r.x2 > x1
+        )
+        if (alreadyCovered) continue
+        coveredRanges.push({ x1, x2, ty: it.ty })
+        fields.push({
+          name:       uniqueName(label),
+          type:       'checkbox',
           rect:       makeRect(x1, x2, it.ty, it.h),
           pageNum,
           pageHeight: pdfH,
@@ -1571,8 +1675,8 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
           if (!slot) return
           els.push({
             id: uuidv4(), type: 'signature',
-            x: slot.baseWidth / 2 - 100, y: slot.baseHeight / 2 - 25,
-            width: 200, height: 50,
+            x: slot.baseWidth / 2 - 125, y: slot.baseHeight / 2 - 30,
+            width: 250, height: 60,
             src: value, pageSlotId: slot.id,
           } as SignatureElement)
           perField.set(name, els)
@@ -1610,9 +1714,19 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       // ── Signature ────────────────────────────────────────────────────────
       if (field.type === 'signature' || value.startsWith('data:image')) {
         if (!value.startsWith('data:image')) return
+        // Signatures need a proper visible height (~40-60pt). The detected field rect
+        // for text-layer signatures is just the underline height (~12pt), so we
+        // use a fixed minimum and place the sig so its BOTTOM aligns with the underline.
+        const sigH  = Math.max(50, pdfW * 0.25)   // tall enough to be visible
+        // el.y = bottom of element in PDF coords (y from bottom).
+        // For textLayer: put sig bottom at y1 (underline level), sig extends upward above it.
+        // For acroform/vision: put sig bottom at field bottom (y1), same logic.
+        const sigY  = Math.max(0, y1)
+        const sigW  = Math.min(pdfW * 2, 250)          // allow wider than the bare underline
+        const sigX  = Math.max(0, x1 - (sigW - pdfW) / 2)  // centre-expand horizontally
         els.push({
           id: uuidv4(), type: 'signature',
-          x: x1, y: pdfY, width: pdfW, height: elemH,
+          x: sigX, y: sigY, width: sigW, height: sigH,
           src: value, pageSlotId: slot.id,
         } as SignatureElement)
 

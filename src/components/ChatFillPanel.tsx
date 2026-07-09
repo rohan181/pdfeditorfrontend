@@ -125,13 +125,16 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
       const newCollected = { ...collectedRef.current }
       const filledLines: string[] = []
 
+      const prevDoc = { ...collectedRef.current }
       const docNewlyFilled: FilledField[] = []
       if (fillData.filled?.length) {
         for (const { name, value } of fillData.filled as { name: string; value: string }[]) {
           if (value?.trim()) {
-            newCollected[name] = value
             filledLines.push(`• ${name}: ${value}`)
-            docNewlyFilled.push({ name, value })
+            if (!prevDoc[name] || prevDoc[name] !== value) {
+              docNewlyFilled.push({ name, value })
+            }
+            newCollected[name] = value
           }
         }
       }
@@ -261,10 +264,21 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
   const sendToAI = useCallback(async (msgs: ChatMessage[], isFirstMessage = false) => {
     setLoading(true)
     try {
-      const fieldsWithValues = fields.map(f => ({
-        name: f.name, type: f.type,
-        value: collectedRef.current[f.name] || '',
-      }))
+      const fieldsWithValues = fields.map(f => {
+        const raw = collectedRef.current[f.name] || ''
+        // Never send a base64 image to the AI — replace with a human-readable placeholder.
+        // This keeps the prompt small and prevents the AI from treating the dataUrl as text.
+        const value = raw.startsWith('data:image') ? '[SIGNED]' : raw
+        return { name: f.name, type: f.type, value }
+      })
+
+      // Build a Set of field names that are already signed (have a placed dataUrl).
+      // We will block the AI from re-placing these as text values.
+      const signedFields = new Set(
+        fields
+          .filter(f => (collectedRef.current[f.name] || '').startsWith('data:image'))
+          .map(f => f.name)
+      )
 
       const res = await fetch('/api/chat-fill', {
         method: 'POST',
@@ -289,15 +303,25 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
       syncHistory([...msgs, aiMsg])
 
       if (data.extracted?.length) {
-        const updated = { ...collectedRef.current }
+        const prevCollected = { ...collectedRef.current }   // snapshot before this response
+        const updated = { ...prevCollected }
         const newlyExtracted: FilledField[] = []
         for (const { name, value } of data.extracted) {
           const v = String(value ?? '')
-          if (v === '' && data.signatureField === name) continue
-          if (value !== undefined && value !== null && v !== '') {
-            updated[name] = v
+          if (v === '') continue                            // skip empty (incl. signature placeholder)
+          if (value === undefined || value === null) continue
+          // Never re-place a field that already has a signature image placed on the PDF.
+          // The AI can't see the actual image, so it might return "[SIGNED]" or garbled text.
+          if (signedFields.has(name)) continue
+          // Never place a dataUrl that the AI somehow echoed back
+          if (v.startsWith('data:image') || v === '[SIGNED]') continue
+          // Only place on PDF if this is a genuinely new value (prevents re-placing after
+          // the AI re-extracts all collected fields following a signature confirmation).
+          const prev = prevCollected[name]
+          if (!prev || prev.toLowerCase() !== v.toLowerCase()) {
             newlyExtracted.push({ name, value: v })
           }
+          updated[name] = v
         }
         syncCollected(updated)
         // Place each field one by one with a small stagger so they appear sequentially

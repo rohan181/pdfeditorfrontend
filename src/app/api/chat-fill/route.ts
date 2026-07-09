@@ -86,14 +86,15 @@ RESPONSE FORMAT — always reply with a raw JSON object, no markdown, no code fe
 
 Rules:
 - "message": plain conversational text only — NO JSON, NO curly braces, NO code blocks inside the message string.
-- "extracted": fields you can confidently extract from the user's latest reply. [] if nothing new. CRITICAL: the "name" in each extracted entry MUST be copied EXACTLY (character-for-character) from the FORM FIELDS list above — do NOT rephrase, abbreviate, or change capitalisation.
+- "extracted": ONLY fields whose value the user provided in THIS message. NEVER re-include fields already marked [already: ...] — those are already placed on the PDF and must not be touched again. [] if nothing new from this message.
+- CRITICAL: the "name" in each extracted entry MUST be copied EXACTLY (character-for-character) from the FORM FIELDS list above — do NOT rephrase, abbreviate, or change capitalisation.
 - "signatureField": if the NEXT unfilled field is a signature/initials field, set this to the exact field name (string, copied verbatim from FORM FIELDS). Otherwise null.
 - "done": true only when all unfilled fields collected or user says stop.
 - Values must be bare (no "Label: value" — just the value).
 - Checkbox fields: "tick" if checked/yes, "" (empty string) if unchecked or unsure. Never "cross" or "no".
 - char_box: raw characters, no spaces.
 - Date parts: if field name contains "Day" extract only the 2-digit day ("28"), "Month" → 2-digit month ("04"), "Year" → 4-digit year ("2026"). For other date fields return full DD/MM/YYYY.
-- Signature fields: set signatureField to the exact field name. Return "" as the extracted value. Never ask the user to type a signature.
+- Signature fields: set signatureField to the exact field name. Return "" as the extracted value. Never ask the user to type a signature. A field marked [already: [SIGNED]] is already signed — do NOT include it in extracted and do NOT set signatureField for it.
 - Never invent values.`,
       messages,
     })
