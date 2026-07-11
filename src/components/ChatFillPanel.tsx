@@ -53,6 +53,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
   const [pendingSigField, setPendingSigField] = useState<string | null>(null)
   const [showSigModal, setShowSigModal] = useState(false)
   const [savedSignature, setSavedSignature] = useState<string | null>(null)
+  const [termsSummary, setTermsSummary] = useState<string | null>(null)
 
   // Document upload state
   const [docs, setDocs] = useState<UploadedDoc[]>([])
@@ -288,8 +289,8 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           history: msgs,
           fields: fieldsWithValues,
           pageImageBase64: pageImageBase64 || null,
-          // Send full PDF only on the first message so Claude reads the whole document
-          pdfDocBase64: isFirstMessage && pdfDocBase64 ? pdfDocBase64 : null,
+          // Always send PDF so Claude can read actual T&C text when generating termsSummary
+          pdfDocBase64: pdfDocBase64 || null,
         }),
       })
 
@@ -304,40 +305,44 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
       syncHistory([...msgs, aiMsg])
 
       if (data.extracted?.length) {
-        const prevCollected = { ...collectedRef.current }   // snapshot before this response
+        const prevCollected = { ...collectedRef.current }
         const updated = { ...prevCollected }
         const newlyExtracted: FilledField[] = []
+
         for (const { name, value } of data.extracted) {
           const v = String(value ?? '')
-          if (v === '') continue                            // skip empty (incl. signature placeholder)
+          if (!v) continue
           if (value === undefined || value === null) continue
-          // Never re-place a signed field or echo back the placeholder
           if (signedFields.has(name)) continue
           if (v.startsWith('data:image') || v === '[SIGNED]') continue
+
           const prev = prevCollected[name]
-          // blockReextract: post-signature call — skip any field that was already collected.
-          // This stops the AI re-emitting every previously answered field when it confirms
-          // the signature and moves on to the next question.
-          if (blockReextract && prev && prev !== '') {
-            updated[name] = v  // keep tracking up to date but don't re-place
+
+          if (blockReextract) {
+            // Post-signature: NEVER place anything from extracted — the AI re-emits
+            // all collected values (and guesses unfilled ones) in the confirmation
+            // response. Only update our internal tracking so field status is current.
+            updated[name] = v
             continue
           }
-          // Normal flow: only place if value is new or genuinely changed
+
+          // Normal flow: only place genuinely new or changed values
           if (!prev || prev.toLowerCase() !== v.toLowerCase()) {
             newlyExtracted.push({ name, value: v })
           }
           updated[name] = v
         }
+
         syncCollected(updated)
-        // Place each field one by one with a small stagger so they appear sequentially
         newlyExtracted.forEach((field, i) => {
           setTimeout(() => onApply([field]), i * 180)
         })
       }
 
-      // Signature field requested — prompt user to sign
+      // Signature field requested — show summary then prompt user to sign
       if (data.signatureField) {
         setPendingSigField(data.signatureField)
+        setTermsSummary(data.termsSummary ?? null)
         setShowSigModal(true)
       }
 
@@ -404,6 +409,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
     const next = [...historyRef.current, sigMsg, confirmUser]
     syncHistory(next)
     setPendingSigField(null)
+    setTermsSummary(null)
     sendToAI(next, false, true)  // blockReextract=true: don't re-place already-collected fields
   }
 
@@ -695,9 +701,30 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
             </div>
           )}
 
-          {/* Sign Here button when AI requests a signature */}
+          {/* Sign Here card with terms summary when AI requests a signature */}
           {pendingSigField && !showSigModal && (
-            <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: 4 }}>
+            <div style={{ marginTop: 6 }}>
+              {/* Terms / consent summary */}
+              {termsSummary && (
+                <div style={{
+                  background: '#fffbeb', border: '1px solid #fde68a',
+                  borderRadius: 10, padding: '10px 12px', marginBottom: 8,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.2" strokeLinecap="round">
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      By signing you agree to
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 11.5, color: '#78350f', lineHeight: 1.55 }}>
+                    {termsSummary}
+                  </p>
+                </div>
+              )}
+
+              {/* Sign Here button row */}
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 background: '#fdf4ff', border: '1.5px dashed #a855f7',
@@ -706,7 +733,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round">
                   <path d="M12 19l7-7-3-3-7 7v3h3z"/><path d="M18 5l1 1-9.5 9.5"/><path d="M5 21h14"/>
                 </svg>
-                <div>
+                <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 11.5, fontWeight: 700, color: '#7e22ce' }}>{pendingSigField}</div>
                   <div style={{ fontSize: 10.5, color: '#a855f7' }}>Signature required</div>
                 </div>

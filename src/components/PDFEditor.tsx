@@ -347,8 +347,8 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
   const [vw, setVw]                   = useState(1280)
   // New tool options
   const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'|'circle'|'square'|'filledbox'>('tick')
-  // fieldName → element IDs placed for that field by AI fill
-  const aiFieldElementsRef = useRef<Map<string, string[]>>(new Map())
+  // fieldName → { ids: element IDs, value: last placed value } for AI fill deduplication
+  const aiFieldElementsRef = useRef<Map<string, { ids: string[]; value: string }>>(new Map())
   const [markColor, setMarkColor]           = useState('#1e293b')
   const [markStrokeWidth, setMarkStrokeWidth] = useState(0.5)
   const [activeShapeType, setActiveShapeType] = useState<'rectangle'|'ellipse'|'line'|'arrow'|'polygon'>('rectangle')
@@ -1042,9 +1042,8 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         )
         if (markEl && markEl.type === 'mark') {
           existingFilled[field.name] = markEl.markType
-          // Register existing mark so AI fill replaces it instead of stacking on top
           aiFieldElementsRef.current.set(field.name,
-            [...(aiFieldElementsRef.current.get(field.name) ?? []), markEl.id])
+            { ids: [...(aiFieldElementsRef.current.get(field.name)?.ids ?? []), markEl.id], value: markEl.markType })
         }
       } else if (field.isComb && field.maxLen) {
         const charEls = elements
@@ -1055,8 +1054,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
           )
           .sort((a, b) => a.x - b.x)
         if (charEls.length > 0) {
-          existingFilled[field.name] = charEls.map(e => e.type === 'text' ? e.text : '').join('')
-          aiFieldElementsRef.current.set(field.name, charEls.map(e => e.id))
+          const v = charEls.map(e => e.type === 'text' ? e.text : '').join('')
+          existingFilled[field.name] = v
+          aiFieldElementsRef.current.set(field.name, { ids: charEls.map(e => e.id), value: v })
         }
       } else {
         const textEl = elements.find(e =>
@@ -1067,7 +1067,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         if (textEl && textEl.type === 'text') {
           existingFilled[field.name] = textEl.text
           aiFieldElementsRef.current.set(field.name,
-            [...(aiFieldElementsRef.current.get(field.name) ?? []), textEl.id])
+            { ids: [...(aiFieldElementsRef.current.get(field.name)?.ids ?? []), textEl.id], value: textEl.text })
         }
       }
     }
@@ -1622,8 +1622,19 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
     filled.forEach(({ name, value }) => {
       if (!value.trim()) return
-      const els: PDFElement[] = []
       const isSigValue = value.startsWith('data:image')
+
+      // Skip if this exact value is already placed for this field (prevents re-placing after
+      // AI re-extracts all collected fields following a signature confirmation or any other
+      // repeated sendToAI call). Signatures are always re-placed (each draw is unique).
+      if (!isSigValue) {
+        const existing = aiFieldElementsRef.current.get(name)
+        if (existing?.ids.length && existing.value.toLowerCase() === value.toLowerCase()) {
+          return  // already on PDF with same value — nothing to do
+        }
+      }
+
+      const els: PDFElement[] = []
 
       // Normalise: lowercase, strip trailing punctuation, collapse whitespace
       const norm = (s: string) => s.toLowerCase().replace(/[:\-_]+$/, '').replace(/\s+/g, ' ').trim()
@@ -1655,7 +1666,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       }
       if (!field && isSigValue) {
         field = latestFields.find(f =>
-          f.type === 'signature' && !(aiFieldElementsRef.current.get(f.name)?.length)
+          f.type === 'signature' && !(aiFieldElementsRef.current.get(f.name)?.ids.length)
         ) ?? latestFields.find(f => f.type === 'signature')
         if (field) matchKind = 'sig-fallback'
       }
@@ -1820,13 +1831,17 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     // Collect old element IDs only for the fields being updated this run
     const oldIdsToRemove = new Set<string>()
     perField.forEach((_, fieldName) => {
-      const prev = aiFieldElementsRef.current.get(fieldName) || []
-      prev.forEach(id => oldIdsToRemove.add(id))
+      const prev = aiFieldElementsRef.current.get(fieldName)
+      prev?.ids.forEach(id => oldIdsToRemove.add(id))
     })
 
-    // Update per-field tracking (merge — untouched fields keep their old IDs)
+    // Update per-field tracking — store both IDs and the placed value for deduplication
     perField.forEach((els, fieldName) => {
-      aiFieldElementsRef.current.set(fieldName, els.map(e => e.id))
+      const placedField = filled.find(f => f.name === fieldName)
+      aiFieldElementsRef.current.set(fieldName, {
+        ids: els.map(e => e.id),
+        value: placedField?.value ?? '',
+      })
     })
 
     const allNew = Array.from(perField.values()).flat()

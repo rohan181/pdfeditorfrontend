@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         type: 'document',
         source: { type: 'base64', media_type: 'application/pdf' as const, data: pdfDocBase64 },
       })
-      userContent.push({ type: 'text', text: 'Above is the complete PDF form. Please read it fully before asking about fields.' })
+      userContent.push({ type: 'text', text: 'Above is the complete PDF form. When generating termsSummary, find and read the actual Terms and Conditions, Declaration, Agreement, or Consent section in this document and summarize the specific obligations from it.' })
     } else if (pageImageBase64) {
       // Subsequent messages: just the current page image for context
       userContent.push({
@@ -82,13 +82,14 @@ YOUR JOB:
 6. Continue until all fields are filled or the user says they're done.
 
 RESPONSE FORMAT — always reply with a raw JSON object, no markdown, no code fences:
-{"message":"Your message here","extracted":[{"name":"field name","value":"value"}],"signatureField":null,"done":false}
+{"message":"Your message here","extracted":[{"name":"field name","value":"value"}],"signatureField":null,"termsSummary":null,"done":false}
 
 Rules:
 - "message": plain conversational text only — NO JSON, NO curly braces, NO code blocks inside the message string.
 - "extracted": ONLY fields whose value the user provided in THIS message. NEVER re-include fields already marked [already: ...] — those are already placed on the PDF and must not be touched again. [] if nothing new from this message.
 - CRITICAL: the "name" in each extracted entry MUST be copied EXACTLY (character-for-character) from the FORM FIELDS list above — do NOT rephrase, abbreviate, or change capitalisation.
 - "signatureField": if the NEXT unfilled field is a signature/initials field, set this to the exact field name (string, copied verbatim from FORM FIELDS). Otherwise null.
+- "termsSummary": ONLY when signatureField is non-null. You MUST look for a "Terms and Conditions", "Terms of Service", "Declaration", "Agreement", "I/We agree", "I/We declare", "Consent", or similar section in the PDF document. Read that section carefully and write a SHORT plain-text summary (2–4 sentences) that captures the SPECIFIC obligations, rights, liabilities, or commitments the user is agreeing to — use the actual wording and meaning from the PDF, not a generic statement. If you can find specific clauses (e.g. payment terms, liability waivers, data use, confidentiality, warranties), include the key ones. Only if the PDF genuinely has NO terms/conditions section at all, write: "By signing, you confirm that all information provided is accurate and complete." Plain text only — no bullet points, no markdown, no headings.
 - "done": true only when all unfilled fields collected or user says stop.
 - Values must be bare (no "Label: value" — just the value).
 - Checkbox fields: "tick" if checked/yes, "" (empty string) if unchecked or unsure. Never "cross" or "no".
