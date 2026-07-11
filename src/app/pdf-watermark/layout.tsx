@@ -15,13 +15,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://editpdfai.com/pdf-watermark',
     siteName: 'EditPDF AI',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'PDF Watermarker — Add Watermarks Online Free' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Watermarker — Add Watermarks Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF Watermarker — Add Text & Image Watermarks to PDFs Free',
     description: 'Add custom text or image watermarks to any PDF. Free, no signup required.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
 }
 

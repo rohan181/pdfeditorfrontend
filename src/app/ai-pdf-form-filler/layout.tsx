@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     siteName: 'EditPDF AI',
     images: [
       {
-        url: '/og-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'AI PDF Form Filler — Fill & Edit PDF Forms Online',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     title: 'AI PDF Form Filler — Fill & Edit PDF Forms Online Free',
     description:
       'Fill PDF forms instantly with AI. Auto-detect fields, type text, add signatures, and download — no registration required.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
 }
 

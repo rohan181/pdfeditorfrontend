@@ -18,9 +18,6 @@ export const metadata: Metadata = {
   publisher: 'EditPDF AI',
   category: 'technology',
   metadataBase: new URL('https://editpdfai.com'),
-  alternates: {
-    canonical: 'https://editpdfai.com',
-  },
   robots: {
     index: true,
     follow: true,
@@ -41,7 +38,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     images: [
       {
-        url: '/og-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'EditPDF AI — AI-Powered PDF Editor',
@@ -54,12 +51,15 @@ export const metadata: Metadata = {
     creator: '@editpdfai',
     title: 'EditPDF AI — AI-Powered PDF Editor',
     description: 'Edit, sign and AI-fill PDF forms online. Intelligent form detection and instant completion.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
+  },
+  verification: {
+    google: 'PASTE_YOUR_GOOGLE_VERIFICATION_CODE_HERE',
   },
 }
 

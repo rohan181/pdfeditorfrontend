@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://editpdfai.com/pdf-password-lock',
     siteName: 'EditPDF AI',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'PDF Password Lock' }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Password Lock' }],
   },
 }
 
