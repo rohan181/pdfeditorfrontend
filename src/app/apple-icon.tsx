@@ -8,54 +8,85 @@ export default function AppleIcon() {
     (
       <div
         style={{
-          width: 180, height: 180,
-          background: '#000',
-          borderRadius: 40,
+          width: 180,
+          height: 180,
+          background: 'white',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 16,
-          position: 'relative',
+          gap: 14,
         }}
       >
-        {/* Glow */}
-        <div style={{
-          position: 'absolute',
-          width: 100, height: 100,
-          background: 'rgba(99,102,241,0.38)',
-          borderRadius: '50%',
-          filter: 'blur(40px)',
-          top: 32,
-        }} />
-
-        {/* Pentagon abstract mark */}
-        <div style={{
-          position: 'relative',
-          width: 72, height: 88,
-          background: 'linear-gradient(148deg, #6366f1 0%, #818cf8 60%, #a78bfa 100%)',
-          clipPath: 'polygon(0% 0%, 68% 0%, 100% 26%, 100% 100%, 0% 100%)',
-        }} />
+        {/* Document icon — gradient fill, folded top-right */}
+        <div
+          style={{
+            position: 'relative',
+            width: 88,
+            height: 106,
+            background: 'linear-gradient(135deg, #4F7FFA 0%, #8B3FEC 100%)',
+            clipPath: 'polygon(0% 0%, 63% 0%, 100% 27%, 100% 100%, 0% 100%)',
+            borderRadius: 6,
+            display: 'flex',
+          }}
+        >
+          {/* Fold triangle */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: 33,
+              height: 29,
+              background: 'rgba(255,255,255,0.25)',
+              clipPath: 'polygon(100% 0%, 100% 100%, 0% 100%)',
+            }}
+          />
+          {/* Diagonal edit stroke */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 28,
+              left: 16,
+              width: 46,
+              height: 8,
+              background: 'rgba(255,255,255,0.9)',
+              transform: 'rotate(-42deg)',
+              transformOrigin: 'left center',
+              borderRadius: 4,
+            }}
+          />
+          {/* Pen dot */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 16,
+              left: 10,
+              width: 11,
+              height: 11,
+              background: 'rgba(255,255,255,0.9)',
+              borderRadius: '50%',
+            }}
+          />
+        </div>
 
         {/* Wordmark */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 0, position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 0 }}>
           <span style={{
-            fontFamily: 'sans-serif', fontSize: 22,
-            fontWeight: 300, color: 'rgba(240,244,255,.42)',
-            letterSpacing: '2px',
-          }}>EDIT</span>
+            fontFamily: 'sans-serif',
+            fontSize: 22,
+            fontWeight: 800,
+            color: '#0D1B4B',
+            letterSpacing: '-0.5px',
+          }}>EditPDF</span>
           <span style={{
-            fontFamily: 'sans-serif', fontSize: 22,
-            fontWeight: 900, color: '#f0f4ff',
-            letterSpacing: '-1px',
-          }}>PDF</span>
-          <span style={{
-            fontFamily: 'monospace', fontSize: 11,
-            fontWeight: 700, color: '#fff',
-            background: '#6366f1',
-            padding: '3px 8px', borderRadius: 5,
-            marginLeft: 6, letterSpacing: '1px',
-          }}>.AI</span>
+            fontFamily: 'sans-serif',
+            fontSize: 22,
+            fontWeight: 800,
+            color: '#6B4FEC',
+            marginLeft: 3,
+            letterSpacing: '-0.5px',
+          }}>AI</span>
         </div>
       </div>
     ),
