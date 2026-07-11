@@ -417,12 +417,14 @@ export default function PDFAnnotate() {
       {/* ── Nav ── */}
       <nav style={S.nav}>
         <Link href="/" style={{ display:'inline-flex', alignItems:'center', gap:8, textDecoration:'none' }}>
-          <div style={{ width:27, height:27, background:'#fff', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="#1d1d1f"/>
-            </svg>
-          </div>
-          <span style={{ fontSize:14, fontWeight:700, color:'#fff', letterSpacing:'-.04em' }}>Edit<span style={{ color:'#a78bfa' }}>PDF</span> AI</span>
+          <svg width="27" height="27" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="lg-pa" x1="2" y1="2" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#4F7FFA"/><stop offset="100%" stopColor="#8B3FEC"/></linearGradient></defs>
+            <path d="M5,2 L19,2 L27,10 L27,26 Q27,28 25,28 L5,28 Q3,28 3,26 L3,4 Q3,2 5,2 Z" fill="rgba(255,255,255,0.12)" stroke="url(#lg-pa)" strokeWidth="2.2" strokeLinejoin="round"/>
+            <path d="M19,2 L19,10 L27,10" fill="none" stroke="url(#lg-pa)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <line x1="9" y1="22" x2="20" y2="11" stroke="url(#lg-pa)" strokeWidth="2.2" strokeLinecap="round"/>
+            <circle cx="8" cy="23" r="1.8" fill="url(#lg-pa)"/>
+          </svg>
+          <span style={{ fontSize:14, fontWeight:700, color:'#fff', letterSpacing:'-.03em' }}>EditPDF<span style={{ marginLeft:2, background:'linear-gradient(90deg,#4F7FFA,#8B3FEC)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}> AI</span></span>
         </Link>
         <span style={{ fontSize:11, color:'rgba(255,255,255,.25)' }}>›</span>
         <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>PDF Annotator</span>

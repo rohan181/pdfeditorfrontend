@@ -158,6 +158,19 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .cta-h{font-family:var(--fd);font-size:clamp(28px,4vw,46px);font-weight:800;letter-spacing:-.045em;color:#1d1d1f;margin-bottom:14px;position:relative;line-height:1.06}
 .cta-sub{font-size:16px;color:var(--fg2);margin-bottom:40px;position:relative}
 
+/* Related tools */
+.related-sec{position:relative;z-index:1;padding:72px 0 80px;background:#f5f5f7;border-top:1px solid #e5e7eb}
+.related-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--p);margin-bottom:14px}
+.related-h{font-family:var(--fd);font-size:clamp(22px,3.5vw,34px);font-weight:800;letter-spacing:-.04em;color:#1d1d1f;margin-bottom:44px}
+.related-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.related-card{display:flex;flex-direction:column;gap:10px;padding:22px 20px;background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;text-decoration:none;transition:border-color .18s,transform .18s,box-shadow .18s}
+.related-card:hover{border-color:rgba(124,58,237,.3);transform:translateY(-3px);box-shadow:0 16px 40px -10px rgba(124,58,237,.1)}
+.related-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.related-name{font-size:14px;font-weight:700;color:#1d1d1f;letter-spacing:-.02em}
+.related-desc{font-size:12px;color:var(--fg3);line-height:1.55}
+@media(max-width:960px){.related-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.related-grid{grid-template-columns:1fr}}
+
 /* Footer */
 .foot{position:relative;z-index:1;border-top:1px solid #e5e7eb;padding:36px 0;background:#fff}
 .foot-in{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
@@ -316,9 +329,9 @@ export default function AIPDFFormFillerPage() {
               <span className="bdot" /><span>AI-POWERED FORM FILLING</span>
             </div>
             <h1 className="hero-h1">
-              <span className="h1-a">Fill PDF Forms</span>
-              <span className="h1-b">with AI</span>
-              <span className="h1-c">in Seconds</span>
+              <span className="h1-a">AI PDF Form Filler</span>
+              <span className="h1-b">Fill Forms Instantly</span>
+              <span className="h1-c">Free — No Signup Needed</span>
             </h1>
             <p className="hero-sub">
               Upload any PDF, paste your details once, and let AI detect and fill the fields for you.
@@ -616,6 +629,72 @@ export default function AIPDFFormFillerPage() {
                 <p className="fq-a">{f.a}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Related tools — internal links for SEO */}
+      <section className="related-sec">
+        <div className="wrap">
+          <p className="related-label">More PDF Tools</p>
+          <h2 className="related-h">Everything you need for PDFs</h2>
+          <div className="related-grid">
+            <Link href="/pdf-editor" className="related-card">
+              <div className="related-icon" style={{ background: 'rgba(99,102,241,0.1)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </div>
+              <div className="related-name">PDF Editor</div>
+              <div className="related-desc">Add text, images, shapes and annotations to any PDF.</div>
+            </Link>
+            <Link href="/pdf-signer" className="related-card">
+              <div className="related-icon" style={{ background: 'rgba(124,58,237,0.1)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"><path d="M12 19l7-7-3-3-7 7v3h3z"/><path d="M18 5l1 1-9.5 9.5"/></svg>
+              </div>
+              <div className="related-name">PDF Signer</div>
+              <div className="related-desc">Draw, type or upload a signature and sign any PDF instantly.</div>
+            </Link>
+            <Link href="/pdf-ocr" className="related-card">
+              <div className="related-icon" style={{ background: 'rgba(8,145,178,0.1)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0891b2" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              </div>
+              <div className="related-name">PDF OCR</div>
+              <div className="related-desc">Extract text from scanned PDFs with AI-powered OCR.</div>
+            </Link>
+            <Link href="/pdf-compressor" className="related-card">
+              <div className="related-icon" style={{ background: 'rgba(22,163,74,0.1)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <div className="related-name">PDF Compressor</div>
+              <div className="related-desc">Reduce PDF file size without losing quality.</div>
+            </Link>
+            <Link href="/pdf-merger" className="related-card">
+              <div className="related-icon" style={{ background: 'rgba(245,158,11,0.1)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round"><path d="M8 6H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-2"/><rect x="8" y="2" width="8" height="6" rx="1"/></svg>
+              </div>
+              <div className="related-name">PDF Merger</div>
+              <div className="related-desc">Combine multiple PDF files into one document.</div>
+            </Link>
+            <Link href="/pdf-splitter" className="related-card">
+              <div className="related-icon" style={{ background: 'rgba(239,68,68,0.1)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <div className="related-name">PDF Splitter</div>
+              <div className="related-desc">Split a PDF into separate files by page range.</div>
+            </Link>
+            <Link href="/pdf-to-word" className="related-card">
+              <div className="related-icon" style={{ background: 'rgba(59,130,246,0.1)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div className="related-name">PDF to Word</div>
+              <div className="related-desc">Convert any PDF to an editable Word document.</div>
+            </Link>
+            <Link href="/pdf-summarizer" className="related-card">
+              <div className="related-icon" style={{ background: 'rgba(168,85,247,0.1)' }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              </div>
+              <div className="related-name">PDF Summarizer</div>
+              <div className="related-desc">Get AI-powered summaries of any PDF in seconds.</div>
+            </Link>
           </div>
         </div>
       </section>

@@ -32,27 +32,60 @@ export default function OGImage() {
           left: 350,
         }} />
 
-        {/* Logo mark */}
+        {/* Logo mark — gradient document icon */}
         <div style={{
-          width: 80,
-          height: 80,
-          background: 'linear-gradient(148deg, #6366f1 0%, #818cf8 60%, #a78bfa 100%)',
-          clipPath: 'polygon(0% 0%, 68% 0%, 100% 26%, 100% 100%, 0% 100%)',
+          width: 90,
+          height: 90,
           marginBottom: 28,
-          borderRadius: 6,
-        }} />
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'white',
+          borderRadius: 16,
+          border: '3px solid transparent',
+          backgroundImage: 'linear-gradient(white,white), linear-gradient(135deg,#4F7FFA,#8B3FEC)',
+          backgroundOrigin: 'border-box',
+          backgroundClip: 'padding-box, border-box',
+        }}>
+          <div style={{
+            width: 50,
+            height: 55,
+            position: 'relative',
+            display: 'flex',
+          }}>
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(135deg,#4F7FFA,#8B3FEC)',
+              clipPath: 'polygon(0% 0%, 65% 0%, 100% 30%, 100% 100%, 0% 100%)',
+              borderRadius: 3,
+              opacity: 0.15,
+            }}/>
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              border: '3px solid transparent',
+              backgroundImage: 'linear-gradient(white,white), linear-gradient(135deg,#4F7FFA,#8B3FEC)',
+              backgroundOrigin: 'border-box',
+              backgroundClip: 'padding-box, border-box',
+              clipPath: 'polygon(0% 0%, 65% 0%, 100% 30%, 100% 100%, 0% 100%)',
+              borderRadius: 3,
+              display: 'flex',
+            }}/>
+          </div>
+        </div>
 
         {/* Title */}
         <div style={{
-          fontSize: 64,
+          fontSize: 72,
           fontWeight: 800,
-          color: '#ffffff',
-          letterSpacing: '-0.02em',
+          letterSpacing: '-0.03em',
           marginBottom: 16,
           display: 'flex',
+          alignItems: 'center',
         }}>
-          EditPDF{' '}
-          <span style={{ color: '#818cf8', marginLeft: 16 }}>AI</span>
+          <span style={{ color: '#ffffff' }}>EditPDF</span>
+          <span style={{ color: '#818cf8', marginLeft: 18 }}>AI</span>
         </div>
 
         {/* Subtitle */}

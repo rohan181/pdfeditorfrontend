@@ -409,9 +409,9 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .pg{height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#f5f5f7}
 
 .logo{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
-.logo-mark{width:27px;height:27px;background:#1d1d1f;border-radius:7px;display:flex;align-items:center;justify-content:center}
-.logo-name{font-size:14px;font-weight:700;color:#1d1d1f;letter-spacing:-.04em}
-.logo-name em{font-style:normal;color:#f59e0b}
+.logo-mark{display:flex;align-items:center;justify-content:center}
+.logo-name{font-size:14px;font-weight:700;color:#0D1B4B;letter-spacing:-.03em}
+.logo-name .logo-ai{background:linear-gradient(90deg,#4F7FFA,#8B3FEC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-left:2px}
 .nav-sep{font-size:11px;color:rgba(0,0,0,.2)}
 .nav-title{font-size:13px;font-weight:700;color:#1d1d1f}
 .nav-count{font-size:11px;color:rgba(0,0,0,.38)}
@@ -893,8 +893,16 @@ export default function ImageToPDFPage() {
       <div className="pg">
         <nav className="nav">
           <Link href="/" className="logo">
-            <div className="logo-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="white"/><polyline points="14 2 14 8 20 8" stroke="#1d1d1f" strokeWidth="2"/></svg></div>
-            <span className="logo-name">Edit<em>PDF</em> AI</span>
+            <div className="logo-mark">
+              <svg width="27" height="27" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="lg-it" x1="2" y1="2" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#4F7FFA"/><stop offset="100%" stopColor="#8B3FEC"/></linearGradient></defs>
+                <path d="M5,2 L19,2 L27,10 L27,26 Q27,28 25,28 L5,28 Q3,28 3,26 L3,4 Q3,2 5,2 Z" fill="white" stroke="url(#lg-it)" strokeWidth="2.2" strokeLinejoin="round"/>
+                <path d="M19,2 L19,10 L27,10" fill="none" stroke="url(#lg-it)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <line x1="9" y1="22" x2="20" y2="11" stroke="url(#lg-it)" strokeWidth="2.2" strokeLinecap="round"/>
+                <circle cx="8" cy="23" r="1.8" fill="url(#lg-it)"/>
+              </svg>
+            </div>
+            <span className="logo-name">EditPDF<span className="logo-ai"> AI</span></span>
           </Link>
           <span className="nav-sep">›</span>
           <span className="nav-title">Image → PDF</span>

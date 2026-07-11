@@ -66,12 +66,21 @@ function Nav() {
     >
       <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 28px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
         {/* Wordmark */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', flexShrink: 0 }}>
-          <div style={{ width: 28, height: 28, background: '#111', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <FileText size={14} color="#fff" strokeWidth={2} />
-          </div>
-          <span style={{ fontSize: 15, fontWeight: 600, color: '#111', letterSpacing: '-0.03em', fontFamily: 'var(--font-inter, system-ui)' }}>
-            Edit<span style={{ color: '#888' }}>PDF</span> AI
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
+          <svg width="28" height="28" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="lg-hc" x1="2" y1="2" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#4F7FFA"/>
+                <stop offset="100%" stopColor="#8B3FEC"/>
+              </linearGradient>
+            </defs>
+            <path d="M5,2 L19,2 L27,10 L27,26 Q27,28 25,28 L5,28 Q3,28 3,26 L3,4 Q3,2 5,2 Z" fill="white" stroke="url(#lg-hc)" strokeWidth="2.2" strokeLinejoin="round"/>
+            <path d="M19,2 L19,10 L27,10" fill="none" stroke="url(#lg-hc)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <line x1="9" y1="22" x2="20" y2="11" stroke="url(#lg-hc)" strokeWidth="2.2" strokeLinecap="round"/>
+            <circle cx="8" cy="23" r="1.8" fill="url(#lg-hc)"/>
+          </svg>
+          <span style={{ fontSize: 15, fontWeight: 800, color: '#0D1B4B', letterSpacing: '-0.03em', lineHeight: 1, fontFamily: 'var(--font-inter, system-ui)' }}>
+            EditPDF<span style={{ marginLeft: 2, background: 'linear-gradient(90deg,#4F7FFA,#8B3FEC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}> AI</span>
           </span>
         </Link>
 
@@ -613,10 +622,21 @@ export default function HomeClient() {
       <footer style={{ borderTop: '1px solid #f0f0f0', padding: '32px 0' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto', padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <div style={{ width: 24, height: 24, background: '#111', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <FileText size={12} color="#fff" strokeWidth={2} />
-            </div>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#111', letterSpacing: '-0.025em', fontFamily: FF }}>EditPDF AI</span>
+            <svg width="24" height="24" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="lg-hcf" x1="2" y1="2" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#4F7FFA"/>
+                  <stop offset="100%" stopColor="#8B3FEC"/>
+                </linearGradient>
+              </defs>
+              <path d="M5,2 L19,2 L27,10 L27,26 Q27,28 25,28 L5,28 Q3,28 3,26 L3,4 Q3,2 5,2 Z" fill="white" stroke="url(#lg-hcf)" strokeWidth="2.2" strokeLinejoin="round"/>
+              <path d="M19,2 L19,10 L27,10" fill="none" stroke="url(#lg-hcf)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="9" y1="22" x2="20" y2="11" stroke="url(#lg-hcf)" strokeWidth="2.2" strokeLinecap="round"/>
+              <circle cx="8" cy="23" r="1.8" fill="url(#lg-hcf)"/>
+            </svg>
+            <span style={{ fontSize: 13, fontWeight: 800, color: '#0D1B4B', letterSpacing: '-0.025em', lineHeight: 1, fontFamily: FF }}>
+              EditPDF<span style={{ marginLeft: 2, background: 'linear-gradient(90deg,#4F7FFA,#8B3FEC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}> AI</span>
+            </span>
           </Link>
           <nav style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
             {[

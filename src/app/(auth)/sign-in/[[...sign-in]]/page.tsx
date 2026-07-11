@@ -7,14 +7,15 @@ export default function SignInPage() {
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#f5f5f7', padding:20, fontFamily:'system-ui,sans-serif' }}>
       {/* App logo above the card */}
       <Link href="/" style={{ display:'inline-flex', alignItems:'center', gap:8, textDecoration:'none', marginBottom:24 }}>
-        <div style={{ width:32, height:32, background:'#1d1d1f', borderRadius:9, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="white"/>
-            <polyline points="14 2 14 8 20 8" stroke="#1d1d1f" strokeWidth="2"/>
-          </svg>
-        </div>
-        <span style={{ fontSize:18, fontWeight:800, color:'#1d1d1f', letterSpacing:'-.04em' }}>
-          Edit<span style={{ color:'#0891b2' }}>PDF</span> AI
+        <svg width="32" height="32" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="lg-si" x1="2" y1="2" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#4F7FFA"/><stop offset="100%" stopColor="#8B3FEC"/></linearGradient></defs>
+          <path d="M5,2 L19,2 L27,10 L27,26 Q27,28 25,28 L5,28 Q3,28 3,26 L3,4 Q3,2 5,2 Z" fill="white" stroke="url(#lg-si)" strokeWidth="2.2" strokeLinejoin="round"/>
+          <path d="M19,2 L19,10 L27,10" fill="none" stroke="url(#lg-si)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+          <line x1="9" y1="22" x2="20" y2="11" stroke="url(#lg-si)" strokeWidth="2.2" strokeLinecap="round"/>
+          <circle cx="8" cy="23" r="1.8" fill="url(#lg-si)"/>
+        </svg>
+        <span style={{ fontSize:18, fontWeight:800, color:'#0D1B4B', letterSpacing:'-.03em' }}>
+          EditPDF<span style={{ marginLeft:2, background:'linear-gradient(90deg,#4F7FFA,#8B3FEC)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}> AI</span>
         </span>
       </Link>
 

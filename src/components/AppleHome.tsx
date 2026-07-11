@@ -447,15 +447,23 @@ function Nav() {
           display:'flex',alignItems:'center'}}>
 
           {/* Logo */}
-          <Link href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',
-            marginRight:28,flexShrink:0}}>
-            <motion.div whileHover={{rotate:12,scale:1.1}} transition={SP}
-              style={{width:28,height:28,background:'#1d1d1f',borderRadius:7,display:'flex',
-                alignItems:'center',justifyContent:'center'}}>
-              <FileText size={14} color="#fff" strokeWidth={2.2}/>
+          <Link href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none',marginRight:28,flexShrink:0}}>
+            <motion.div whileHover={{scale:1.1}} transition={SP} style={{display:'flex',flexShrink:0}}>
+              <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="lg-ah" x1="2" y1="2" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#4F7FFA"/>
+                    <stop offset="100%" stopColor="#8B3FEC"/>
+                  </linearGradient>
+                </defs>
+                <path d="M5,2 L19,2 L27,10 L27,26 Q27,28 25,28 L5,28 Q3,28 3,26 L3,4 Q3,2 5,2 Z" fill="white" stroke="url(#lg-ah)" strokeWidth="2.2" strokeLinejoin="round"/>
+                <path d="M19,2 L19,10 L27,10" fill="none" stroke="url(#lg-ah)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <line x1="9" y1="22" x2="20" y2="11" stroke="url(#lg-ah)" strokeWidth="2.2" strokeLinecap="round"/>
+                <circle cx="8" cy="23" r="1.8" fill="url(#lg-ah)"/>
+              </svg>
             </motion.div>
-            <span style={{...FI,fontSize:15,fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.04em'}}>
-              Edit<span style={{color:RED}}>PDF</span> AI
+            <span style={{...FI,fontSize:15,fontWeight:800,color:'#0D1B4B',letterSpacing:'-0.03em',lineHeight:1}}>
+              EditPDF<span style={{marginLeft:2,background:'linear-gradient(90deg,#4F7FFA,#8B3FEC)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}> AI</span>
             </span>
           </Link>
 
@@ -1652,11 +1660,20 @@ function Footer() {
           {/* Brand */}
           <div>
             <Link href="/" style={{display:'inline-flex',alignItems:'center',gap:8,textDecoration:'none',marginBottom:14}}>
-              <div style={{width:30,height:30,background:'#1d1d1f',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <FileText size={15} color="#fff" strokeWidth={2.2}/>
-              </div>
-              <span style={{...FI,fontSize:15,fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.04em'}}>
-                Edit<span style={{color:RED}}>PDF</span> AI
+              <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="lg-ahf" x1="2" y1="2" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#4F7FFA"/>
+                    <stop offset="100%" stopColor="#8B3FEC"/>
+                  </linearGradient>
+                </defs>
+                <path d="M5,2 L19,2 L27,10 L27,26 Q27,28 25,28 L5,28 Q3,28 3,26 L3,4 Q3,2 5,2 Z" fill="white" stroke="url(#lg-ahf)" strokeWidth="2.2" strokeLinejoin="round"/>
+                <path d="M19,2 L19,10 L27,10" fill="none" stroke="url(#lg-ahf)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <line x1="9" y1="22" x2="20" y2="11" stroke="url(#lg-ahf)" strokeWidth="2.2" strokeLinecap="round"/>
+                <circle cx="8" cy="23" r="1.8" fill="url(#lg-ahf)"/>
+              </svg>
+              <span style={{...FI,fontSize:15,fontWeight:800,color:'#0D1B4B',letterSpacing:'-0.03em',lineHeight:1}}>
+                EditPDF<span style={{marginLeft:2,background:'linear-gradient(90deg,#4F7FFA,#8B3FEC)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}> AI</span>
               </span>
             </Link>
             <p style={{...FI,fontSize:13,color:'#6b7280',lineHeight:1.7,maxWidth:220,margin:'0 0 16px'}}>
