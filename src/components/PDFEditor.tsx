@@ -1317,8 +1317,13 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         // If the very next item is underscores, Strategy A already claimed it — skip
         if (next && DASH_RE.test(next.str.trim())) continue
 
-        const x1 = labelRight + 2
+        let x1 = labelRight + 2
         const x2 = gapRight - 2
+
+        // Snap x1 to any dash/line item sitting inside the gap on this line
+        // so text starts at the actual fill line, not before it
+        const dashInGap = line.find(o => o.tx >= labelRight + 2 && o.tx + o.w <= gapRight + 4 && DASH_RE.test(o.str.trim()))
+        if (dashInGap) x1 = dashInGap.tx
 
         // Skip if Strategy A already placed a field covering this x-range on this line
         const alreadyCovered = coveredRanges.some(
@@ -1361,8 +1366,13 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
         // Skip if next item starts a new dash field (Strategy A handles that)
         if (next && DASH_RE.test(next.str.trim())) continue
 
-        const x1 = labelRight + 4
+        let x1 = labelRight + 4
         const x2 = gapRight - 4
+
+        // Snap x1 to any dash/line item sitting inside the gap on this line
+        // so text starts at the actual fill line, not before it
+        const dashInGap = line.find(o => o.tx >= labelRight + 4 && o.tx + o.w <= gapRight + 4 && DASH_RE.test(o.str.trim()))
+        if (dashInGap) x1 = dashInGap.tx
 
         // Skip if already covered by A or B
         const alreadyCovered = coveredRanges.some(
