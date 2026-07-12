@@ -86,8 +86,10 @@ const TIER_BADGE = {
 }
 
 const NAV_LINKS = [
-  { label: 'AI Tools', href: '/#tools' },
-  { label: 'Pricing',  href: '/pricing' },
+  { label: 'All Tools', href: '/#tools' },
+  { label: 'AI Tools',  href: '/#tools' },
+  { label: 'Pricing',   href: '/pricing' },
+  { label: 'About',     href: '/about'   },
 ]
 
 // ── shared touch-button style ─────────────────────────────────────────────────
@@ -198,6 +200,14 @@ export default function SiteNav() {
             <Link href="/pdf-editor" className="sn-desk-only"
               style={{ ...FI, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', background: '#1d1d1f', color: '#fff', borderRadius: 99, fontSize: 12.5, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.02em' }}>
               <Upload size={12} strokeWidth={2.5} /> Open Editor
+            </Link>
+
+            {/* All Tools — mobile only, in header bar */}
+            <Link href="/#tools" className="sn-mob-only" style={{ textDecoration: 'none' }}>
+              <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 99, border: '1.5px solid rgba(0,0,0,.12)', background: '#fff' }}>
+                <Layers size={13} color="#4F7FFA" strokeWidth={2} />
+                <span style={{ ...FI, fontSize: 12.5, fontWeight: 700, color: '#1d1d1f' }}>All Tools</span>
+              </div>
             </Link>
 
             {/* Hamburger — mobile only */}
@@ -360,6 +370,17 @@ export default function SiteNav() {
                   </div>
                 </div>
               </div>
+
+              {/* ── All Tools quick link ── */}
+              <Link href="/#tools" onClick={closeMob} style={{ textDecoration: 'none', display: 'block' }}>
+                <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 8, height: 52, padding: '0 20px', borderBottom: '1px solid #f0f0f0' }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: '#f0f4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Layers size={16} color="#4F7FFA" strokeWidth={1.9} />
+                  </div>
+                  <span style={{ ...FI, fontSize: 15, fontWeight: 700, color: '#1d1d1f', flex: 1 }}>All Tools</span>
+                  <ArrowRight size={15} color="rgba(0,0,0,.25)" strokeWidth={2} />
+                </div>
+              </Link>
 
               {/* ── Plain nav links ── */}
               {NAV_LINKS.map(({ label, href }) => (

@@ -2014,12 +2014,12 @@ function Footer() {
       ['Image to PDF','/image-to-pdf'],
     ]},
     { title:'Company', color:'#374151', links:[
+      ['About Us','/about'],
       ['Pricing','/pricing'],
       ['Privacy Policy','/privacy'],
       ['Terms of Service','/terms'],
       ['Contact','/contact'],
       ['Support','mailto:support@editpdfai.com'],
-      ['All Tools','/#tools'],
     ]},
   ]
   return (
@@ -2105,7 +2105,7 @@ function Footer() {
               35+ TOOLS · FREE · AI-POWERED
             </span>
             <div style={{display:'flex',gap:12}}>
-              {[['Privacy','/privacy'],['Terms','/terms'],['Contact','/contact']].map(([l,h])=>(
+              {[['About','/about'],['Privacy','/privacy'],['Terms','/terms'],['Contact','/contact']].map(([l,h])=>(
                 <Link key={l} href={h}
                   style={{...FI,fontSize:11,color:'#9ca3af',textDecoration:'none',fontWeight:500}}
                   onMouseEnter={e=>(e.currentTarget.style.color='#374151')}
@@ -2538,11 +2538,20 @@ function Testimonials() {
 //  PRICING PREVIEW
 // ══════════════════════════════════════════════════════════════════════════════
 function PricingPreview() {
-  const FREE_ITEMS = ['35+ PDF tools — all free','No account required','Edit, merge, split, compress','Sign & watermark PDFs']
-  const PRO_ITEMS  = ['Everything in Free','Unlimited AI uses per day','PDF → Word / Excel / PPT','Priority processing']
+  const FREE_ITEMS = ['35+ PDF tools — all free','No account required','Edit, merge, split, compress','Sign & watermark PDFs','5 AI uses per day']
+  const PRO_ITEMS  = ['Everything in Free','Unlimited AI uses per day','PDF → Word / Excel / PPT','Priority processing','AI form autofill & chat fill']
+
+  const COMPARE = [
+    { label:'All PDF tools',                 free: true,      pro: true         },
+    { label:'No account needed',             free: true,      pro: true         },
+    { label:'AI form fill / summarise / OCR',free: '5/day',   pro: '∞ Unlimited'},
+    { label:'PDF → Word / Excel / PPT',      free: false,     pro: true         },
+    { label:'Priority processing',           free: false,     pro: true         },
+  ]
+
   return (
     <section style={{background:'#f5f5f7',padding:'72px 28px',borderTop:'1px solid #ebebeb'}}>
-      <div style={{maxWidth:820,margin:'0 auto'}}>
+      <div style={{maxWidth:860,margin:'0 auto'}}>
         <motion.div initial={{opacity:0,y:14}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.5,ease:E}}
           style={{marginBottom:36,textAlign:'center'}}>
           <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
@@ -2555,7 +2564,9 @@ function PricingPreview() {
             All core PDF tools are free — no card, no account. Upgrade for unlimited AI.
           </p>
         </motion.div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:16}}>
+
+        {/* Cards */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:16,marginBottom:20}}>
           {/* Free */}
           <motion.div initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:.4,ease:E}}
             style={{background:'#fff',borderRadius:20,padding:'28px 28px 24px',border:'1.5px solid #e5e7eb'}}>
@@ -2579,12 +2590,16 @@ function PricingPreview() {
               Start free — no signup
             </Link>
           </motion.div>
+
           {/* Pro */}
           <motion.div initial={{opacity:0,y:12}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:.4,delay:.07,ease:E}}
             style={{background:'#1d1d1f',borderRadius:20,padding:'28px 28px 24px',border:'1.5px solid #1d1d1f',position:'relative',overflow:'hidden'}}>
             <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle,rgba(8,145,178,.25),transparent)',pointerEvents:'none'}}/>
+            <div style={{position:'absolute',top:16,right:16}}>
+              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'.04em',color:'#f59e0b',background:'rgba(251,191,36,.15)',border:'1px solid rgba(251,191,36,.3)',padding:'3px 8px',borderRadius:99}}>🎉 LAUNCH PRICE</span>
+            </div>
             <div style={{marginBottom:20}}>
-              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#0891b2',background:'rgba(8,145,178,.18)',padding:'3px 8px',borderRadius:99}}>PRO · LAUNCH PRICE</span>
+              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#0891b2',background:'rgba(8,145,178,.18)',padding:'3px 8px',borderRadius:99}}>PRO</span>
               <div style={{...FI,fontSize:28,fontWeight:800,color:'#fff',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>US$1<span style={{fontSize:14,fontWeight:500,color:'rgba(255,255,255,.5)'}}>/month</span></div>
               <div style={{...FI,fontSize:12,color:'rgba(255,255,255,.45)',lineHeight:1.55}}>Billed monthly · Cancel anytime</div>
             </div>
@@ -2604,7 +2619,35 @@ function PricingPreview() {
             </Link>
           </motion.div>
         </div>
-        <div style={{textAlign:'center',marginTop:20}}>
+
+        {/* Inline comparison table */}
+        <motion.div initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:.4,delay:.1,ease:E}}
+          style={{background:'#fff',borderRadius:16,border:'1.5px solid #e5e7eb',overflow:'hidden',marginBottom:16}}>
+          {/* Header */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',padding:'10px 20px',background:'#f9fafb',borderBottom:'1.5px solid #e5e7eb'}}>
+            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#9ca3af'}}>Feature</span>
+            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#9ca3af',textAlign:'center'}}>Free</span>
+            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#0891b2',textAlign:'center'}}>Pro ✦</span>
+          </div>
+          {COMPARE.map(({label,free,pro},i)=>(
+            <div key={label} style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',padding:'11px 20px',
+              borderBottom: i < COMPARE.length-1 ? '1px solid #f3f4f6' : 'none',alignItems:'center'}}>
+              <span style={{...FI,fontSize:13,color:'#374151',fontWeight:500}}>{label}</span>
+              <span style={{textAlign:'center',fontSize:13}}>
+                {free===true  ? <span style={{color:'#16a34a',fontWeight:700}}>✓</span>
+                : free===false ? <span style={{color:'#d1d5db',fontSize:16,lineHeight:1}}>—</span>
+                : <span style={{...FI,fontSize:11.5,color:'#6b7280',fontWeight:600}}>{free as string}</span>}
+              </span>
+              <span style={{textAlign:'center',fontSize:13,background:'rgba(8,145,178,.04)',margin:'0 -20px',padding:'11px 20px',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                {pro===true
+                  ? <span style={{color:'#0891b2',fontWeight:800,fontSize:15}}>✓</span>
+                  : <span style={{...FI,fontSize:11.5,color:'#0891b2',fontWeight:700}}>{pro as string}</span>}
+              </span>
+            </div>
+          ))}
+        </motion.div>
+
+        <div style={{textAlign:'center'}}>
           <Link href="/pricing" style={{...FI,fontSize:13,color:'#9ca3af',textDecoration:'none',fontWeight:500}}>
             See full pricing & feature comparison →
           </Link>
