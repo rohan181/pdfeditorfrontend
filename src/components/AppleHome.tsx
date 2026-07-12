@@ -416,10 +416,8 @@ const NAV_TIER_LABEL = {
 }
 
 const NAV_LINKS = [
-  { label:'AI Tools', href:'/ai-pdf-form-filler', highlight:true },
-  { label:'Pricing',  href:'/pricing' },
-  { label:'Privacy',  href:'/privacy' },
-  { label:'Support',  href:'/support' },
+  { label:'Pricing', href:'/pricing' },
+  { label:'Support', href:'/support' },
 ]
 
 function Nav() {
@@ -491,13 +489,12 @@ function Nav() {
             </div>
 
             {/* Plain links */}
-            {NAV_LINKS.map(({label,href,highlight})=>(
+            {NAV_LINKS.map(({label,href})=>(
               <Link key={label} href={href} style={{textDecoration:'none'}}>
-                <motion.span whileHover={{color:highlight?'#7c3aed':'#1d1d1f'}}
+                <motion.span whileHover={{color:'#1d1d1f'}}
                   style={{...FI,display:'inline-flex',alignItems:'center',gap:4,
                     padding:'5px 11px',fontSize:13,fontWeight:500,borderRadius:8,
-                    color:highlight?'#7c3aed':'rgba(0,0,0,.52)'}}>
-                  {highlight && <Sparkles size={11} strokeWidth={2}/>}
+                    color:'rgba(0,0,0,.52)'}}>
                   {label}
                 </motion.span>
               </Link>
@@ -729,12 +726,11 @@ function Nav() {
               </div>
 
               {/* Plain links */}
-              {NAV_LINKS.map(({label,href,highlight})=>(
+              {NAV_LINKS.map(({label,href})=>(
                 <Link key={label} href={href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,height:52,padding:'0 20px',
                     borderBottom:'1px solid #f0f0f0',...FI,fontSize:15,fontWeight:600,
-                    color:highlight?'#7c3aed':'#1d1d1f',WebkitTapHighlightColor:'transparent'}}>
-                    {highlight && <Sparkles size={15} strokeWidth={2} color="#7c3aed"/>}
+                    color:'#1d1d1f',WebkitTapHighlightColor:'transparent'}}>
                     {label}
                   </div>
                 </Link>
@@ -1318,15 +1314,16 @@ function ToolCard({ tool, catColor }: { tool: typeof TOOLS[0]; catColor: string 
 // ══════════════════════════════════════════════════════════════════════════════
 const TOOL_FILTERS = [
   { label:'All',      catId:'All',     color:'#1d1d1f', Icon:Layers   },
+  { label:'AI Tools', catId:'AI',      color:'#7c3aed', Icon:Sparkles },
   { label:'Edit',     catId:'Edit',    color:'#2563eb', Icon:FilePen  },
-  { label:'AI',       catId:'AI',      color:'#7c3aed', Icon:Sparkles },
   { label:'Convert',  catId:'Convert', color:'#16a34a', Icon:FileType },
+  { label:'Pages',    catId:'Pages',   color:'#f97316', Icon:Layers   },
   { label:'Sign',     catId:'Protect', color:'#dc2626', Icon:PenTool  },
   { label:'Organize', catId:'Organize',color:'#d97706', Icon:Merge    },
 ]
 
 function AllTools() {
-  const [activeTab, setActiveTab] = useState('All')
+  const [activeTab, setActiveTab] = useState('AI Tools')
   const [search, setSearch] = useState('')
 
   const activeFilter = TOOL_FILTERS.find(f => f.label === activeTab) ?? TOOL_FILTERS[0]

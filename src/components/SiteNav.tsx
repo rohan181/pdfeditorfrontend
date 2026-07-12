@@ -25,17 +25,6 @@ type NavCat  = { label: string; href: string; color: string; Icon: LucideIcon; t
 
 const NAV_CATS: NavCat[] = [
   {
-    label: 'Edit', href: '/pdf-editor', color: '#2563eb', Icon: FilePen,
-    tools: [
-      { name: 'PDF Editor',    href: '/pdf-editor',   tier: 'free', Icon: FilePen,          bg: '#2563eb' },
-      { name: 'PDF Annotator', href: '/pdf-annotate', tier: 'free', Icon: MessageSquareText, bg: '#0ea5e9' },
-      { name: 'PDF Viewer',    href: '/pdf-viewer',   tier: 'free', Icon: MonitorPlay,       bg: '#0a84ff' },
-      { name: 'PDF Redactor',  href: '/pdf-redactor', tier: 'free', Icon: EyeOff,            bg: '#374151' },
-      { name: 'PDF Cropper',   href: '/pdf-cropper',  tier: 'free', Icon: Scissors,          bg: '#0d9488' },
-      { name: 'Rotate PDF',    href: '/rotate-pdf',   tier: 'free', Icon: RotateCw,          bg: '#ea580c' },
-    ],
-  },
-  {
     label: 'AI Tools', href: '/ai-pdf-form-filler', color: '#7c3aed', Icon: Sparkles,
     tools: [
       { name: 'AI Form Filler', href: '/ai-pdf-form-filler', tier: 'ai', Icon: WandSparkles,  bg: '#7c3aed' },
@@ -44,6 +33,17 @@ const NAV_CATS: NavCat[] = [
       { name: 'PDF Translator', href: '/pdf-translator',     tier: 'ai', Icon: Languages,     bg: '#0891b2' },
       { name: 'PDF Mind Map',   href: '/mind-map',           tier: 'ai', Icon: BrainCircuit,  bg: '#a855f7' },
       { name: 'Quiz Creator',   href: '/quiz-creator',       tier: 'ai', Icon: ClipboardList, bg: '#7c3aed' },
+    ],
+  },
+  {
+    label: 'Edit', href: '/pdf-editor', color: '#2563eb', Icon: FilePen,
+    tools: [
+      { name: 'PDF Editor',    href: '/pdf-editor',   tier: 'free', Icon: FilePen,          bg: '#2563eb' },
+      { name: 'PDF Annotator', href: '/pdf-annotate', tier: 'free', Icon: MessageSquareText, bg: '#0ea5e9' },
+      { name: 'PDF Viewer',    href: '/pdf-viewer',   tier: 'free', Icon: MonitorPlay,       bg: '#0a84ff' },
+      { name: 'PDF Redactor',  href: '/pdf-redactor', tier: 'free', Icon: EyeOff,            bg: '#374151' },
+      { name: 'PDF Cropper',   href: '/pdf-cropper',  tier: 'free', Icon: Scissors,          bg: '#0d9488' },
+      { name: 'Rotate PDF',    href: '/rotate-pdf',   tier: 'free', Icon: RotateCw,          bg: '#ea580c' },
     ],
   },
   {
@@ -86,10 +86,8 @@ const TIER_BADGE = {
 }
 
 const NAV_LINKS = [
-  { label: 'AI Tools', href: '/ai-pdf-form-filler', highlight: true },
-  { label: 'Pricing',  href: '/pricing' },
-  { label: 'Privacy',  href: '/privacy' },
-  { label: 'Support',  href: '/support' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Support', href: '/support' },
 ]
 
 // ── shared touch-button style ─────────────────────────────────────────────────
@@ -165,11 +163,10 @@ export default function SiteNav() {
               </button>
             </div>
 
-            {NAV_LINKS.map(({ label, href, highlight }) => (
+            {NAV_LINKS.map(({ label, href }) => (
               <Link key={label} href={href} className="sn-desk-only" style={{ textDecoration: 'none' }}>
-                <motion.span whileHover={{ color: highlight ? '#7c3aed' : '#1d1d1f' }}
-                  style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 11px', fontSize: 13, fontWeight: 500, borderRadius: 8, color: highlight ? '#7c3aed' : 'rgba(0,0,0,.52)' }}>
-                  {highlight && <Sparkles size={11} strokeWidth={2} />}
+                <motion.span whileHover={{ color: '#1d1d1f' }}
+                  style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 11px', fontSize: 13, fontWeight: 500, borderRadius: 8, color: 'rgba(0,0,0,.52)' }}>
                   {label}
                 </motion.span>
               </Link>
@@ -369,10 +366,9 @@ export default function SiteNav() {
               </div>
 
               {/* ── Plain nav links ── */}
-              {NAV_LINKS.map(({ label, href, highlight }) => (
+              {NAV_LINKS.map(({ label, href }) => (
                 <Link key={label} href={href} onClick={closeMob} style={{ textDecoration: 'none', display: 'block' }}>
-                  <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 8, height: 52, padding: '0 20px', borderBottom: '1px solid #f0f0f0', ...FI, fontSize: 15, fontWeight: 600, color: highlight ? '#7c3aed' : '#1d1d1f' }}>
-                    {highlight && <Sparkles size={15} strokeWidth={2} color="#7c3aed" />}
+                  <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 8, height: 52, padding: '0 20px', borderBottom: '1px solid #f0f0f0', ...FI, fontSize: 15, fontWeight: 600, color: '#1d1d1f' }}>
                     {label}
                   </div>
                 </Link>
