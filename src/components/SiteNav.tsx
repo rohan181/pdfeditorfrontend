@@ -86,8 +86,8 @@ const TIER_BADGE = {
 }
 
 const NAV_LINKS = [
-  { label: 'Pricing', href: '/pricing' },
-  { label: 'Support', href: '/support' },
+  { label: 'AI Tools', href: '/#tools' },
+  { label: 'Pricing',  href: '/pricing' },
 ]
 
 // ── shared touch-button style ─────────────────────────────────────────────────
@@ -178,30 +178,26 @@ export default function SiteNav() {
             {isLoaded && isSignedIn ? (
               <>
                 <Link href="/dashboard" className="sn-desk-only"
-                  style={{ ...FI, fontSize: 12.5, fontWeight: 500, color: 'rgba(0,0,0,.55)', textDecoration: 'none', padding: '5px 10px', borderRadius: 8 }}>
+                  style={{ ...FI, fontSize: 12.5, fontWeight: 700, color: '#1d1d1f', textDecoration: 'none',
+                    padding: '6px 14px', borderRadius: 99, border: '1.5px solid rgba(0,0,0,.16)', background: '#fff' }}>
                   Dashboard
                 </Link>
                 <UserButton />
               </>
             ) : isLoaded ? (
-              <>
-                <SignInButton mode="modal">
-                  <button className="sn-desk-only" style={{ ...FI, ...TAP, fontSize: 13, fontWeight: 500, color: 'rgba(0,0,0,.6)', background: 'transparent', border: 'none', padding: '6px 12px', borderRadius: 8 }}>
-                    Sign in
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="sn-desk-only" style={{ ...FI, ...TAP, fontSize: 13, fontWeight: 600, color: '#fff', background: '#1d1d1f', border: 'none', padding: '7px 16px', borderRadius: 99, letterSpacing: '-0.02em' }}>
-                    Sign up
-                  </button>
-                </SignUpButton>
-              </>
+              <SignInButton mode="modal">
+                <button className="sn-desk-only" style={{ ...FI, ...TAP, fontSize: 13, fontWeight: 700,
+                  color: '#1d1d1f', background: '#fff', border: '1.5px solid rgba(0,0,0,.16)',
+                  padding: '6px 14px', borderRadius: 99, cursor: 'pointer', letterSpacing: '-0.02em' }}>
+                  Sign in
+                </button>
+              </SignInButton>
             ) : null}
 
-            {/* Upload PDF — desktop only */}
+            {/* Open Editor — desktop only */}
             <Link href="/pdf-editor" className="sn-desk-only"
               style={{ ...FI, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', background: '#1d1d1f', color: '#fff', borderRadius: 99, fontSize: 12.5, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.02em' }}>
-              <Upload size={12} strokeWidth={2.5} /> Upload PDF
+              <Upload size={12} strokeWidth={2.5} /> Open Editor
             </Link>
 
             {/* Hamburger — mobile only */}
@@ -379,31 +375,28 @@ export default function SiteNav() {
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
                   {isSignedIn ? (
                     <Link href="/dashboard" onClick={closeMob}
-                      style={{ ...FI, fontSize: 15, fontWeight: 600, color: '#1d1d1f', textDecoration: 'none' }}>
-                      Dashboard →
+                      style={{ ...FI, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 15, fontWeight: 700, color: '#1d1d1f', textDecoration: 'none',
+                        padding: '13px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff' }}>
+                      Dashboard
                     </Link>
                   ) : (
-                    <div style={{ display: 'flex', gap: 10 }}>
-                      <SignInButton mode="modal">
-                        <button style={{ ...FI, ...TAP, flex: 1, padding: '13px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff', fontSize: 15, fontWeight: 600, color: '#1d1d1f' }}>
-                          Sign in
-                        </button>
-                      </SignInButton>
-                      <SignUpButton mode="modal">
-                        <button style={{ ...FI, ...TAP, flex: 1, padding: '13px', borderRadius: 12, border: 'none', background: '#1d1d1f', fontSize: 15, fontWeight: 600, color: '#fff' }}>
-                          Sign up
-                        </button>
-                      </SignUpButton>
-                    </div>
+                    <SignInButton mode="modal">
+                      <button style={{ ...FI, ...TAP, width: '100%', padding: '13px', borderRadius: 12,
+                        border: '1.5px solid #e5e7eb', background: '#fff',
+                        fontSize: 15, fontWeight: 700, color: '#1d1d1f' }}>
+                        Sign in
+                      </button>
+                    </SignInButton>
                   )}
                 </div>
               )}
 
-              {/* ── Upload CTA ── */}
+              {/* ── Open Editor CTA ── */}
               <div style={{ padding: '16px 20px', marginTop: 'auto' }}>
                 <Link href="/pdf-editor" onClick={closeMob}
                   style={{ ...FI, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px', background: '#1d1d1f', color: '#fff', borderRadius: 14, fontSize: 15, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.02em' }}>
-                  <Upload size={16} strokeWidth={2.5} /> Upload PDF
+                  <Upload size={16} strokeWidth={2.5} /> Open Editor
                 </Link>
               </div>
 

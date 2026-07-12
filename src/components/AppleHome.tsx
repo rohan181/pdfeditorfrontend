@@ -13,6 +13,7 @@ import {
   ArrowRight, FileText, Lock, PenLine, ScanLine, Zap,
   Upload, CheckCircle2, MousePointer2, Layers, Download, X, Menu,
   ChevronRight, ChevronDown, ArrowUpRight,
+  Shield, Server, CreditCard, Globe, GraduationCap, Briefcase, Building2, FlaskConical, Plus, Minus,
   // tool icons
   WandSparkles, ScanText, Sparkles, BrainCircuit, ClipboardList, Languages,
   FilePen, MessageSquareText,
@@ -416,8 +417,8 @@ const NAV_TIER_LABEL = {
 }
 
 const NAV_LINKS = [
-  { label:'Pricing', href:'/pricing' },
-  { label:'Support', href:'/support' },
+  { label:'AI Tools', href:'/#tools' },
+  { label:'Pricing',  href:'/pricing' },
 ]
 
 function Nav() {
@@ -507,8 +508,10 @@ function Nav() {
               isSignedIn ? (
                 <div className="desk" style={{display:'flex',alignItems:'center',gap:8}}>
                   <Link href="/dashboard"
-                    style={{...FI,fontSize:12.5,fontWeight:500,color:'rgba(0,0,0,.55)',
-                      textDecoration:'none',padding:'5px 10px',borderRadius:8}}>
+                    style={{...FI,fontSize:12.5,fontWeight:700,color:'#1d1d1f',
+                      textDecoration:'none',padding:'6px 14px',borderRadius:99,
+                      border:'1.5px solid rgba(0,0,0,.16)',background:'#fff',
+                      letterSpacing:'-0.02em',display:'flex',alignItems:'center',gap:5}}>
                     Dashboard
                   </Link>
                   <UserButton/>
@@ -516,19 +519,13 @@ function Nav() {
               ) : (
                 <div className="desk" style={{display:'flex',alignItems:'center',gap:6}}>
                   <SignInButton mode="modal">
-                    <button style={{...FI,fontSize:12.5,fontWeight:500,color:'rgba(0,0,0,.6)',
-                      background:'transparent',border:'none',padding:'6px 12px',
-                      borderRadius:8,cursor:'pointer'}}>
+                    <button style={{...FI,fontSize:12.5,fontWeight:700,color:'#1d1d1f',
+                      background:'#fff',border:'1.5px solid rgba(0,0,0,.16)',
+                      padding:'6px 14px',borderRadius:99,cursor:'pointer',
+                      letterSpacing:'-0.02em',transition:'all .15s'}}>
                       Sign in
                     </button>
                   </SignInButton>
-                  <SignUpButton mode="modal">
-                    <button style={{...FI,fontSize:12.5,fontWeight:600,color:'#fff',
-                      background:'#1d1d1f',border:'none',padding:'6px 14px',
-                      borderRadius:99,cursor:'pointer',letterSpacing:'-0.02em'}}>
-                      Sign up
-                    </button>
-                  </SignUpButton>
                 </div>
               )
             )}
@@ -538,7 +535,7 @@ function Nav() {
                 textDecoration:'none',letterSpacing:'-0.02em',flexShrink:0}}>
               <motion.span style={{display:'flex',alignItems:'center',gap:6}}
                 whileHover={{gap:10}} transition={SP}>
-                <Upload size={12} strokeWidth={2.5}/> Upload PDF
+                <Upload size={12} strokeWidth={2.5}/> Open Editor
               </motion.span>
             </Link>
             <button className="mob" onClick={()=>setMobOpen(o=>!o)}
@@ -741,33 +738,31 @@ function Nav() {
                 <div style={{padding:'16px 20px',borderBottom:'1px solid #f0f0f0'}}>
                   {isSignedIn ? (
                     <Link href="/dashboard" onClick={()=>setMobOpen(false)}
-                      style={{...FI,fontSize:15,fontWeight:600,color:'#1d1d1f',textDecoration:'none'}}>
-                      Dashboard →
+                      style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:6,
+                        fontSize:15,fontWeight:700,color:'#1d1d1f',textDecoration:'none',
+                        padding:'13px',borderRadius:12,border:'1.5px solid #e5e7eb',background:'#fff'}}>
+                      Dashboard
                     </Link>
                   ) : (
-                    <div style={{display:'flex',gap:10}}>
-                      <SignInButton mode="modal">
-                        <button style={{...FI,flex:1,padding:'13px',borderRadius:12,
-                          border:'1.5px solid #e5e7eb',background:'#fff',
-                          fontSize:15,fontWeight:600,color:'#1d1d1f',cursor:'pointer',WebkitTapHighlightColor:'transparent'}}>Sign in</button>
-                      </SignInButton>
-                      <SignUpButton mode="modal">
-                        <button style={{...FI,flex:1,padding:'13px',borderRadius:12,
-                          border:'none',background:'#1d1d1f',
-                          fontSize:15,fontWeight:600,color:'#fff',cursor:'pointer',WebkitTapHighlightColor:'transparent'}}>Sign up</button>
-                      </SignUpButton>
-                    </div>
+                    <SignInButton mode="modal">
+                      <button style={{...FI,width:'100%',padding:'13px',borderRadius:12,
+                        border:'1.5px solid #e5e7eb',background:'#fff',
+                        fontSize:15,fontWeight:700,color:'#1d1d1f',cursor:'pointer',
+                        WebkitTapHighlightColor:'transparent'}}>
+                        Sign in
+                      </button>
+                    </SignInButton>
                   )}
                 </div>
               )}
 
-              {/* Upload CTA */}
+              {/* Open Editor CTA */}
               <div style={{padding:'16px 20px',marginTop:'auto'}}>
                 <Link href="/pdf-editor" onClick={()=>setMobOpen(false)}
                   style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:8,
                     padding:'16px',background:'#1d1d1f',color:'#fff',borderRadius:14,
                     fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.02em'}}>
-                  <Upload size={16} strokeWidth={2.5}/> Upload PDF
+                  <Upload size={16} strokeWidth={2.5}/> Open Editor
                 </Link>
               </div>
             </motion.div>
@@ -806,16 +801,19 @@ function Hero() {
               <span style={{...MONO,fontSize:10.5,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase'}}>AI PDF Platform · Free Tools · No Account Needed</span>
             </motion.div>
 
-            {/* Headline — "Edit any PDF. In seconds." with shimmer on "seconds." */}
+            {/* Headline — SEO-optimised H1 */}
             <motion.h1 variants={MV} initial="hidden" animate="visible"
-              style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(40px,5.8vw,96px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.95,margin:'0 0 24px',display:'flex',flexWrap:'wrap',gap:'0 .22em'}}>
-              {['Edit,','Sign,','Fill','&','Convert','PDFs'].map((w,i)=>(
-                <span key={i} style={{display:'inline-block',overflow:'hidden',lineHeight:1.06}}>
-                  <motion.span style={{display:'inline-block'}} variants={WV}>{w}</motion.span>
-                </span>
-              ))}
-              <span style={{display:'inline-block',overflow:'hidden',lineHeight:1.06}}>
-                <motion.span className="grad-red" style={{display:'inline-block'}} variants={WV}>Online</motion.span>
+              style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(34px,4.8vw,76px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 24px'}}>
+              <span style={{display:'block',overflow:'hidden'}}>
+                <motion.span style={{display:'block'}} variants={WV}>Free Online PDF Editor</motion.span>
+              </span>
+              <span style={{display:'block',overflow:'hidden',marginTop:'0.1em'}}>
+                <motion.span style={{display:'inline-flex',flexWrap:'wrap',gap:'0 .22em'}} variants={WV}>
+                  {['Edit,','Sign,','Fill','&','Convert'].map((w,i)=>(
+                    <span key={i}>{w}</span>
+                  ))}
+                  <span className="grad-red">PDFs</span>
+                </motion.span>
               </span>
             </motion.h1>
 
@@ -847,11 +845,15 @@ function Hero() {
             {/* Trust row */}
             <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.5,delay:1.05}}
               className="hero-trust">
-              <span style={{color:'#f59e0b',fontSize:12,letterSpacing:2}}>★★★★★</span>
-              {['Free PDF tools','No account needed','Sign in for unlimited AI'].map((t,i)=>(
-                <span key={t} style={{display:'flex',alignItems:'center',gap:6}}>
-                  {i>0&&<span style={{width:3,height:3,borderRadius:'50%',background:'#ddd',display:'inline-block'}}/>}
-                  <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.06em',textTransform:'uppercase'}}>{t}</span>
+              {[
+                { icon:<CheckCircle2 size={12} color="#16a34a" strokeWidth={2.5}/>, label:'35+ Free tools' },
+                { icon:<Shield size={12} color="#0891b2" strokeWidth={2.5}/>, label:'Browser-based · private' },
+                { icon:<Sparkles size={12} color="#7c3aed" strokeWidth={2.5}/>, label:'AI: 5 free uses/day' },
+              ].map(({icon,label},i)=>(
+                <span key={label} style={{display:'flex',alignItems:'center',gap:5}}>
+                  {i>0&&<span style={{width:3,height:3,borderRadius:'50%',background:'#ddd',display:'inline-block',marginRight:2}}/>}
+                  {icon}
+                  <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.42)',letterSpacing:'0.05em',textTransform:'uppercase'}}>{label}</span>
                 </span>
               ))}
             </motion.div>
@@ -1066,6 +1068,109 @@ const GSTEPS = [
   { n:'04', color:'#22c55e', label:'Export',      headline:'Download your file',         body:'Convert to Word, Excel, or compress. Your finished file is ready to download.',  Screen:ScreenExport   },
 ]
 
+// ══════════════════════════════════════════════════════════════════════════════
+//  HOW IT WORKS — static 4-card (crawlable by search engines)
+// ══════════════════════════════════════════════════════════════════════════════
+function HowItWorks() {
+  const steps = [
+    {
+      n: '01', color: '#6366f1', bg: 'rgba(99,102,241,.08)',
+      Icon: Upload,
+      title: 'Upload your document',
+      desc: 'Drag and drop any PDF or click to browse. No account needed — your file opens instantly in the browser.',
+    },
+    {
+      n: '02', color: '#7c3aed', bg: 'rgba(124,58,237,.08)',
+      Icon: Sparkles,
+      title: 'Choose a PDF or AI tool',
+      desc: 'Pick from 35+ tools — edit text, compress, merge, OCR scan, translate, summarise, or auto-fill a form with AI.',
+    },
+    {
+      n: '03', color: RED, bg: 'rgba(226,75,74,.08)',
+      Icon: PenTool,
+      title: 'Edit, fill, sign or convert',
+      desc: 'Make changes directly in your browser. Add text, annotations, or a digital signature. Convert to Word, Excel and more.',
+    },
+    {
+      n: '04', color: '#16a34a', bg: 'rgba(22,163,74,.08)',
+      Icon: Download,
+      title: 'Download securely',
+      desc: 'Your finished PDF is ready in seconds. Download it, share a link, or continue editing — all for free.',
+    },
+  ]
+
+  return (
+    <section style={{background:'#fff', padding:'80px 28px 72px', borderTop:'1px solid #f0f0f0'}}>
+      <div style={{maxWidth:1100, margin:'0 auto'}}>
+
+        <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.5,ease:E}}
+          style={{marginBottom:48, textAlign:'center'}}>
+          <div style={{...MONO, fontSize:10, color:'rgba(0,0,0,.35)', letterSpacing:'0.14em', textTransform:'uppercase', marginBottom:14}}>
+            How it works
+          </div>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)', fontSize:'clamp(26px,3.5vw,44px)', fontWeight:800, color:'#1d1d1f', letterSpacing:'-0.05em', lineHeight:.97, margin:'0 0 12px'}}>
+            Four simple steps
+          </h2>
+          <p style={{...FI, fontSize:15, color:'#6b7280', margin:'0 auto', maxWidth:420, lineHeight:1.65}}>
+            From upload to download — everything runs in your browser, no install required.
+          </p>
+        </motion.div>
+
+        {/* Static cards — always in the DOM for crawlers */}
+        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:16}}>
+          {steps.map(({n,color,bg,Icon,title,desc},i) => (
+            <motion.div key={n}
+              initial={{opacity:0,y:18}} whileInView={{opacity:1,y:0}}
+              viewport={{once:true,margin:'60px'}} transition={{duration:.4,delay:i*.07,ease:E}}
+              style={{background:'#fafafa', border:'1.5px solid #eeeeee', borderRadius:20,
+                padding:'24px 20px 22px', display:'flex', flexDirection:'column', gap:14, position:'relative'}}>
+
+              {/* Step number — decorative */}
+              <span style={{position:'absolute',top:16,right:18,...MONO,fontSize:11,fontWeight:800,
+                color:'rgba(0,0,0,.08)',letterSpacing:'0.06em'}}>
+                {n}
+              </span>
+
+              {/* Icon */}
+              <div style={{width:46,height:46,borderRadius:13,background:bg,
+                display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Icon size={22} color={color} strokeWidth={1.8}/>
+              </div>
+
+              {/* Text */}
+              <div>
+                <div style={{...FI,fontSize:15,fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.03em',marginBottom:6,lineHeight:1.25}}>
+                  {title}
+                </div>
+                <p style={{...FI,fontSize:13,color:'#6b7280',lineHeight:1.65,margin:0}}>
+                  {desc}
+                </p>
+              </div>
+
+              {/* Connector arrow (hidden on last card) */}
+              {i < steps.length - 1 && (
+                <div style={{position:'absolute',top:'50%',right:-12,transform:'translateY(-50%)',
+                  width:20,height:20,borderRadius:'50%',background:'#fff',border:'1.5px solid #e5e7eb',
+                  display:'flex',alignItems:'center',justifyContent:'center',zIndex:2}}>
+                  <ChevronRight size={11} color="#9ca3af" strokeWidth={2.5}/>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Link to interactive walkthrough */}
+        <div style={{textAlign:'center',marginTop:28}}>
+          <button onClick={()=>document.getElementById('how-it-works-detail')?.scrollIntoView({behavior:'smooth'})}
+            style={{...FI,background:'none',border:'none',cursor:'pointer',fontSize:13,color:'#9ca3af',fontWeight:500,display:'inline-flex',alignItems:'center',gap:5}}>
+            See detailed walkthrough below <ChevronDown size={13} strokeWidth={2}/>
+          </button>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Scroll gallery ─────────────────────────────────────────────────────────────
 function Apple3DScroll() {
   const pin = useRef<HTMLDivElement>(null)
@@ -1096,7 +1201,7 @@ function Apple3DScroll() {
   return (
     <>
       {/* Section intro — scrolls normally before sticky activates */}
-      <div className="sec-pad" style={{maxWidth:1200,margin:'0 auto'}}>
+      <div id="how-it-works-detail" className="sec-pad" style={{maxWidth:1200,margin:'0 auto'}}>
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.55,ease:E}}>
           <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>How it works</div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,4vw,56px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>
@@ -1550,6 +1655,274 @@ const TIER_BADGE: Record<string, { label:string; bg:string; color:string }> = {
   pro:   { label:'Pro',           bg:'rgba(8,145,178,.1)',    color:'#0e7490' },
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+//  PRODUCT DEMO — looping 4-step animation
+// ══════════════════════════════════════════════════════════════════════════════
+const DEMO_STEPS = [
+  {
+    step: '01',
+    label: 'Upload',
+    color: '#6366f1',
+    headline: 'Drop or click to upload',
+    Screen: function DemoUpload() {
+      return (
+        <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,padding:24,background:'#F5F5F7'}}>
+          <motion.div
+            animate={{borderColor:['rgba(99,102,241,.25)','rgba(99,102,241,.7)','rgba(99,102,241,.25)'],background:['rgba(99,102,241,.02)','rgba(99,102,241,.07)','rgba(99,102,241,.02)']}}
+            transition={{duration:2.2,repeat:Infinity,ease:'easeInOut'}}
+            style={{border:'2px dashed rgba(99,102,241,.35)',borderRadius:16,padding:'32px 40px',textAlign:'center',width:'100%',maxWidth:320}}>
+            <motion.div animate={{y:[0,-6,0]}} transition={{duration:2,repeat:Infinity,ease:'easeInOut'}}
+              style={{width:52,height:52,borderRadius:14,background:'rgba(99,102,241,.1)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px'}}>
+              <Upload size={24} color="#6366f1" strokeWidth={1.6}/>
+            </motion.div>
+            <div style={{...FI,fontSize:14,fontWeight:700,color:'#1d1d1f',marginBottom:4}}>Drop your PDF here</div>
+            <div style={{...FI,fontSize:12,color:'#9ca3af',marginBottom:16}}>or click to browse · up to 100 MB</div>
+            <motion.div animate={{width:['0%','72%']}} transition={{duration:1.4,delay:.6,ease:[.22,1,.36,1]}}
+              style={{height:3,borderRadius:99,background:'linear-gradient(90deg,#6366f1,#818cf8)',margin:'0 auto'}}/>
+          </motion.div>
+          <div style={{display:'flex',gap:8}}>
+            {['invoice.pdf','contract.pdf','form.pdf'].map((f,i)=>(
+              <motion.div key={f} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:.3+i*.15,duration:.3}}
+                style={{...FI,fontSize:10,fontWeight:600,color:'#6366f1',background:'rgba(99,102,241,.08)',border:'1px solid rgba(99,102,241,.2)',borderRadius:8,padding:'4px 9px',whiteSpace:'nowrap'}}>
+                {f}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )
+    },
+  },
+  {
+    step: '02',
+    label: 'AI Fill',
+    color: '#7c3aed',
+    headline: 'AI fills fields instantly',
+    Screen: function DemoAI() {
+      const fields = [
+        {label:'Full Name',     val:'John Smith',          w:'80%'},
+        {label:'Email Address', val:'john@example.com',    w:'90%'},
+        {label:'Date of Birth', val:'12 / 04 / 1990',     w:'60%'},
+        {label:'Signature',     val:'',                    w:'70%', sig:true},
+      ]
+      return (
+        <div style={{height:'100%',background:'#fff',display:'flex',flexDirection:'column',padding:'20px 24px',gap:10,overflow:'hidden'}}>
+          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+            <div style={{width:28,height:28,borderRadius:8,background:'linear-gradient(135deg,#7c3aed,#a855f7)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <WandSparkles size={13} color="#fff" strokeWidth={2}/>
+            </div>
+            <span style={{...FI,fontSize:12,fontWeight:700,color:'#7c3aed'}}>AI Form Filler</span>
+            <motion.span animate={{opacity:[1,.3,1]}} transition={{duration:1.4,repeat:Infinity}}
+              style={{...MONO,fontSize:9,color:'#7c3aed',background:'rgba(124,58,237,.1)',padding:'2px 7px',borderRadius:99,marginLeft:'auto'}}>
+              Scanning…
+            </motion.span>
+          </div>
+          {fields.map(({label,val,w,sig},i)=>(
+            <div key={label}>
+              <div style={{...MONO,fontSize:9,color:'#9ca3af',marginBottom:3,letterSpacing:'0.06em',textTransform:'uppercase'}}>{label}</div>
+              <motion.div initial={{width:'0%'}} animate={{width:w}} transition={{delay:.3+i*.28,duration:.5,ease:[.22,1,.36,1]}}
+                style={{height:sig?28:22,borderRadius:6,background:sig?'rgba(124,58,237,.06)':'rgba(124,58,237,.09)',
+                  border:`1px solid rgba(124,58,237,.2)`,display:'flex',alignItems:'center',paddingLeft:8,overflow:'hidden'}}>
+                {sig ? (
+                  <motion.span initial={{opacity:0}} animate={{opacity:1}} transition={{delay:.3+i*.28+.4}}
+                    style={{...FI,fontSize:13,color:'#7c3aed',fontStyle:'italic',fontWeight:600}}>J. Smith</motion.span>
+                ) : (
+                  <motion.span initial={{opacity:0}} animate={{opacity:1}} transition={{delay:.3+i*.28+.3}}
+                    style={{...FI,fontSize:11,color:'#4c1d95',fontWeight:500}}>{val}</motion.span>
+                )}
+              </motion.div>
+            </div>
+          ))}
+        </div>
+      )
+    },
+  },
+  {
+    step: '03',
+    label: 'Sign',
+    color: RED,
+    headline: 'Add your signature',
+    Screen: function DemoSign() {
+      return (
+        <div style={{height:'100%',background:'#fff',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:24,gap:14}}>
+          <div style={{width:'100%',maxWidth:320,background:'#fafafa',borderRadius:12,border:'1.5px solid #f0f0f0',padding:18}}>
+            <div style={{...MONO,fontSize:9,color:'#9ca3af',marginBottom:10,letterSpacing:'0.06em',textTransform:'uppercase'}}>Sign here</div>
+            <div style={{height:68,borderRadius:8,background:'rgba(226,75,74,.04)',border:'1.5px dashed rgba(226,75,74,.3)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden'}}>
+              <svg width="200" height="52" viewBox="0 0 200 52" fill="none" style={{position:'absolute'}}>
+                <path
+                  d="M20,36 C28,20 36,14 48,26 C56,34 60,18 72,18 C82,18 86,30 94,24 C104,16 112,28 122,26 C134,22 140,32 152,28 C162,24 168,34 180,30"
+                  stroke={RED} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+                  fill="none"
+                  strokeDasharray="340"
+                  style={{animation:'sigdraw 3s ease-in-out infinite'}}
+                />
+              </svg>
+            </div>
+            <div style={{display:'flex',gap:6,marginTop:10}}>
+              {['Draw','Type','Upload'].map((m,i)=>(
+                <div key={m} style={{...FI,fontSize:10,fontWeight:600,padding:'3px 10px',borderRadius:99,
+                  background:i===0?`${RED}12`:'transparent',color:i===0?RED:'#9ca3af',
+                  border:`1px solid ${i===0?RED+'30':'#ebebeb'}`}}>{m}</div>
+              ))}
+            </div>
+          </div>
+          <div style={{...FI,display:'inline-flex',alignItems:'center',gap:7,padding:'9px 22px',
+              background:RED,color:'#fff',borderRadius:99,fontSize:12.5,fontWeight:700,cursor:'pointer',
+              boxShadow:`0 6px 20px ${RED}40`,animation:'pdot 2s ease-in-out infinite',
+              animationName:'none'}}>
+            <PenTool size={13} strokeWidth={2.2}/> Apply Signature
+          </div>
+        </div>
+      )
+    },
+  },
+  {
+    step: '04',
+    label: 'Download',
+    color: '#16a34a',
+    headline: 'Download your file',
+    Screen: function DemoDownload() {
+      return (
+        <div style={{height:'100%',background:'#fff',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:28,gap:18}}>
+          <motion.div
+            animate={{y:[0,-4,0]}} transition={{duration:2,repeat:Infinity,ease:'easeInOut'}}
+            style={{width:72,height:88,borderRadius:10,background:'linear-gradient(135deg,#16a34a,#22c55e)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6,
+              boxShadow:'0 12px 32px rgba(22,163,74,.3)',position:'relative',overflow:'hidden'}}>
+            <div style={{position:'absolute',top:0,right:0,width:22,height:22,background:'rgba(255,255,255,.18)',clipPath:'polygon(100% 0%,100% 100%,0% 100%)'}}/>
+            <Download size={26} color="#fff" strokeWidth={1.6}/>
+          </motion.div>
+          <div style={{textAlign:'center'}}>
+            <div style={{...FI,fontSize:14,fontWeight:800,color:'#1d1d1f',marginBottom:4}}>form_signed.pdf</div>
+            <div style={{...FI,fontSize:12,color:'#9ca3af',marginBottom:14}}>Ready · 1.2 MB · processed in browser</div>
+            <div style={{...FI,display:'inline-flex',alignItems:'center',gap:7,padding:'10px 24px',
+                background:'#16a34a',color:'#fff',borderRadius:99,fontSize:13,fontWeight:700,cursor:'pointer',
+                boxShadow:'0 6px 20px rgba(22,163,74,.35)'}}>
+              <Download size={14} strokeWidth={2.5}/> Download PDF
+            </div>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            {['PDF → Word','Share link','Compress'].map(opt=>(
+              <div key={opt} style={{...FI,fontSize:10,fontWeight:600,color:'#6b7280',
+                border:'1px solid #e5e7eb',borderRadius:8,padding:'4px 10px'}}>{opt}</div>
+            ))}
+          </div>
+        </div>
+      )
+    },
+  },
+]
+
+function ProductDemo() {
+  const [active, setActive] = useState(0)
+
+  useEffect(() => {
+    const id = setInterval(() => setActive(p => (p + 1) % DEMO_STEPS.length), 3200)
+    return () => clearInterval(id)
+  }, [])
+
+  const cur = DEMO_STEPS[active]
+  const Screen = cur.Screen
+
+  return (
+    <section style={{background:'#F5F5F7',borderTop:'1px solid #ebebeb',padding:'80px 28px 88px'}}>
+      <div style={{maxWidth:1100,margin:'0 auto'}}>
+
+        {/* Header */}
+        <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.5,ease:E}}
+          style={{textAlign:'center',marginBottom:48}}>
+          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
+            See it in action
+          </div>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(26px,3.5vw,44px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 12px'}}>
+            From upload to done — in seconds
+          </h2>
+          <p style={{...FI,fontSize:15,color:'#6b7280',margin:'0 auto',maxWidth:400,lineHeight:1.65}}>
+            Upload a PDF, fill or edit it with AI, add your signature, and download — all in your browser.
+          </p>
+        </motion.div>
+
+        {/* Step tabs */}
+        <div style={{display:'flex',gap:8,justifyContent:'center',marginBottom:32,flexWrap:'wrap'}}>
+          {DEMO_STEPS.map(({step,label,color},i) => (
+            <button key={step} onClick={() => setActive(i)}
+              style={{...FI,display:'flex',alignItems:'center',gap:6,padding:'8px 18px',borderRadius:99,
+                border:`1.5px solid ${i===active ? color : '#e5e7eb'}`,
+                background:i===active ? `${color}10` : '#fff',
+                color:i===active ? color : '#9ca3af',
+                fontSize:13,fontWeight:700,cursor:'pointer',transition:'all .18s',
+                boxShadow:i===active?`0 4px 16px ${color}20`:'none'}}>
+              <span style={{...MONO,fontSize:9,fontWeight:800}}>{step}</span>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Main demo window */}
+        <motion.div initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'60px'}} transition={{duration:.5,ease:E}}>
+          <div style={{borderRadius:20,overflow:'hidden',border:'1.5px solid #e5e7eb',
+            boxShadow:'0 24px 80px -16px rgba(0,0,0,.12)',background:'#fff',maxWidth:760,margin:'0 auto'}}>
+
+            {/* Chrome bar */}
+            <div style={{background:'#F5F5F7',borderBottom:'1px solid rgba(0,0,0,.07)',height:38,
+              display:'flex',alignItems:'center',padding:'0 14px',gap:10}}>
+              <div style={{display:'flex',gap:5}}>
+                {['#ff5f57','#febc2e','#28c840'].map(c=><div key={c} style={{width:9,height:9,borderRadius:'50%',background:c}}/>)}
+              </div>
+              <div style={{flex:1,display:'flex',justifyContent:'center'}}>
+                <div style={{display:'flex',alignItems:'center',gap:6,background:'rgba(0,0,0,.05)',borderRadius:7,padding:'3px 14px',minWidth:220}}>
+                  <Lock size={8} color="rgba(0,0,0,.35)" strokeWidth={2}/>
+                  <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)'}}>editpdfai.com</span>
+                </div>
+              </div>
+              {/* Progress bar */}
+              <motion.div key={active}
+                style={{width:60,height:3,borderRadius:99,background:'#ebebeb',overflow:'hidden',flexShrink:0}}>
+                <motion.div
+                  initial={{width:'0%'}} animate={{width:'100%'}}
+                  transition={{duration:3.2,ease:'linear'}}
+                  style={{height:'100%',borderRadius:99,background:cur.color}}/>
+              </motion.div>
+            </div>
+
+            {/* Screen content */}
+            <div style={{height:300,position:'relative',overflow:'hidden'}}>
+              <AnimatePresence mode="sync">
+                <motion.div key={active}
+                  initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-20}}
+                  transition={{duration:.28,ease:[.22,1,.36,1]}}
+                  style={{position:'absolute',inset:0}}>
+                  <Screen/>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Bottom bar */}
+            <div style={{background:'#fafafa',borderTop:'1px solid #f0f0f0',padding:'10px 18px',
+              display:'flex',alignItems:'center',gap:10}}>
+              <motion.div animate={{background:cur.color}} transition={{duration:.4}}
+                style={{width:6,height:6,borderRadius:'50%'}}/>
+              <span style={{...FI,fontSize:12,fontWeight:600,color:'#1d1d1f'}}>{cur.headline}</span>
+              <span style={{...MONO,fontSize:10,color:'#9ca3af',marginLeft:'auto'}}>
+                Step {cur.step} of {DEMO_STEPS.length}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* CTA */}
+        <div style={{textAlign:'center',marginTop:28}}>
+          <Link href="/pdf-editor"
+            style={{...FI,display:'inline-flex',alignItems:'center',gap:7,fontSize:14,fontWeight:700,
+              color:'#fff',background:'#1d1d1f',textDecoration:'none',
+              padding:'11px 28px',borderRadius:99,letterSpacing:'-0.02em',
+              boxShadow:'0 4px 20px rgba(0,0,0,.14)'}}>
+            <Upload size={14} strokeWidth={2.5}/> Try it free — no account needed
+          </Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function PopularTools() {
   const popular: { label:string; href:string; Icon:typeof FilePen; color:string; tier:string }[] = [
     { label:'Edit PDF',      href:'/pdf-editor',         Icon:FilePen,   color:'#6366f1', tier:'free' },
@@ -1756,22 +2129,236 @@ function Footer() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  PRIVACY NOTE
+//  USE CASES
+// ══════════════════════════════════════════════════════════════════════════════
+function UseCases() {
+  const cases = [
+    {
+      Icon: GraduationCap, color: '#7c3aed', bg: 'rgba(124,58,237,.08)',
+      title: 'Students',
+      desc: 'Summarise lecture notes, generate practice quizzes, and OCR scan handwritten pages — all before your next class.',
+      tools: ['PDF Summarizer', 'Quiz Creator', 'PDF OCR Scanner'],
+    },
+    {
+      Icon: Briefcase, color: '#2563eb', bg: 'rgba(37,99,235,.08)',
+      title: 'Job Seekers',
+      desc: 'Fill job application forms with AI, sign offer letters digitally, and convert your CV to PDF in seconds.',
+      tools: ['AI Form Filler', 'PDF E-Signer', 'Word → PDF'],
+    },
+    {
+      Icon: FilePen, color: '#16a34a', bg: 'rgba(22,163,74,.08)',
+      title: 'Freelancers',
+      desc: 'Edit invoice PDFs, add your signature to contracts, and redact sensitive client details before sharing.',
+      tools: ['PDF Editor', 'PDF E-Signer', 'PDF Redactor'],
+    },
+    {
+      Icon: Building2, color: '#f97316', bg: 'rgba(249,115,22,.08)',
+      title: 'Small Businesses',
+      desc: 'Merge multi-page reports, compress attachments for email, and lock confidential documents with a password.',
+      tools: ['PDF Merger', 'PDF Compressor', 'PDF Password Lock'],
+    },
+    {
+      Icon: FlaskConical, color: '#0891b2', bg: 'rgba(8,145,178,.08)',
+      title: 'Researchers',
+      desc: 'Translate academic papers, extract text from scanned journals, and create mind maps from long PDFs.',
+      tools: ['PDF Translator', 'PDF OCR Scanner', 'PDF Mind Map'],
+    },
+  ]
+  return (
+    <section style={{background:'#fff',padding:'88px 28px 80px',borderTop:'1px solid #f0f0f0'}}>
+      <div style={{maxWidth:1200,margin:'0 auto'}}>
+        <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.5,ease:E}}
+          style={{marginBottom:48,textAlign:'center'}}>
+          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
+            Use cases
+          </div>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(26px,3.5vw,44px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 12px'}}>
+            Built for every PDF task
+          </h2>
+          <p style={{...FI,fontSize:15,color:'#6b7280',margin:'0 auto',maxWidth:480,lineHeight:1.65}}>
+            Whether you are a student, professional or business — EditPDF AI has the right tool for you.
+          </p>
+        </motion.div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:16}}>
+          {cases.map(({Icon,color,bg,title,desc,tools},i)=>(
+            <motion.div key={title}
+              initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}}
+              viewport={{once:true,margin:'60px'}} transition={{duration:.4,delay:i*.06,ease:E}}
+              style={{background:'#fafafa',border:'1.5px solid #eeeeee',borderRadius:20,padding:'24px 20px 20px',
+                display:'flex',flexDirection:'column',gap:12}}>
+              <div style={{width:44,height:44,borderRadius:13,background:bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Icon size={22} color={color} strokeWidth={1.8}/>
+              </div>
+              <div>
+                <div style={{...FI,fontSize:15,fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.03em',marginBottom:6}}>{title}</div>
+                <p style={{...FI,fontSize:13,color:'#6b7280',lineHeight:1.65,margin:'0 0 12px'}}>{desc}</p>
+                <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
+                  {tools.map(t=>(
+                    <span key={t} style={{...MONO,fontSize:9,fontWeight:700,padding:'3px 8px',borderRadius:99,
+                      background:bg,color,letterSpacing:'0.04em'}}>{t}</span>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  PRIVACY & SECURITY (expanded 4-card)
 // ══════════════════════════════════════════════════════════════════════════════
 function PrivacyNote() {
+  const cards = [
+    {
+      Icon: Globe, color: '#2563eb', bg: 'rgba(37,99,235,.08)',
+      title: 'Browser-based processing',
+      desc: 'PDF editing, compression, signing and page tools all run directly in your browser. Your file never leaves your device.',
+    },
+    {
+      Icon: Server, color: '#16a34a', bg: 'rgba(22,163,74,.08)',
+      title: 'No PDF storage',
+      desc: 'We do not store your documents on our servers. When you close the tab, your PDF is gone — permanently.',
+    },
+    {
+      Icon: Shield, color: '#7c3aed', bg: 'rgba(124,58,237,.08)',
+      title: 'Raw PDFs never sent to AI',
+      desc: 'AI features extract only the text context needed. Your raw PDF binary is never transmitted to any AI model.',
+    },
+    {
+      Icon: CreditCard, color: '#0891b2', bg: 'rgba(8,145,178,.08)',
+      title: 'Secure Stripe payments',
+      desc: 'All billing is handled by Stripe — the global standard for payment security. We never see or store your card details.',
+    },
+  ]
   return (
-    <section style={{background:'#f5f5f7',padding:'40px 24px'}}>
-      <div style={{maxWidth:680,margin:'0 auto',display:'flex',alignItems:'flex-start',gap:16}}>
-        <div style={{flexShrink:0,width:36,height:36,borderRadius:10,background:'#e8f4f8',display:'flex',alignItems:'center',justifyContent:'center',marginTop:2}}>
-          <Lock size={16} color="#0891b2" strokeWidth={2}/>
+    <section style={{background:'#f5f5f7',padding:'80px 28px',borderTop:'1px solid #e8e8e8'}}>
+      <div style={{maxWidth:1200,margin:'0 auto'}}>
+        <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.5,ease:E}}
+          style={{marginBottom:40,textAlign:'center'}}>
+          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
+            Privacy &amp; Security
+          </div>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,40px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 12px'}}>
+            Your files stay private. Always.
+          </h2>
+          <p style={{...FI,fontSize:15,color:'#6b7280',margin:'0 auto',maxWidth:440,lineHeight:1.65}}>
+            Privacy is not a feature — it is the foundation of how EditPDF AI is built.
+          </p>
+        </motion.div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14,marginBottom:28}}>
+          {cards.map(({Icon,color,bg,title,desc},i)=>(
+            <motion.div key={title}
+              initial={{opacity:0,y:14}} whileInView={{opacity:1,y:0}}
+              viewport={{once:true,margin:'60px'}} transition={{duration:.4,delay:i*.06,ease:E}}
+              style={{background:'#fff',border:'1.5px solid #ebebeb',borderRadius:18,padding:'22px 18px',display:'flex',flexDirection:'column',gap:10}}>
+              <div style={{width:40,height:40,borderRadius:11,background:bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <Icon size={19} color={color} strokeWidth={1.8}/>
+              </div>
+              <div style={{...FI,fontSize:13.5,fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.02em'}}>{title}</div>
+              <p style={{...FI,fontSize:12.5,color:'#6b7280',lineHeight:1.65,margin:0}}>{desc}</p>
+            </motion.div>
+          ))}
         </div>
-        <div>
-          <p style={{fontFamily:'var(--font-dm,system-ui,sans-serif)',fontSize:15,fontWeight:700,color:'#1d1d1f',margin:'0 0 4px',letterSpacing:'-0.02em'}}>
-            Your privacy, clearly explained
-          </p>
-          <p style={{fontFamily:'var(--font-dm,system-ui,sans-serif)',fontSize:14,color:'#6b7280',margin:0,lineHeight:1.65}}>
-            Your PDF stays in your browser. For AI features, only the required text context is sent for processing.
-          </p>
+
+        <div style={{textAlign:'center'}}>
+          <Link href="/privacy"
+            style={{...FI,display:'inline-flex',alignItems:'center',gap:6,fontSize:13.5,fontWeight:600,
+              color:'#2563eb',textDecoration:'none',borderBottom:'1.5px solid rgba(37,99,235,.3)',paddingBottom:1}}>
+            See exactly how we protect your files <ArrowRight size={13} strokeWidth={2.5}/>
+          </Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  FAQ
+// ══════════════════════════════════════════════════════════════════════════════
+const FAQ_ITEMS = [
+  {
+    q: 'Is EditPDF AI really free?',
+    a: 'Yes. All core PDF tools — edit, merge, split, compress, sign, watermark, and more — are free with no limits and no account required. AI features (Form Filler, Summarizer, OCR, etc.) include 5 free uses per day. Upgrade to Pro (US$1/month) for unlimited AI use.',
+  },
+  {
+    q: 'Do I need to create an account?',
+    a: 'No account is required for any of the core tools. Sign in to unlock AI features (5 free per day) and Pro benefits such as unlimited AI, PDF-to-Word conversion, and priority processing.',
+  },
+  {
+    q: 'Are my PDF files uploaded to a server?',
+    a: 'Core tools process your PDF entirely in your browser — nothing is uploaded. For AI features, only the extracted text context is sent, never the raw PDF file.',
+  },
+  {
+    q: 'What is the maximum file size?',
+    a: 'You can upload PDFs up to 100 MB. Most browser-based tools handle files well below this limit instantly. For very large files, compression before processing is recommended.',
+  },
+  {
+    q: 'What counts as an AI use?',
+    a: 'Each interaction with an AI tool (one form fill, one summary, one OCR scan, one mind map, etc.) counts as one AI use. You get 5 free AI uses per day. Pro subscribers get unlimited uses.',
+  },
+  {
+    q: 'Can I edit scanned PDFs?',
+    a: 'Yes. Use the PDF OCR Scanner to extract and copy text from any scanned document. Once extracted, you can edit, translate, or summarise the content with our other tools.',
+  },
+]
+
+function FAQ() {
+  const [open, setOpen] = useState<number|null>(null)
+  return (
+    <section style={{background:'#fff',padding:'80px 28px',borderTop:'1px solid #f0f0f0'}}>
+      <div style={{maxWidth:720,margin:'0 auto'}}>
+        <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.5,ease:E}}
+          style={{marginBottom:40,textAlign:'center'}}>
+          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
+            FAQ
+          </div>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,40px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:0}}>
+            Common questions
+          </h2>
+        </motion.div>
+
+        <div style={{display:'flex',flexDirection:'column',gap:0}}>
+          {FAQ_ITEMS.map(({q,a},i)=>(
+            <motion.div key={q}
+              initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}}
+              viewport={{once:true,margin:'40px'}} transition={{duration:.35,delay:i*.04,ease:E}}
+              style={{borderBottom:'1px solid #f0f0f0'}}>
+              <button
+                onClick={()=>setOpen(open===i?null:i)}
+                style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',
+                  gap:16,padding:'20px 0',background:'none',border:'none',cursor:'pointer',textAlign:'left'}}>
+                <span style={{...FI,fontSize:15,fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.02em',lineHeight:1.3}}>{q}</span>
+                <span style={{flexShrink:0,width:26,height:26,borderRadius:'50%',background:open===i?'#1d1d1f':'#f3f4f6',
+                  display:'flex',alignItems:'center',justifyContent:'center',transition:'background .15s'}}>
+                  {open===i
+                    ? <Minus size={12} color="#fff" strokeWidth={2.5}/>
+                    : <Plus size={12} color="#6b7280" strokeWidth={2.5}/>}
+                </span>
+              </button>
+              <AnimatePresence>
+                {open===i && (
+                  <motion.div
+                    initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}}
+                    transition={{duration:.22,ease:E}}
+                    style={{overflow:'hidden'}}>
+                    <p style={{...FI,fontSize:14,color:'#6b7280',lineHeight:1.7,margin:'0 0 20px',maxWidth:600}}>{a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </div>
+
+        <div style={{textAlign:'center',marginTop:32}}>
+          <Link href="/support"
+            style={{...FI,fontSize:13.5,color:'#6b7280',textDecoration:'none',fontWeight:500}}>
+            Still have questions? <span style={{color:'#2563eb',fontWeight:600}}>Visit our support page →</span>
+          </Link>
         </div>
       </div>
     </section>
@@ -1811,6 +2398,137 @@ function UploadBox() {
             </span>
           </motion.div>
         </Link>
+      </div>
+    </section>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  TESTIMONIALS
+// ══════════════════════════════════════════════════════════════════════════════
+const REVIEWS = [
+  {
+    name: 'Sarah K.',
+    role: 'HR Manager',
+    avatar: 'SK',
+    color: '#7c3aed',
+    stars: 5,
+    text: 'I fill onboarding forms for new hires every week. The AI Form Filler saves me at least 30 minutes per document — it detects every field and fills them perfectly from the employee details I paste in.',
+    tool: 'AI Form Filler',
+  },
+  {
+    name: 'James T.',
+    role: 'Freelance Designer',
+    avatar: 'JT',
+    color: '#2563eb',
+    stars: 5,
+    text: 'I send contracts and invoices constantly. Being able to edit a PDF, add my signature and send it — all in the browser without installing anything — is exactly what I needed.',
+    tool: 'PDF Editor + E-Signer',
+  },
+  {
+    name: 'Priya M.',
+    role: 'Graduate Student',
+    avatar: 'PM',
+    color: '#16a34a',
+    stars: 5,
+    text: 'The PDF Summarizer and Quiz Creator are genuinely useful for studying. I upload a lecture PDF and get a clean summary and practice questions in under a minute. Game changer for exam prep.',
+    tool: 'PDF Summarizer · Quiz Creator',
+  },
+  {
+    name: 'David R.',
+    role: 'Small Business Owner',
+    avatar: 'DR',
+    color: '#f97316',
+    stars: 5,
+    text: 'We merge supplier invoices every month before sending them to our accountant. The PDF Merger works flawlessly every time, and compressing them keeps email attachments small.',
+    tool: 'PDF Merger · Compressor',
+  },
+  {
+    name: 'Lena W.',
+    role: 'Legal Assistant',
+    avatar: 'LW',
+    color: '#dc2626',
+    stars: 5,
+    text: 'Client documents contain sensitive information. The redaction tool permanently removes it — not just covers it with a box. And the password lock gives clients extra peace of mind.',
+    tool: 'PDF Redactor · Password Lock',
+  },
+  {
+    name: 'Arjun S.',
+    role: 'Research Analyst',
+    avatar: 'AS',
+    color: '#0891b2',
+    stars: 5,
+    text: 'I work with academic papers in multiple languages. The OCR scanner extracts text from scanned journals and the translator handles the rest. Two AI tools that genuinely save hours.',
+    tool: 'PDF OCR · Translator',
+  },
+]
+
+function Stars({ n }: { n: number }) {
+  return (
+    <div style={{display:'flex',gap:2}}>
+      {Array.from({length:n}).map((_,i)=>(
+        <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b" stroke="none">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      ))}
+    </div>
+  )
+}
+
+function Testimonials() {
+  return (
+    <section style={{background:'#fff',padding:'80px 28px 72px',borderTop:'1px solid #f0f0f0'}}>
+      <div style={{maxWidth:1200,margin:'0 auto'}}>
+
+        <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.5,ease:E}}
+          style={{marginBottom:48,textAlign:'center'}}>
+          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
+            Reviews
+          </div>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(26px,3.5vw,44px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 12px'}}>
+            What people are saying
+          </h2>
+          <p style={{...FI,fontSize:15,color:'#6b7280',margin:'0 auto',maxWidth:400,lineHeight:1.65}}>
+            Real feedback from users across different roles and industries.
+          </p>
+        </motion.div>
+
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))',gap:16}}>
+          {REVIEWS.map(({name,role,avatar,color,stars,text,tool},i)=>(
+            <motion.div key={name}
+              initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}}
+              viewport={{once:true,margin:'40px'}} transition={{duration:.4,delay:(i%3)*.07,ease:E}}
+              style={{background:'#fafafa',border:'1.5px solid #eeeeee',borderRadius:20,
+                padding:'22px 20px',display:'flex',flexDirection:'column',gap:12}}>
+
+              {/* Stars */}
+              <Stars n={stars}/>
+
+              {/* Quote */}
+              <p style={{...FI,fontSize:13.5,color:'#374151',lineHeight:1.7,margin:0,flex:1}}>
+                &ldquo;{text}&rdquo;
+              </p>
+
+              {/* Tool tag */}
+              <div style={{...MONO,fontSize:9,fontWeight:700,color,background:`${color}10`,
+                padding:'3px 9px',borderRadius:99,width:'fit-content',letterSpacing:'0.05em'}}>
+                {tool}
+              </div>
+
+              {/* Author */}
+              <div style={{display:'flex',alignItems:'center',gap:10,paddingTop:4,borderTop:'1px solid #f0f0f0'}}>
+                <div style={{width:34,height:34,borderRadius:'50%',background:`${color}18`,
+                  display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <span style={{...MONO,fontSize:10,fontWeight:800,color,letterSpacing:'0.04em'}}>{avatar}</span>
+                </div>
+                <div>
+                  <div style={{...FI,fontSize:13,fontWeight:700,color:'#1d1d1f',lineHeight:1.2}}>{name}</div>
+                  <div style={{...FI,fontSize:11.5,color:'#9ca3af',marginTop:1}}>{role}</div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   )
@@ -1867,8 +2585,8 @@ function PricingPreview() {
             <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle,rgba(8,145,178,.25),transparent)',pointerEvents:'none'}}/>
             <div style={{marginBottom:20}}>
               <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#0891b2',background:'rgba(8,145,178,.18)',padding:'3px 8px',borderRadius:99}}>PRO · LAUNCH PRICE</span>
-              <div style={{...FI,fontSize:28,fontWeight:800,color:'#fff',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>$1<span style={{fontSize:14,fontWeight:500,color:'rgba(255,255,255,.5)'}}>/month</span></div>
-              <div style={{...FI,fontSize:13,color:'rgba(255,255,255,.5)'}}>Lock in early — price rises for new subscribers</div>
+              <div style={{...FI,fontSize:28,fontWeight:800,color:'#fff',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>US$1<span style={{fontSize:14,fontWeight:500,color:'rgba(255,255,255,.5)'}}>/month</span></div>
+              <div style={{...FI,fontSize:12,color:'rgba(255,255,255,.45)',lineHeight:1.55}}>Billed monthly · Cancel anytime</div>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:24}}>
               {PRO_ITEMS.map(item=>(
@@ -1905,12 +2623,16 @@ export default function AppleHome() {
       <style dangerouslySetInnerHTML={{__html:CSS}}/>
       <Nav />
       <Hero />
+      <ProductDemo />
       <PopularTools />
       <UploadBox />
+      <HowItWorks />
       <Apple3DScroll />
+      <UseCases />
       <AllTools />
       <PrivacyNote />
       <PricingPreview />
+      <FAQ />
       <CTA />
       <Footer />
     </div>

@@ -243,7 +243,7 @@ const FEATURES = [
 const FAQS = [
   { q: 'What is an AI PDF form filler?', a: 'An AI PDF form filler detects input fields in a PDF and fills them automatically based on context you provide. You describe your details once and AI populates the entire form instantly — no clicking each field manually.' },
   { q: 'Is it free to use?', a: 'Free to start — includes 5 AI uses per day. Core PDF tools (edit, sign, merge, compress) are always free with no limits. Upgrade to Pro for unlimited AI uses.' },
-  { q: 'Do I need to create an account?', a: 'No account needed. Your browser handles everything locally — documents never leave your device unless you trigger an AI feature, which only sends the relevant text context.' },
+  { q: 'Do I need to create an account?', a: 'A free account is required to use AI features. Sign in to get 5 free AI uses per day — no credit card needed. Upgrade to Pro for unlimited use. Your PDF is always processed in your browser and never stored.' },
   { q: 'What types of PDFs are supported?', a: 'Both interactive PDF forms (AcroForms) and flat or scanned PDFs are supported. For scanned documents, the built-in OCR engine detects field positions automatically.' },
   { q: 'Is my document data secure?', a: 'Your files are processed entirely in your browser and are never stored on our servers. AI features send only the relevant text context — never the raw file — and no data is retained.' },
   { q: 'Can I add a digital signature?', a: 'Yes. Draw a freehand signature, type your name, or upload a signature image. Place it anywhere with drag-and-drop precision.' },
@@ -331,7 +331,7 @@ export default function AIPDFFormFillerPage() {
             <h1 className="hero-h1">
               <span className="h1-a">AI PDF Form Filler</span>
               <span className="h1-b">Fill Forms Instantly</span>
-              <span className="h1-c">Free — No Signup Needed</span>
+              <span className="h1-c">5 Free Uses/Day — Sign In Required</span>
             </h1>
             <p className="hero-sub">
               Upload any PDF, paste your details once, and let AI detect and fill the fields for you.
@@ -344,7 +344,7 @@ export default function AIPDFFormFillerPage() {
               <a className="btn-s2" href="#features">See features</a>
             </div>
             <div className="h-pills">
-              {([['5 AI Uses','/ Day Free'],['No','Signup'],['OCR','Built-in'],['Private','& Secure']] as const).map(([v, l]) => (
+              {([['5 AI Uses','/ Day Free'],['Sign In','Required'],['OCR','Built-in'],['Private','& Secure']] as const).map(([v, l]) => (
                 <div key={l} className="hpill"><strong>{v}</strong>{' '}<span>{l}</span></div>
               ))}
             </div>
@@ -705,7 +705,7 @@ export default function AIPDFFormFillerPage() {
           <div className="cta-inner">
             <div className="cta-glow" />
             <h2 className="cta-h">Start filling PDFs<br />with AI right now</h2>
-            <p className="cta-sub">5 free AI uses per day. No signup. No install. Works in any browser.</p>
+            <p className="cta-sub">5 free AI uses per day. Sign in required. Upgrade to Pro for unlimited use.</p>
             <button className="btn-p" onClick={openEditor} style={{ margin: '0 auto' }}>
               Start AI Form Filler
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
