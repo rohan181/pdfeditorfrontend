@@ -42,8 +42,29 @@ interface Props {
 let _idCounter = 0
 const nextId = () => `cdoc-${++_idCounter}`
 
+function sessionKey(label?: string) {
+  return `chatfill-history:${label ?? 'default'}`
+}
+
+function loadHistory(label?: string): ChatMessage[] {
+  try {
+    const raw = sessionStorage.getItem(sessionKey(label))
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return []
+}
+
+function saveHistory(msgs: ChatMessage[], label?: string) {
+  try { sessionStorage.setItem(sessionKey(label), JSON.stringify(msgs)) } catch {}
+}
+
+function clearHistory(label?: string) {
+  try { sessionStorage.removeItem(sessionKey(label)) } catch {}
+}
+
 export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBase64, pdfDocBase64, onApply, onClose, pageLabel, isDetecting = false }: Props) {
-  const [history, setHistory] = useState<ChatMessage[]>([])
+  const restored = loadHistory(pageLabel)
+  const [history, setHistory] = useState<ChatMessage[]>(restored)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [collected, setCollected] = useState<Record<string, string>>({ ...existingFilled })
@@ -60,7 +81,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
   const [showDocs, setShowDocs] = useState(false)
   const [dragOver, setDragOver] = useState(false)
 
-  const historyRef = useRef<ChatMessage[]>([])
+  const historyRef = useRef<ChatMessage[]>(restored)
   const collectedRef = useRef<Record<string, string>>({ ...existingFilled })
   const docsRef = useRef<UploadedDoc[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -70,7 +91,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
   const filledCount = Object.keys(collected).filter(k => collected[k] !== '').length
   const totalFields = fields.length
 
-  function syncHistory(msgs: ChatMessage[]) { historyRef.current = msgs; setHistory(msgs) }
+  function syncHistory(msgs: ChatMessage[]) { historyRef.current = msgs; setHistory(msgs); saveHistory(msgs, pageLabel) }
   function syncCollected(vals: Record<string, string>) { collectedRef.current = vals; setCollected(vals) }
   function syncDocs(d: UploadedDoc[]) { docsRef.current = d; setDocs(d) }
 
@@ -355,10 +376,11 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
     }
   }, [fields, pageImageBase64, pdfDocBase64, onApply])
 
-  // Kick off conversation on mount
+  // Kick off conversation on mount (skip if history was restored from sessionStorage)
   useEffect(() => {
     if (startedRef.current || fields.length === 0) return
     startedRef.current = true
+    if (historyRef.current.length > 0) return  // resumed from saved session
     const initMsg: ChatMessage = {
       role: 'user',
       content: 'Hello! Please start asking me about the form fields that need to be filled.',
@@ -366,7 +388,8 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
     sendToAI([initMsg], true)
     historyRef.current = [initMsg]
     setHistory([initMsg])
-  }, [fields, sendToAI])
+    saveHistory([initMsg], pageLabel)
+  }, [fields, sendToAI, pageLabel])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -418,6 +441,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
       .filter(([, v]) => v !== '')
       .map(([name, value]) => ({ name, value }))
     onApply(filled)
+    clearHistory(pageLabel)
     onClose()
   }
 
@@ -762,7 +786,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
               <div style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
                 {unfilled.length === 0 ? `All ${filledCount} fields applied to PDF!` : 'Chat ended — fields applied.'}
               </div>
-              <button onClick={onClose} style={{
+              <button onClick={() => { clearHistory(pageLabel); onClose() }} style={{
                 width: '100%', padding: '9px 0', border: 'none', cursor: 'pointer',
                 background: 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
                 color: '#fff', fontSize: 13, fontWeight: 700, borderRadius: 10,

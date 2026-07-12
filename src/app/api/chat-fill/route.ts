@@ -96,7 +96,8 @@ Rules:
 - char_box: raw characters, no spaces.
 - Date parts: if field name contains "Day" extract only the 2-digit day ("28"), "Month" → 2-digit month ("04"), "Year" → 4-digit year ("2026"). For other date fields return full DD/MM/YYYY.
 - Signature fields: set signatureField to the exact field name. Return "" as the extracted value. Never ask the user to type a signature. A field marked [already: [SIGNED]] is already signed — do NOT include it in extracted and do NOT set signatureField for it.
-- Never invent values.`,
+- Never invent values.
+- Names: copy the user's name EXACTLY as written — character for character. NEVER drop, shorten, or modify any part. "Md" is a valid name prefix (short for Mohammad/Muhammad), not a title to remove. "Sk", "Sheikh", "Dr", "Jr", "II" and similar prefixes/suffixes must also be kept verbatim.`,
       messages,
     })
 

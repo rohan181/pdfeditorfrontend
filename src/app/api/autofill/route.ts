@@ -82,6 +82,7 @@ OTHER RULES:
 - signature type: return "" (empty string) — signatures are drawn, never typed.
 - char_box type: return raw characters with NO spaces (e.g. "A1234567"). The renderer places each character into its own cell.
 - When multiple documents are provided, pick the most relevant one per field
+- Names: copy EXACTLY as the user wrote them — never drop, shorten, or normalise any part. "Md" is a valid name prefix (Mohammad/Muhammad), not a title to remove. Preserve "Sk", "Sheikh", "Jr", "II" and all other prefixes/suffixes verbatim.
 
 Return ONLY a raw JSON array — no markdown, no code fences, no extra text:
 [{"name": "exact field name", "value": "filled value"}]`,

@@ -1181,17 +1181,20 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     for (let i = 0; i < items.length; i++) {
       const it = items[i]
       if (DASH_CHAR_RE.test(it.str.trim()) && it.w > 0) {
-        let x2 = it.tx + it.w
+        let minTx = it.tx
+        let maxX2 = it.tx + it.w
         let j  = i + 1
         while (j < items.length) {
           const nxt = items[j]
           if (!DASH_CHAR_RE.test(nxt.str.trim())) break
           if (Math.abs(nxt.ty - it.ty) > 4) break  // different baseline
-          if (nxt.tx - x2 > 6) break               // gap too large to be same run
-          x2 = nxt.tx + nxt.w
+          // allow adjacency check against the full range so RTL-encoded dashes still merge
+          if (nxt.tx > maxX2 + 6 && nxt.tx + nxt.w < minTx - 6) break
+          minTx = Math.min(minTx, nxt.tx)
+          maxX2 = Math.max(maxX2, nxt.tx + nxt.w)
           j++
         }
-        mergedItems.push({ str: it.str.trim().repeat(3), tx: it.tx, ty: it.ty, w: x2 - it.tx, h: it.h })
+        mergedItems.push({ str: it.str.trim().repeat(3), tx: minTx, ty: it.ty, w: maxX2 - minTx, h: it.h })
         i = j - 1
       } else {
         mergedItems.push(it)
