@@ -86,7 +86,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .saved-bar-lbl{font-size:10px;font-weight:700;color:rgba(0,0,0,.35);white-space:nowrap;text-transform:uppercase;letter-spacing:.05em}
 .saved-chip{display:flex;align-items:center;gap:5px;padding:4px 8px;border:1.5px solid #e0e0e0;border-radius:7px;background:#fff;cursor:pointer;transition:all .12s}
 .saved-chip:hover{border-color:#6366f1;background:#f0f0ff}
-.saved-chip img{height:22px;max-width:60px;object-fit:contain}
+.saved-chip img{height:38px;max-width:60px;object-fit:contain}
 .saved-chip-del{width:14px;height:14px;border-radius:50%;border:none;background:rgba(0,0,0,.12);color:rgba(0,0,0,.4);cursor:pointer;font-size:9px;display:flex;align-items:center;justify-content:center;line-height:1;flex-shrink:0;transition:all .1s}
 .saved-chip-del:hover{background:#E24B4A;color:#fff}
 
@@ -137,10 +137,10 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 
 /* color palette */
 .palette{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.palette-swatch{width:22px;height:22px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;transition:border-color .11s,transform .11s;flex-shrink:0}
+.palette-swatch{width:22px;height:38px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;transition:border-color .11s,transform .11s;flex-shrink:0}
 .palette-swatch.sel{border-color:#6366f1;transform:scale(1.18)}
 .palette-swatch:hover:not(.sel){transform:scale(1.1)}
-.color-pick{width:22px;height:22px;border-radius:50%;border:2px dashed #d0d0d0;cursor:pointer;padding:0;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);overflow:hidden;flex-shrink:0}
+.color-pick{width:22px;height:38px;border-radius:50%;border:2px dashed #d0d0d0;cursor:pointer;padding:0;background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);overflow:hidden;flex-shrink:0}
 .color-pick input{opacity:0;width:100%;height:100%;cursor:pointer;position:absolute;inset:0}
 
 /* stroke sizes */
@@ -553,7 +553,7 @@ export default function PDFSignerPage() {
             style={{ background: c, boxShadow: inkColor===c ? `0 0 0 3px #fff, 0 0 0 5px ${c}` : undefined }}
             onClick={() => setInkColor(c)} />
         ))}
-        <div style={{ position:'relative', width:22, height:22, flex:'none' }} title="Custom color">
+        <div style={{ position:'relative', width:22, height:38, flex:'none' }} title="Custom color">
           <div className="color-pick" style={{ borderColor: !INK_COLORS.includes(inkColor) ? '#6366f1' : undefined, transform: !INK_COLORS.includes(inkColor) ? 'scale(1.18)' : undefined }} />
           <input type="color" value={inkColor} onChange={e => setInkColor(e.target.value)}
             style={{ position:'absolute', inset:0, opacity:0, width:'100%', height:'100%', cursor:'pointer', border:'none', padding:0 }} />

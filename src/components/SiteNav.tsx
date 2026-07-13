@@ -86,10 +86,8 @@ const TIER_BADGE = {
 }
 
 const NAV_LINKS = [
-  { label: 'All Tools', href: '/#tools' },
-  { label: 'AI Tools',  href: '/#tools' },
-  { label: 'Pricing',   href: '/pricing' },
-  { label: 'About',     href: '/about'   },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'About',   href: '/about'   },
 ]
 
 // ── shared touch-button style ─────────────────────────────────────────────────
@@ -111,11 +109,10 @@ export default function SiteNav() {
   const keepMenu  = () => { clearTimeout(closeTimer.current!) }
 
   // mobile drawer
-  const [mobOpen,    setMobOpen]    = useState(false)
-  const [toolsExp,   setToolsExp]   = useState(false)
-  const [openCat,    setOpenCat]    = useState<string | null>(null)
+  const [mobOpen,  setMobOpen]  = useState(false)
+  const [toolsExp, setToolsExp] = useState(false)
 
-  const closeMob = () => { setMobOpen(false); setToolsExp(false); setOpenCat(null) }
+  const closeMob = () => { setMobOpen(false); setToolsExp(false) }
 
   const { scrollY } = useScroll()
   const navBg = useTransform(scrollY, [0, 80], ['rgba(255,255,255,0)', 'rgba(255,255,255,0.97)'])
@@ -131,24 +128,8 @@ export default function SiteNav() {
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', height: '100%', display: 'flex', alignItems: 'center', gap: 4 }}>
 
           {/* Logo */}
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', marginRight: 20, flexShrink: 0 }}>
-            <motion.div whileHover={{ scale: 1.1 }} transition={SP} style={{ display: 'flex', flexShrink: 0 }}>
-              <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="lg-sn" x1="2" y1="2" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#4F7FFA"/>
-                    <stop offset="100%" stopColor="#8B3FEC"/>
-                  </linearGradient>
-                </defs>
-                <path d="M5,2 L19,2 L27,10 L27,26 Q27,28 25,28 L5,28 Q3,28 3,26 L3,4 Q3,2 5,2 Z" fill="white" stroke="url(#lg-sn)" strokeWidth="2.2" strokeLinejoin="round"/>
-                <path d="M19,2 L19,10 L27,10" fill="none" stroke="url(#lg-sn)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                <line x1="9" y1="22" x2="20" y2="11" stroke="url(#lg-sn)" strokeWidth="2.2" strokeLinecap="round"/>
-                <circle cx="8" cy="23" r="1.8" fill="url(#lg-sn)"/>
-              </svg>
-            </motion.div>
-            <span style={{ ...FI, fontSize: 15, fontWeight: 800, color: '#0D1B4B', letterSpacing: '-0.03em', lineHeight: 1 }}>
-              EditPDF<span style={{ marginLeft: 2, background: 'linear-gradient(90deg,#4F7FFA,#8B3FEC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}> AI</span>
-            </span>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', marginRight: 20, flexShrink: 0 }}>
+            <img src="/logo.png" alt="EditPDF AI" style={{ height: 48, width: 'auto', display: 'block' }} />
           </Link>
 
           {/* Desktop nav links — hidden on ≤900px via CSS */}
@@ -202,14 +183,6 @@ export default function SiteNav() {
               <Upload size={12} strokeWidth={2.5} /> Open Editor
             </Link>
 
-            {/* All Tools — mobile only, in header bar */}
-            <Link href="/#tools" className="sn-mob-only" style={{ textDecoration: 'none' }}>
-              <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 99, border: '1.5px solid rgba(0,0,0,.12)', background: '#fff' }}>
-                <Layers size={13} color="#4F7FFA" strokeWidth={2} />
-                <span style={{ ...FI, fontSize: 12.5, fontWeight: 700, color: '#1d1d1f' }}>All Tools</span>
-              </div>
-            </Link>
-
             {/* Hamburger — mobile only */}
             <button className="sn-mob-only" onClick={() => setMobOpen(o => !o)}
               aria-label={mobOpen ? 'Close menu' : 'Open menu'}
@@ -260,7 +233,7 @@ export default function SiteNav() {
                           <Link key={tool.name} href={tool.href} onClick={() => setToolsOpen(false)} style={{ textDecoration: 'none' }}>
                             <motion.div whileHover={{ background: '#f5f5f7' }} transition={{ duration: .08 }}
                               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: 8 }}>
-                              <div style={{ width: 26, height: 26, borderRadius: 7, background: tool.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <div style={{ width: 26, height: 38, borderRadius: 7, background: tool.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 <tool.Icon size={13} color="#fff" strokeWidth={1.8} />
                               </div>
                               <span style={{ ...FI, fontSize: 12, fontWeight: 600, color: '#1d1d1f', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tool.name}</span>
@@ -305,82 +278,55 @@ export default function SiteNav() {
               transition={{ duration: .25, ease: E }}
               style={{ position: 'fixed', top: 56, right: 0, bottom: 0, width: '100%', maxWidth: 360, zIndex: 290, background: '#fff', display: 'flex', flexDirection: 'column', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
 
-              {/* ── Tools section ── */}
+              {/* ── Tools section — flat list, all tools always visible ── */}
               <div style={{ borderBottom: '1px solid #f0f0f0' }}>
                 {/* "Tools" header row */}
                 <button
                   onClick={() => setToolsExp(v => !v)}
                   style={{ ...TAP, width: '100%', display: 'flex', alignItems: 'center', padding: '0 20px', height: 52, background: 'transparent', border: 'none', outline: 'none' }}>
-                  <span style={{ ...FI, fontSize: 15, fontWeight: 700, color: '#1d1d1f', flex: 1, textAlign: 'left' }}>Tools</span>
+                  <span style={{ ...FI, fontSize: 15, fontWeight: 700, color: '#1d1d1f', flex: 1, textAlign: 'left' }}>All Tools</span>
                   <span style={{ display: 'flex', transition: 'transform .2s', transform: toolsExp ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                     <ChevronDown size={18} color="rgba(0,0,0,.4)" strokeWidth={2} />
                   </span>
                 </button>
 
-                {/* Animated tools panel */}
-                <div style={{ overflow: 'hidden', maxHeight: toolsExp ? 2000 : 0, transition: 'max-height .3s ease' }}>
+                {/* Flat tools panel — all tools visible, grouped by category header */}
+                <div style={{ overflow: 'hidden', maxHeight: toolsExp ? 4000 : 0, transition: 'max-height .35s ease' }}>
                   <div style={{ background: '#f9fafb', borderTop: '1px solid #f0f0f0' }}>
                     {NAV_CATS.map(cat => (
-                      <div key={cat.label} style={{ borderBottom: '1px solid #f0f0f0' }}>
-
-                        {/* Category row */}
-                        <button
-                          onClick={() => setOpenCat(v => v === cat.label ? null : cat.label)}
-                          style={{ ...TAP, width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px', height: 52, background: 'transparent', border: 'none', outline: 'none' }}>
-                          <div style={{ width: 34, height: 34, borderRadius: 10, background: `${cat.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <cat.Icon size={16} color={cat.color} strokeWidth={1.9} />
+                      <div key={cat.label}>
+                        {/* Category header — not a button, just a label */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px 6px', borderBottom: `2px solid ${cat.color}22` }}>
+                          <div style={{ width: 26, height: 38, borderRadius: 8, background: `${cat.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <cat.Icon size={13} color={cat.color} strokeWidth={2} />
                           </div>
-                          <span style={{ ...FI, fontSize: 14, fontWeight: 700, color: cat.color, flex: 1, textAlign: 'left' }}>{cat.label}</span>
-                          <span style={{ display: 'flex', transition: 'transform .2s', transform: openCat === cat.label ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                            <ChevronDown size={16} color="rgba(0,0,0,.3)" strokeWidth={2} />
-                          </span>
-                        </button>
-
-                        {/* Tools list */}
-                        <div style={{ overflow: 'hidden', maxHeight: openCat === cat.label ? 1000 : 0, transition: 'max-height .25s ease', background: '#fff' }}>
-                          {cat.tools.map(tool => {
-                            const badge = TIER_BADGE[tool.tier]
-                            return (
-                              <Link key={tool.name} href={tool.href} onClick={closeMob} style={{ textDecoration: 'none', display: 'block' }}>
-                                <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px 0 24px', height: 52, borderTop: '1px solid #f5f6f8' }}>
-                                  <div style={{ width: 32, height: 32, borderRadius: 9, background: tool.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <tool.Icon size={15} color="#fff" strokeWidth={1.8} />
-                                  </div>
-                                  <span style={{ ...FI, fontSize: 14, fontWeight: 600, color: '#1d1d1f', flex: 1 }}>{tool.name}</span>
-                                  {tool.tier !== 'free' && (
-                                    <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: badge.bg, color: badge.color, flexShrink: 0 }}>
-                                      {badge.label}
-                                    </span>
-                                  )}
-                                  <ArrowRight size={14} color="rgba(0,0,0,.2)" strokeWidth={2} />
-                                </div>
-                              </Link>
-                            )
-                          })}
+                          <span style={{ ...FI, fontSize: 11, fontWeight: 800, color: cat.color, textTransform: 'uppercase', letterSpacing: '.06em' }}>{cat.label}</span>
                         </div>
+                        {/* All tools in this category — always visible */}
+                        {cat.tools.map(tool => {
+                          const badge = TIER_BADGE[tool.tier]
+                          return (
+                            <Link key={tool.name} href={tool.href} onClick={closeMob} style={{ textDecoration: 'none', display: 'block' }}>
+                              <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 11, padding: '0 20px 0 20px', height: 46, borderBottom: '1px solid #f0f1f3', background: '#fff' }}>
+                                <div style={{ width: 28, height: 28, borderRadius: 8, background: tool.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                  <tool.Icon size={13} color="#fff" strokeWidth={1.8} />
+                                </div>
+                                <span style={{ ...FI, fontSize: 13.5, fontWeight: 600, color: '#1d1d1f', flex: 1 }}>{tool.name}</span>
+                                {tool.tier !== 'free' && (
+                                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 99, background: badge.bg, color: badge.color, flexShrink: 0 }}>
+                                    {badge.label}
+                                  </span>
+                                )}
+                                <ArrowRight size={13} color="rgba(0,0,0,.18)" strokeWidth={2} />
+                              </div>
+                            </Link>
+                          )
+                        })}
                       </div>
                     ))}
-
-                    {/* See all */}
-                    <Link href="/#tools" onClick={closeMob} style={{ textDecoration: 'none', display: 'block' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, height: 48, ...FI, fontSize: 13, fontWeight: 700, color: '#2563eb' }}>
-                        See all 35+ tools <ArrowRight size={13} strokeWidth={2.5} />
-                      </div>
-                    </Link>
                   </div>
                 </div>
               </div>
-
-              {/* ── All Tools quick link ── */}
-              <Link href="/#tools" onClick={closeMob} style={{ textDecoration: 'none', display: 'block' }}>
-                <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 8, height: 52, padding: '0 20px', borderBottom: '1px solid #f0f0f0' }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: '#f0f4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Layers size={16} color="#4F7FFA" strokeWidth={1.9} />
-                  </div>
-                  <span style={{ ...FI, fontSize: 15, fontWeight: 700, color: '#1d1d1f', flex: 1 }}>All Tools</span>
-                  <ArrowRight size={15} color="rgba(0,0,0,.25)" strokeWidth={2} />
-                </div>
-              </Link>
 
               {/* ── Plain nav links ── */}
               {NAV_LINKS.map(({ label, href }) => (

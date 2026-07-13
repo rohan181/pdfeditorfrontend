@@ -21,7 +21,7 @@ export default function Icon() {
           style={{
             position: 'relative',
             width: 22,
-            height: 26,
+            height: 38,
             background: 'linear-gradient(135deg, #4F7FFA 0%, #8B3FEC 100%)',
             clipPath: 'polygon(0% 0%, 62% 0%, 100% 27%, 100% 100%, 0% 100%)',
             borderRadius: 2,

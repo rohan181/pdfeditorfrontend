@@ -268,7 +268,7 @@ function BrowserMockup() {
               <div style={{ fontSize: 8, color: '#111', fontWeight: 600, marginTop: 4 }}>94%</div>
             </div>
             <div style={{ marginTop: 'auto' }}>
-              <div style={{ height: 30, background: '#111', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+              <div style={{ height: 38, background: '#111', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
                 <Zap size={10} color="#fff" strokeWidth={2} />
                 <span style={{ fontSize: 10, color: '#fff', fontWeight: 600 }}>Apply All</span>
               </div>
@@ -349,7 +349,7 @@ function FieldsMicro() {
             >
               <div style={{ fontSize: 6.5, color: '#bbb', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
               <motion.div
-                style={{ height: 22, borderRadius: 5, border: '1.5px solid' }}
+                style={{ height: 38, borderRadius: 5, border: '1.5px solid' }}
                 animate={{
                   borderColor: ['rgba(99,102,241,0.2)', 'rgba(99,102,241,0.85)', 'rgba(99,102,241,0.2)'],
                   background:  ['rgba(99,102,241,0)',   'rgba(99,102,241,0.05)', 'rgba(99,102,241,0)'],

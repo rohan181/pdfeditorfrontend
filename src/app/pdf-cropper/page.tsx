@@ -66,7 +66,7 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .tb-l{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .tb-c{display:flex;align-items:center;gap:4px;flex:1;justify-content:center}
 .tb-r{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.tb-sep{width:1px;height:22px;background:rgba(255,255,255,.12);margin:0 4px;flex-shrink:0}
+.tb-sep{width:1px;height:38px;background:rgba(255,255,255,.12);margin:0 4px;flex-shrink:0}
 
 .tb-btn{height:32px;min-width:32px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,.7);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 10px;white-space:nowrap;letter-spacing:-.01em}
 .tb-btn:hover:not(:disabled){background:rgba(255,255,255,.1);color:#fff}

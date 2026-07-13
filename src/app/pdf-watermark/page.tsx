@@ -389,7 +389,7 @@ export default function PDFWatermarkPage() {
           </span>
           <span style={{ fontSize:15, fontWeight:800, color:'#0f172a', letterSpacing:'-0.03em' }}>Edit<span style={{ color:'#8b5cf6' }}>PDF</span></span>
         </Link>
-        <div style={{ width:1, height:22, background:'#e2e8f0' }} />
+        <div style={{ width:1, height:38, background:'#e2e8f0' }} />
         <span style={{ fontSize:11, color:'#64748b', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:180 }}>{fileName}</span>
         {statusMsg && (
           <span style={{ fontSize:10, padding:'2px 8px', borderRadius:4, whiteSpace:'nowrap', background: watermarked ? 'rgba(34,197,94,0.09)' : processing ? 'rgba(251,191,36,0.09)' : 'rgba(0,0,0,0.04)', border: watermarked ? '1px solid rgba(34,197,94,0.22)' : processing ? '1px solid rgba(251,191,36,0.22)' : '1px solid #e2e8f0', color: watermarked ? '#16a34a' : processing ? '#92400e' : '#64748b' }}>

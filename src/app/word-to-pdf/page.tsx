@@ -71,7 +71,7 @@ body{background:#fff;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,
 .tg{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:rgba(0,0,0,.45);transition:all .14s;white-space:nowrap;letter-spacing:-.01em}
 .tg.on{background:#fff;color:#1d1d1f;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .tg:hover:not(.on){color:#1d1d1f}
-.set-sep{width:1px;height:22px;background:#e0e0e0;flex-shrink:0}
+.set-sep{width:1px;height:38px;background:#e0e0e0;flex-shrink:0}
 
 /* ── Preview ── */
 .preview-wrap{background:#fff;border:1px solid #e5e5e7;border-radius:18px;overflow:hidden;margin-bottom:14px;box-shadow:0 1px 12px rgba(0,0,0,.05);animation:fadeup .25s ease}

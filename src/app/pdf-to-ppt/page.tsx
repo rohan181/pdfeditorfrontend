@@ -82,7 +82,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .file-info{flex:1;min-width:0}
 .file-name{font-size:11px;font-weight:700;color:#1d1d1f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .file-meta{font-size:9px;color:rgba(0,0,0,.38);margin-top:1px}
-.file-rm{width:22px;height:22px;border-radius:5px;border:1px solid #e0e0e0;background:transparent;cursor:pointer;font-size:12px;color:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s}
+.file-rm{width:22px;height:38px;border-radius:5px;border:1px solid #e0e0e0;background:transparent;cursor:pointer;font-size:12px;color:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .13s}
 .file-rm:hover{border-color:#dc2626;color:#dc2626}
 
 /* Slide count */
@@ -96,7 +96,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .theme-btn{padding:8px 6px;border-radius:8px;border:2px solid #e0e0e0;background:#fff;cursor:pointer;transition:all .14s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
 .theme-btn:hover:not(.on){border-color:#d35230}
 .theme-btn.on{border-color:#d35230;box-shadow:0 0 0 2px rgba(211,82,48,.2)}
-.theme-swatch{width:100%;height:22px;border-radius:4px;margin-bottom:2px}
+.theme-swatch{width:100%;height:38px;border-radius:4px;margin-bottom:2px}
 .theme-name{font-size:9px;font-weight:700;color:#1d1d1f}
 
 /* Generate button */

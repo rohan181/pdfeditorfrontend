@@ -387,11 +387,11 @@ export default function AddPageNumbers() {
             <div style={{ display:'flex', gap:6, flexWrap:'wrap' as const }}>
               {['#1d1d1f','#374151','#6b7280','#9ca3af','#7c3aed','#1d4ed8','#dc2626'].map(c => (
                 <button key={c} onClick={() => setColor(c)}
-                  style={{ width:26, height:26, borderRadius:6, background:c, border: color===c ? '2.5px solid #7c3aed' : '2px solid transparent', outline: color===c ? '1.5px solid #fff' : 'none', outlineOffset:-3, cursor:'pointer', flexShrink:0 }}
+                  style={{ width:26, height:38, borderRadius:6, background:c, border: color===c ? '2.5px solid #7c3aed' : '2px solid transparent', outline: color===c ? '1.5px solid #fff' : 'none', outlineOffset:-3, cursor:'pointer', flexShrink:0 }}
                 />
               ))}
               <input type="color" value={color} onChange={e => setColor(e.target.value)}
-                style={{ width:26, height:26, borderRadius:6, border:'1.5px solid #e0e0e0', cursor:'pointer', padding:2, background:'#fff' }}
+                style={{ width:26, height:38, borderRadius:6, border:'1.5px solid #e0e0e0', cursor:'pointer', padding:2, background:'#fff' }}
                 title="Custom color"
               />
             </div>
@@ -402,7 +402,7 @@ export default function AddPageNumbers() {
             <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
               <div
                 onClick={() => setSkipFirst(v => !v)}
-                style={{ width:38, height:22, borderRadius:11, background: skipFirst ? '#7c3aed' : '#d1d5db', position:'relative', flexShrink:0, transition:'background .2s', cursor:'pointer' }}
+                style={{ width:38, height:38, borderRadius:11, background: skipFirst ? '#7c3aed' : '#d1d5db', position:'relative', flexShrink:0, transition:'background .2s', cursor:'pointer' }}
               >
                 <div style={{ position:'absolute', top:3, left: skipFirst ? 18 : 3, width:16, height:16, borderRadius:8, background:'#fff', transition:'left .2s', boxShadow:'0 1px 3px rgba(0,0,0,.2)' }}/>
               </div>

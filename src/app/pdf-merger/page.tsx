@@ -53,7 +53,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .drag-handle{display:flex;flex-direction:column;gap:3px;padding:2px 4px;cursor:grab;flex-shrink:0;opacity:.3;transition:opacity .12s}
 .file-item:hover .drag-handle{opacity:.7}
 .drag-handle span{display:block;width:14px;height:1.5px;background:#1d1d1f;border-radius:2px}
-.file-num{width:22px;height:22px;border-radius:6px;background:#f5f5f7;border:1px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(0,0,0,.4);flex-shrink:0}
+.file-num{width:22px;height:38px;border-radius:6px;background:#f5f5f7;border:1px solid #e8e8e8;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(0,0,0,.4);flex-shrink:0}
 .file-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
 .file-info{flex:1;min-width:0}
 .file-name{font-size:13px;font-weight:600;color:#1d1d1f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -62,7 +62,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .move-btn{width:24px;height:24px;border-radius:5px;background:transparent;border:1px solid #e8e8e8;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.3);font-size:11px;transition:all .12s}
 .move-btn:hover:not(:disabled){border-color:#1d1d1f;color:#1d1d1f;background:#f5f5f7}
 .move-btn:disabled{opacity:.25;cursor:not-allowed}
-.rm-btn{width:26px;height:26px;border-radius:6px;background:transparent;border:1px solid #e0e0e0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.35);font-size:11px;transition:all .15s}
+.rm-btn{width:26px;height:38px;border-radius:6px;background:transparent;border:1px solid #e0e0e0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.35);font-size:11px;transition:all .15s}
 .rm-btn:hover{border-color:#E24B4A;color:#E24B4A;background:#fff5f5}
 
 /* add more */

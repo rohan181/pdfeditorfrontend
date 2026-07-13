@@ -63,7 +63,7 @@ export default function DatePickerPanel({ onInsert, onClose, isMobile, panelStyl
           <button
             onClick={onClose}
             style={{
-              width: 22, height: 22, borderRadius: 6, border: '1px solid #e2e8f0',
+              width: 22, height: 38, borderRadius: 6, border: '1px solid #e2e8f0',
               background: '#f8faff', cursor: 'pointer', fontSize: 14, color: '#64748b',
               display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
             }}

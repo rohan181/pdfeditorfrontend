@@ -650,7 +650,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
               <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                 {msg.role === 'assistant' && (
                   <div style={{
-                    width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                    width: 22, height: 38, borderRadius: '50%', flexShrink: 0,
                     background: 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     marginRight: 6, marginTop: 2,
@@ -678,7 +678,7 @@ export default function ChatFillPanel({ fields, existingFilled = {}, pageImageBa
           {loading && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{
-                width: 22, height: 22, borderRadius: '50%',
+                width: 22, height: 38, borderRadius: '50%',
                 background: 'linear-gradient(135deg,#0ea5e9,#38bdf8)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
               }}>

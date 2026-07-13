@@ -64,7 +64,7 @@ body{background:#fff;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,
 /* ── Paste area ── */
 .paste-wrap{display:flex;flex-direction:column;gap:10px}
 .paste-label{font-size:12px;font-weight:600;color:rgba(0,0,0,.4);letter-spacing:-.01em}
-.paste-area{width:100%;min-height:220px;padding:16px;border:1.5px solid #e5e5e7;border-radius:12px;font-size:13px;font-family:ui-monospace,'SF Mono',Menlo,monospace;line-height:1.65;color:#1d1d1f;background:#fff;resize:vertical;outline:none;transition:border .15s;letter-spacing:.01em}
+.paste-area{width:100%;min-height:380px;padding:16px;border:1.5px solid #e5e5e7;border-radius:12px;font-size:13px;font-family:ui-monospace,'SF Mono',Menlo,monospace;line-height:1.65;color:#1d1d1f;background:#fff;resize:vertical;outline:none;transition:border .15s;letter-spacing:.01em}
 .paste-area:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.1)}
 .paste-area::placeholder{color:rgba(0,0,0,.25)}
 
@@ -84,7 +84,7 @@ body{background:#fff;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,
 .tg{padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:rgba(0,0,0,.45);transition:all .14s;white-space:nowrap;letter-spacing:-.01em}
 .tg.on{background:#fff;color:#1d1d1f;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .tg:hover:not(.on){color:#1d1d1f}
-.set-sep{width:1px;height:22px;background:#e0e0e0;flex-shrink:0}
+.set-sep{width:1px;height:38px;background:#e0e0e0;flex-shrink:0}
 
 /* ── Preview ── */
 .preview-wrap{background:#fff;border:1px solid #e5e5e7;border-radius:18px;overflow:hidden;margin-bottom:14px;box-shadow:0 1px 12px rgba(0,0,0,.05);animation:fadeup .25s ease}

@@ -115,7 +115,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .field-overlay.sel{box-shadow:0 0 0 2px #6366f1,0 2px 12px rgba(99,102,241,.2)}
 .field-overlay:not(.sel):hover{box-shadow:0 0 0 1.5px #6366f1}
 .field-inner{width:100%;height:100%;display:flex;align-items:center;gap:4px;padding:0 6px;font-size:11px;color:rgba(0,0,0,.35);user-select:none;overflow:hidden;white-space:nowrap;border-radius:3px}
-.field-del{position:absolute;top:-11px;right:-11px;width:22px;height:22px;border-radius:50%;background:#E24B4A;border:2px solid #fff;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.field-del{position:absolute;top:-11px;right:-11px;width:22px;height:38px;border-radius:50%;background:#E24B4A;border:2px solid #fff;color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10;line-height:1;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 .field-overlay.sel .field-del{display:flex}
 .resize-se{position:absolute;bottom:-4px;right:-4px;width:9px;height:9px;background:#6366f1;border:2px solid #fff;border-radius:2px;cursor:se-resize;z-index:5}
 
@@ -1240,7 +1240,7 @@ export default function PDFFormBuilderPage() {
                           <input type="color" value={selectedField.labelColor ?? '#374151'}
                             onChange={e => updateField(selectedField.id, { labelColor: e.target.value })}
                             title="Label color"
-                            style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
+                            style={{ width:28, height:38, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
                           <input type="number" min={7} max={24} step={1}
                             value={selectedField.labelFontSize ?? 9}
                             onChange={e => updateField(selectedField.id, { labelFontSize: parseInt(e.target.value)||9 })}
@@ -1248,7 +1248,7 @@ export default function PDFFormBuilderPage() {
                             style={{ width:48, padding:'5px 6px', border:'1px solid #e0e0e0', borderRadius:6, fontSize:11, color:'#1d1d1f', outline:'none', fontFamily:'inherit' }} />
                           <button onClick={() => updateField(selectedField.id, { labelBold: !selectedField.labelBold })}
                             title="Bold"
-                            style={{ width:30, height:26, borderRadius:6, fontSize:12, fontWeight:800, cursor:'pointer',
+                            style={{ width:30, height:38, borderRadius:6, fontSize:12, fontWeight:800, cursor:'pointer',
                               border: selectedField.labelBold ? '1.5px solid #6366f1' : '1.5px solid #e0e0e0',
                               background: selectedField.labelBold ? '#f0f0ff' : '#fff',
                               color: selectedField.labelBold ? '#6366f1' : 'rgba(0,0,0,.5)' }}>B</button>
@@ -1352,7 +1352,7 @@ export default function PDFFormBuilderPage() {
                             <div style={{ display:'flex', gap:6, alignItems:'center' }}>
                               <input type="color" value={selectedField.sigLineColor ?? '#374151'}
                                 onChange={e => updateField(selectedField.id, { sigLineColor: e.target.value })}
-                                style={{ width:28, height:26, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
+                                style={{ width:28, height:38, border:'1px solid #e0e0e0', borderRadius:5, cursor:'pointer', padding:1 }} />
                               {(['solid','dash'] as const).map(ls => (
                                 <button key={ls} onClick={() => updateField(selectedField.id, { sigLineStyle: ls })}
                                   style={{ flex:1, padding:'4px 0', borderRadius:6, fontSize:10, fontWeight:700, cursor:'pointer',
@@ -1864,7 +1864,7 @@ export default function PDFFormBuilderPage() {
                       {/* Delete button */}
                       {sel && (
                         <button style={{
-                          position:'absolute', top:-11, right:-11, width:22, height:22,
+                          position:'absolute', top:-11, right:-11, width:22, height:38,
                           borderRadius:'50%', background:'#E24B4A', border:'2px solid #fff',
                           color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer',
                           display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, lineHeight:1,
@@ -1907,7 +1907,7 @@ export default function PDFFormBuilderPage() {
                 <div style={{ fontSize:12, fontWeight:700, color:'#fff' }}>✨ AI Builder</div>
                 <div style={{ fontSize:10, color:'rgba(255,255,255,.7)', marginTop:1 }}>Describe your form and I'll build it</div>
               </div>
-              <button onClick={() => setChatOpen(false)} style={{ background:'rgba(255,255,255,.2)', border:'none', borderRadius:6, color:'#fff', cursor:'pointer', width:26, height:26, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>×</button>
+              <button onClick={() => setChatOpen(false)} style={{ background:'rgba(255,255,255,.2)', border:'none', borderRadius:6, color:'#fff', cursor:'pointer', width:26, height:38, display:'flex', alignItems:'center', justifyContent:'center', fontSize:14 }}>×</button>
             </div>
             <div style={{ flex:1, overflowY:'auto', padding:'12px 14px 8px', display:'flex', flexDirection:'column', gap:10 }}>
                 {chatHistory.length === 0 && (

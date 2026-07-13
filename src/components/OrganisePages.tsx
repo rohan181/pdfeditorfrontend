@@ -345,7 +345,7 @@ export default function OrganisePages({ pageSlots, currentSlotIdx, onApply, onCl
                         title="Delete this page"
                         style={{
                           position: 'absolute', bottom: 5, right: 5,
-                          width: 22, height: 22, borderRadius: '50%', border: 'none',
+                          width: 22, height: 38, borderRadius: '50%', border: 'none',
                           background: 'rgba(239,68,68,0.9)', color: '#fff',
                           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                           boxShadow: '0 2px 8px rgba(239,68,68,0.5)',
@@ -571,7 +571,7 @@ function CardBtn({ disabled, onClick, title, children }: {
 }) {
   return (
     <button disabled={disabled} onClick={onClick} title={title} style={{
-      width: 26, height: 26, borderRadius: 7,
+      width: 26, height: 38, borderRadius: 7,
       border: `1px solid ${disabled ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.12)'}`,
       background: disabled ? 'transparent' : 'rgba(255,255,255,0.07)',
       color: disabled ? '#1e293b' : '#64748b',

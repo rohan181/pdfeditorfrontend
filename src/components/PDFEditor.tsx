@@ -1895,7 +1895,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       setSelectedId(el.id); setEditingId(el.id); setToolMode('select')
     } else if (toolMode === 'highlight') {
       const el: HighlightElement = {
-        id: uuidv4(), type: 'highlight', x, y, width: 200, height: 22,
+        id: uuidv4(), type: 'highlight', x, y, width: 200, height: 38,
         color: '#fef08a', opacity: 0.5, pageSlotId: slotId,
       }
       setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
@@ -2493,7 +2493,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
             {/* Icon — matches home page wm-mark */}
             <div style={{
-              width: 30, height: 30,
+              width: 30, height: 38,
               background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
               borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 14px rgba(139,92,246,0.45)', flexShrink: 0,
@@ -2866,9 +2866,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
                     <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
                     <div style={{display:'flex',gap:5,flexWrap:'wrap',maxWidth:180}}>
                       {['#16a34a','#dc2626','#1d4ed8','#7c3aed','#ea580c','#0e7490','#1e293b','#f59e0b'].map(c=>(
-                        <button key={c} onClick={()=>setMarkColor(c)} style={{width:22,height:22,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
+                        <button key={c} onClick={()=>setMarkColor(c)} style={{width:22,height:38,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
                       ))}
-                      <input type="color" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:22,height:22,border:'none',borderRadius:4,cursor:'pointer',padding:1}}/>
+                      <input type="color" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:22,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1}}/>
                     </div>
                   </div>
                   <div style={{minWidth:160}}>
@@ -3518,7 +3518,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
                           onClick={() => rotatePageLeft(idx)}
                           title="Rotate left 90°"
                           style={{
-                            width: 26, height: 26, borderRadius: '50%',
+                            width: 26, height: 38, borderRadius: '50%',
                             border: '1px solid rgba(165,180,252,0.3)',
                             background: 'rgba(165,180,252,0.12)',
                             color: '#a5b4fc', cursor: 'pointer',
@@ -3540,7 +3540,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
                           onClick={() => rotatePage(idx)}
                           title="Rotate right 90°"
                           style={{
-                            width: 26, height: 26, borderRadius: '50%',
+                            width: 26, height: 38, borderRadius: '50%',
                             border: '1px solid rgba(165,180,252,0.3)',
                             background: 'rgba(165,180,252,0.12)',
                             color: '#a5b4fc', cursor: 'pointer',
@@ -3964,9 +3964,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
             <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
             <div style={{display:'flex',gap:6,flexWrap:'wrap',maxWidth:220}}>
               {['#16a34a','#dc2626','#1d4ed8','#7c3aed','#ea580c','#0e7490','#1e293b','#f59e0b'].map(c=>(
-                <button key={c} onClick={()=>setMarkColor(c)} style={{width:26,height:26,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
+                <button key={c} onClick={()=>setMarkColor(c)} style={{width:26,height:38,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
               ))}
-              <input type="color" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:26,height:26,border:'none',borderRadius:6,cursor:'pointer',padding:1}}/>
+              <input type="color" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:26,height:38,border:'none',borderRadius:6,cursor:'pointer',padding:1}}/>
             </div>
           </div>
         </div>

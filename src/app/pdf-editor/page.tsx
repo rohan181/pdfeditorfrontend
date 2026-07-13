@@ -86,7 +86,7 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .cta-ban{position:relative;z-index:1;padding:0 0 96px;background:#fff}
 .cta-inner{background:#f5f5f7;border:1.5px solid rgba(37,99,235,.12);border-radius:24px;padding:72px 48px;text-align:center;position:relative;overflow:hidden}
 .cta-inner::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(37,99,235,.04) 0%,transparent 60%);pointer-events:none}
-.cta-glow{position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,rgba(37,99,235,.08) 0%,transparent 70%);filter:blur(40px);pointer-events:none}
+.cta-glow{position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:500px;height:380px;background:radial-gradient(ellipse,rgba(37,99,235,.08) 0%,transparent 70%);filter:blur(40px);pointer-events:none}
 .cta-h{font-family:var(--fd);font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.04em;color:#1d1d1f;margin-bottom:14px;position:relative;line-height:1.07}
 .cta-sub{font-size:16px;color:var(--fg2);margin-bottom:36px;position:relative}
 

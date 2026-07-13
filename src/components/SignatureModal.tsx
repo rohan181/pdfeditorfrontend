@@ -189,7 +189,7 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
                 <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                   {['#1b1c1c', '#1d4ed8', '#dc2626', '#7c3aed', '#047857'].map(c => (
                     <button key={c} onClick={() => setPenColor(c)} style={{
-                      width: 22, height: 22, borderRadius: '50%', background: c,
+                      width: 22, height: 38, borderRadius: '50%', background: c,
                       border: 'none', cursor: 'pointer',
                       outline: penColor === c ? '2.5px solid #6366f1' : '2px solid transparent',
                       outlineOffset: 2,
@@ -197,7 +197,7 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
                   ))}
                   <input type="color" value={penColor} onChange={e => setPenColor(e.target.value)}
                     title="Custom colour"
-                    style={{ width: 22, height: 22, border: 'none', borderRadius: 5, cursor: 'pointer', padding: 1 }} />
+                    style={{ width: 22, height: 38, border: 'none', borderRadius: 5, cursor: 'pointer', padding: 1 }} />
                 </div>
               </div>
               {/* Thickness */}

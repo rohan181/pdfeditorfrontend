@@ -48,7 +48,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .file-info{flex:1;min-width:0}
 .file-name{font-size:13px;font-weight:600;color:#1d1d1f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .file-size{font-size:10px;color:rgba(0,0,0,.4);margin-top:2px}
-.file-rm{width:26px;height:26px;border-radius:6px;background:transparent;border:1px solid #e0e0e0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.35);font-size:12px;transition:all .15s}
+.file-rm{width:26px;height:38px;border-radius:6px;background:transparent;border:1px solid #e0e0e0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.35);font-size:12px;transition:all .15s}
 .file-rm:hover{border-color:#E24B4A;color:#E24B4A}
 
 /* mode tabs */
@@ -103,7 +103,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 /* output list */
 .output-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
 .output-item{display:flex;align-items:center;gap:10px;padding:10px 13px;background:#fafafa;border:1px solid #e8e8e8;border-radius:9px}
-.output-num{width:22px;height:22px;border-radius:5px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(0,0,0,.4);flex-shrink:0}
+.output-num{width:22px;height:38px;border-radius:5px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(0,0,0,.4);flex-shrink:0}
 .output-info{flex:1;font-size:12px;font-weight:500;color:#1d1d1f}
 .output-sub{font-size:10px;color:rgba(0,0,0,.4);margin-top:1px}
 

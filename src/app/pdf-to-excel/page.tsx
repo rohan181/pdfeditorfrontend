@@ -57,7 +57,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .file-info{flex:1;min-width:0}
 .file-name{font-size:13px;font-weight:600;color:#1d1d1f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .file-meta{font-size:10px;color:rgba(0,0,0,.4);margin-top:2px}
-.file-rm{width:26px;height:26px;border-radius:6px;background:transparent;border:1px solid #e0e0e0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.35);font-size:13px;transition:all .15s}
+.file-rm{width:26px;height:38px;border-radius:6px;background:transparent;border:1px solid #e0e0e0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.35);font-size:13px;transition:all .15s}
 .file-rm:hover{border-color:#dc2626;color:#dc2626}
 
 /* Convert button */

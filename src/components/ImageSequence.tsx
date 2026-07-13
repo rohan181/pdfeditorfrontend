@@ -23,7 +23,7 @@ function bgOp(i: number, p: number): number {
 // ─── Document card components ──────────────────────────────────────────────────
 function ChromeBar({ dot }: { dot: string }) {
   return (
-    <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,.07)', height: 30, display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8 }}>
+    <div style={{ background: '#0d0d0d', borderBottom: '1px solid rgba(255,255,255,.07)', height: 38, display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8 }}>
       <div style={{ display: 'flex', gap: 4 }}>
         {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: c }} />)}
       </div>
@@ -93,7 +93,7 @@ function DocScan() {
             <div style={{ fontSize: 7.5, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2 }}>{l}</div>
             <motion.div animate={{ borderColor: ['rgba(167,139,250,.1)','rgba(167,139,250,.72)','rgba(167,139,250,.1)'], background: ['rgba(167,139,250,.01)','rgba(167,139,250,.06)','rgba(167,139,250,.01)'] }}
               transition={{ duration: 2.0, repeat: Infinity, delay: d as number, ease: 'easeInOut' }}
-              style={{ height: 22, borderRadius: 5, border: '1.5px solid rgba(167,139,250,.1)', display: 'flex', alignItems: 'center', padding: '0 8px' }}>
+              style={{ height: 38, borderRadius: 5, border: '1.5px solid rgba(167,139,250,.1)', display: 'flex', alignItems: 'center', padding: '0 8px' }}>
               <motion.div animate={{ width: ['8%','65%','8%'] }} transition={{ duration: 2.0, repeat: Infinity, delay: d as number, ease: 'easeInOut' }}
                 style={{ height: 4, borderRadius: 99, background: 'rgba(167,139,250,.28)' }} />
             </motion.div>
@@ -134,7 +134,7 @@ function DocFill() {
         {fields.map(({ label, val, d1, d2, done }) => (
           <div key={label} style={{ marginBottom: 9 }}>
             <div style={{ fontSize: 7.5, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2 }}>{label}</div>
-            <div style={{ position: 'relative', height: 22, borderRadius: 5, border: `1.5px solid ${done ? 'rgba(34,197,94,.38)' : `${RED}55`}`, background: done ? 'rgba(34,197,94,.04)' : `${RED}07`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 7px', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', height: 38, borderRadius: 5, border: `1.5px solid ${done ? 'rgba(34,197,94,.38)' : `${RED}55`}`, background: done ? 'rgba(34,197,94,.04)' : `${RED}07`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 7px', overflow: 'hidden' }}>
               <span style={{ ...FI, fontSize: 10, color: '#111', fontWeight: 500, animation: `fin .35s ${d1} both`, opacity: 0 }}>{val}</span>
               {done
                 ? <span style={{ fontSize: 11, animation: `chk .35s ${d2} both`, opacity: 0, color: '#22c55e' }}>✓</span>
@@ -174,7 +174,7 @@ function DocDone() {
         {[['Bill To','Acme Corporation'],['Amount Due','$12,400.00'],['Due Date','Dec 30, 2025'],['PO Number','PO-4521']].map(([l,v]) => (
           <div key={l} style={{ marginBottom: 9 }}>
             <div style={{ fontSize: 7.5, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2 }}>{l}</div>
-            <div style={{ height: 22, borderRadius: 5, border: '1.5px solid rgba(34,197,94,.35)', background: 'rgba(34,197,94,.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 7px' }}>
+            <div style={{ height: 38, borderRadius: 5, border: '1.5px solid rgba(34,197,94,.35)', background: 'rgba(34,197,94,.04)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 7px' }}>
               <span style={{ ...FI, fontSize: 10, color: '#111', fontWeight: 500 }}>{v}</span>
               <span style={{ fontSize: 11, color: '#22c55e' }}>✓</span>
             </div>
@@ -182,7 +182,7 @@ function DocDone() {
         ))}
         <div style={{ marginBottom: 12 }}>
           <div style={{ fontSize: 7.5, color: '#bbb', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 2 }}>Signature</div>
-          <div style={{ height: 30, border: '1px dashed #e4e4e7', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ height: 38, border: '1px dashed #e4e4e7', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="110" height="20" viewBox="0 0 110 20" fill="none">
               <path d="M4 14 C11 4 18 17 27 11 C36 5 45 16 55 9 C64 3 73 14 82 8 C90 3 98 13 105 9"
                 stroke={RED} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"

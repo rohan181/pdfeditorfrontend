@@ -32,7 +32,7 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .nav{position:sticky;top:0;z-index:200;height:62px;background:rgba(255,255,255,.88);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid rgba(0,0,0,.08);display:flex;align-items:center}
 .nav-in{display:flex;align-items:center;justify-content:space-between;width:100%}
 .wm{display:inline-flex;align-items:center;gap:9px;text-decoration:none}
-.wm-mark{width:30px;height:30px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(139,92,246,.3);flex-shrink:0}
+.wm-mark{width:30px;height:38px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(139,92,246,.3);flex-shrink:0}
 .wm-inner{width:15px;height:18px;background:rgba(255,255,255,.95);clip-path:polygon(0% 0%,68% 0%,100% 26%,100% 100%,0% 100%)}
 .wm-name{font-family:var(--fd);font-size:17px;font-weight:800;color:#1d1d1f;letter-spacing:-.03em}
 .wm-name em{font-style:normal;color:var(--p)}
@@ -524,7 +524,7 @@ export default function AIPDFFormFillerPage() {
                       {['Full Name','Date of Birth','Address','Phone Number'].map((f,i) => (
                         <div key={f} style={{marginBottom:8,animation:`field-fill .35s ${i*.1}s both`}}>
                           <div style={{fontSize:9,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:3}}>{f}</div>
-                          <div style={{height:22,border:'1.5px solid rgba(8,145,178,.4)',borderRadius:6,background:'rgba(8,145,178,.04)',display:'flex',alignItems:'center',padding:'0 8px'}}>
+                          <div style={{height:38,border:'1.5px solid rgba(8,145,178,.4)',borderRadius:6,background:'rgba(8,145,178,.04)',display:'flex',alignItems:'center',padding:'0 8px'}}>
                             <div style={{height:5,width:`${70-i*8}%`,borderRadius:99,background:'rgba(8,145,178,.25)',animation:'type-in 1s ease forwards'}}/>
                           </div>
                         </div>
@@ -541,7 +541,7 @@ export default function AIPDFFormFillerPage() {
                       {[['Full Name','John Smith'],['Date of Birth','12/05/1990'],['Address','42 Oak Lane, Boston MA'],['Phone','617-555-0192']].map(([f,v],i) => (
                         <div key={f} style={{marginBottom:8,animation:`field-fill .3s ${i*.08}s both`}}>
                           <div style={{fontSize:9,color:'#9ca3af',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:3}}>{f}</div>
-                          <div style={{height:26,border:'1.5px solid rgba(22,163,74,.3)',borderRadius:6,background:'rgba(22,163,74,.04)',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 8px'}}>
+                          <div style={{height:38,border:'1.5px solid rgba(22,163,74,.3)',borderRadius:6,background:'rgba(22,163,74,.04)',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 8px'}}>
                             <span style={{fontSize:11,color:'#1d1d1f',fontWeight:500}}>{v}</span>
                             <span style={{color:'#16a34a',fontWeight:700,fontSize:13}}>✓</span>
                           </div>

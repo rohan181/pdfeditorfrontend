@@ -254,7 +254,7 @@ export default function QuizCreator() {
                   <div style={{ fontSize:11, fontWeight:700, color:'#1d1d1f', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{file.name}</div>
                   <div style={{ fontSize:9, color:'rgba(0,0,0,.38)', marginTop:1 }}>{fmtBytes(file.size)}{pages ? ` · ${pages}p` : ''}</div>
                 </div>
-                <button onClick={reset} style={{ width:22, height:22, borderRadius:5, border:'1px solid #e0e0e0', background:'transparent', cursor:'pointer', fontSize:12, color:'rgba(0,0,0,.35)' }}>×</button>
+                <button onClick={reset} style={{ width:22, height:38, borderRadius:5, border:'1px solid #e0e0e0', background:'transparent', cursor:'pointer', fontSize:12, color:'rgba(0,0,0,.35)' }}>×</button>
               </div>
             )}
           </div>
@@ -535,7 +535,7 @@ export default function QuizCreator() {
               </div>
               <button
                 onClick={() => setRefPanel(null)}
-                style={{ width:30, height:30, borderRadius:8, border:'1px solid #e0e0e0', background:'#f9f9f9', cursor:'pointer', fontSize:16, color:'rgba(0,0,0,.5)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
+                style={{ width:30, height:38, borderRadius:8, border:'1px solid #e0e0e0', background:'#f9f9f9', cursor:'pointer', fontSize:16, color:'rgba(0,0,0,.5)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
               >
                 ✕
               </button>
@@ -544,7 +544,7 @@ export default function QuizCreator() {
             {/* PDF canvas area */}
             <div style={{ flex:1, overflowY:'auto', background:'#6b7280', display:'flex', flexDirection:'column', alignItems:'center', padding:20, gap:0 }}>
               {refPanel.loading && (
-                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:12, height:260 }}>
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:12, height:380 }}>
                   <div style={{ width:36, height:36, border:'3px solid rgba(255,255,255,.3)', borderTopColor:'#fff', borderRadius:'50%', animation:'spin .8s linear infinite' }}/>
                   <div style={{ fontSize:12, color:'rgba(255,255,255,.7)', fontWeight:600 }}>Rendering page {refPanel.page}…</div>
                 </div>

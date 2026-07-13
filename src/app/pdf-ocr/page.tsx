@@ -107,7 +107,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .main-top{display:flex;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid #f0f0f0;gap:10px;flex-shrink:0}
 .page-label{font-size:13px;font-weight:700;color:#1d1d1f}
 .page-nav{display:flex;gap:4px}
-.pn-btn{width:26px;height:26px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.5);transition:all .12s}
+.pn-btn{width:26px;height:38px;border-radius:6px;border:1px solid #e0e0e0;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.5);transition:all .12s}
 .pn-btn:hover:not(:disabled){border-color:#0891b2;color:#0891b2}
 .pn-btn:disabled{opacity:.25;cursor:not-allowed}
 

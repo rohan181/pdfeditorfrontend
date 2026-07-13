@@ -66,7 +66,7 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .tb-left{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .tb-center{display:flex;align-items:center;gap:4px;flex:1;justify-content:center;flex-shrink:0}
 .tb-right{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.tb-sep{width:1px;height:22px;background:rgba(255,255,255,.12);margin:0 4px;flex-shrink:0}
+.tb-sep{width:1px;height:38px;background:rgba(255,255,255,.12);margin:0 4px;flex-shrink:0}
 
 .tb-btn{height:32px;min-width:32px;border-radius:8px;border:none;background:transparent;color:rgba(255,255,255,.75);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 10px;white-space:nowrap;letter-spacing:-.01em}
 .tb-btn:hover:not(:disabled){background:rgba(255,255,255,.1);color:#fff}
@@ -76,7 +76,7 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .tb-icon{font-size:16px;line-height:1}
 
 .page-ctrl{display:flex;align-items:center;gap:6px}
-.page-input{width:44px;height:30px;border-radius:7px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:600;text-align:center;outline:none;transition:border .15s;font-family:inherit}
+.page-input{width:44px;height:38px;border-radius:7px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-size:13px;font-weight:600;text-align:center;outline:none;transition:border .15s;font-family:inherit}
 .page-input:focus{border-color:#0a84ff;background:rgba(10,132,255,.12)}
 .page-total{font-size:12px;color:rgba(255,255,255,.45);white-space:nowrap;letter-spacing:-.01em}
 

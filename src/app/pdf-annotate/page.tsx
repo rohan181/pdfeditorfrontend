@@ -577,7 +577,7 @@ export default function PDFAnnotate() {
                   {ann.type} · Page {ann.page}
                 </div>
                 <button onClick={() => { setSelectedId(null); setEditingId(null) }}
-                  style={{ width:22, height:22, borderRadius:5, border:'1px solid rgba(255,255,255,.15)', background:'transparent', color:'rgba(255,255,255,.5)', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+                  style={{ width:22, height:38, borderRadius:5, border:'1px solid rgba(255,255,255,.15)', background:'transparent', color:'rgba(255,255,255,.5)', cursor:'pointer', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
               </div>
 
               {/* Color */}
@@ -586,7 +586,7 @@ export default function PDFAnnotate() {
                 <div style={{ display:'flex', flexWrap:'wrap' as const, gap:5 }}>
                   {COLORS.map(c => (
                     <button key={c} onClick={() => updateAnnotation(ann.id, { color: c })}
-                      style={{ width:22, height:22, borderRadius:5, background:c, border: ann.color===c?'2px solid #a78bfa':'2px solid transparent', cursor:'pointer', flexShrink:0 }}/>
+                      style={{ width:22, height:38, borderRadius:5, background:c, border: ann.color===c?'2px solid #a78bfa':'2px solid transparent', cursor:'pointer', flexShrink:0 }}/>
                   ))}
                 </div>
               </div>

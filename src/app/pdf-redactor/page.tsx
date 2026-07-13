@@ -374,7 +374,7 @@ function ColorPickerPopover({ initialColor, pickerPos, onApply, onClose }: CPPro
 
       {/* Preview strip + close */}
       <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:4 }}>
-        <div style={{ flex:1, height:22, borderRadius:7, background:currentHex, border:'1px solid rgba(0,0,0,.08)' }} />
+        <div style={{ flex:1, height:38, borderRadius:7, background:currentHex, border:'1px solid rgba(0,0,0,.08)' }} />
         <button className="cpicker-cancel" onClick={onClose} style={{ flexShrink:0 }}>Close</button>
       </div>
     </div>
