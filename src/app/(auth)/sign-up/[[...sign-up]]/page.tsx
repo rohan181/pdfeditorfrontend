@@ -1,13 +1,14 @@
 'use client'
 import { SignUp } from '@clerk/nextjs'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function SignUpPage() {
   return (
     <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#f5f5f7', padding:20, fontFamily:'system-ui,sans-serif' }}>
       {/* App logo above the card */}
       <Link href="/" style={{ display:'inline-flex', alignItems:'center', gap:8, textDecoration:'none', marginBottom:24 }}>
-        <img src="/logo.png" alt="EditPDF AI" style={{ height: 48, width: 'auto', display: 'block' }} />
+        <Image src="/logo.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} priority />
       </Link>
 
       <SignUp
@@ -23,7 +24,7 @@ export default function SignUpPage() {
             card:           { boxShadow:'0 4px 40px rgba(0,0,0,.08)', border:'1px solid #e8e8e8', borderRadius:'20px', padding:'32px 28px' },
             headerTitle:    { fontSize:'22px', fontWeight:'800', letterSpacing:'-.04em' },
             headerSubtitle: { color:'rgba(0,0,0,.4)' },
-            footer:         { display:'none' },   // removes "Secured by Clerk"
+            footer:         { display:'none' },
             footerAction:   { display:'none' },
             footerPages:    { display:'none' },
             socialButtonsBlockButton: { border:'1.5px solid #e0e0e0', borderRadius:'10px', fontWeight:'600' },

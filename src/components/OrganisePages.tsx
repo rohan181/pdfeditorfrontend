@@ -285,7 +285,7 @@ export default function OrganisePages({ pageSlots, currentSlotIdx, onApply, onCl
                   {/* Thumbnail */}
                   <div style={{ position: 'relative', aspectRatio: String(ar), overflow: 'hidden', background: '#050a18' }}>
                     {slot.thumbUrl ? (
-                      <img src={slot.thumbUrl} alt={`Page ${idx + 1}`}
+                      <img src={slot.thumbUrl} alt={`Page ${idx + 1}`} loading="lazy"
                         style={{
                           width: '100%', height: '100%', objectFit: 'cover', display: 'block',
                           transform: slot.rotation ? `rotate(${slot.rotation}deg) scale(${slot.rotation === 90 || slot.rotation === 270 ? ar : 1})` : undefined,

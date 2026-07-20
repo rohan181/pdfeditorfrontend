@@ -3,6 +3,8 @@ import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -379,7 +381,7 @@ export default function PDFToImagesPage() {
                       {images.map(img => (
                         <div className="img-card" key={img.pageNum}>
                           <div className="img-preview">
-                            <img src={img.dataUrl} alt={`Page ${img.pageNum}`} />
+                            <img src={img.dataUrl} alt={`Page ${img.pageNum}`} loading="lazy" />
                             <span className="img-badge">Page {img.pageNum}</span>
                           </div>
                           <div className="img-footer">
@@ -446,6 +448,7 @@ export default function PDFToImagesPage() {
           </div>
         </div>
       </div>
+      <ToolSEOSection {...toolSeoData['pdf-to-images']} />
     </>
   )
 }

@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export const metadata: Metadata = {
-  title: 'About Us — EditPDF AI',
-  description: 'Learn about EditPDF AI — our mission to make powerful PDF editing free and accessible to everyone, everywhere.',
+  title: { absolute: 'About EditPDF AI – Our Story and Privacy Approach' },
+  description: 'EditPDF AI is an independent PDF tool suite built in Australia. Learn who we are, how your files are handled, and why we keep 35+ tools permanently free.',
+  alternates: { canonical: 'https://editpdfai.com/about' },
 }
 
 const VALUES = [
@@ -36,14 +38,52 @@ const STATS = [
   { value: '$1',   label: 'Pro plan per month' },
 ]
 
+const DATA_FACTS = [
+  {
+    heading: 'Core PDF tools — fully offline',
+    body: 'Editing, merging, splitting, compressing, rotating, and converting all run via WebAssembly directly in your browser. Your PDF bytes are never transmitted to any server for these operations.',
+  },
+  {
+    heading: 'AI features — text only, no raw file',
+    body: 'When you use AI features (form autofill, summariser, OCR, translator), only the extracted text content is sent to our AI provider. Your raw PDF file stays on your device at all times.',
+  },
+  {
+    heading: 'Account data',
+    body: 'If you create a free account, we store your email address and usage count (to enforce the 5 AI uses/day free tier). We do not sell or share your personal data with third parties.',
+  },
+  {
+    heading: 'No tracking across sessions',
+    body: 'We do not use cross-site tracking cookies or fingerprinting. Basic analytics (page views, tool usage counts) are collected in aggregate only — no individual profiles are built.',
+  },
+]
+
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': 'https://editpdfai.com/#organization',
+  name: 'EditPDF AI',
+  url: 'https://editpdfai.com',
+  logo: 'https://editpdfai.com/logo.png',
+  foundingDate: '2026',
+  areaServed: 'Worldwide',
+  contactPoint: {
+    '@type': 'ContactPoint',
+    email: 'support@editpdfai.com',
+    contactType: 'customer support',
+    availableLanguage: 'English',
+  },
+  description: 'Independent PDF tool suite with 35+ browser-based tools and AI features. Built in Australia.',
+}
+
 export default function AboutPage() {
   return (
     <div style={{ fontFamily: 'var(--font-inter,system-ui,sans-serif)', color: '#1d1d1f', background: '#fff', minHeight: '100vh' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }} />
 
       {/* ── Nav ── */}
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img src="/logo.png" alt="EditPDF AI" style={{ height: 48, width: 'auto', display: 'block' }} />
+          <Image src="/logo.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <Link href="/pricing" style={{ fontSize: 14, color: '#6b7280', textDecoration: 'none', fontWeight: 500 }}>Pricing</Link>
@@ -88,8 +128,29 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* ── Who we are ── */}
+      <section style={{ maxWidth: 720, margin: '0 auto', padding: '72px 24px 0' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 16 }}>Who we are</div>
+        <h2 style={{ fontSize: 'clamp(22px,3vw,32px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 24px', lineHeight: 1.2 }}>
+          A small independent team, building in Australia
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16, marginBottom: 32 }}>
+          {[
+            { label: 'Founded',   value: 'Early 2026' },
+            { label: 'Based in',  value: 'Australia' },
+            { label: 'Team size', value: 'Small, independent' },
+            { label: 'Contact',   value: 'support@editpdfai.com' },
+          ].map(({ label, value }) => (
+            <div key={label} style={{ background: '#f5f5f7', borderRadius: 12, padding: '16px 18px', border: '1.5px solid #e5e7eb' }}>
+              <div style={{ fontSize: 10.5, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>{label}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1d1d1f' }}>{value}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ── Story ── */}
-      <section style={{ maxWidth: 720, margin: '0 auto', padding: '72px 24px' }}>
+      <section style={{ maxWidth: 720, margin: '0 auto', padding: '40px 24px 72px' }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 16 }}>Our story</div>
         <h2 style={{ fontSize: 'clamp(22px,3vw,32px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 24px', lineHeight: 1.2 }}>
           Built out of frustration with expensive, bloated PDF software
@@ -125,21 +186,30 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── Privacy note ── */}
+      {/* ── Data handling ── */}
       <section style={{ maxWidth: 720, margin: '0 auto', padding: '72px 24px' }}>
-        <div style={{ background: 'linear-gradient(135deg,rgba(79,127,250,.06),rgba(139,63,236,.06))', border: '1.5px solid rgba(79,127,250,.18)', borderRadius: 20, padding: '36px 32px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 18 }}>
-            <span style={{ fontSize: 32, flexShrink: 0 }}>🔒</span>
-            <div>
-              <h3 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 12px', letterSpacing: '-.03em' }}>Your privacy is non-negotiable</h3>
-              <p style={{ fontSize: 15, color: '#374151', lineHeight: 1.75, margin: '0 0 14px' }}>
-                All PDF editing, merging, splitting, and compressing happens directly in your browser using WebAssembly. Your files are never sent to our servers.
-              </p>
-              <p style={{ fontSize: 15, color: '#374151', lineHeight: 1.75, margin: 0 }}>
-                When you use AI features, only the text content is sent to process your request. Your document&apos;s raw bytes stay on your device.
-              </p>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 16 }}>Data &amp; privacy</div>
+        <h2 style={{ fontSize: 'clamp(22px,3vw,32px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 12px', lineHeight: 1.2 }}>
+          How we handle your files
+        </h2>
+        <p style={{ fontSize: 16, color: '#6b7280', lineHeight: 1.7, marginBottom: 36, marginTop: 0 }}>
+          We have designed EditPDF AI so that the default behaviour is to process your PDF locally — on your own device. Here is exactly what happens in each case.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {DATA_FACTS.map(({ heading, body }) => (
+            <div key={heading} style={{ background: '#f5f5f7', borderRadius: 14, padding: '20px 22px', border: '1.5px solid #e5e7eb' }}>
+              <h3 style={{ fontSize: 14.5, fontWeight: 800, margin: '0 0 8px', letterSpacing: '-.02em', color: '#1d1d1f' }}>{heading}</h3>
+              <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.7, margin: 0 }}>{body}</p>
             </div>
-          </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 24, display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+          <Link href="/privacy" style={{ fontSize: 13.5, fontWeight: 700, color: '#4F7FFA', textDecoration: 'none' }}>
+            Read our Privacy Policy →
+          </Link>
+          <Link href="/terms" style={{ fontSize: 13.5, fontWeight: 700, color: '#4F7FFA', textDecoration: 'none' }}>
+            Read our Terms of Service →
+          </Link>
         </div>
       </section>
 
@@ -148,8 +218,11 @@ export default function AboutPage() {
         <h2 style={{ fontSize: 'clamp(24px,4vw,40px)', fontWeight: 800, color: '#fff', margin: '0 0 14px', letterSpacing: '-.04em' }}>
           Have a question or idea?
         </h2>
-        <p style={{ fontSize: 16, color: '#6b7280', margin: '0 0 32px', lineHeight: 1.6 }}>
-          We read every email. Whether it&apos;s a bug, a feature request, or just feedback — reach out.
+        <p style={{ fontSize: 16, color: '#6b7280', margin: '0 0 10px', lineHeight: 1.6 }}>
+          We read every email. Whether it&apos;s a bug, a feature request, or feedback — reach out.
+        </p>
+        <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 32px' }}>
+          For security disclosures: <span style={{ color: '#6b7280' }}>support@editpdfai.com</span> (mark subject &ldquo;Security&rdquo;)
         </p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
           <Link href="mailto:support@editpdfai.com"

@@ -3,14 +3,16 @@
 import { useState, useRef } from 'react'
 import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import {
-  Upload, FileText, FilePen, Minimize2, Merge, Split, PenTool,
+  Upload, FilePen, Minimize2, Merge, Split, PenTool,
   FileType, FileSpreadsheet, Presentation, Sparkles, KeyRound, Layers,
   WandSparkles, ScanText, Languages, BrainCircuit, ClipboardList,
   ImagePlus, Images, Stamp, Scissors, EyeOff, Trash2,
   MessageSquareText, MonitorPlay, RotateCw,
+  ListOrdered, Table, Code, FormInput,
   ChevronDown, X, Menu, ArrowRight,
 } from 'lucide-react'
 
@@ -27,23 +29,31 @@ const NAV_CATS: NavCat[] = [
   {
     label: 'AI Tools', href: '/ai-pdf-form-filler', color: '#7c3aed', Icon: Sparkles,
     tools: [
-      { name: 'AI Form Filler', href: '/ai-pdf-form-filler', tier: 'ai', Icon: WandSparkles,  bg: '#7c3aed' },
-      { name: 'PDF Summarizer', href: '/pdf-summarizer',     tier: 'ai', Icon: Sparkles,      bg: '#8b5cf6' },
-      { name: 'OCR Scanner',    href: '/pdf-ocr',            tier: 'ai', Icon: ScanText,      bg: '#6366f1' },
-      { name: 'PDF Translator', href: '/pdf-translator',     tier: 'ai', Icon: Languages,     bg: '#0891b2' },
-      { name: 'PDF Mind Map',   href: '/mind-map',           tier: 'ai', Icon: BrainCircuit,  bg: '#a855f7' },
-      { name: 'Quiz Creator',   href: '/quiz-creator',       tier: 'ai', Icon: ClipboardList, bg: '#7c3aed' },
+      { name: 'AI Form Filler', href: '/ai-pdf-form-filler', tier: 'ai',   Icon: WandSparkles,  bg: '#7c3aed' },
+      { name: 'PDF Summarizer', href: '/pdf-summarizer',     tier: 'ai',   Icon: Sparkles,      bg: '#8b5cf6' },
+      { name: 'OCR Scanner',    href: '/pdf-ocr',            tier: 'ai',   Icon: ScanText,      bg: '#6366f1' },
+      { name: 'PDF Translator', href: '/pdf-translator',     tier: 'ai',   Icon: Languages,     bg: '#0891b2' },
+      { name: 'PDF Mind Map',   href: '/mind-map',           tier: 'ai',   Icon: BrainCircuit,  bg: '#a855f7' },
+      { name: 'Quiz Creator',   href: '/quiz-creator',       tier: 'ai',   Icon: ClipboardList, bg: '#7c3aed' },
     ],
   },
   {
     label: 'Edit', href: '/pdf-editor', color: '#2563eb', Icon: FilePen,
     tools: [
-      { name: 'PDF Editor',    href: '/pdf-editor',   tier: 'free', Icon: FilePen,          bg: '#2563eb' },
+      { name: 'PDF Editor',    href: '/pdf-editor',   tier: 'free', Icon: FilePen,           bg: '#2563eb' },
       { name: 'PDF Annotator', href: '/pdf-annotate', tier: 'free', Icon: MessageSquareText, bg: '#0ea5e9' },
       { name: 'PDF Viewer',    href: '/pdf-viewer',   tier: 'free', Icon: MonitorPlay,       bg: '#0a84ff' },
-      { name: 'PDF Redactor',  href: '/pdf-redactor', tier: 'free', Icon: EyeOff,            bg: '#374151' },
-      { name: 'PDF Cropper',   href: '/pdf-cropper',  tier: 'free', Icon: Scissors,          bg: '#0d9488' },
-      { name: 'Rotate PDF',    href: '/rotate-pdf',   tier: 'free', Icon: RotateCw,          bg: '#ea580c' },
+    ],
+  },
+  {
+    label: 'Page Tools', href: '/#tools', color: '#f97316', Icon: Layers,
+    tools: [
+      { name: 'Page Manager',     href: '/pdf-page-manager', tier: 'free', Icon: Layers,      bg: '#f59e0b' },
+      { name: 'PDF Cropper',      href: '/pdf-cropper',      tier: 'free', Icon: Scissors,    bg: '#0d9488' },
+      { name: 'Add Page Numbers', href: '/add-page-numbers', tier: 'free', Icon: ListOrdered, bg: '#f97316' },
+      { name: 'Rotate PDF',       href: '/rotate-pdf',       tier: 'free', Icon: RotateCw,    bg: '#ea580c' },
+      { name: 'Extract Pages',    href: '/extract-pages',    tier: 'free', Icon: Scissors,    bg: '#0891b2' },
+      { name: 'Delete Pages',     href: '/delete-pages',     tier: 'free', Icon: Trash2,      bg: '#dc2626' },
     ],
   },
   {
@@ -52,15 +62,19 @@ const NAV_CATS: NavCat[] = [
       { name: 'PDF → Word',    href: '/pdf-to-word',   tier: 'pro',  Icon: FileType,        bg: '#16a34a' },
       { name: 'PDF → Excel',   href: '/pdf-to-excel',  tier: 'pro',  Icon: FileSpreadsheet, bg: '#15803d' },
       { name: 'PDF → PPT',     href: '/pdf-to-ppt',    tier: 'pro',  Icon: Presentation,    bg: '#d97706' },
-      { name: 'Image to PDF',  href: '/image-to-pdf',  tier: 'free', Icon: ImagePlus,       bg: '#7c3aed' },
       { name: 'Word → PDF',    href: '/word-to-pdf',   tier: 'free', Icon: FileType,        bg: '#2563eb' },
+      { name: 'Excel → PDF',   href: '/excel-to-pdf',  tier: 'free', Icon: Table,           bg: '#059669' },
+      { name: 'PPT → PDF',     href: '/ppt-to-pdf',    tier: 'free', Icon: Presentation,    bg: '#b45309' },
+      { name: 'Image to PDF',  href: '/image-to-pdf',  tier: 'free', Icon: ImagePlus,       bg: '#7c3aed' },
       { name: 'PDF to Images', href: '/pdf-to-images', tier: 'free', Icon: Images,          bg: '#db2777' },
+      { name: 'TXT → PDF',     href: '/txt-to-pdf',    tier: 'free', Icon: FileType,        bg: '#6366f1' },
+      { name: 'HTML → PDF',    href: '/html-to-pdf',   tier: 'free', Icon: Code,            bg: '#0891b2' },
     ],
   },
   {
     label: 'Protect', href: '/pdf-signer', color: '#dc2626', Icon: KeyRound,
     tools: [
-      { name: 'Sign PDF',      href: '/pdf-signer',        tier: 'free', Icon: PenTool,  bg: '#0d9488' },
+      { name: 'PDF E-Signer',  href: '/pdf-signer',        tier: 'free', Icon: PenTool,  bg: '#0d9488' },
       { name: 'Password Lock', href: '/pdf-password-lock', tier: 'free', Icon: KeyRound, bg: '#dc2626' },
       { name: 'Watermark',     href: '/pdf-watermark',     tier: 'free', Icon: Stamp,    bg: '#2563eb' },
       { name: 'PDF Redactor',  href: '/pdf-redactor',      tier: 'free', Icon: EyeOff,   bg: '#374151' },
@@ -69,12 +83,10 @@ const NAV_CATS: NavCat[] = [
   {
     label: 'Organize', href: '/#tools', color: '#d97706', Icon: Layers,
     tools: [
-      { name: 'Merge PDF',     href: '/pdf-merger',       tier: 'free', Icon: Merge,    bg: '#7c3aed' },
-      { name: 'Split PDF',     href: '/pdf-splitter',     tier: 'free', Icon: Split,    bg: '#e11d48' },
-      { name: 'Compress PDF',  href: '/pdf-compressor',   tier: 'free', Icon: Minimize2,bg: '#d97706' },
-      { name: 'Page Manager',  href: '/pdf-page-manager', tier: 'free', Icon: Layers,   bg: '#f97316' },
-      { name: 'Extract Pages', href: '/extract-pages',    tier: 'free', Icon: Scissors, bg: '#0891b2' },
-      { name: 'Delete Pages',  href: '/delete-pages',     tier: 'free', Icon: Trash2,   bg: '#dc2626' },
+      { name: 'PDF Merger',   href: '/pdf-merger',       tier: 'free', Icon: Merge,      bg: '#7c3aed' },
+      { name: 'PDF Splitter', href: '/pdf-splitter',     tier: 'free', Icon: Split,      bg: '#e11d48' },
+      { name: 'Compress PDF', href: '/pdf-compressor',   tier: 'free', Icon: Minimize2,  bg: '#d97706' },
+      { name: 'Form Builder', href: '/pdf-form-builder', tier: 'free', Icon: FormInput,  bg: '#0369a1' },
     ],
   },
 ]
@@ -86,6 +98,7 @@ const TIER_BADGE = {
 }
 
 const NAV_LINKS = [
+  { label: 'Guides',  href: '/guides'  },
   { label: 'Pricing', href: '/pricing' },
   { label: 'About',   href: '/about'   },
 ]
@@ -129,7 +142,7 @@ export default function SiteNav() {
 
           {/* Logo */}
           <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', marginRight: 20, flexShrink: 0 }}>
-            <img src="/logo.png" alt="EditPDF AI" style={{ height: 48, width: 'auto', display: 'block' }} />
+            <Image src="/logo.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} priority />
           </Link>
 
           {/* Desktop nav links — hidden on ≤900px via CSS */}
@@ -184,7 +197,7 @@ export default function SiteNav() {
             </Link>
 
             {/* Hamburger — mobile only */}
-            <button className="sn-mob-only" onClick={() => setMobOpen(o => !o)}
+            <button className="sn-mob-only" onClick={() => { setMobOpen(o => !o); if (mobOpen) setToolsExp(false); }}
               aria-label={mobOpen ? 'Close menu' : 'Open menu'}
               style={{ ...TAP, width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(0,0,0,.12)', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <AnimatePresence mode="wait" initial={false}>
@@ -216,7 +229,7 @@ export default function SiteNav() {
               onMouseEnter={keepMenu} onMouseLeave={closeMenu}
               style={{ position: 'fixed', top: 56, left: 0, right: 0, zIndex: 299, background: '#fff', borderBottom: '1px solid rgba(0,0,0,.07)', boxShadow: '0 20px 60px rgba(0,0,0,.1)' }}>
               <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 24px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 4 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 4 }}>
                   {NAV_CATS.map(cat => (
                     <div key={cat.label}>
                       <Link href={cat.href} onClick={() => setToolsOpen(false)} style={{ textDecoration: 'none' }}>

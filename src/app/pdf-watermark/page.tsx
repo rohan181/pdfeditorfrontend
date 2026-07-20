@@ -2,11 +2,20 @@
 import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib'
-import * as pdfjsLib from 'pdfjs-dist'
+import type { PDFDocumentProxy } from 'pdfjs-dist'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+let _pdfjs: typeof import('pdfjs-dist') | null = null
+async function getPdfjs() {
+  if (!_pdfjs) {
+    _pdfjs = await import('pdfjs-dist')
+    _pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${_pdfjs.version}/pdf.worker.min.js`
+  }
+  return _pdfjs
+}
 
 const LANDING_CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -158,7 +167,7 @@ export default function PDFWatermarkPage() {
   const [wmCustomX, setWmCustomX]   = useState(0.5)  // 0–1 (fraction of page width)
   const [wmCustomY, setWmCustomY]   = useState(0.5)  // 0–1 (fraction, 0=bottom 1=top, pdf-lib coords)
 
-  const renderAllPages = useCallback(async (doc: pdfjsLib.PDFDocumentProxy) => {
+  const renderAllPages = useCallback(async (doc: PDFDocumentProxy) => {
     const imgs: string[] = []
     const natWidths: number[] = []
     const cap = Math.min(doc.numPages, 30)
@@ -184,7 +193,7 @@ export default function PDFWatermarkPage() {
       const copy = bytes.slice(0)
       origBytesRef.current = copy.slice(0)
       pdfBytesRef.current  = copy
-      const doc = await pdfjsLib.getDocument({ data: bytes }).promise
+      const doc = await (await getPdfjs()).getDocument({ data: bytes }).promise
       setFileName(name)
       setPageCount(doc.numPages)
       setWatermarked(false)
@@ -265,7 +274,7 @@ export default function PDFWatermarkPage() {
       const result = await doc.save()
       pdfBytesRef.current = result.slice(0)
       setWatermarked(true)
-      const newDoc = await pdfjsLib.getDocument({ data: result }).promise
+      const newDoc = await (await getPdfjs()).getDocument({ data: result }).promise
       await renderAllPages(newDoc)
       setStatusMsg('Watermark applied — ready to download')
     } catch (err) {
@@ -284,7 +293,7 @@ export default function PDFWatermarkPage() {
       const copy = orig.slice(0)
       pdfBytesRef.current = copy.slice(0)
       setWatermarked(false)
-      const doc = await pdfjsLib.getDocument({ data: copy }).promise
+      const doc = await (await getPdfjs()).getDocument({ data: copy }).promise
       await renderAllPages(doc)
       setStatusMsg('Original restored')
     } catch {
@@ -665,6 +674,7 @@ export default function PDFWatermarkPage() {
       </div>
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <ToolSEOSection {...toolSeoData['pdf-watermark']} />
     </div>
   )
 }

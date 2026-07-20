@@ -1,34 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="220" height="52" viewBox="0 0 220 52">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 58" fill="none">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#4F7FFA"/>
-      <stop offset="100%" stop-color="#8B3FEC"/>
-    </linearGradient>
-    <linearGradient id="gt" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#4F7FFA"/>
-      <stop offset="100%" stop-color="#8B3FEC"/>
+    <linearGradient id="ep" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f43f5e"/>
+      <stop offset="1" stop-color="#e11d48"/>
     </linearGradient>
   </defs>
-
-  <!-- Document icon with fold at top-right -->
-  <path d="M6,4 L32,4 L44,16 L44,46 Q44,48 42,48 L8,48 Q6,48 6,46 L6,6 Q6,4 8,4 Z"
-        fill="white" stroke="url(#g)" stroke-width="2.8" stroke-linejoin="round"/>
-  <!-- Fold crease -->
-  <path d="M32,4 L32,16 L44,16" fill="none" stroke="url(#g)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Diagonal edit stroke -->
-  <line x1="14" y1="38" x2="32" y2="20" stroke="url(#g)" stroke-width="2.8" stroke-linecap="round"/>
-  <!-- Pen dot -->
-  <circle cx="12.5" cy="40" r="2.5" fill="url(#g)"/>
-
-  <!-- Wordmark: EditPDF in dark navy -->
-  <text x="58" y="36"
-        font-family="'Plus Jakarta Sans','DM Sans',system-ui,-apple-system,sans-serif"
-        font-size="26" font-weight="800" letter-spacing="-1"
-        fill="#0D1B4B">EditPDF</text>
-
-  <!-- AI in gradient -->
-  <text x="174" y="36"
-        font-family="'Plus Jakarta Sans','DM Sans',system-ui,-apple-system,sans-serif"
-        font-size="26" font-weight="800" letter-spacing="-1"
-        fill="url(#gt)"> AI</text>
+  <g transform="translate(2,0) scale(1.15)">
+    <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32"
+          stroke="url(#ep)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="38" cy="27" r="5" fill="url(#ep)"/>
+  </g>
+  <text x="72" y="38" font-family="system-ui,-apple-system,'Segoe UI',sans-serif" font-size="25" font-weight="800" letter-spacing="-0.5" fill="#0f172a">EditPDF<tspan fill="#dc2626">AI</tspan></text>
 </svg>

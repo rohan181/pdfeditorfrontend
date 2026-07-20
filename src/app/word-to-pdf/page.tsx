@@ -3,6 +3,8 @@ import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -587,6 +589,7 @@ export default function WordToPDFPage() {
         style={{display:'none'}}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
       />
+      <ToolSEOSection {...toolSeoData['word-to-pdf']} />
     </>
   )
 }

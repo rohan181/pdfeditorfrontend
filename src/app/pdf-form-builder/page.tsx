@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -1159,7 +1161,7 @@ export default function PDFFormBuilderPage() {
                         onClick={() => { setCurPage(i); setSelectedId(null); scrollToPage(i) }}>
                         <div className="page-thumb-img">
                           {mode === 'pdf' && thumbs[i]
-                            ? <img src={thumbs[i]} alt="" />
+                            ? <img src={thumbs[i]} alt="" loading="lazy" />
                             : <span style={{ fontSize:14 }}>📄</span>}
                         </div>
                         <div className="page-thumb-info">
@@ -2048,6 +2050,7 @@ export default function PDFFormBuilderPage() {
           </div>
         )
       })()}
+      <ToolSEOSection {...toolSeoData['pdf-form-builder']} />
     </>
   )
 }

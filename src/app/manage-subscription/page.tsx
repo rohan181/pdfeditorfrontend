@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { currentUser } from '@clerk/nextjs/server'
 import Link from 'next/link'
+import Image from 'next/image'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getUserSubscription } from '@/lib/subscription'
@@ -93,7 +94,7 @@ export default async function ManageSubscriptionPage() {
       {/* Nav */}
       <nav style={{ maxWidth: 720, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img src="/logo.png" alt="EditPDF AI" style={{ height: 48, width: 'auto', display: 'block' }} />
+          <Image src="/logo.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} priority />
         </Link>
         <Link href="/dashboard" style={{ fontSize: 13, color: '#6b7280', textDecoration: 'none', fontWeight: 500 }}>
           ← Dashboard

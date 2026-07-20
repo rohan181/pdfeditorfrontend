@@ -3,6 +3,8 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 type LengthOpt = 'brief' | 'standard' | 'detailed'
 type FocusOpt  = 'general' | 'technical' | 'legal' | 'medical' | 'financial'
@@ -24,7 +26,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .logo{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
 .logo-mark{display:flex;align-items:center;justify-content:center}
 .logo-name{font-size:14px;font-weight:700;color:#0D1B4B;letter-spacing:-.03em}
-.logo-name .logo-ai{background:linear-gradient(90deg,#4F7FFA,#8B3FEC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-left:2px}
+.logo-name .logo-ai{color:#dc2626;margin-left:2px}
 .nav-sep{font-size:11px;color:rgba(0,0,0,.2)}
 .nav-title{font-size:13px;font-weight:700;color:#1d1d1f}
 .nav-sp{flex:1}
@@ -326,12 +328,10 @@ export default function PDFSummarizerPage() {
         <nav className="nav">
           <Link href="/" className="logo">
             <div className="logo-mark">
-              <svg width="27" height="27" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="lg-sm" x1="2" y1="2" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#4F7FFA"/><stop offset="100%" stopColor="#8B3FEC"/></linearGradient></defs>
-                <path d="M5,2 L19,2 L27,10 L27,26 Q27,28 25,28 L5,28 Q3,28 3,26 L3,4 Q3,2 5,2 Z" fill="white" stroke="url(#lg-sm)" strokeWidth="2.2" strokeLinejoin="round"/>
-                <path d="M19,2 L19,10 L27,10" fill="none" stroke="url(#lg-sm)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                <line x1="9" y1="22" x2="20" y2="11" stroke="url(#lg-sm)" strokeWidth="2.2" strokeLinecap="round"/>
-                <circle cx="8" cy="23" r="1.8" fill="url(#lg-sm)"/>
+              <svg width="27" height="27" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="lg-sm" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#e11d48"/></linearGradient></defs>
+                <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32" stroke="url(#lg-sm)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="38" cy="27" r="5" fill="url(#lg-sm)"/>
               </svg>
             </div>
             <span className="logo-name">EditPDF<span className="logo-ai"> AI</span></span>
@@ -482,6 +482,7 @@ export default function PDFSummarizerPage() {
 
       <input ref={fileInputRef} type="file" accept="application/pdf" style={{display:'none'}}
         onChange={e=>{const f=e.target.files?.[0];if(f)loadFile(f);e.target.value=''}} />
+      <ToolSEOSection {...toolSeoData['pdf-summarizer']} />
     </>
   )
 }

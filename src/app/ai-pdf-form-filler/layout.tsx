@@ -1,17 +1,17 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'AI PDF Form Filler — Fill & Edit PDF Forms Online Free',
+  title: 'AI PDF Form Filler — Autofill Any PDF Form Free Online',
   description:
-    'Fill PDF forms instantly with AI. Auto-detect fields, type text, add signatures, and download — no registration required. The fastest AI PDF form filler online.',
+    'Autofill PDF forms instantly with AI — W-9, job applications, tax forms, rental agreements and more. Paste your details once, AI fills every field. Free, no Adobe Acrobat needed.',
   keywords:
-    'AI PDF form filler, fill PDF forms online, PDF form auto-fill, edit PDF free, PDF form filler AI, fill PDF online, sign PDF forms, PDF editor free',
+    'AI PDF form filler, autofill PDF forms, fill PDF forms online free, PDF form autofill, AI form filling, fill W-9 online, fill PDF job application, fill tax form PDF, PDF filler no Adobe, auto fill PDF forms AI',
   alternates: { canonical: 'https://editpdfai.com/ai-pdf-form-filler' },
   robots: { index: true, follow: true },
   openGraph: {
-    title: 'AI PDF Form Filler — Fill & Edit PDF Forms Online Free',
+    title: 'AI PDF Form Filler — Autofill Any PDF Form Free Online',
     description:
-      'Fill PDF forms instantly with AI. Auto-detect fields, type text, add signatures, and download — no registration required.',
+      'Autofill W-9s, job applications, tax forms and any PDF form instantly with AI. Paste your details once — AI fills every field. Free, no Adobe Acrobat needed.',
     type: 'website',
     url: 'https://editpdfai.com/ai-pdf-form-filler',
     siteName: 'EditPDF AI',
@@ -20,15 +20,15 @@ export const metadata: Metadata = {
         url: '/opengraph-image',
         width: 1200,
         height: 630,
-        alt: 'AI PDF Form Filler — Fill & Edit PDF Forms Online',
+        alt: 'AI PDF Form Filler — Autofill Any PDF Form Free',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI PDF Form Filler — Fill & Edit PDF Forms Online Free',
+    title: 'AI PDF Form Filler — Autofill Any PDF Form Free Online',
     description:
-      'Fill PDF forms instantly with AI. Auto-detect fields, type text, add signatures, and download — no registration required.',
+      'Autofill W-9s, job applications, tax forms and any PDF form instantly with AI. Free, no Adobe Acrobat needed.',
     images: ['/opengraph-image'],
   },
 }
@@ -51,7 +51,7 @@ const jsonLdFaq = {
     {
       '@type': 'Question',
       name: 'Do I need to create an account?',
-      acceptedAnswer: { '@type': 'Answer', text: 'No account needed. Your browser handles everything locally — documents never leave your device unless you trigger an AI feature, which only sends the relevant text context.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'A free account is required to use AI features. Sign in to get 5 free AI uses per day — no credit card needed. Upgrade to Pro for unlimited use. Your PDF is always processed in your browser and never stored.' },
     },
     {
       '@type': 'Question',
@@ -68,6 +68,26 @@ const jsonLdFaq = {
       name: 'Can I add a digital signature?',
       acceptedAnswer: { '@type': 'Answer', text: 'Yes. Draw a freehand signature, type your name, or upload a signature image. Place it anywhere with drag-and-drop precision.' },
     },
+    {
+      '@type': 'Question',
+      name: 'Can it fill a W-9, 1099, or tax form automatically?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes. W-9, 1099, and other IRS tax forms are standard PDFs that the AI handles well. Paste your name, EIN/SSN, address, and tax classification once and the AI fills every matching field. Download the completed form and sign.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'How do I fill a PDF form online without Adobe Acrobat?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Upload your PDF to EditPDF AI, use the AI form filler to auto-detect and fill all fields, add a signature if needed, then download. No Adobe Acrobat subscription or desktop software required — everything runs free in your browser.' },
+    },
+    {
+      '@type': 'Question',
+      name: "What's the difference between a fillable and a non-fillable PDF?",
+      acceptedAnswer: { '@type': 'Answer', text: 'A fillable PDF (AcroForm) has interactive fields you can click and type into. A non-fillable or flat PDF is an image or static layout with no interactive fields. Our AI handles both: AcroForms are filled natively, and flat PDFs are filled using text overlays positioned by AI over the detected form areas.' },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can it fill a scanned PDF form?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes. For scanned paper forms saved as image-based PDFs, the built-in OCR engine first extracts the layout and field positions. AI then fills the detected fields using text overlays. The result is a completed PDF that looks identical to a manually filled paper form.' },
+    },
   ],
 }
 
@@ -82,13 +102,6 @@ const jsonLdApp = {
   description: 'Fill PDF forms instantly with AI. Auto-detect fields, add text, draw signatures, and download — free, no registration.',
   featureList: 'AI Form Filling, E-Signatures, PDF Annotation, PDF OCR, Field Auto-Detection, Page Management',
   browserRequirements: 'Requires JavaScript. Works in Chrome, Firefox, Safari, Edge.',
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: '4.8',
-    ratingCount: '1247',
-    bestRating: '5',
-    worstRating: '1',
-  },
 }
 
 const jsonLdBreadcrumb = {

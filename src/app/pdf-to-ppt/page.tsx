@@ -3,6 +3,8 @@ import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Slide  { title: string; bullets: string[]; notes?: string }
@@ -535,6 +537,7 @@ export default function PDFToPPTPage() {
 
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
+      <ToolSEOSection {...toolSeoData['pdf-to-ppt']} />
     </>
   )
 }

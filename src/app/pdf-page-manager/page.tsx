@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { PDFDocument, degrees } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -519,6 +521,7 @@ export default function PDFPageManagerPage() {
           </div>
         </div>
       </div>
+      <ToolSEOSection {...toolSeoData['pdf-page-manager']} />
     </>
   )
 }

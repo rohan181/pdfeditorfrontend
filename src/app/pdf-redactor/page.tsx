@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { PDFDocument, rgb, BlendMode } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -693,7 +695,7 @@ export default function PDFRedactorPage() {
             <div className="page-list">
               {pages.map((p, i) => (
                 <button key={i} className={`page-thumb-btn${curPage===i?' active':''}`} onClick={() => setCurPage(i)}>
-                  <div className="page-thumb-img"><img src={p.thumbUrl} alt={`Page ${i+1}`} /></div>
+                  <div className="page-thumb-img"><img src={p.thumbUrl} alt={`Page ${i+1}`} loading="lazy" /></div>
                   <div className="page-thumb-info">
                     <div className="page-thumb-num">Page {i+1}</div>
                     <div className="page-thumb-marks">{p.rects.length > 0 ? `${p.rects.length} redaction${p.rects.length!==1?'s':''}` : 'No redactions'}</div>
@@ -830,6 +832,7 @@ export default function PDFRedactorPage() {
           </div>
         </div>
       </div>
+      <ToolSEOSection {...toolSeoData['pdf-redactor']} />
     </>
   )
 }

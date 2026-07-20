@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
-export const alt = 'EditPDF AI — AI-Powered PDF Editor & Document Suite'
+export const alt = 'EditPDF AI — Edit smarter. Finish faster.'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -32,7 +32,7 @@ export default function OGImage() {
           left: 350,
         }} />
 
-        {/* Logo mark — gradient document icon */}
+        {/* Logo mark — E+P rose gradient icon */}
         <div style={{
           width: 90,
           height: 90,
@@ -40,39 +40,20 @@ export default function OGImage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'white',
-          borderRadius: 16,
-          border: '3px solid transparent',
-          backgroundImage: 'linear-gradient(white,white), linear-gradient(135deg,#4F7FFA,#8B3FEC)',
-          backgroundOrigin: 'border-box',
-          backgroundClip: 'padding-box, border-box',
+          background: 'linear-gradient(135deg,#f43f5e,#e11d48)',
+          borderRadius: 20,
+          boxShadow: '0 0 0 3px rgba(244,63,94,.3)',
         }}>
-          <div style={{
-            width: 50,
-            height: 55,
-            position: 'relative',
-            display: 'flex',
-          }}>
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(135deg,#4F7FFA,#8B3FEC)',
-              clipPath: 'polygon(0% 0%, 65% 0%, 100% 30%, 100% 100%, 0% 100%)',
-              borderRadius: 3,
-              opacity: 0.15,
-            }}/>
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              border: '3px solid transparent',
-              backgroundImage: 'linear-gradient(white,white), linear-gradient(135deg,#4F7FFA,#8B3FEC)',
-              backgroundOrigin: 'border-box',
-              backgroundClip: 'padding-box, border-box',
-              clipPath: 'polygon(0% 0%, 65% 0%, 100% 30%, 100% 100%, 0% 100%)',
-              borderRadius: 3,
-              display: 'flex',
-            }}/>
-          </div>
+          <svg width="58" height="58" viewBox="0 0 48 48" fill="none">
+            <path
+              d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32"
+              stroke="white"
+              strokeWidth="7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="38" cy="27" r="6" fill="white" />
+          </svg>
         </div>
 
         {/* Title */}
@@ -96,7 +77,7 @@ export default function OGImage() {
           marginBottom: 40,
           display: 'flex',
         }}>
-          AI-Powered PDF Editor & Document Suite
+          Edit smarter. Finish faster.
         </div>
 
         {/* Feature pills */}

@@ -3,6 +3,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 type PageSize   = 'a4' | 'letter' | 'legal'
 type Orient     = 'portrait' | 'landscape'
@@ -462,6 +464,7 @@ export default function HtmlToPdf() {
           e.target.value = ''
         }}
       />
+      <ToolSEOSection {...toolSeoData['html-to-pdf']} />
     </div>
   )
 }

@@ -18,75 +18,35 @@ export default function AppleIcon() {
           gap: 14,
         }}
       >
-        {/* Document icon — gradient fill, folded top-right */}
         <div
           style={{
-            position: 'relative',
-            width: 88,
-            height: 106,
-            background: 'linear-gradient(135deg, #4F7FFA 0%, #8B3FEC 100%)',
-            clipPath: 'polygon(0% 0%, 63% 0%, 100% 27%, 100% 100%, 0% 100%)',
-            borderRadius: 6,
+            width: 100,
+            height: 100,
+            background: 'linear-gradient(135deg, #f43f5e, #e11d48)',
+            borderRadius: 24,
             display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          {/* Fold triangle */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              width: 33,
-              height: 29,
-              background: 'rgba(255,255,255,0.25)',
-              clipPath: 'polygon(100% 0%, 100% 100%, 0% 100%)',
-            }}
-          />
-          {/* Diagonal edit stroke */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 28,
-              left: 16,
-              width: 46,
-              height: 8,
-              background: 'rgba(255,255,255,0.9)',
-              transform: 'rotate(-42deg)',
-              transformOrigin: 'left center',
-              borderRadius: 4,
-            }}
-          />
-          {/* Pen dot */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 16,
-              left: 10,
-              width: 11,
-              height: 11,
-              background: 'rgba(255,255,255,0.9)',
-              borderRadius: '50%',
-            }}
-          />
+          <svg width="64" height="64" viewBox="0 0 48 48" fill="none">
+            <path
+              d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32"
+              stroke="white"
+              strokeWidth="7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle cx="38" cy="27" r="6" fill="white" />
+          </svg>
         </div>
-
-        {/* Wordmark */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 0 }}>
-          <span style={{
-            fontFamily: 'sans-serif',
-            fontSize: 22,
-            fontWeight: 800,
-            color: '#0D1B4B',
-            letterSpacing: '-0.5px',
-          }}>EditPDF</span>
-          <span style={{
-            fontFamily: 'sans-serif',
-            fontSize: 22,
-            fontWeight: 800,
-            color: '#6B4FEC',
-            marginLeft: 3,
-            letterSpacing: '-0.5px',
-          }}>AI</span>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'sans-serif', fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>
+            EditPDF
+          </span>
+          <span style={{ fontFamily: 'sans-serif', fontSize: 24, fontWeight: 800, color: '#dc2626', marginLeft: 3, letterSpacing: '-0.5px' }}>
+            AI
+          </span>
         </div>
       </div>
     ),

@@ -1,4 +1,5 @@
 'use client'
+import '@/styles/editor.css'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import DraggableElement from './DraggableElement'
@@ -698,7 +699,66 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       setUploadProgress(100)
       await new Promise(r => setTimeout(r, 350))
 
-      setSlots(newSlots); setSlotIdx(0); setElements([])
+      // ── Extract existing AcroForm field values so they're editable ──────────
+      const prefilledElements: PDFElement[] = []
+      for (const slot of newSlots) {
+        try {
+          const pg   = await doc.getPage(slot.pageNum!)
+          const vp   = pg.getViewport({ scale: 1 })
+          const anns = await pg.getAnnotations()
+          for (const ann of anns) {
+            if (ann.subtype !== 'Widget') continue
+            const [x1, y1, x2, y2] = ann.rect as number[]
+            const fieldH = Math.max(1, y2 - y1)
+            const pdfW   = Math.max(16, x2 - x1)
+            const fs     = Math.max(8, Math.min(14, Math.round(fieldH * 0.72)))
+            const elemH  = Math.max(fieldH, fs + 4)
+            const pdfY   = Math.max(0, vp.height - (y1 + y2) / 2 - fs * 0.75)
+
+            if (ann.fieldType === 'Btn') {
+              // Checkbox: checked when fieldValue is non-empty and not 'Off'
+              const v = typeof ann.fieldValue === 'string' ? ann.fieldValue : ''
+              if (!v || v === 'Off') continue
+              const inset = Math.max(0.5, Math.min(x2 - x1, y2 - y1) * 0.08)
+              prefilledElements.push({
+                id: uuidv4(), type: 'mark',
+                x: x1 + inset, y: (vp.height - y2) + inset,
+                width: (x2 - x1) - inset * 2, height: (y2 - y1) - inset * 2,
+                markType: 'tick', color: '#1a2e5a', strokeWidth: 1.5,
+                pageSlotId: slot.id,
+              } as MarkElement)
+            } else {
+              // Text / choice field
+              const raw = ann.fieldValue
+              const val = (Array.isArray(raw) ? raw[0] : raw)
+              if (typeof val !== 'string' || !val.trim()) continue
+              const isComb = ann.fieldType === 'Tx' && !!(ann.fieldFlags & (1 << 24))
+              if (isComb && ann.maxLen && ann.maxLen > 1) {
+                const cellW = pdfW / ann.maxLen
+                val.trim().split('').slice(0, ann.maxLen).forEach((char: string, i: number) => {
+                  prefilledElements.push({
+                    id: uuidv4(), type: 'text',
+                    x: x1 + i * cellW, y: pdfY, width: cellW, height: elemH,
+                    text: char, fontSize: fs, fontFamily: 'Inter', color: '#000000',
+                    bold: false, italic: false, underline: false, align: 'center',
+                    bgColor: '#ffffff', pageSlotId: slot.id,
+                  } as TextElement)
+                })
+              } else {
+                prefilledElements.push({
+                  id: uuidv4(), type: 'text',
+                  x: x1, y: pdfY, width: pdfW, height: elemH,
+                  text: val.trim(), fontSize: fs, fontFamily: 'Inter', color: '#000000',
+                  bold: false, italic: false, underline: false, align: 'left',
+                  bgColor: '#ffffff', pageSlotId: slot.id,
+                } as TextElement)
+              }
+            }
+          }
+        } catch { /* page may not support annotations */ }
+      }
+
+      setSlots(newSlots); setSlotIdx(0); setElements(prefilledElements)
       setPdfName(file.name.replace(/\.pdf$/i, ''))
     } finally {
       setUploading(false); setUploadProgress(0)
@@ -2304,6 +2364,10 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
     const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib')
     const out = await PDFDocument.create()
     const libDocs = await Promise.all(sources.map(s => PDFDocument.load(s.bytes)))
+    // Flatten AcroForm widgets so interactive fields don't conflict with overlaid text elements
+    for (const libDoc of libDocs) {
+      try { const f = libDoc.getForm(); if (f.getFields().length) f.flatten() } catch { /* ignore */ }
+    }
 
     for (let si = 0; si < slots.length; si++) {
       const slot = slots[si]
@@ -2349,6 +2413,19 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
           const g = parseInt(hex.slice(2, 4), 16) / 255
           const b = parseInt(hex.slice(4, 6), 16) / 255
           const fs = el.fontSize * xR
+          // Draw background rect if element has a bgColor (e.g. pre-filled field overlay)
+          if (el.bgColor) {
+            const bh = el.bgColor.replace('#', '')
+            libPage.drawRectangle({
+              x: el.x * xR, y: pH - (el.y + el.height) * yR,
+              width: el.width * xR, height: el.height * yR,
+              color: rgb(
+                parseInt(bh.slice(0,2),16)/255,
+                parseInt(bh.slice(2,4),16)/255,
+                parseInt(bh.slice(4,6),16)/255,
+              ),
+            })
+          }
           let dy = pH - el.y * yR - fs
           for (const line of el.text.split('\n')) {
             if (line.trim()) libPage.drawText(line, {

@@ -4,6 +4,7 @@ import { currentUser } from '@clerk/nextjs/server'
 import { getUserSubscription } from '@/lib/subscription'
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
+import Image from 'next/image'
 
 async function getTodayUsage(userId: string) {
   const today = new Date().toISOString().slice(0, 10)
@@ -39,7 +40,7 @@ export default async function DashboardPage() {
       {/* Nav */}
       <nav style={{ maxWidth: 900, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img src="/logo.png" alt="EditPDF AI" style={{ height: 48, width: 'auto', display: 'block' }} />
+          <Image src="/logo.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} priority />
         </Link>
         <Link href="/" style={{ fontSize: 13, color: '#6b7280', textDecoration: 'none', fontWeight: 500 }}>
           ← Back to tools

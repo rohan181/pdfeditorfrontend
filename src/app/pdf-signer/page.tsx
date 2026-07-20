@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 type SignMode = 'draw' | 'type' | 'upload'
 
@@ -51,7 +53,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .logo{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
 .logo-mark{display:flex;align-items:center;justify-content:center}
 .logo-name{font-size:14px;font-weight:700;color:#0D1B4B;letter-spacing:-.03em}
-.logo-name .logo-ai{background:linear-gradient(90deg,#4F7FFA,#8B3FEC);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-left:2px}
+.logo-name .logo-ai{color:#dc2626;margin-left:2px}
 .nav-sep{font-size:11px;color:rgba(0,0,0,.2)}
 .nav-title{font-size:13px;font-weight:700;color:#1d1d1f}
 .nav-file{font-size:11px;color:rgba(0,0,0,.38);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
@@ -586,7 +588,7 @@ export default function PDFSignerPage() {
           <div className="uc">
             <div className="u-hero">
               <div className="u-badge">✍ E-Signer</div>
-              <h1 className="u-h1">Sign your <em>PDF</em><br/>in seconds</h1>
+              <h1 className="u-h1">Sign <em>PDF</em> online<br/>free — instantly</h1>
               <p className="u-sub">Draw, type or upload your signature — place it anywhere and download instantly. 100% in-browser.</p>
             </div>
             <div ref={dropRef} className="u-drop" onClick={() => fileInputRef.current?.click()}>
@@ -625,12 +627,10 @@ export default function PDFSignerPage() {
         <nav className="nav">
           <Link href="/" className="logo">
             <div className="logo-mark">
-              <svg width="27" height="27" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="lg-ps" x1="2" y1="2" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#4F7FFA"/><stop offset="100%" stopColor="#8B3FEC"/></linearGradient></defs>
-                <path d="M5,2 L19,2 L27,10 L27,26 Q27,28 25,28 L5,28 Q3,28 3,26 L3,4 Q3,2 5,2 Z" fill="white" stroke="url(#lg-ps)" strokeWidth="2.2" strokeLinejoin="round"/>
-                <path d="M19,2 L19,10 L27,10" fill="none" stroke="url(#lg-ps)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-                <line x1="9" y1="22" x2="20" y2="11" stroke="url(#lg-ps)" strokeWidth="2.2" strokeLinecap="round"/>
-                <circle cx="8" cy="23" r="1.8" fill="url(#lg-ps)"/>
+              <svg width="27" height="27" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="lg-ps" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#e11d48"/></linearGradient></defs>
+                <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32" stroke="url(#lg-ps)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="38" cy="27" r="5" fill="url(#lg-ps)"/>
               </svg>
             </div>
             <span className="logo-name">EditPDF<span className="logo-ai"> AI</span></span>
@@ -658,7 +658,7 @@ export default function PDFSignerPage() {
           <div className="thumbs">
             {thumbs.map((t, i) => (
               <div key={i} className={`thumb${curPage===i?' act':''}`} onClick={() => { setCurPage(i); scrollTo(i) }}>
-                <img src={t} alt={`p${i+1}`} />
+                <img src={t} alt={`p${i+1}`} loading="lazy" />
                 <div className="thumb-n">{i+1}</div>
               </div>
             ))}
@@ -927,6 +927,7 @@ export default function PDFSignerPage() {
 
       <input ref={fileInputRef} type="file" accept="application/pdf" style={{ display:'none' }}
         onChange={e => { const f=e.target.files?.[0]; if(f){setPdfFile(f);loadPDF(f)}; e.target.value='' }} />
+      <ToolSEOSection {...toolSeoData['pdf-signer']} />
     </>
   )
 }

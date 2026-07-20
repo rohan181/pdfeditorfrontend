@@ -3,6 +3,8 @@ import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -373,6 +375,7 @@ export default function PDFPasswordLockPage() {
           </div>
         </div>
       </div>
+      <ToolSEOSection {...toolSeoData['pdf-password-lock']} />
     </>
   )
 }

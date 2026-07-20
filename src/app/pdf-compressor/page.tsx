@@ -3,6 +3,8 @@ import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -324,6 +326,7 @@ export default function PDFCompressorPage() {
           </div>
         </div>
       </div>
+      <ToolSEOSection {...toolSeoData['pdf-compressor']} />
     </>
   )
 }

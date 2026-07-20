@@ -4,6 +4,8 @@ import Link from 'next/link'
 import PDFEditor from '@/components/PDFEditor'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -247,6 +249,10 @@ const FAQS = [
   { q: 'What types of PDFs are supported?', a: 'Both interactive PDF forms (AcroForms) and flat or scanned PDFs are supported. For scanned documents, the built-in OCR engine detects field positions automatically.' },
   { q: 'Is my document data secure?', a: 'Your files are processed entirely in your browser and are never stored on our servers. AI features send only the relevant text context — never the raw file — and no data is retained.' },
   { q: 'Can I add a digital signature?', a: 'Yes. Draw a freehand signature, type your name, or upload a signature image. Place it anywhere with drag-and-drop precision.' },
+  { q: 'Can it fill a W-9, 1099, or tax form automatically?', a: 'Yes. W-9, 1099, and other IRS tax forms are standard PDFs that the AI handles well. Paste your name, EIN/SSN, address, and tax classification once and the AI fills every matching field. Download the completed form and sign.' },
+  { q: 'How do I fill a PDF form online without Adobe Acrobat?', a: 'Upload your PDF to EditPDF AI, use the AI form filler to auto-detect and fill all fields, add a signature if needed, then download. No Adobe Acrobat subscription or desktop software required — everything runs free in your browser.' },
+  { q: "What's the difference between a fillable and a non-fillable PDF?", a: 'A fillable PDF (AcroForm) has interactive fields you can click and type into. A non-fillable or flat PDF is an image or static layout with no interactive fields. Our AI handles both: AcroForms are filled natively, and flat PDFs are filled using text overlays positioned by AI over the detected form areas.' },
+  { q: 'Can it fill a scanned PDF form?', a: 'Yes. For scanned paper forms that have been saved as image-based PDFs, the built-in OCR engine first extracts the layout and field positions. AI then fills the detected fields using text overlays. The result is a completed PDF that looks identical to a manually filled paper form.' },
 ]
 
 const TICKS = ['AI Form Filling','OCR Support','Digital Signature','Instant Export']
@@ -435,6 +441,74 @@ export default function AIPDFFormFillerPage() {
         </div>
       </div>
 
+      {/* ── What is / Use cases / Form types ── */}
+      <section style={{ background: '#fff', padding: '72px 0', borderTop: '1px solid #f0f0f0' }}>
+        <div className="wrap" style={{ maxWidth: 1000 }}>
+
+          {/* What is */}
+          <div style={{ maxWidth: 720, marginBottom: 64 }}>
+            <span style={{ fontFamily: 'var(--fm)', fontSize: 9, fontWeight: 700, letterSpacing: '.18em', color: 'var(--p)', textTransform: 'uppercase', display: 'block', marginBottom: 12, opacity: .7 }}>What it is</span>
+            <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(24px,3vw,36px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 20 }}>
+              What is an AI PDF form filler?
+            </h2>
+            <p style={{ fontSize: 16, color: '#374151', lineHeight: 1.8, marginBottom: 16 }}>
+              An <strong>AI PDF form filler</strong> is a tool that reads the fields in a PDF form and fills them in automatically based on information you provide. Instead of clicking each box and typing your name, address, date, and other details repeatedly, you describe your information once — in plain language — and AI maps that context to every matching field instantly.
+            </p>
+            <p style={{ fontSize: 16, color: '#374151', lineHeight: 1.8, marginBottom: 16 }}>
+              Traditional PDF form filling is tedious: open Acrobat, click field by field, type the same address you typed last week, repeat for the next form. AI form filling removes this entirely. Our tool detects both native AcroForm fields (the clickable boxes in an interactive PDF) and non-interactive forms (flat PDFs with underlines or tables). For scanned paper forms, OCR reads the layout first, then AI fills the detected fields.
+            </p>
+            <p style={{ fontSize: 16, color: '#374151', lineHeight: 1.8 }}>
+              The result: a completed, signable, downloadable PDF in seconds — with no Adobe Acrobat subscription, no desktop software, and no account required for core tools.
+            </p>
+          </div>
+
+          {/* Who uses it */}
+          <div style={{ marginBottom: 64 }}>
+            <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(22px,2.5vw,32px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 28 }}>
+              Who uses AI PDF form filling?
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 16 }}>
+              {[
+                { who: 'Job seekers', why: 'Auto-fill job application PDFs from a CV — name, contact, work history — in one paste instead of retyping everything.' },
+                { who: 'Freelancers & contractors', why: 'Complete W-9, 1099, and client onboarding forms without manually entering the same business details every time.' },
+                { who: 'Students', why: 'Fill scholarship applications, enrollment forms, and financial aid PDFs quickly — no PDF editor subscription needed.' },
+                { who: 'Small business owners', why: 'Process vendor agreements, insurance forms, and government applications without paying for Acrobat Pro.' },
+                { who: 'HR & recruiting teams', why: 'Populate employee onboarding packets and benefits enrollment forms from existing data in seconds.' },
+                { who: 'Legal & real estate', why: 'Fill lease agreements, disclosure forms, and standard legal documents without copying and re-entering client details.' },
+              ].map(u => (
+                <div key={u.who} style={{ background: '#f7f8fa', borderRadius: 14, padding: '20px 18px', border: '1.5px solid #e8eaed' }}>
+                  <div style={{ fontFamily: 'var(--fd)', fontSize: 14, fontWeight: 800, color: '#1d1d1f', marginBottom: 7, letterSpacing: '-.02em' }}>{u.who}</div>
+                  <p style={{ fontSize: 13.5, color: '#6b7280', lineHeight: 1.65, margin: 0 }}>{u.why}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Form types */}
+          <div>
+            <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(22px,2.5vw,32px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 12 }}>
+              Works with every type of PDF form
+            </h2>
+            <p style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.7, marginBottom: 28, maxWidth: 600 }}>
+              Whether the PDF is a native interactive form, a flat scanned document, or a government application — the AI detects and fills the fields.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {[
+                'W-9 tax forms','1099 forms','Job applications','Rental agreements',
+                'Lease contracts','Medical intake forms','Insurance claim forms','Scholarship applications',
+                'Government applications','Visa application forms','Bank account forms','HR onboarding forms',
+                'Vendor registration forms','NDA agreements','Purchase order forms','Permit applications',
+              ].map(f => (
+                <span key={f} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 13px', background: 'rgba(124,58,237,.07)', border: '1.5px solid rgba(124,58,237,.15)', borderRadius: 99, fontSize: 13, fontWeight: 600, color: '#6d28d9' }}>
+                  <span style={{ color: 'var(--p)', fontSize: 10 }}>✓</span> {f}
+                </span>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       {/* ── Animated Demo ── */}
       <section className="demo-sec">
         <div className="wrap">
@@ -575,8 +649,8 @@ export default function AIPDFFormFillerPage() {
       <section className="how-sec" id="how">
         <div className="wrap">
           <span className="sec-eye">Simple process</span>
-          <h2 className="sec-h">Three steps to a<br />completed form</h2>
-          <p className="sec-sub">No learning curve. Upload, describe, done.</p>
+          <h2 className="sec-h">How to auto-fill a PDF<br />form with AI</h2>
+          <p className="sec-sub">No learning curve. Upload, describe your details, download the completed form.</p>
           <div className="steps">
             {[
               { n: '1', t: 'Upload your PDF', d: 'Drag and drop any PDF — AcroForm, flat or scanned. Loads instantly in your browser, no server processing.' },
@@ -621,12 +695,87 @@ export default function AIPDFFormFillerPage() {
       <section className="faq-sec" id="faq">
         <div className="wrap">
           <span className="sec-eye">FAQ</span>
-          <h2 className="sec-h">Common questions</h2>
+          <h2 className="sec-h">AI PDF form filler — frequently asked questions</h2>
           <div className="faq-grid">
             {FAQS.map(f => (
               <div key={f.q} className="fq">
                 <div className="fq-q"><span className="fq-ic">✦</span>{f.q}</div>
                 <p className="fq-a">{f.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── AI vs manual comparison ── */}
+      <section style={{ background: '#f5f5f7', borderTop: '1px solid #ebebeb', padding: '72px 0' }}>
+        <div className="wrap" style={{ maxWidth: 1000 }}>
+          <span style={{ fontFamily: 'var(--fm)', fontSize: 9, fontWeight: 700, letterSpacing: '.18em', color: 'var(--p)', textTransform: 'uppercase', display: 'block', marginBottom: 12, opacity: .7 }}>Why AI</span>
+          <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(24px,3vw,36px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 12 }}>
+            AI form filling vs typing manually
+          </h2>
+          <p style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.7, marginBottom: 40, maxWidth: 560 }}>
+            Every minute you spend clicking form fields and retyping the same details is a minute wasted. Here is how AI form filling compares to doing it manually or with Adobe Acrobat.
+          </p>
+
+          {/* Comparison table */}
+          <div style={{ background: '#fff', borderRadius: 18, border: '1.5px solid #e5e7eb', overflow: 'hidden', marginBottom: 48 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px 130px 140px', background: '#f9fafb', borderBottom: '1.5px solid #e5e7eb' }}>
+              {['', 'Manual typing', 'Adobe Acrobat', 'EditPDF AI'].map((h, i) => (
+                <span key={i} style={{ padding: '11px 18px', fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: i === 3 ? '#7c3aed' : '#9ca3af', textAlign: i > 0 ? 'center' : 'left', background: i === 3 ? 'rgba(124,58,237,.04)' : 'transparent', borderLeft: i === 3 ? '1px solid rgba(124,58,237,.12)' : 'none' }}>{h}</span>
+              ))}
+            </div>
+            {[
+              { feat: 'Fill all fields at once', manual: false, adobe: false, ai: true },
+              { feat: 'Works on non-fillable / flat PDFs', manual: false, adobe: false, ai: true },
+              { feat: 'Fill from plain-language description', manual: false, adobe: false, ai: true },
+              { feat: 'OCR for scanned PDFs', manual: false, adobe: '$$', ai: true },
+              { feat: 'Digital signatures', manual: false, adobe: '$$', ai: true },
+              { feat: 'No subscription needed', manual: true, adobe: false, ai: true },
+              { feat: 'Works in the browser, no install', manual: false, adobe: false, ai: true },
+            ].map(({ feat, manual, adobe, ai }, i, arr) => (
+              <div key={feat} style={{ display: 'grid', gridTemplateColumns: '1fr 130px 130px 140px', borderBottom: i < arr.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'stretch' }}>
+                <span style={{ padding: '12px 18px', fontSize: 13.5, color: '#374151', fontWeight: 500, display: 'flex', alignItems: 'center' }}>{feat}</span>
+                {[manual, adobe, ai].map((v, ci) => (
+                  <span key={ci} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, background: ci === 2 ? 'rgba(124,58,237,.04)' : 'transparent', borderLeft: ci === 2 ? '1px solid rgba(124,58,237,.1)' : 'none' }}>
+                    {v === true ? <span style={{ color: ci === 2 ? '#7c3aed' : '#16a34a', fontWeight: 800 }}>✓</span>
+                      : v === false ? <span style={{ color: '#d1d5db', fontSize: 18, lineHeight: 1 }}>—</span>
+                      : <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>{v}</span>}
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          {/* Mini how-to guides for specific form types */}
+          <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(22px,2.5vw,30px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 12 }}>
+            How to autofill specific PDF form types
+          </h2>
+          <p style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.7, marginBottom: 28, maxWidth: 560 }}>
+            The same three steps work for any form. Here are the most common use cases.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
+            {[
+              {
+                title: 'How to fill a W-9 tax form with AI',
+                body: 'Upload the W-9 PDF. Paste your legal name, business name, address, tax classification, and EIN or SSN into the chat. AI fills all boxes — Line 1 through Part II — in one pass. Sign the form digitally and download.',
+              },
+              {
+                title: 'How to autofill a job application PDF',
+                body: 'Upload the job application. Paste your CV or type your name, contact details, work history, and education. AI reads each question and fills the matching field. Review and add your signature before downloading.',
+              },
+              {
+                title: 'How to fill a rental or lease agreement PDF',
+                body: 'Upload the lease PDF. Provide the tenant name, address, rent amount, start/end dates, and landlord name. AI locates and fills every corresponding field across all pages. Sign and download the completed agreement.',
+              },
+              {
+                title: 'How to fill a medical or insurance form PDF',
+                body: 'Upload the intake or claim form. Describe the patient name, date of birth, policy number, and condition details in plain language. AI maps your description to each labelled field — including checkboxes — and fills them all.',
+              },
+            ].map(g => (
+              <div key={g.title} style={{ background: '#fff', borderRadius: 14, padding: '22px 20px', border: '1.5px solid #e5e7eb' }}>
+                <h3 style={{ fontFamily: 'var(--fd)', fontSize: 14.5, fontWeight: 800, color: '#1d1d1f', letterSpacing: '-.02em', marginBottom: 10 }}>{g.title}</h3>
+                <p style={{ fontSize: 13.5, color: '#6b7280', lineHeight: 1.7, margin: 0 }}>{g.body}</p>
               </div>
             ))}
           </div>
@@ -713,6 +862,8 @@ export default function AIPDFFormFillerPage() {
           </div>
         </div>
       </section>
+
+      <ToolSEOSection {...toolSeoData['ai-pdf-form-filler']} />
 
       {/* Footer — same as homepage */}
       <SiteFooter />

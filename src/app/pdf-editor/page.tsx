@@ -4,6 +4,8 @@ import Link from 'next/link'
 import PDFEditor from '@/components/PDFEditor'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolSEOSection from '@/components/ToolSEOSection'
+import toolSeoData from '@/lib/toolSeoData'
 
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -191,11 +193,10 @@ export default function PDFEditorPage() {
             <span className="bdot" /><span>FREE · NO SIGNUP · BROWSER-BASED</span>
           </div>
           <h1 id="hero-h1" className="hero-h1">
-            <span className="h1-top">The complete toolkit for working with PDFs</span>
-            <span className="h1-main">PDF Editor</span>
+            <span className="h1-main">Free Online PDF Editor</span>
           </h1>
           <p className="hero-sub">
-            Add text, images, shapes, highlights and signatures to any PDF. Manage pages, apply stamps, draw freehand and download — instantly, in your browser, for free.
+            The complete toolkit for working with PDFs. Add text, images, shapes, highlights and signatures. Manage pages, apply stamps, draw freehand and download — instantly, in your browser, for free.
           </p>
           <div className="hero-cta-row">
             <button className="btn-primary" onClick={openEditor} aria-label="Open PDF editor">
@@ -292,6 +293,7 @@ export default function PDFEditorPage() {
       </section>
 
       {/* Footer */}
+      <ToolSEOSection {...toolSeoData['pdf-editor']} />
       <SiteFooter />
     </div>
   )

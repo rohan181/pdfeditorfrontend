@@ -1,35 +1,89 @@
 import type { Metadata } from 'next'
 import AppleHome from '@/components/AppleHome'
+import SitePopularTools from '@/components/SitePopularTools'
+import SiteUseCases from '@/components/SiteUseCases'
+import SitePrivacyNote from '@/components/SitePrivacyNote'
+import SiteTestimonials from '@/components/SiteTestimonials'
+import SitePricingPreview from '@/components/SitePricingPreview'
+import HomeScroll from '@/components/HomeScroll'
+import HomeAllTools from '@/components/HomeAllTools'
+import SiteFAQ from '@/components/SiteFAQ'
+import SiteCTA from '@/components/SiteCTA'
+import SiteFooter from '@/components/SiteFooter'
 
 export const metadata: Metadata = {
-  title: 'EditPDF AI — AI-Powered PDF Editor & Document Suite',
-  description: 'Edit, sign, annotate and AI-fill PDF forms online. The fastest AI PDF editor with intelligent form detection, e-signatures and instant completion.',
+  title: { absolute: 'Free Online PDF Editor – Edit, Sign, Fill & Convert | EditPDF AI' },
+  description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — edit, sign, OCR, translate, summarise and fill forms. Free, no account needed.',
   keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, editpdfai',
   alternates: { canonical: 'https://editpdfai.com' },
   openGraph: {
-    title: 'EditPDF AI — AI-Powered PDF Editor & Document Suite',
-    description: 'Edit, sign and AI-fill PDF forms online. Intelligent form detection and instant completion.',
+    title: 'Free Online PDF Editor – Edit, Sign, Fill & Convert | EditPDF AI',
+    description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — free, no account needed.',
     type: 'website',
     url: 'https://editpdfai.com',
   },
 }
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: 'EditPDF AI',
-  url: 'https://editpdfai.com',
-  applicationCategory: 'ProductivityApplication',
-  operatingSystem: 'Web',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-  description: 'AI-powered PDF editor with 35+ tools. Edit, sign, annotate and AI-fill PDF forms online.',
-}
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'EditPDF AI',
+    url: 'https://editpdfai.com',
+    applicationCategory: 'ProductivityApplication',
+    operatingSystem: 'Web',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — free, no account needed.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'EditPDF AI',
+    alternateName: 'EditPDF',
+    url: 'https://editpdfai.com',
+    logo: 'https://editpdfai.com/logo.png',
+    sameAs: [
+      'https://twitter.com/editpdfai',
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'support@editpdfai.com',
+      contactType: 'customer support',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'EditPDF AI',
+    url: 'https://editpdfai.com',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: 'https://editpdfai.com/?q={search_term_string}',
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  },
+]
 
 export default function HomePage() {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      {jsonLd.map((schema, i) => (
+        <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
+      ))}
       <AppleHome />
+      <SitePopularTools />
+      <SiteUseCases />
+      <SitePrivacyNote />
+      <SiteTestimonials />
+      <SitePricingPreview />
+      <HomeScroll />
+      <HomeAllTools />
+      <SiteFAQ />
+      <SiteCTA />
+      <SiteFooter />
     </>
   )
 }
