@@ -211,6 +211,7 @@ export default function QuizCreator() {
   }
 
   return (
+    <>
     <div style={S.page}>
       {/* Nav */}
       <nav style={S.nav}>
@@ -572,7 +573,8 @@ export default function QuizCreator() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display:'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}/>
-      <ToolSEOSection {...toolSeoData['quiz-creator']} />
     </div>
+    <ToolSEOSection {...toolSeoData['quiz-creator']} />
+    </>
   )
 }

@@ -274,6 +274,7 @@ export default function DeletePages() {
   )
 
   return (
+    <>
     <div style={S.page}>
       {/* Nav */}
       <nav style={S.nav}>
@@ -538,7 +539,8 @@ export default function DeletePages() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }}/>
-      <ToolSEOSection {...toolSeoData['delete-pages']} />
     </div>
+    <ToolSEOSection {...toolSeoData['delete-pages']} />
+    </>
   )
 }

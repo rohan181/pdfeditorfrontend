@@ -388,6 +388,7 @@ export default function PDFWatermarkPage() {
   const isTile   = wmPosition === 'tile'
 
   return (
+    <>
     <div style={{ display:'flex', flexDirection:'column', height:'100vh', background:'#edf0f7', fontFamily:'Manrope,sans-serif' }}>
 
       {/* Top bar */}
@@ -674,7 +675,8 @@ export default function PDFWatermarkPage() {
       </div>
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      <ToolSEOSection {...toolSeoData['pdf-watermark']} />
     </div>
+    <ToolSEOSection {...toolSeoData['pdf-watermark']} />
+    </>
   )
 }

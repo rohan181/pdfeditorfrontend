@@ -3,7 +3,6 @@ import AppleHome from '@/components/AppleHome'
 import SitePopularTools from '@/components/SitePopularTools'
 import SiteUseCases from '@/components/SiteUseCases'
 import SitePrivacyNote from '@/components/SitePrivacyNote'
-import SiteTestimonials from '@/components/SiteTestimonials'
 import SitePricingPreview from '@/components/SitePricingPreview'
 import HomeScroll from '@/components/HomeScroll'
 import HomeAllTools from '@/components/HomeAllTools'
@@ -77,7 +76,6 @@ export default function HomePage() {
       <SitePopularTools />
       <SiteUseCases />
       <SitePrivacyNote />
-      <SiteTestimonials />
       <SitePricingPreview />
       <HomeScroll />
       <HomeAllTools />

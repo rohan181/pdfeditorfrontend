@@ -227,6 +227,7 @@ export default function HtmlToPdf() {
   }
 
   return (
+    <>
     <div style={S.page}>
       {/* Nav */}
       <SiteNav />
@@ -464,7 +465,8 @@ export default function HtmlToPdf() {
           e.target.value = ''
         }}
       />
-      <ToolSEOSection {...toolSeoData['html-to-pdf']} />
     </div>
+    <ToolSEOSection {...toolSeoData['html-to-pdf']} />
+    </>
   )
 }

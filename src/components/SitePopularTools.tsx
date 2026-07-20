@@ -1,19 +1,20 @@
 import Link from 'next/link'
 import {
-  FilePen, Minimize2, Merge, Split, PenTool, FileType, Sparkles, ChevronRight,
+  FilePen, Minimize2, Merge, Split, PenTool, FileType, Sparkles, Scissors, ChevronRight,
 } from 'lucide-react'
 
 const FI = { fontFamily:'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily:'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
 
 const popular = [
-  { label:'Edit PDF',      href:'/pdf-editor',         Icon:FilePen,   color:'#6366f1', tier:'free' },
-  { label:'Compress PDF',  href:'/pdf-compressor',     Icon:Minimize2, color:'#f97316', tier:'free' },
-  { label:'Merge PDF',     href:'/pdf-merger',         Icon:Merge,     color:'#0891b2', tier:'free' },
-  { label:'Split PDF',     href:'/pdf-splitter',       Icon:Split,     color:'#16a34a', tier:'free' },
-  { label:'Sign PDF',      href:'/pdf-signer',         Icon:PenTool,   color:'#dc2626', tier:'free' },
-  { label:'PDF to Word',   href:'/pdf-to-word',        Icon:FileType,  color:'#2563eb', tier:'pro'  },
-  { label:'AI PDF Form Filler',href:'/ai-pdf-form-filler', Icon:Sparkles,  color:'#7c3aed', tier:'ai'  },
+  { label:'Edit PDF',           href:'/pdf-editor',         Icon:FilePen,   color:'#6366f1', tier:'free' },
+  { label:'Compress PDF',       href:'/pdf-compressor',     Icon:Minimize2, color:'#f97316', tier:'free' },
+  { label:'Merge PDF',          href:'/pdf-merger',         Icon:Merge,     color:'#0891b2', tier:'free' },
+  { label:'Split PDF',          href:'/pdf-splitter',       Icon:Split,     color:'#16a34a', tier:'free' },
+  { label:'Extract Pages',      href:'/extract-pages',      Icon:Scissors,  color:'#d97706', tier:'free' },
+  { label:'Sign PDF',           href:'/pdf-signer',         Icon:PenTool,   color:'#dc2626', tier:'free' },
+  { label:'PDF to Word',        href:'/pdf-to-word',        Icon:FileType,  color:'#2563eb', tier:'pro'  },
+  { label:'AI PDF Form Filler', href:'/ai-pdf-form-filler', Icon:Sparkles,  color:'#7c3aed', tier:'ai'  },
 ]
 
 const TIER_BADGE: Record<string, { label:string; bg:string; color:string }> = {

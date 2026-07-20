@@ -225,6 +225,7 @@ export default function AddPageNumbers() {
   }
 
   return (
+    <>
     <div style={S.page}>
       {/* Nav */}
       <nav style={S.nav}>
@@ -532,7 +533,8 @@ export default function AddPageNumbers() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display:'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
-      <ToolSEOSection {...toolSeoData['add-page-numbers']} />
     </div>
+    <ToolSEOSection {...toolSeoData['add-page-numbers']} />
+    </>
   )
 }
