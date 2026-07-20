@@ -13,11 +13,11 @@ export const metadata: Metadata = {
   title: { default: 'EditPDF AI — Edit smarter. Finish faster.', template: '%s | EditPDF AI' },
   description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — edit, sign, OCR, translate, summarise and fill forms. Free, no account needed.',
   keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, PDF annotator, PDF OCR, PDF compressor, editpdfai',
-  authors: [{ name: 'EditPDF AI', url: 'https://editpdfai.com' }],
+  authors: [{ name: 'EditPDF AI', url: 'https://www.editpdfai.com' }],
   creator: 'EditPDF AI',
   publisher: 'EditPDF AI',
   category: 'technology',
-  metadataBase: new URL('https://editpdfai.com'),
+  metadataBase: new URL('https://www.editpdfai.com'),
   robots: {
     index: true,
     follow: true,
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    url: 'https://editpdfai.com',
+    url: 'https://www.editpdfai.com',
     siteName: 'EditPDF AI',
     title: 'EditPDF AI — Edit smarter. Finish faster.',
     description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — free, no account needed.',

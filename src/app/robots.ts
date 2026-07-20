@@ -19,6 +19,6 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: 'https://editpdfai.com/sitemap.xml',
+    sitemap: 'https://www.editpdfai.com/sitemap.xml',
   }
 }

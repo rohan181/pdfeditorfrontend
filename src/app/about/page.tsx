@@ -5,7 +5,7 @@ import Image from 'next/image'
 export const metadata: Metadata = {
   title: { absolute: 'About EditPDF AI – Our Story and Privacy Approach' },
   description: 'EditPDF AI is an independent PDF tool suite built in Australia. Learn who we are, how your files are handled, and why we keep 35+ tools permanently free.',
-  alternates: { canonical: 'https://editpdfai.com/about' },
+  alternates: { canonical: 'https://www.editpdfai.com/about' },
 }
 
 const VALUES = [
@@ -60,10 +60,10 @@ const DATA_FACTS = [
 const orgSchema = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
-  '@id': 'https://editpdfai.com/#organization',
+  '@id': 'https://www.editpdfai.com/#organization',
   name: 'EditPDF AI',
-  url: 'https://editpdfai.com',
-  logo: 'https://editpdfai.com/logo.png',
+  url: 'https://www.editpdfai.com',
+  logo: 'https://www.editpdfai.com/logo.png',
   foundingDate: '2026',
   areaServed: 'Worldwide',
   contactPoint: {

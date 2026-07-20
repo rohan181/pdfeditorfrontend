@@ -6,14 +6,14 @@ export const metadata: Metadata = {
     'Edit any PDF online for free. Add text, images, shapes, highlights, signatures and stamps. Rotate, reorder and delete pages. No signup, no install — works in your browser.',
   keywords:
     'PDF editor, edit PDF online, annotate PDF, sign PDF, add text to PDF, PDF page editor, free PDF editor, PDF markup, PDF annotator',
-  alternates: { canonical: 'https://editpdfai.com/pdf-editor' },
+  alternates: { canonical: 'https://www.editpdfai.com/pdf-editor' },
   robots: { index: true, follow: true },
   openGraph: {
     title: 'PDF Editor — Edit, Annotate & Sign PDFs Online Free',
     description:
       'Add text, images, shapes, signatures and stamps to any PDF. Reorder and rotate pages. Free, no signup.',
     type: 'website',
-    url: 'https://editpdfai.com/pdf-editor',
+    url: 'https://www.editpdfai.com/pdf-editor',
     siteName: 'EditPDF AI',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Editor — Edit PDFs Online Free' }],
   },
@@ -29,7 +29,7 @@ const jsonLdApp = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: 'PDF Editor',
-  url: 'https://editpdfai.com/pdf-editor',
+  url: 'https://www.editpdfai.com/pdf-editor',
   applicationCategory: 'ProductivityApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },

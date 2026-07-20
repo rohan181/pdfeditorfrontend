@@ -4,13 +4,13 @@ export const metadata: Metadata = {
   title: 'PDF Password Lock — Password Protect PDF Free Online',
   description: 'Add a password to any PDF instantly. Encrypt your PDF with AES-256 security in your browser — free, no upload, no account required.',
   keywords: 'PDF password lock, password protect PDF, encrypt PDF, PDF security, lock PDF online, PDF password free, AES-256 PDF encryption',
-  alternates: { canonical: 'https://editpdfai.com/pdf-password-lock' },
+  alternates: { canonical: 'https://www.editpdfai.com/pdf-password-lock' },
   robots: { index: true, follow: true },
   openGraph: {
     title: 'PDF Password Lock — Password Protect PDF Free Online',
     description: 'Add a password to any PDF instantly. AES-256 encryption, free, no account, no upload.',
     type: 'website',
-    url: 'https://editpdfai.com/pdf-password-lock',
+    url: 'https://www.editpdfai.com/pdf-password-lock',
     siteName: 'EditPDF AI',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Password Lock' }],
   },
@@ -26,7 +26,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: 'PDF Password Lock',
-  url: 'https://editpdfai.com/pdf-password-lock',
+  url: 'https://www.editpdfai.com/pdf-password-lock',
   applicationCategory: 'ProductivityApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
@@ -39,8 +39,8 @@ const breadcrumb = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://editpdfai.com' },
-    { '@type': 'ListItem', position: 2, name: 'PDF Password Lock', item: 'https://editpdfai.com/pdf-password-lock' },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.editpdfai.com' },
+    { '@type': 'ListItem', position: 2, name: 'PDF Password Lock', item: 'https://www.editpdfai.com/pdf-password-lock' },
   ],
 }
 

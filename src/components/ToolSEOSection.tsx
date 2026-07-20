@@ -21,7 +21,7 @@ interface Props {
 const PURPLE  = '#4F7FFA'
 const BG      = '#f7f8fa'
 
-const BASE = 'https://editpdfai.com'
+const BASE = 'https://www.editpdfai.com'
 
 export default function ToolSEOSection({ steps, faqs, whatIs, users, related, formats, privacy, toolSlug }: Props) {
   const faqSchema = {

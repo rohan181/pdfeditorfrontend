@@ -8,18 +8,6 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig = {
   compress: true,
 
-  async redirects() {
-    return [
-      // Canonicalise www → non-www (permanent 301)
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'www.editpdfai.com' }],
-        destination: 'https://editpdfai.com/:path*',
-        permanent: true,
-      },
-    ]
-  },
-
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

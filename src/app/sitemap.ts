@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 
-const BASE = 'https://editpdfai.com'
+const BASE = 'https://www.editpdfai.com'
 
 function url(
   path: string,

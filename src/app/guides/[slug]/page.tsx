@@ -15,12 +15,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title:       { absolute: `${guide.seoTitle} | EditPDF AI` },
     description: guide.description,
-    alternates:  { canonical: `https://editpdfai.com/guides/${guide.slug}` },
+    alternates:  { canonical: `https://www.editpdfai.com/guides/${guide.slug}` },
     openGraph: {
       title:       `${guide.seoTitle} | EditPDF AI`,
       description: guide.description,
       type:        'article',
-      url:         `https://editpdfai.com/guides/${guide.slug}`,
+      url:         `https://www.editpdfai.com/guides/${guide.slug}`,
       siteName:    'EditPDF AI',
       publishedTime: guide.datePublished,
       modifiedTime:  guide.dateModified,
@@ -88,19 +88,19 @@ function GuideContent({ guide }: { guide: Guide }) {
     description:      guide.description,
     datePublished:    guide.datePublished,
     dateModified:     guide.dateModified,
-    url:              `https://editpdfai.com/guides/${guide.slug}`,
+    url:              `https://www.editpdfai.com/guides/${guide.slug}`,
     publisher: {
       '@type': 'Organization',
       name:    'EditPDF AI',
-      url:     'https://editpdfai.com',
-      logo:    { '@type': 'ImageObject', url: 'https://editpdfai.com/logo.png' },
+      url:     'https://www.editpdfai.com',
+      logo:    { '@type': 'ImageObject', url: 'https://www.editpdfai.com/logo.png' },
     },
     breadcrumb: {
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home',   item: 'https://editpdfai.com' },
-        { '@type': 'ListItem', position: 2, name: 'Guides', item: 'https://editpdfai.com/guides' },
-        { '@type': 'ListItem', position: 3, name: guide.title, item: `https://editpdfai.com/guides/${guide.slug}` },
+        { '@type': 'ListItem', position: 1, name: 'Home',   item: 'https://www.editpdfai.com' },
+        { '@type': 'ListItem', position: 2, name: 'Guides', item: 'https://www.editpdfai.com/guides' },
+        { '@type': 'ListItem', position: 3, name: guide.title, item: `https://www.editpdfai.com/guides/${guide.slug}` },
       ],
     },
   }

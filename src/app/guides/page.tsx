@@ -6,12 +6,12 @@ import guides from '@/lib/guidesData'
 export const metadata: Metadata = {
   title: { absolute: 'PDF Guides & How-To Articles | EditPDF AI' },
   description: 'Practical PDF guides: how to edit, compress, sign, merge, redact, and make PDFs searchable — with step-by-step instructions and free tool links.',
-  alternates: { canonical: 'https://editpdfai.com/guides' },
+  alternates: { canonical: 'https://www.editpdfai.com/guides' },
   openGraph: {
     title: 'PDF Guides & How-To Articles | EditPDF AI',
     description: 'Practical guides: edit, compress, sign, merge, redact and more — free tools included.',
     type: 'website',
-    url: 'https://editpdfai.com/guides',
+    url: 'https://www.editpdfai.com/guides',
     siteName: 'EditPDF AI',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Guides by EditPDF AI' }],
   },

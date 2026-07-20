@@ -6,14 +6,14 @@ export const metadata: Metadata = {
     'Add custom text or image watermarks to any PDF online for free. Control position, opacity, angle, font size and color. No signup, no install — works in your browser.',
   keywords:
     'PDF watermark, add watermark to PDF, watermark PDF online, text watermark, image watermark, free PDF watermark tool, PDF stamp, watermark remover',
-  alternates: { canonical: 'https://editpdfai.com/pdf-watermark' },
+  alternates: { canonical: 'https://www.editpdfai.com/pdf-watermark' },
   robots: { index: true, follow: true },
   openGraph: {
     title: 'PDF Watermarker — Add Text & Image Watermarks to PDFs Free',
     description:
       'Add custom text or image watermarks to any PDF. Control opacity, angle, position and color. Free, no signup.',
     type: 'website',
-    url: 'https://editpdfai.com/pdf-watermark',
+    url: 'https://www.editpdfai.com/pdf-watermark',
     siteName: 'EditPDF AI',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Watermarker — Add Watermarks Online Free' }],
   },
@@ -29,7 +29,7 @@ const jsonLdApp = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: 'PDF Watermarker',
-  url: 'https://editpdfai.com/pdf-watermark',
+  url: 'https://www.editpdfai.com/pdf-watermark',
   applicationCategory: 'ProductivityApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },

@@ -15,12 +15,12 @@ export const metadata: Metadata = {
   title: { absolute: 'Free Online PDF Editor – Edit, Sign, Fill & Convert | EditPDF AI' },
   description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — edit, sign, OCR, translate, summarise and fill forms. Free, no account needed.',
   keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, editpdfai',
-  alternates: { canonical: 'https://editpdfai.com' },
+  alternates: { canonical: 'https://www.editpdfai.com' },
   openGraph: {
     title: 'Free Online PDF Editor – Edit, Sign, Fill & Convert | EditPDF AI',
     description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — free, no account needed.',
     type: 'website',
-    url: 'https://editpdfai.com',
+    url: 'https://www.editpdfai.com',
   },
 }
 
@@ -29,7 +29,7 @@ const jsonLd = [
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: 'EditPDF AI',
-    url: 'https://editpdfai.com',
+    url: 'https://www.editpdfai.com',
     applicationCategory: 'ProductivityApplication',
     operatingSystem: 'Web',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
@@ -40,8 +40,8 @@ const jsonLd = [
     '@type': 'Organization',
     name: 'EditPDF AI',
     alternateName: 'EditPDF',
-    url: 'https://editpdfai.com',
-    logo: 'https://editpdfai.com/logo.png',
+    url: 'https://www.editpdfai.com',
+    logo: 'https://www.editpdfai.com/logo.png',
     sameAs: [
       'https://twitter.com/editpdfai',
     ],
@@ -55,12 +55,12 @@ const jsonLd = [
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: 'EditPDF AI',
-    url: 'https://editpdfai.com',
+    url: 'https://www.editpdfai.com',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: 'https://editpdfai.com/?q={search_term_string}',
+        urlTemplate: 'https://www.editpdfai.com/?q={search_term_string}',
       },
       'query-input': 'required name=search_term_string',
     },

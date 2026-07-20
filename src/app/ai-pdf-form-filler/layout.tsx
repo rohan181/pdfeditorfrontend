@@ -6,14 +6,14 @@ export const metadata: Metadata = {
     'Autofill PDF forms instantly with AI — W-9, job applications, tax forms, rental agreements and more. Paste your details once, AI fills every field. Free, no Adobe Acrobat needed.',
   keywords:
     'AI PDF form filler, autofill PDF forms, fill PDF forms online free, PDF form autofill, AI form filling, fill W-9 online, fill PDF job application, fill tax form PDF, PDF filler no Adobe, auto fill PDF forms AI',
-  alternates: { canonical: 'https://editpdfai.com/ai-pdf-form-filler' },
+  alternates: { canonical: 'https://www.editpdfai.com/ai-pdf-form-filler' },
   robots: { index: true, follow: true },
   openGraph: {
     title: 'AI PDF Form Filler — Autofill Any PDF Form Free Online',
     description:
       'Autofill W-9s, job applications, tax forms and any PDF form instantly with AI. Paste your details once — AI fills every field. Free, no Adobe Acrobat needed.',
     type: 'website',
-    url: 'https://editpdfai.com/ai-pdf-form-filler',
+    url: 'https://www.editpdfai.com/ai-pdf-form-filler',
     siteName: 'EditPDF AI',
     images: [
       {
@@ -95,7 +95,7 @@ const jsonLdApp = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   name: 'AI PDF Form Filler',
-  url: 'https://editpdfai.com/ai-pdf-form-filler',
+  url: 'https://www.editpdfai.com/ai-pdf-form-filler',
   applicationCategory: 'ProductivityApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
@@ -108,8 +108,8 @@ const jsonLdBreadcrumb = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://editpdfai.com' },
-    { '@type': 'ListItem', position: 2, name: 'AI PDF Form Filler', item: 'https://editpdfai.com/ai-pdf-form-filler' },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.editpdfai.com' },
+    { '@type': 'ListItem', position: 2, name: 'AI PDF Form Filler', item: 'https://www.editpdfai.com/ai-pdf-form-filler' },
   ],
 }
 
