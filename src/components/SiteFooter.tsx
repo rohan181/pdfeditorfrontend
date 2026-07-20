@@ -68,7 +68,7 @@ export default function SiteFooter() {
           {/* Brand */}
           <div>
             <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', marginBottom: 14 }}>
-              <Image src="/logo.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} />
+              <Image src="/logo.svg?v=2" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} />
             </Link>
 
             <p style={{ ...FI, fontSize: 13, color: '#6b7280', lineHeight: 1.7, maxWidth: 220, margin: '0 0 16px' }}>
