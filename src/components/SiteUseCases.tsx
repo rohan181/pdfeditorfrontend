@@ -28,7 +28,7 @@ export default function SiteUseCases() {
       ],
     },
     {
-      Icon: FilePen, color: '#16a34a', bg: 'rgba(22,163,74,.08)',
+      Icon: FilePen, color: '#10B981', bg: 'rgba(16,185,129,.08)',
       title: 'Freelancers',
       desc: 'Edit invoice PDFs, add your signature to contracts, and redact sensitive client details before sharing.',
       tools: [
@@ -48,7 +48,7 @@ export default function SiteUseCases() {
       ],
     },
     {
-      Icon: FlaskConical, color: '#0891b2', bg: 'rgba(8,145,178,.08)',
+      Icon: FlaskConical, color: '#2563EB', bg: 'rgba(37,99,235,.08)',
       title: 'Researchers',
       desc: 'Translate academic papers, extract text from scanned journals, and create mind maps from long PDFs.',
       tools: [
@@ -60,7 +60,7 @@ export default function SiteUseCases() {
   ]
 
   return (
-    <section style={{background:'#fff',padding:'88px 28px 80px',borderTop:'1px solid #f0f0f0'}}>
+    <section style={{background:'#F8FAFC',padding:'88px 28px 80px',borderTop:'1px solid #E2E8F0'}}>
       <div style={{maxWidth:1200,margin:'0 auto'}}>
         <div style={{marginBottom:48}}>
           <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
@@ -77,7 +77,7 @@ export default function SiteUseCases() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:16}}>
           {cases.map(({Icon,color,bg,title,desc,tools})=>(
             <div key={title}
-              style={{background:'#fafafa',border:'1.5px solid #eeeeee',borderRadius:20,padding:'24px 20px 20px',
+              style={{background:'#fff',border:'1.5px solid #E2E8F0',borderRadius:20,padding:'24px 20px 20px',
                 display:'flex',flexDirection:'column',gap:12}}>
               <div style={{width:44,height:44,borderRadius:13,background:bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                 <Icon size={22} color={color} strokeWidth={1.8}/>

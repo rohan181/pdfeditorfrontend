@@ -17,7 +17,7 @@ const COMPARE = [
 
 export default function SitePricingPreview() {
   return (
-    <section style={{background:'#f5f5f7',padding:'72px 28px',borderTop:'1px solid #ebebeb'}}>
+    <section style={{background:'#F8FAFC',padding:'72px 28px',borderTop:'1px solid #E2E8F0'}}>
       <div style={{maxWidth:860,margin:'0 auto'}}>
         <div style={{marginBottom:36,textAlign:'center'}}>
           <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
@@ -52,21 +52,21 @@ export default function SitePricingPreview() {
             </div>
             <Link href="/pdf-editor"
               style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:7,
-                padding:'11px 0',borderRadius:12,background:'#f3f4f6',
-                color:'#1d1d1f',fontSize:13.5,fontWeight:700,textDecoration:'none',letterSpacing:'-0.01em'}}>
+                padding:'11px 0',borderRadius:12,background:'#2563EB',
+                color:'#fff',fontSize:13.5,fontWeight:700,textDecoration:'none',letterSpacing:'-0.01em'}}>
               Start free — no signup
             </Link>
           </div>
 
           {/* Pro */}
           <div style={{background:'#0f172a',borderRadius:20,padding:'28px 28px 24px',border:'1.5px solid #1e293b',position:'relative',overflow:'hidden'}}>
-            <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle,rgba(8,145,178,.25),transparent)',pointerEvents:'none'}}/>
+            <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle,rgba(124,58,237,.25),transparent)',pointerEvents:'none'}}/>
             {/* Clean "Intro offer" label — no emoji */}
             <div style={{position:'absolute',top:16,right:16}}>
               <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'.06em',color:'#94a3b8',background:'rgba(148,163,184,.1)',border:'1px solid rgba(148,163,184,.2)',padding:'3px 8px',borderRadius:99}}>INTRO OFFER</span>
             </div>
             <div style={{marginBottom:20}}>
-              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#0891b2',background:'rgba(8,145,178,.18)',padding:'3px 8px',borderRadius:99}}>PRO</span>
+              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#7C3AED',background:'rgba(124,58,237,.18)',padding:'3px 8px',borderRadius:99}}>PRO</span>
               <div style={{...FI,fontSize:28,fontWeight:800,color:'#fff',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>
                 US$1<span style={{fontSize:14,fontWeight:500,color:'rgba(255,255,255,.4)'}}>/month</span>
               </div>
@@ -75,14 +75,14 @@ export default function SitePricingPreview() {
             <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:24}}>
               {PRO_ITEMS.map(item=>(
                 <div key={item} style={{display:'flex',alignItems:'center',gap:9}}>
-                  <CheckCircle2 size={14} color="#0891b2" strokeWidth={2}/>
+                  <CheckCircle2 size={14} color="#7C3AED" strokeWidth={2}/>
                   <span style={{...FI,fontSize:13.5,color:'rgba(255,255,255,.8)'}}>{item}</span>
                 </div>
               ))}
             </div>
             <Link href="/pricing"
               style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:7,
-                padding:'11px 0',borderRadius:12,background:'#0891b2',
+                padding:'11px 0',borderRadius:12,background:'#7C3AED',
                 color:'#fff',fontSize:13.5,fontWeight:700,textDecoration:'none',letterSpacing:'-0.01em'}}>
               Get Pro — $1/month
             </Link>
@@ -95,7 +95,7 @@ export default function SitePricingPreview() {
           <div style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',background:'#f9fafb',borderBottom:'1.5px solid #e5e7eb'}}>
             <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#9ca3af',padding:'10px 20px'}}>Feature</span>
             <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#9ca3af',textAlign:'center',padding:'10px 8px'}}>Free</span>
-            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#0891b2',textAlign:'center',padding:'10px 20px',background:'rgba(8,145,178,.05)',borderLeft:'1px solid rgba(8,145,178,.12)'}}>Pro ✦</span>
+            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#7C3AED',textAlign:'center',padding:'10px 20px',background:'rgba(124,58,237,.05)',borderLeft:'1px solid rgba(124,58,237,.12)'}}>Pro ✦</span>
           </div>
           {COMPARE.map(({label,free,pro},i)=>(
             <div key={label} style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',
@@ -106,10 +106,10 @@ export default function SitePricingPreview() {
                 : free===false ? <span style={{color:'#d1d5db',fontSize:16,lineHeight:1}}>—</span>
                 : <span style={{...FI,fontSize:11.5,color:'#6b7280',fontWeight:600}}>{free as string}</span>}
               </span>
-              <span style={{textAlign:'center',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',padding:'11px 20px',background:'rgba(8,145,178,.04)',borderLeft:'1px solid rgba(8,145,178,.1)'}}>
+              <span style={{textAlign:'center',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',padding:'11px 20px',background:'rgba(124,58,237,.04)',borderLeft:'1px solid rgba(124,58,237,.1)'}}>
                 {pro===true
-                  ? <span style={{color:'#0891b2',fontWeight:800,fontSize:15}}>✓</span>
-                  : <span style={{...FI,fontSize:11.5,color:'#0891b2',fontWeight:700}}>{pro as string}</span>}
+                  ? <span style={{color:'#7C3AED',fontWeight:800,fontSize:15}}>✓</span>
+                  : <span style={{...FI,fontSize:11.5,color:'#7C3AED',fontWeight:700}}>{pro as string}</span>}
               </span>
             </div>
           ))}

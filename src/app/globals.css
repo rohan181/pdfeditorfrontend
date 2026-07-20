@@ -8,6 +8,32 @@
 :root {
   --font-inter: var(--font-dm, system-ui, sans-serif);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, "Cascadia Code", "Courier New", monospace;
+
+  /* ── Brand palette: From Paper to Possibility ─────────────────────────── */
+  --brand-blue:          #3B82F6;
+  --brand-blue-strong:   #2563EB;
+  --brand-violet:        #8B5CF6;
+  --brand-violet-strong: #7C3AED;
+
+  --trust-navy:          #0F172A;
+  --privacy-green:       #10B981;
+  --privacy-green-light: #34D399;
+
+  --text-primary:        #0F172A;
+  --text-secondary:      #475569;
+  --text-muted:          #64748B;
+
+  --surface-white:       #FFFFFF;
+  --surface-soft:        #F8FAFC;
+  --surface-ai:          #F5F3FF;
+  --surface-blue:        #EFF6FF;
+  --surface-success:     #ECFDF5;
+
+  --border-default:      #E2E8F0;
+  --border-hover:        #93C5FD;
+
+  --gradient-brand: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+  --gradient-strong: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
 }
 
 /* overflow managed per-page via JS */
@@ -124,6 +150,11 @@ body { overflow-x:clip; }
   background-size:200% auto;
   -webkit-background-clip:text; -webkit-text-fill-color:transparent;
   background-clip:text; animation:shimmer-g 4s linear infinite;
+}
+.grad-brand {
+  background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
 }
 .tool-row:hover { background:rgba(0,0,0,.02) !important; }
 .tool-row-light:hover { background:#f5f5f5 !important; }

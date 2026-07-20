@@ -358,7 +358,7 @@ function Nav() {
 
           {/* Logo */}
           <Link href="/" style={{display:'flex',alignItems:'center',textDecoration:'none',marginRight:28,flexShrink:0}}>
-            <Image src="/logo.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{height:48,width:'auto',display:'block'}} priority />
+            <Image src="/logo.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{height:60,width:'auto',display:'block'}} priority />
           </Link>
 
           {/* Desktop nav */}
@@ -676,9 +676,9 @@ function Hero() {
       <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(rgba(0,0,0,.04) 1px, transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}}/>
 
       {/* Ambient glows */}
-      <div style={{position:'absolute',top:'-20%',left:'-10%',width:700,height:700,borderRadius:'50%',background:'radial-gradient(circle, rgba(226,75,74,.10) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
-      <div style={{position:'absolute',bottom:'-15%',right:'-5%',width:600,height:600,borderRadius:'50%',background:'radial-gradient(circle, rgba(99,102,241,.07) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
-      <div style={{position:'absolute',top:'30%',right:'20%',width:400,height:400,borderRadius:'50%',background:'radial-gradient(circle, rgba(226,75,74,.05) 0%, transparent 70%)',filter:'blur(60px)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',top:'-20%',left:'-10%',width:700,height:700,borderRadius:'50%',background:'radial-gradient(circle, rgba(59,130,246,.10) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',bottom:'-15%',right:'-5%',width:600,height:600,borderRadius:'50%',background:'radial-gradient(circle, rgba(139,92,246,.08) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',top:'30%',right:'20%',width:400,height:400,borderRadius:'50%',background:'radial-gradient(circle, rgba(59,130,246,.05) 0%, transparent 70%)',filter:'blur(60px)',pointerEvents:'none'}}/>
 
       {/* Content grid */}
       <div style={{maxWidth:1200,margin:'0 auto',padding:'0 clamp(16px,5vw,48px)',width:'100%',position:'relative',zIndex:2}}>
@@ -689,7 +689,7 @@ function Hero() {
             {/* Eyebrow */}
             <motion.div initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.1}}
               style={{display:'flex',alignItems:'center',gap:10,marginBottom:32}}>
-              <span style={{width:5,height:5,borderRadius:'50%',background:RED,display:'inline-block',animation:'pdot 2s ease-in-out infinite'}}/>
+              <span style={{width:5,height:5,borderRadius:'50%',background:'#3B82F6',display:'inline-block',animation:'pdot 2s ease-in-out infinite'}}/>
               <span style={{...MONO,fontSize:10.5,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase'}}>Edit smarter. Finish faster.</span>
             </motion.div>
 
@@ -701,7 +701,7 @@ function Hero() {
               </span>
               <span style={{display:'block',overflow:'hidden',marginTop:'0.1em'}}>
                 <motion.span style={{display:'block'}} variants={WV}>
-                  Edit, Sign, Fill &amp; Convert <span className="grad-red">PDFs</span>
+                  Edit, Sign, Fill &amp; Convert <span className="grad-brand">PDFs</span>
                 </motion.span>
               </span>
             </motion.h1>

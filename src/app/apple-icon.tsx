@@ -22,29 +22,33 @@ export default function AppleIcon() {
           style={{
             width: 100,
             height: 100,
-            background: 'linear-gradient(135deg, #f43f5e, #e11d48)',
+            background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
             borderRadius: 24,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <svg width="64" height="64" viewBox="0 0 48 48" fill="none">
-            <path
-              d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32"
-              stroke="white"
-              strokeWidth="7"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <circle cx="38" cy="27" r="6" fill="white" />
+          <svg width="64" height="64" viewBox="0 0 44 44" fill="none">
+            {/* Document body */}
+            <rect x="2" y="2" width="24" height="30" rx="3" fill="none" stroke="white" strokeWidth="2.5" />
+            {/* Dog-ear fold */}
+            <path d="M18,2 L26,10" stroke="white" strokeWidth="2" />
+            {/* Text lines */}
+            <line x1="6" y1="14" x2="13" y2="14" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            <line x1="6" y1="20" x2="20" y2="20" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            <line x1="6" y1="26" x2="16" y2="26" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            {/* Pencil */}
+            <path d="M30,4 L36,10 L20,26 L14,26 L14,20 Z" fill="white" />
+            {/* Red cap dot */}
+            <circle cx="33" cy="7" r="2.5" fill="#F43F5E" />
           </svg>
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ fontFamily: 'sans-serif', fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>
             EditPDF
           </span>
-          <span style={{ fontFamily: 'sans-serif', fontSize: 24, fontWeight: 800, color: '#dc2626', marginLeft: 3, letterSpacing: '-0.5px' }}>
+          <span style={{ fontFamily: 'sans-serif', fontSize: 24, fontWeight: 800, color: '#3B82F6', marginLeft: 4, letterSpacing: '-0.5px' }}>
             AI
           </span>
         </div>

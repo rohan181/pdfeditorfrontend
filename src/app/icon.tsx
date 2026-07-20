@@ -13,19 +13,19 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #f43f5e, #e11d48)',
-          borderRadius: 7,
+          background: 'white',
         }}
       >
-        <svg width="22" height="22" viewBox="0 0 48 48" fill="none">
-          <path
-            d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32"
-            stroke="white"
-            strokeWidth="7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <circle cx="38" cy="27" r="6" fill="white" />
+        {/* viewBox tightly cropped to content so mark fills entire 32×32 */}
+        <svg width="32" height="32" viewBox="1 1 36 32" fill="none">
+          {/* Document body */}
+          <rect x="2" y="2" width="24" height="30" rx="3" fill="none" stroke="#3B82F6" strokeWidth="2.5" />
+          {/* Dog-ear fold */}
+          <path d="M18,2 L26,10" stroke="#3B82F6" strokeWidth="2" />
+          {/* Pencil */}
+          <path d="M30,4 L36,10 L20,26 L14,26 L14,20 Z" fill="#8B5CF6" />
+          {/* Red cap dot */}
+          <circle cx="33" cy="7" r="2.5" fill="#F43F5E" />
         </svg>
       </div>
     ),

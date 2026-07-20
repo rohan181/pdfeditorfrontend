@@ -6,62 +6,72 @@ import {
 const FI = { fontFamily:'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily:'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
 
-const popular = [
-  { label:'Edit PDF',           href:'/pdf-editor',         Icon:FilePen,   color:'#6366f1', tier:'free' },
-  { label:'Compress PDF',       href:'/pdf-compressor',     Icon:Minimize2, color:'#f97316', tier:'free' },
-  { label:'Merge PDF',          href:'/pdf-merger',         Icon:Merge,     color:'#0891b2', tier:'free' },
-  { label:'Split PDF',          href:'/pdf-splitter',       Icon:Split,     color:'#16a34a', tier:'free' },
-  { label:'Extract Pages',      href:'/extract-pages',      Icon:Scissors,  color:'#d97706', tier:'free' },
-  { label:'Sign PDF',           href:'/pdf-signer',         Icon:PenTool,   color:'#dc2626', tier:'free' },
-  { label:'PDF to Word',        href:'/pdf-to-word',        Icon:FileType,  color:'#2563eb', tier:'pro'  },
-  { label:'AI PDF Form Filler', href:'/ai-pdf-form-filler', Icon:Sparkles,  color:'#7c3aed', tier:'ai'  },
+type ToolTier = 'free' | 'ai' | 'pro'
+type ToolKind = 'standard' | 'ai' | 'security'
+
+const KIND_STYLE: Record<ToolKind, { iconBg: string; iconColor: string }> = {
+  standard: { iconBg: '#EFF6FF', iconColor: '#2563EB' },
+  ai:       { iconBg: '#F5F3FF', iconColor: '#7C3AED' },
+  security: { iconBg: '#ECFDF5', iconColor: '#059669' },
+}
+
+const popular: { label: string; href: string; Icon: any; tier: ToolTier; kind: ToolKind }[] = [
+  { label:'Edit PDF',           href:'/pdf-editor',         Icon:FilePen,   tier:'free', kind:'standard' },
+  { label:'Compress PDF',       href:'/pdf-compressor',     Icon:Minimize2, tier:'free', kind:'standard' },
+  { label:'Merge PDF',          href:'/pdf-merger',         Icon:Merge,     tier:'free', kind:'standard' },
+  { label:'Split PDF',          href:'/pdf-splitter',       Icon:Split,     tier:'free', kind:'standard' },
+  { label:'Extract Pages',      href:'/extract-pages',      Icon:Scissors,  tier:'free', kind:'standard' },
+  { label:'Sign PDF',           href:'/pdf-signer',         Icon:PenTool,   tier:'free', kind:'security' },
+  { label:'PDF to Word',        href:'/pdf-to-word',        Icon:FileType,  tier:'pro',  kind:'standard' },
+  { label:'AI PDF Form Filler', href:'/ai-pdf-form-filler', Icon:Sparkles,  tier:'ai',   kind:'ai'       },
 ]
 
-const TIER_BADGE: Record<string, { label:string; bg:string; color:string }> = {
-  free: { label:'Free',       bg:'rgba(22,163,74,.1)',   color:'#15803d' },
-  ai:   { label:'5 free/day', bg:'rgba(124,58,237,.1)',  color:'#7c3aed' },
-  pro:  { label:'Pro',        bg:'rgba(8,145,178,.1)',   color:'#0e7490' },
+const TIER_BADGE: Record<ToolTier, { label: string; bg: string; color: string }> = {
+  free: { label:'Free',       bg:'rgba(16,185,129,.1)',   color:'#059669' },
+  ai:   { label:'5 free/day', bg:'rgba(124,58,237,.1)',   color:'#7C3AED' },
+  pro:  { label:'Pro',        bg:'rgba(37,99,235,.1)',    color:'#2563EB' },
 }
 
 export default function SitePopularTools() {
   return (
-    <section style={{background:'#fff',padding:'72px 28px 60px',borderTop:'1px solid #f0f0f0'}}>
+    <section style={{background:'#fff',padding:'72px 28px 60px',borderTop:'1px solid #E2E8F0'}}>
       <div style={{maxWidth:1100,margin:'0 auto'}}>
         <div style={{marginBottom:36}}>
-          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
+          <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
             Most used
           </div>
-          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,38px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',lineHeight:1,margin:0}}>
+          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,38px)',fontWeight:800,color:'#0F172A',letterSpacing:'-0.04em',lineHeight:1,margin:0}}>
             Popular tools
           </h2>
         </div>
         <div style={{display:'flex',flexWrap:'wrap',gap:12}}>
-          {popular.map(({label,href,Icon,color,tier})=>{
+          {popular.map(({label,href,Icon,tier,kind})=>{
             const badge = TIER_BADGE[tier]
+            const { iconBg, iconColor } = KIND_STYLE[kind]
             return (
               <Link
                 key={href}
                 href={href}
                 className="pop-tool-link"
                 style={{
-                  '--hl-bg': color+'08',
-                  '--hl-border': color+'30',
-                  '--hl-shadow': color+'18',
+                  '--hl-bg': iconColor+'0d',
+                  '--hl-border': iconColor+'40',
+                  '--hl-shadow': iconColor+'18',
                   display:'inline-flex',alignItems:'center',gap:10,
                   padding:'11px 18px',borderRadius:14,textDecoration:'none',
-                  background:'#f8f8fa',border:'1.5px solid #ebebeb',
+                  background:'#fff',border:'1.5px solid #E2E8F0',
                 } as React.CSSProperties}
               >
-                <div style={{width:32,height:32,borderRadius:9,background:`${color}12`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  <Icon size={15} color={color} strokeWidth={2}/>
+                <div style={{width:32,height:32,borderRadius:9,background:iconBg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  <Icon size={15} color={iconColor} strokeWidth={2}/>
                 </div>
                 <div style={{display:'flex',flexDirection:'column',gap:2}}>
-                  <span style={{...FI,fontSize:13.5,fontWeight:700,color:'#1d1d1f',whiteSpace:'nowrap',lineHeight:1}}>{label}</span>
+                  <span style={{...FI,fontSize:13.5,fontWeight:700,color:'#0F172A',whiteSpace:'nowrap',lineHeight:1}}>{label}</span>
                   <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.06em',padding:'1.5px 6px',borderRadius:99,background:badge.bg,color:badge.color,width:'fit-content'}}>
                     {badge.label}
                   </span>
                 </div>
-                <ChevronRight size={13} color="#bbb" strokeWidth={2}/>
+                <ChevronRight size={13} color="#94A3B8" strokeWidth={2}/>
               </Link>
             )
           })}
