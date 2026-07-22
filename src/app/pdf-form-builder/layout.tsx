@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'PDF Form Builder',
   url: 'https://www.editpdfai.com/pdf-form-builder',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Build fillable PDF forms online for free. Add text fields, checkboxes, dropdowns, signatures and more.',

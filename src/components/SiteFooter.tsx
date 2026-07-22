@@ -58,7 +58,7 @@ export default function SiteFooter() {
         @media(max-width:600px){ .sf-footer-grid{ grid-template-columns:1fr !important; gap:24px !important; } }
         .sf-link { display:block; font-size:13px; color:#6b7280; text-decoration:none; font-weight:500; margin-bottom:10px; letter-spacing:-0.01em; transition:color .12s, transform .12s; }
         .sf-link:hover { color:#1d1d1f; transform:translateX(3px); }
-        .sf-bot-link { font-size:11px; color:#9ca3af; text-decoration:none; font-weight:500; transition:color .12s; }
+        .sf-bot-link { font-size:11px; color:#64748B; text-decoration:none; font-weight:500; transition:color .12s; }
         .sf-bot-link:hover { color:#374151; }
       `}</style>
 
@@ -89,7 +89,7 @@ export default function SiteFooter() {
                 </span>
               ))}
             </div>
-            <p style={{ ...MONO, fontSize: 10, color: '#9ca3af', letterSpacing: '0.04em' }}>
+            <p style={{ ...MONO, fontSize: 10, color: '#64748B', letterSpacing: '0.04em' }}>
               © {new Date().getFullYear()} EditPDF AI. All rights reserved.
             </p>
           </div>
@@ -110,7 +110,7 @@ export default function SiteFooter() {
         {/* Bottom bar */}
         <div style={{ borderTop: '1px solid #e5e5ea', padding: '16px 0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <span style={{ ...MONO, fontSize: 10, color: '#9ca3af', letterSpacing: '0.04em' }}>
+            <span style={{ ...MONO, fontSize: 10, color: '#64748B', letterSpacing: '0.04em' }}>
               35+ TOOLS · FREE · AI-POWERED
             </span>
             <div style={{ display: 'flex', gap: 12 }}>

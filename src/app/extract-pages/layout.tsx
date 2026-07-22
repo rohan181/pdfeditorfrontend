@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'Extract PDF Pages',
   url: 'https://www.editpdfai.com/extract-pages',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Extract specific pages from a PDF online for free. Save selected pages as a new PDF document.',

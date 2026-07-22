@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'PDF Page Manager',
   url: 'https://www.editpdfai.com/pdf-page-manager',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Manage PDF pages online for free. Drag to reorder, delete unwanted pages, add blank pages and rotate individual pages.',

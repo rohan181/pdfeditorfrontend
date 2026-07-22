@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'Excel to PDF Converter',
   url: 'https://www.editpdfai.com/excel-to-pdf',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Convert Excel spreadsheets to PDF online for free. Preserves tables and formatting.',

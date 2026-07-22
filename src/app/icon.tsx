@@ -13,19 +13,17 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'white',
         }}
       >
-        {/* viewBox tightly cropped to content so mark fills entire 32×32 */}
-        <svg width="32" height="32" viewBox="1 1 36 32" fill="none">
+        <svg width="32" height="32" viewBox="1 0 34 34" fill="none">
           {/* Document body */}
-          <rect x="2" y="2" width="24" height="30" rx="3" fill="none" stroke="#3B82F6" strokeWidth="2.5" />
+          <rect x="2" y="2" width="22" height="28" rx="3" fill="none" stroke="#2563EB" strokeWidth="2.5" />
           {/* Dog-ear fold */}
-          <path d="M18,2 L26,10" stroke="#3B82F6" strokeWidth="2" />
+          <path d="M16,2 L24,10" stroke="#2563EB" strokeWidth="2" />
           {/* Pencil */}
-          <path d="M30,4 L36,10 L20,26 L14,26 L14,20 Z" fill="#8B5CF6" />
+          <path d="M28,6 L34,12 L18,28 L12,28 L12,22 Z" fill="#7C3AED" />
           {/* Red cap dot */}
-          <circle cx="33" cy="7" r="2.5" fill="#F43F5E" />
+          <circle cx="31" cy="9" r="2.5" fill="#F43F5E" />
         </svg>
       </div>
     ),

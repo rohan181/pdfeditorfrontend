@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'AI Mind Map Generator',
   url: 'https://www.editpdfai.com/mind-map',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Generate visual mind maps from any PDF with AI. Turn reports, research papers and notes into structured mind maps.',

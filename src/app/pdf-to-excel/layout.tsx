@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'PDF to Excel Converter',
   url: 'https://www.editpdfai.com/pdf-to-excel',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Convert PDF tables and data to Excel spreadsheets online for free. AI-powered extraction.',

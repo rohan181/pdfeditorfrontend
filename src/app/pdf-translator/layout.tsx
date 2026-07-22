@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'AI PDF Translator',
   url: 'https://www.editpdfai.com/pdf-translator',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Translate PDF documents to 50+ languages with AI. Preserve the original layout and formatting.',

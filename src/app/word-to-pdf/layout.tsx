@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'Word to PDF Converter',
   url: 'https://www.editpdfai.com/word-to-pdf',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Convert Word documents to PDF online for free. Preserves fonts, formatting and images.',

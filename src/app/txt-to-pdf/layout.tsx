@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'TXT to PDF Converter',
   url: 'https://www.editpdfai.com/txt-to-pdf',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Convert plain text TXT files to PDF online for free. Choose font, size and margins.',

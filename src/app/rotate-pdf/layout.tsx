@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'Rotate PDF',
   url: 'https://www.editpdfai.com/rotate-pdf',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Rotate PDF pages online for free. Rotate a single page, all pages, or a custom range — 90°, 180° or 270°.',

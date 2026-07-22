@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'PDF Merger',
   url: 'https://www.editpdfai.com/pdf-merger',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Merge multiple PDF files into one document online for free. Drag, reorder and combine any number of PDFs.',

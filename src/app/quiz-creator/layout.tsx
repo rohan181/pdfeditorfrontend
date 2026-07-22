@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'AI Quiz Creator',
   url: 'https://www.editpdfai.com/quiz-creator',
-  applicationCategory: 'EducationApplication',
+  applicationCategory: 'EducationalApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Create quizzes and flashcards from any PDF with AI. Generate multiple-choice, true/false and open-ended questions.',

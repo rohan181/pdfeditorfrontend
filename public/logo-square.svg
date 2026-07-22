@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">EditPDF AI</title>
+  <desc id="desc">EditPDF AI document and pencil logo</desc>
+  <defs>
+    <linearGradient id="brand" x1="96" y1="72" x2="416" y2="440" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#FFFFFF"/>
+  <path d="M122 76h176l92 92v250c0 20-16 36-36 36H122c-20 0-36-16-36-36V112c0-20 16-36 36-36Z" fill="none" stroke="url(#brand)" stroke-width="28" stroke-linejoin="round"/>
+  <path d="M298 76v92h92" fill="none" stroke="url(#brand)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m142 370 34-74L344 128l50 50-168 168-84 24Z" fill="url(#brand)"/>
+  <path d="m176 296 50 50" fill="none" stroke="#FFFFFF" stroke-width="16"/>
+  <circle cx="370" cy="152" r="13" fill="#F43F5E"/>
+</svg>

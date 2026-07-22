@@ -96,7 +96,7 @@ const jsonLdApp = {
   '@type': 'WebApplication',
   name: 'AI PDF Form Filler',
   url: 'https://www.editpdfai.com/ai-pdf-form-filler',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Fill PDF forms instantly with AI. Auto-detect fields, add text, draw signatures, and download — free, no registration.',

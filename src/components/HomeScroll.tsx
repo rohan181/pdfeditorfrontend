@@ -45,11 +45,11 @@ function ScreenDrop() {
           </div>
           <div style={{...FI,fontSize:17,fontWeight:600,color:'#1d1d1f',marginBottom:7,letterSpacing:'-0.02em'}}>Drop your PDF here</div>
           <div style={{...FI,fontSize:13,color:'#6E6E73',marginBottom:24,lineHeight:1.6}}>or click to browse · up to 100 MB · stays in your browser</div>
-          <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'11px 26px',background:'#6366f1',borderRadius:99,fontSize:13,fontWeight:600,color:'#fff',cursor:'default'}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'11px 26px',background:'#2563EB',borderRadius:99,fontSize:13,fontWeight:600,color:'#fff',cursor:'default'}}>
             <Upload size={13} strokeWidth={2}/> Choose PDF File
           </div>
         </div>
-        <div style={{...MONO,fontSize:9,color:'#bbb',letterSpacing:'0.1em',textTransform:'uppercase'}}>PDF · Up to 100 MB · Runs in your browser</div>
+        <div style={{...MONO,fontSize:9,color:'#64748B',letterSpacing:'0.1em',textTransform:'uppercase'}}>PDF · Up to 100 MB · Runs in your browser</div>
       </div>
     </div>
   )
@@ -125,7 +125,7 @@ function ScreenEditSign() {
               boxShadow:i===2?'0 0 0 2px rgba(99,102,241,.1)':'none'}}/>
         ))}
         <div style={{marginTop:12,padding:'9px 12px',border:'1px dashed #e4e4e7',borderRadius:8,background:'#fafafa'}}>
-          <div style={{fontSize:7,color:'#bbb',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>Signature</div>
+          <div style={{fontSize:7,color:'#64748B',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>Signature</div>
           <svg width="140" height="24" viewBox="0 0 140 24" fill="none">
             <path d="M6 16 C16 4 24 20 34 12 C44 4 56 18 68 9 C79 2 90 16 100 9 C109 3 120 15 130 11"
               stroke={RED} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="400"
@@ -208,9 +208,9 @@ export default function HomeScroll() {
     <>
       <div id="how-it-works-detail" className="sec-pad" style={{maxWidth:1200,margin:'0 auto'}}>
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.55,ease:E}}>
-          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>How it works</div>
+          <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>See it in action</div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,4vw,56px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>
-            Four simple steps
+            Everything in your browser
           </h2>
         </motion.div>
       </div>

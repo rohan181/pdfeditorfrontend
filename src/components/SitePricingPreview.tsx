@@ -20,7 +20,7 @@ export default function SitePricingPreview() {
     <section style={{background:'#F8FAFC',padding:'72px 28px',borderTop:'1px solid #E2E8F0'}}>
       <div style={{maxWidth:860,margin:'0 auto'}}>
         <div style={{marginBottom:36,textAlign:'center'}}>
-          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
+          <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
             Pricing
           </div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,36px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',lineHeight:1,margin:'0 0 8px'}}>
@@ -38,7 +38,7 @@ export default function SitePricingPreview() {
             <div style={{marginBottom:20}}>
               <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#15803d',background:'rgba(22,163,74,.1)',padding:'3px 8px',borderRadius:99}}>FREE</span>
               <div style={{...FI,fontSize:28,fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>
-                $0<span style={{fontSize:14,fontWeight:500,color:'#9ca3af'}}>/month</span>
+                $0<span style={{fontSize:14,fontWeight:500,color:'#64748B'}}>/month</span>
               </div>
               <div style={{...FI,fontSize:13,color:'#6b7280'}}>No credit card needed</div>
             </div>
@@ -59,24 +59,23 @@ export default function SitePricingPreview() {
           </div>
 
           {/* Pro */}
-          <div style={{background:'#0f172a',borderRadius:20,padding:'28px 28px 24px',border:'1.5px solid #1e293b',position:'relative',overflow:'hidden'}}>
-            <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle,rgba(124,58,237,.25),transparent)',pointerEvents:'none'}}/>
-            {/* Clean "Intro offer" label — no emoji */}
+          <div style={{background:'#F5F3FF',borderRadius:20,padding:'28px 28px 24px',border:'1.5px solid #8B5CF6',position:'relative',overflow:'hidden'}}>
+            <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle,rgba(139,92,246,.15),transparent)',pointerEvents:'none'}}/>
             <div style={{position:'absolute',top:16,right:16}}>
-              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'.06em',color:'#94a3b8',background:'rgba(148,163,184,.1)',border:'1px solid rgba(148,163,184,.2)',padding:'3px 8px',borderRadius:99}}>INTRO OFFER</span>
+              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'.06em',color:'#7C3AED',background:'rgba(124,58,237,.12)',border:'1px solid rgba(124,58,237,.25)',padding:'3px 8px',borderRadius:99}}>FOUNDING OFFER</span>
             </div>
             <div style={{marginBottom:20}}>
-              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#7C3AED',background:'rgba(124,58,237,.18)',padding:'3px 8px',borderRadius:99}}>PRO</span>
-              <div style={{...FI,fontSize:28,fontWeight:800,color:'#fff',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>
-                US$1<span style={{fontSize:14,fontWeight:500,color:'rgba(255,255,255,.4)'}}>/month</span>
+              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#7C3AED',background:'rgba(124,58,237,.12)',padding:'3px 8px',borderRadius:99}}>PRO</span>
+              <div style={{...FI,fontSize:28,fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>
+                US$1<span style={{fontSize:14,fontWeight:500,color:'#64748B'}}>/month</span>
               </div>
-              <div style={{...FI,fontSize:12,color:'rgba(255,255,255,.4)',lineHeight:1.55}}>Billed monthly · Cancel anytime</div>
+              <div style={{...FI,fontSize:12,color:'#7C3AED',fontWeight:600,lineHeight:1.55}}>Founding-member rate · cancel anytime</div>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:24}}>
               {PRO_ITEMS.map(item=>(
                 <div key={item} style={{display:'flex',alignItems:'center',gap:9}}>
                   <CheckCircle2 size={14} color="#7C3AED" strokeWidth={2}/>
-                  <span style={{...FI,fontSize:13.5,color:'rgba(255,255,255,.8)'}}>{item}</span>
+                  <span style={{...FI,fontSize:13.5,color:'#374151'}}>{item}</span>
                 </div>
               ))}
             </div>
@@ -93,8 +92,8 @@ export default function SitePricingPreview() {
         <div style={{background:'#fff',borderRadius:16,border:'1.5px solid #e5e7eb',overflow:'hidden',marginBottom:16}}>
           {/* Header row */}
           <div style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',background:'#f9fafb',borderBottom:'1.5px solid #e5e7eb'}}>
-            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#9ca3af',padding:'10px 20px'}}>Feature</span>
-            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#9ca3af',textAlign:'center',padding:'10px 8px'}}>Free</span>
+            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#64748B',padding:'10px 20px'}}>Feature</span>
+            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#64748B',textAlign:'center',padding:'10px 8px'}}>Free</span>
             <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#7C3AED',textAlign:'center',padding:'10px 20px',background:'rgba(124,58,237,.05)',borderLeft:'1px solid rgba(124,58,237,.12)'}}>Pro ✦</span>
           </div>
           {COMPARE.map(({label,free,pro},i)=>(
@@ -116,7 +115,7 @@ export default function SitePricingPreview() {
         </div>
 
         <div style={{textAlign:'center'}}>
-          <Link href="/pricing" style={{...FI,fontSize:13,color:'#9ca3af',textDecoration:'none',fontWeight:500}}>
+          <Link href="/pricing" style={{...FI,fontSize:13,color:'#64748B',textDecoration:'none',fontWeight:500}}>
             See full pricing & feature comparison →
           </Link>
         </div>

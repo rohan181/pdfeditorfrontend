@@ -30,7 +30,7 @@ const jsonLdApp = {
   '@type': 'WebApplication',
   name: 'PDF Editor',
   url: 'https://www.editpdfai.com/pdf-editor',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Edit any PDF online — add text, images, shapes, highlights, signatures and stamps. Rotate, reorder and delete pages. Free, no signup.',

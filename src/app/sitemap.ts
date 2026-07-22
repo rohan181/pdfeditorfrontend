@@ -6,15 +6,15 @@ function url(
   path: string,
   priority: number,
   changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] = 'monthly',
-  lastModified = '2026-07-19',
+  _lastModified = '2026-07-19',
 ): MetadataRoute.Sitemap[number] {
-  return { url: `${BASE}${path}`, lastModified, changeFrequency, priority }
+  return { url: `${BASE}${path}`, changeFrequency, priority }
 }
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     // ── Home ──────────────────────────────────────────────────────────────────
-    url('/',                    1.0, 'weekly',   '2026-07-19'),
+    url('/',                    1.0, 'weekly',   '2026-07-22'),
 
     // ── Flagship tools ────────────────────────────────────────────────────────
     url('/ai-pdf-form-filler',  0.95, 'monthly', '2026-07-19'),

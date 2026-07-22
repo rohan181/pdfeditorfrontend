@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'PDF Signer',
   url: 'https://www.editpdfai.com/pdf-signer',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Sign PDF documents online for free. Draw, type or upload your signature and place it anywhere on the PDF.',

@@ -56,7 +56,7 @@ export default function SiteFAQ() {
       ` }} />
       <div style={{maxWidth:720,margin:'0 auto'}}>
         <div style={{marginBottom:40,textAlign:'center'}}>
-          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>FAQ</div>
+          <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>FAQ</div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,40px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:0}}>
             Common questions
           </h2>

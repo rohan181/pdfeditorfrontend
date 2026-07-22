@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'Delete PDF Pages',
   url: 'https://www.editpdfai.com/delete-pages',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Delete pages from a PDF online for free. Select and remove single pages, multiple pages or a page range.',

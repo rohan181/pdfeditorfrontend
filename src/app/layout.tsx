@@ -58,9 +58,6 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  verification: {
-    google: 'PASTE_YOUR_GOOGLE_VERIFICATION_CODE_HERE',
-  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

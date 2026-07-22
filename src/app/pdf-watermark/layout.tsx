@@ -30,7 +30,7 @@ const jsonLdApp = {
   '@type': 'WebApplication',
   name: 'PDF Watermarker',
   url: 'https://www.editpdfai.com/pdf-watermark',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Add custom text or image watermarks to any PDF online. Control opacity, angle, position, color and font size. Free, no signup.',

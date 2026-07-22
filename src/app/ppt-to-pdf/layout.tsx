@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'PowerPoint to PDF Converter',
   url: 'https://www.editpdfai.com/ppt-to-pdf',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Convert PowerPoint presentations to PDF online for free. Preserves fonts, images and all slides.',

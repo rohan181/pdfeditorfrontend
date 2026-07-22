@@ -34,7 +34,7 @@ const TIER_BADGE: Record<ToolTier, { label: string; bg: string; color: string }>
 
 export default function SitePopularTools() {
   return (
-    <section style={{background:'#fff',padding:'72px 28px 60px',borderTop:'1px solid #E2E8F0'}}>
+    <section style={{background:'#fff',padding:'64px 28px 32px',borderTop:'1px solid #E2E8F0'}}>
       <div style={{maxWidth:1100,margin:'0 auto'}}>
         <div style={{marginBottom:36}}>
           <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
@@ -43,6 +43,13 @@ export default function SitePopularTools() {
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,38px)',fontWeight:800,color:'#0F172A',letterSpacing:'-0.04em',lineHeight:1,margin:0}}>
             Popular tools
           </h2>
+          <p style={{...FI,fontSize:15,color:'#64748B',lineHeight:1.7,maxWidth:720,margin:'16px 0 0'}}>
+            EditPDF AI is a browser-based PDF workspace for <Link href="/pdf-editor" style={{color:'#2563EB',fontWeight:600}}>editing PDFs</Link>,{' '}
+            <Link href="/pdf-signer" style={{color:'#2563EB',fontWeight:600}}>filling and signing forms</Link>,{' '}
+            <Link href="/pdf-compressor" style={{color:'#2563EB',fontWeight:600}}>compressing files</Link>, organizing pages, and converting documents.
+            Core tools work without an account, while optional AI tools can <Link href="/pdf-ocr" style={{color:'#7C3AED',fontWeight:600}}>OCR scanned pages</Link>,{' '}
+            <Link href="/pdf-summarizer" style={{color:'#7C3AED',fontWeight:600}}>summarize documents</Link>, translate content, and automate form filling.
+          </p>
         </div>
         <div style={{display:'flex',flexWrap:'wrap',gap:12}}>
           {popular.map(({label,href,Icon,tier,kind})=>{

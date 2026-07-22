@@ -4,8 +4,8 @@ import SitePopularTools from '@/components/SitePopularTools'
 import SiteUseCases from '@/components/SiteUseCases'
 import SitePrivacyNote from '@/components/SitePrivacyNote'
 import SitePricingPreview from '@/components/SitePricingPreview'
-import HomeScroll from '@/components/HomeScroll'
-import HomeAllTools from '@/components/HomeAllTools'
+import LazyHomeScroll from '@/components/LazyHomeScroll'
+import LazyHomeAllTools from '@/components/LazyHomeAllTools'
 import SiteFAQ from '@/components/SiteFAQ'
 import SiteCTA from '@/components/SiteCTA'
 import SiteFooter from '@/components/SiteFooter'
@@ -26,23 +26,45 @@ export const metadata: Metadata = {
 const jsonLd = [
   {
     '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
+    '@type': 'WebApplication',
+    '@id': 'https://www.editpdfai.com/#webapp',
     name: 'EditPDF AI',
     url: 'https://www.editpdfai.com',
-    applicationCategory: 'ProductivityApplication',
-    operatingSystem: 'Web',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    applicationCategory: 'UtilitiesApplication',
+    operatingSystem: 'Any',
+    browserRequirements: 'Requires a modern web browser with JavaScript enabled.',
+    isAccessibleForFree: true,
+    provider: { '@id': 'https://www.editpdfai.com/#organization' },
+    featureList: [
+      'Edit and annotate PDF files',
+      'Fill and sign PDF forms',
+      'Merge, split, compress and organize PDF pages',
+      'Convert PDF files to and from common document formats',
+      'OCR, translate and summarize PDF documents with AI',
+    ],
+    offers: [
+      { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD', url: 'https://www.editpdfai.com/pdf-editor' },
+      { '@type': 'Offer', name: 'Pro', price: '1', priceCurrency: 'USD', url: 'https://www.editpdfai.com/pricing' },
+    ],
     description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — free, no account needed.',
   },
   {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': 'https://www.editpdfai.com/#organization',
     name: 'EditPDF AI',
     alternateName: 'EditPDF',
     url: 'https://www.editpdfai.com',
-    logo: 'https://www.editpdfai.com/logo.png',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://www.editpdfai.com/logo-square.svg',
+      contentUrl: 'https://www.editpdfai.com/logo-square.svg',
+      width: 512,
+      height: 512,
+    },
     sameAs: [
       'https://twitter.com/editpdfai',
+      'https://www.linkedin.com/company/editpdfai/',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
@@ -53,16 +75,11 @@ const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': 'https://www.editpdfai.com/#website',
     name: 'EditPDF AI',
     url: 'https://www.editpdfai.com',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: 'https://www.editpdfai.com/?q={search_term_string}',
-      },
-      'query-input': 'required name=search_term_string',
-    },
+    inLanguage: 'en',
+    publisher: { '@id': 'https://www.editpdfai.com/#organization' },
   },
 ]
 
@@ -74,11 +91,11 @@ export default function HomePage() {
       ))}
       <AppleHome />
       <SitePopularTools />
+      <LazyHomeScroll />
+      <LazyHomeAllTools />
       <SiteUseCases />
       <SitePrivacyNote />
       <SitePricingPreview />
-      <HomeScroll />
-      <HomeAllTools />
       <SiteFAQ />
       <SiteCTA />
       <SiteFooter />

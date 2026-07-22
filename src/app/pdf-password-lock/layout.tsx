@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'PDF Password Lock',
   url: 'https://www.editpdfai.com/pdf-password-lock',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Add a password to any PDF instantly with AES-256 encryption. Free, runs in your browser, no account required.',

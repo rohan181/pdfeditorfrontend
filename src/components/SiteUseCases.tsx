@@ -1,4 +1,3 @@
-'use client'
 import Link from 'next/link'
 import { GraduationCap, Briefcase, FilePen, Building2, FlaskConical } from 'lucide-react'
 
@@ -63,7 +62,7 @@ export default function SiteUseCases() {
     <section style={{background:'#F8FAFC',padding:'88px 28px 80px',borderTop:'1px solid #E2E8F0'}}>
       <div style={{maxWidth:1200,margin:'0 auto'}}>
         <div style={{marginBottom:48}}>
-          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
+          <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
             Use cases
           </div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(26px,3.5vw,44px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 12px'}}>
@@ -88,11 +87,9 @@ export default function SiteUseCases() {
                 <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
                   {tools.map(t=>(
                     <Link key={t.name} href={t.href} style={{textDecoration:'none'}}>
-                      <span style={{...MONO,fontSize:9,fontWeight:700,padding:'3px 8px',borderRadius:99,
+                      <span className="use-case-tool" style={{...MONO,fontSize:9,fontWeight:700,padding:'3px 8px',borderRadius:99,
                         background:bg,color,letterSpacing:'0.04em',display:'inline-block',
-                        transition:'opacity .12s'}}
-                        onMouseEnter={e=>(e.currentTarget as HTMLElement).style.opacity='.7'}
-                        onMouseLeave={e=>(e.currentTarget as HTMLElement).style.opacity='1'}>
+                        transition:'opacity .12s'}}>
                         {t.name}
                       </span>
                     </Link>

@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'Image to PDF Converter',
   url: 'https://www.editpdfai.com/image-to-pdf',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Convert JPG, PNG, WebP and other images to PDF online for free. Combine multiple images into one PDF.',

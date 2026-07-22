@@ -175,6 +175,7 @@ body { overflow-x:clip; }
 .filter-tab-btn:active { transform:scale(.94); }
 
 .pop-tool-link:hover { background:var(--hl-bg); border-color:var(--hl-border); transform:translateY(-2px); box-shadow:0 6px 20px var(--hl-shadow); transition:all .18s; }
+.use-case-tool:hover { opacity:.7; }
 
 /* responsive */
 .r-feat    { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
@@ -251,4 +252,3 @@ body { overflow-x:clip; }
   .scr-url    { display:none !important; }
   .scr-hint   { display:none !important; }
 }
-

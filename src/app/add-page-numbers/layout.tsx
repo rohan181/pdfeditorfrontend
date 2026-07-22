@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'Add Page Numbers to PDF',
   url: 'https://www.editpdfai.com/add-page-numbers',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Add page numbers to PDF documents online for free. Choose position, font, size and starting number.',

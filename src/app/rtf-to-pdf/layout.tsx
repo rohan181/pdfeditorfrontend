@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'RTF to PDF Converter',
   url: 'https://www.editpdfai.com/rtf-to-pdf',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Convert RTF (Rich Text Format) files to PDF online for free. Preserves bold, italic, fonts and formatting.',

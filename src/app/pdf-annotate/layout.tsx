@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'PDF Annotate',
   url: 'https://www.editpdfai.com/pdf-annotate',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Annotate PDF documents online for free. Highlight text, add comments, draw shapes, sticky notes and freehand markup.',

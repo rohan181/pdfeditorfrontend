@@ -8,6 +8,17 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig = {
   compress: true,
 
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'editpdfai.com' }],
+        destination: 'https://www.editpdfai.com/:path*',
+        permanent: true,
+      },
+    ]
+  },
+
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

@@ -14,7 +14,6 @@ export default function robots(): MetadataRoute.Robots {
           '/cancel',
           '/sign-in',
           '/sign-up',
-          '/_next/',
           '/trpc/',
         ],
       },

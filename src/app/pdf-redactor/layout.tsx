@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'PDF Redactor',
   url: 'https://www.editpdfai.com/pdf-redactor',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Redact sensitive information from PDF files online for free. Permanently black out names, addresses, SSNs and confidential data.',

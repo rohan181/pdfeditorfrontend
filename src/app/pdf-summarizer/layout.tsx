@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'AI PDF Summarizer',
   url: 'https://www.editpdfai.com/pdf-summarizer',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Summarize any PDF document with AI in seconds. Get concise key points, chapter summaries and action items.',

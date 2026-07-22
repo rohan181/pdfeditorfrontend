@@ -368,6 +368,9 @@ function Nav() {
             <div onMouseEnter={openMenu} onMouseLeave={closeMenu} style={{position:'relative'}}>
               <button
                 onClick={()=>setToolsOpen(v=>!v)}
+                aria-expanded={toolsOpen}
+                aria-controls="desktop-tools-menu"
+                aria-haspopup="true"
                 style={{
                   display:'flex',alignItems:'center',gap:4,
                   padding:'5px 11px',background:toolsOpen?'rgba(0,0,0,.05)':'transparent',
@@ -426,7 +429,7 @@ function Nav() {
             )}
             <Link href="/pdf-editor" className="desk nav-cta-btn"
               style={{...FI,display:'inline-flex',alignItems:'center',gap:6,padding:'7px 16px',
-                background:'#1d1d1f',color:'#fff',borderRadius:99,fontSize:12.5,fontWeight:700,
+                background:'#2563EB',color:'#fff',borderRadius:99,fontSize:12.5,fontWeight:700,
                 textDecoration:'none',letterSpacing:'-0.02em',flexShrink:0}}>
               <Upload size={12} strokeWidth={2.5}/> Open Editor
             </Link>
@@ -452,13 +455,16 @@ function Nav() {
       <AnimatePresence>
         {toolsOpen && (
           <>
-            <motion.div
+          <motion.div
+              aria-hidden="true"
               initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:.15}}
               onClick={()=>setToolsOpen(false)}
               style={{position:'fixed',inset:'56px 0 0',zIndex:298,
                 background:'rgba(0,0,0,.18)',backdropFilter:'blur(2px)'}}
             />
             <motion.div
+              id="desktop-tools-menu"
+              role="menu"
               initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}}
               transition={{duration:.18,ease:[.22,1,.36,1]}}
               onMouseEnter={keepMenu} onMouseLeave={closeMenu}
@@ -652,7 +658,7 @@ function Nav() {
               <div style={{padding:'16px 20px',marginTop:'auto'}}>
                 <Link href="/pdf-editor" onClick={()=>setMobOpen(false)}
                   style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:8,
-                    padding:'16px',background:'#1d1d1f',color:'#fff',borderRadius:14,
+                    padding:'16px',background:'#2563EB',color:'#fff',borderRadius:14,
                     fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.02em'}}>
                   <Upload size={16} strokeWidth={2.5}/> Open Editor
                 </Link>
@@ -678,7 +684,6 @@ function Hero() {
       {/* Ambient glows */}
       <div style={{position:'absolute',top:'-20%',left:'-10%',width:700,height:700,borderRadius:'50%',background:'radial-gradient(circle, rgba(59,130,246,.10) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
       <div style={{position:'absolute',bottom:'-15%',right:'-5%',width:600,height:600,borderRadius:'50%',background:'radial-gradient(circle, rgba(139,92,246,.08) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
-      <div style={{position:'absolute',top:'30%',right:'20%',width:400,height:400,borderRadius:'50%',background:'radial-gradient(circle, rgba(59,130,246,.05) 0%, transparent 70%)',filter:'blur(60px)',pointerEvents:'none'}}/>
 
       {/* Content grid */}
       <div style={{maxWidth:1200,margin:'0 auto',padding:'0 clamp(16px,5vw,48px)',width:'100%',position:'relative',zIndex:2}}>
@@ -690,7 +695,7 @@ function Hero() {
             <motion.div initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.1}}
               style={{display:'flex',alignItems:'center',gap:10,marginBottom:32}}>
               <span style={{width:5,height:5,borderRadius:'50%',background:'#3B82F6',display:'inline-block',animation:'pdot 2s ease-in-out infinite'}}/>
-              <span style={{...MONO,fontSize:10.5,color:'rgba(0,0,0,.38)',letterSpacing:'0.14em',textTransform:'uppercase'}}>Edit smarter. Finish faster.</span>
+              <span style={{...MONO,fontSize:10.5,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase'}}>Edit smarter. Finish faster.</span>
             </motion.div>
 
             {/* Headline — SEO-optimised H1 */}
@@ -717,8 +722,8 @@ function Hero() {
               className="hero-ctas">
               <Mag>
                 <Link href="/pdf-editor" className="hero-upload-btn"
-                  style={{...FI,display:'inline-flex',alignItems:'center',gap:10,padding:'16px 32px',background:RED,color:'#fff',borderRadius:99,fontSize:16,fontWeight:800,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:`0 6px 32px ${RED}55`}}>
-                  <Upload size={16} strokeWidth={2.5}/> Upload PDF
+                  style={{...FI,display:'inline-flex',alignItems:'center',gap:10,padding:'16px 32px',background:'#2563EB',color:'#fff',borderRadius:99,fontSize:16,fontWeight:800,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:'0 6px 32px rgba(37,99,235,.35)'}}>
+                  <Upload size={16} strokeWidth={2.5}/> Open PDF Editor
                 </Link>
               </Mag>
               <Mag>
@@ -746,28 +751,10 @@ function Hero() {
             </motion.div>
           </div>
 
-          {/* ── RIGHT: browser mockup with floating chips ── */}
+          {/* ── RIGHT: browser mockup ── */}
           <div className="hero-visual" style={{position:'relative',overflow:'visible'}}>
             {/* Glow behind frame */}
-            <div style={{position:'absolute',inset:-60,background:'radial-gradient(ellipse, rgba(226,75,74,.08) 0%, rgba(99,102,241,.06) 50%, transparent 70%)',filter:'blur(40px)',pointerEvents:'none'}}/>
-
-            {/* Feature chips */}
-            {([
-              { label:'AI Summarize', Icon:Sparkles,  color:'#7c3aed', delay:1.0, pos:{ top:'-16px',  left:'-20px'  } },
-              { label:'E-Sign',       Icon:PenLine,   color:RED,       delay:1.2, pos:{ bottom:'70px', left:'-24px'  } },
-              { label:'PDF → Word',   Icon:FileType,  color:'#2563eb', delay:1.4, pos:{ top:'38%',     right:'-22px' } },
-            ] as const).map(({label,Icon,color,delay,pos})=>(
-              <motion.div key={label}
-                initial={{opacity:0,scale:0.8,y:8}} animate={{opacity:1,scale:1,y:0}}
-                transition={{duration:.45,ease:[0.22,1,0.36,1] as [number,number,number,number],delay}}
-                style={{position:'absolute',display:'flex',alignItems:'center',gap:6,padding:'7px 12px',
-                  background:'#fff',borderRadius:99,boxShadow:'0 4px 16px rgba(0,0,0,.08)',
-                  border:'1px solid #f0f0f0',...FI,fontSize:11,fontWeight:600,color,
-                  whiteSpace:'nowrap',zIndex:10,...pos}}>
-                <Icon size={12} strokeWidth={2.5} color={color}/>
-                {label}
-              </motion.div>
-            ))}
+            <div style={{position:'absolute',inset:-60,background:'radial-gradient(ellipse, rgba(59,130,246,.08) 0%, rgba(139,92,246,.06) 50%, transparent 70%)',filter:'blur(40px)',pointerEvents:'none'}}/>
 
             {/* Browser — entry animation + infinite float */}
             <motion.div
@@ -792,10 +779,10 @@ function Hero() {
         </div>
         <div className="desk" style={{gap:24}}>
           {['35+ Tools','Free PDF Tools','AI: 5/day Free','Pro: Unlimited AI'].map(t=>(
-            <span key={t} style={{...MONO,fontSize:10,color:'#bbb',letterSpacing:'0.08em',textTransform:'uppercase'}}>{t}</span>
+            <span key={t} style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.08em',textTransform:'uppercase'}}>{t}</span>
           ))}
         </div>
-        <span style={{...MONO,fontSize:10,color:'#bbb',letterSpacing:'0.08em',textTransform:'uppercase'}}>Popular tools below</span>
+        <span style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.08em',textTransform:'uppercase'}}>Popular tools below</span>
       </motion.div>
     </section>
   )
@@ -823,7 +810,7 @@ const DEMO_STEPS = [
               <Upload size={24} color="#6366f1" strokeWidth={1.6}/>
             </div>
             <div style={{...FI,fontSize:14,fontWeight:700,color:'#1d1d1f',marginBottom:4}}>Drop your PDF here</div>
-            <div style={{...FI,fontSize:12,color:'#9ca3af',marginBottom:16}}>or click to browse · up to 100 MB</div>
+            <div style={{...FI,fontSize:12,color:'#64748B',marginBottom:16}}>or click to browse · up to 100 MB</div>
             <motion.div animate={{width:['0%','72%']}} transition={{duration:1.4,delay:.6,ease:[.22,1,.36,1]}}
               style={{height:3,borderRadius:99,background:'linear-gradient(90deg,#6366f1,#818cf8)',margin:'0 auto'}}/>
           </div>
@@ -865,7 +852,7 @@ const DEMO_STEPS = [
           </div>
           {fields.map(({label,val,w,sig},i)=>(
             <div key={label}>
-              <div style={{...MONO,fontSize:9,color:'#9ca3af',marginBottom:3,letterSpacing:'0.06em',textTransform:'uppercase'}}>{label}</div>
+              <div style={{...MONO,fontSize:9,color:'#64748B',marginBottom:3,letterSpacing:'0.06em',textTransform:'uppercase'}}>{label}</div>
               <motion.div initial={{width:'0%'}} animate={{width:w}} transition={{delay:.3+i*.28,duration:.5,ease:[.22,1,.36,1]}}
                 style={{height:sig?28:22,borderRadius:6,background:sig?'rgba(124,58,237,.06)':'rgba(124,58,237,.09)',
                   border:`1px solid rgba(124,58,237,.2)`,display:'flex',alignItems:'center',paddingLeft:8,overflow:'hidden'}}>
@@ -892,7 +879,7 @@ const DEMO_STEPS = [
       return (
         <div style={{height:'100%',background:'#fff',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:24,gap:14}}>
           <div style={{width:'100%',maxWidth:320,background:'#fafafa',borderRadius:12,border:'1.5px solid #f0f0f0',padding:18}}>
-            <div style={{...MONO,fontSize:9,color:'#9ca3af',marginBottom:10,letterSpacing:'0.06em',textTransform:'uppercase'}}>Sign here</div>
+            <div style={{...MONO,fontSize:9,color:'#64748B',marginBottom:10,letterSpacing:'0.06em',textTransform:'uppercase'}}>Sign here</div>
             <div style={{height:68,borderRadius:8,background:'rgba(226,75,74,.04)',border:'1.5px dashed rgba(226,75,74,.3)',display:'flex',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden'}}>
               <svg width="200" height="52" viewBox="0 0 200 52" fill="none" style={{position:'absolute'}}>
                 <path
@@ -938,7 +925,7 @@ const DEMO_STEPS = [
           </div>
           <div style={{textAlign:'center'}}>
             <div style={{...FI,fontSize:14,fontWeight:800,color:'#1d1d1f',marginBottom:4}}>form_signed.pdf</div>
-            <div style={{...FI,fontSize:12,color:'#9ca3af',marginBottom:14}}>Ready · 1.2 MB · processed in browser</div>
+            <div style={{...FI,fontSize:12,color:'#64748B',marginBottom:14}}>Ready · 1.2 MB · processed in browser</div>
             <div style={{...FI,display:'inline-flex',alignItems:'center',gap:7,padding:'10px 24px',
                 background:'#16a34a',color:'#fff',borderRadius:99,fontSize:13,fontWeight:700,cursor:'pointer',
                 boxShadow:'0 6px 20px rgba(22,163,74,.35)'}}>
@@ -957,13 +944,15 @@ const DEMO_STEPS = [
   },
 ]
 
-function ProductDemo() {
+export function ProductDemo() {
   const [active, setActive] = useState(0)
+  const [autoPlay, setAutoPlay] = useState(true)
 
   useEffect(() => {
+    if (!autoPlay) return
     const id = setInterval(() => setActive(p => (p + 1) % DEMO_STEPS.length), 3200)
     return () => clearInterval(id)
-  }, [])
+  }, [autoPlay])
 
   const cur = DEMO_STEPS[active]
   const Screen = cur.Screen
@@ -975,7 +964,7 @@ function ProductDemo() {
         {/* Header */}
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.5,ease:E}}
           style={{textAlign:'center',marginBottom:48}}>
-          <div style={{...MONO,fontSize:10,color:'rgba(0,0,0,.35)',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
+          <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
             See it in action
           </div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(26px,3.5vw,44px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 12px'}}>
@@ -989,11 +978,13 @@ function ProductDemo() {
         {/* Step tabs */}
         <div style={{display:'flex',gap:8,justifyContent:'center',marginBottom:32,flexWrap:'wrap'}}>
           {DEMO_STEPS.map(({step,label,color},i) => (
-            <button key={step} onClick={() => setActive(i)}
+            <button key={step} onClick={() => { setActive(i); setAutoPlay(false) }}
+              aria-pressed={i === active}
+              aria-label={`Show step ${step}: ${label}`}
               style={{...FI,display:'flex',alignItems:'center',gap:6,padding:'8px 18px',borderRadius:99,
                 border:`1.5px solid ${i===active ? color : '#e5e7eb'}`,
                 background:i===active ? `${color}10` : '#fff',
-                color:i===active ? color : '#9ca3af',
+                color:i===active ? color : '#64748B',
                 fontSize:13,fontWeight:700,cursor:'pointer',transition:'all .18s',
                 boxShadow:i===active?`0 4px 16px ${color}20`:'none'}}>
               <span style={{...MONO,fontSize:9,fontWeight:800}}>{step}</span>
@@ -1047,7 +1038,7 @@ function ProductDemo() {
               <motion.div animate={{background:cur.color}} transition={{duration:.4}}
                 style={{width:6,height:6,borderRadius:'50%'}}/>
               <span style={{...FI,fontSize:12,fontWeight:600,color:'#1d1d1f'}}>{cur.headline}</span>
-              <span style={{...MONO,fontSize:10,color:'#9ca3af',marginLeft:'auto'}}>
+              <span style={{...MONO,fontSize:10,color:'#64748B',marginLeft:'auto'}}>
                 Step {cur.step} of {DEMO_STEPS.length}
               </span>
             </div>
@@ -1058,7 +1049,7 @@ function ProductDemo() {
         <div style={{textAlign:'center',marginTop:28}}>
           <Link href="/pdf-editor"
             style={{...FI,display:'inline-flex',alignItems:'center',gap:7,fontSize:14,fontWeight:700,
-              color:'#fff',background:'#1d1d1f',textDecoration:'none',
+              color:'#fff',background:'#2563EB',textDecoration:'none',
               padding:'11px 28px',borderRadius:99,letterSpacing:'-0.02em',
               boxShadow:'0 4px 20px rgba(0,0,0,.14)'}}>
             <Upload size={14} strokeWidth={2.5}/> Try it free — no account needed
@@ -1077,7 +1068,6 @@ export default function AppleHome() {
     <div style={{background:'#fff'}}>
       <Nav />
       <Hero />
-      <ProductDemo />
     </div>
   )
 }

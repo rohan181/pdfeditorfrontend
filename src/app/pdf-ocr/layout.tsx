@@ -27,7 +27,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: 'PDF OCR',
   url: 'https://www.editpdfai.com/pdf-ocr',
-  applicationCategory: 'ProductivityApplication',
+  applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Convert scanned PDFs and images to searchable, editable text with AI OCR. Supports 100+ languages.',
