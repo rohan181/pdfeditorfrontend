@@ -592,6 +592,7 @@ function Nav() {
 
             {/* Panel */}
             <motion.div
+              className="mobile-nav-drawer"
               initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}}
               transition={{duration:.25,ease:E}}
               style={{position:'fixed',top:56,right:0,bottom:0,width:'100%',maxWidth:360,

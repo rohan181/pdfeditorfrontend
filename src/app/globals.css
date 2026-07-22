@@ -89,9 +89,10 @@ textarea:focus { outline: none; }
 button:disabled, [aria-disabled="true"] { opacity:.55; cursor:not-allowed !important; }
 a, button { -webkit-tap-highlight-color:transparent; }
 
-/* ── Safe area on notched phones ───────────────────────────────────────────── */
+/* Safe areas are scoped to the fixed mobile surfaces. Applying inset padding
+   to every nav changes the header height and can clip its controls on iOS. */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  nav { padding-bottom: max(4px, env(safe-area-inset-bottom)) !important; }
+  .mobile-nav-drawer { padding-bottom:max(8px,env(safe-area-inset-bottom)); }
 }
 
 /* ── Animations ─────────────────────────────────────────────────────────────── */
@@ -294,6 +295,11 @@ body { overflow-x:clip; }
 @supports (height:100dvh){ .scr-sticky{ height:100dvh; } }
 
 @media(max-width:768px){
+  .home-nav-inner {
+    padding-left:max(12px,env(safe-area-inset-left)) !important;
+    padding-right:max(12px,env(safe-area-inset-right)) !important;
+  }
+  .mobile-nav-drawer { width:min(100%,360px) !important; }
   .scr-sticky { padding-top:54px; box-sizing:border-box; }
   .scr-row    { flex-direction:column !important; gap:12px !important; padding:16px 20px 0 !important; align-items:stretch !important; justify-content:flex-start !important; }
   .scr-left   { width:100% !important; }
@@ -327,7 +333,11 @@ body { overflow-x:clip; }
 }
 
 @media(max-width:360px){
-  .home-nav-inner { padding-left:10px !important; padding-right:10px !important; gap:6px; }
+  .home-nav-inner {
+    padding-left:max(8px,env(safe-area-inset-left)) !important;
+    padding-right:max(8px,env(safe-area-inset-right)) !important;
+    gap:4px;
+  }
   .home-nav-logo { margin-right:0 !important; }
   .home-nav-logo img { height:36px !important; max-width:104px; }
   .nav-editor-button { display:inline-flex !important; padding:8px 12px !important; min-height:40px; }
