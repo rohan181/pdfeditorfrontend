@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Globe, Server, Shield, CreditCard, ArrowRight } from 'lucide-react'
+import { Globe, Server, Shield, ArrowRight } from 'lucide-react'
 
 const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
@@ -8,7 +8,6 @@ const CARDS = [
   { Icon: Globe,      title: 'Browser-based processing', desc: 'PDF editing, compression, signing and page tools all run directly in your browser. Your file never leaves your device.' },
   { Icon: Server,     title: 'No PDF storage',           desc: 'We do not store your documents on our servers. When you close the tab, your PDF is gone — permanently.' },
   { Icon: Shield,     title: 'Raw PDFs never sent to AI', desc: 'AI features extract only the text context needed. Your raw PDF binary is never transmitted to any AI model.' },
-  { Icon: CreditCard, title: 'Secure Stripe payments',   desc: 'All billing is handled by Stripe — the global standard for payment security. We never see or store your card details.' },
 ]
 
 export default function SitePrivacyNote() {
@@ -20,16 +19,16 @@ export default function SitePrivacyNote() {
             Privacy &amp; Security
           </div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,40px)',fontWeight:800,color:'#F8FAFC',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 12px'}}>
-            Your files stay private. Always.
+            Private Browser-Based PDF Processing
           </h2>
           <p style={{...FI,fontSize:15,color:'#CBD5E1',margin:'0 auto',maxWidth:440,lineHeight:1.65}}>
             Privacy is not a feature — it is the foundation of how EditPDF AI is built.
           </p>
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14,marginBottom:28}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:0,marginBottom:32,borderTop:'1px solid rgba(255,255,255,.1)',borderBottom:'1px solid rgba(255,255,255,.1)'}}>
           {CARDS.map(({Icon,title,desc})=>(
-            <div key={title} style={{background:'rgba(255,255,255,.04)',border:'1px solid rgba(255,255,255,.08)',borderRadius:18,padding:'22px 18px',display:'flex',flexDirection:'column',gap:10}}>
+            <div key={title} style={{padding:'28px clamp(12px,2vw,28px)',display:'flex',flexDirection:'column',gap:10}}>
               <div style={{width:40,height:40,borderRadius:11,background:'rgba(52,211,153,.12)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                 <Icon size={19} color="#34D399" strokeWidth={1.8}/>
               </div>

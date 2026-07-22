@@ -89,6 +89,16 @@ export default function SiteFooter() {
                 </span>
               ))}
             </div>
+            <a
+              href="https://nz.trustpilot.com/review/editpdfai.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 18, color: '#0F172A', fontSize: 12.5, fontWeight: 700, textDecoration: 'none' }}
+              aria-label="Write a review for EditPDF AI on Trustpilot"
+            >
+              <span aria-hidden="true" style={{ color: '#00B67A', fontSize: 17, lineHeight: 1 }}>★</span>
+              Write a review on Trustpilot
+            </a>
             <p style={{ ...MONO, fontSize: 10, color: '#64748B', letterSpacing: '0.04em' }}>
               © {new Date().getFullYear()} EditPDF AI. All rights reserved.
             </p>

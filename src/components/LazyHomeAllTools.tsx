@@ -48,6 +48,39 @@ function ToolsPlaceholder() {
     ['HTML to PDF', '/html-to-pdf'],
   ] as const
 
+  const groups = [
+    {
+      title: 'AI PDF Tools',
+      description: 'Extract, understand and transform document content with OCR, summaries, translation, quizzes and automated form filling.',
+      paths: ['/ai-pdf-form-filler', '/pdf-ocr', '/pdf-summarizer', '/pdf-translator', '/mind-map', '/quiz-creator'],
+    },
+    {
+      title: 'Edit and Annotate PDFs',
+      description: 'Open PDFs in your browser to edit content, review documents, add annotations and create fillable forms.',
+      paths: ['/pdf-editor', '/pdf-viewer', '/pdf-annotate', '/pdf-form-builder'],
+    },
+    {
+      title: 'Manage PDF Pages',
+      description: 'Reorder, crop, rotate, extract, delete and number PDF pages without installing desktop software.',
+      paths: ['/pdf-page-manager', '/pdf-cropper', '/rotate-pdf', '/extract-pages', '/delete-pages', '/add-page-numbers'],
+    },
+    {
+      title: 'Convert PDF Files',
+      description: 'Convert PDFs to editable Word, Excel, PowerPoint and image formats, or create PDFs from common documents and web content.',
+      paths: ['/pdf-to-word', '/pdf-to-excel', '/pdf-to-ppt', '/pdf-to-images', '/word-to-pdf', '/excel-to-pdf', '/ppt-to-pdf', '/image-to-pdf', '/txt-to-pdf', '/rtf-to-pdf', '/odt-to-pdf', '/html-to-pdf'],
+    },
+    {
+      title: 'Protect and Sign PDFs',
+      description: 'Sign documents, add watermarks, redact confidential information and protect PDF files with passwords.',
+      paths: ['/pdf-signer', '/pdf-watermark', '/pdf-redactor', '/pdf-password-lock'],
+    },
+    {
+      title: 'Organize and Compress PDFs',
+      description: 'Reduce file size or combine and separate documents for easier storage, email and sharing.',
+      paths: ['/pdf-compressor', '/pdf-merger', '/pdf-splitter'],
+    },
+  ] as const
+
   return (
     <section
       id="tools"
@@ -57,14 +90,25 @@ function ToolsPlaceholder() {
         <p style={{ margin: '0 0 12px', color: '#64748B', fontSize: 12, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
           All tools
         </p>
-        <h2 style={{ margin: '0 0 32px', color: '#1d1d1f', fontSize: 'clamp(28px,3.5vw,46px)', lineHeight: .96, letterSpacing: '-.05em' }}>
-          35+ tools. One platform.
+        <h2 style={{ margin: '0 0 16px', color: '#1d1d1f', fontSize: 'clamp(28px,3.5vw,46px)', lineHeight: .96, letterSpacing: '-.05em' }}>
+          Edit, Convert and Organize PDFs
         </h2>
-        <nav aria-label="All PDF tools" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12 }}>
-          {tools.map(([label, href]) => (
-            <Link key={href} href={href} style={{ padding: '12px 14px', color: '#334155', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, textDecoration: 'none', fontSize: 13, fontWeight: 600 }}>
-              {label}
-            </Link>
+        <p style={{margin:'0 0 40px',maxWidth:760,color:'#64748B',fontSize:15,lineHeight:1.7}}>
+          Choose from browser-based tools for editing, signing, converting, securing and understanding PDF documents.
+        </p>
+        <nav aria-label="PDF tool categories" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(330px,1fr))', gap: 18 }}>
+          {groups.map(group => (
+            <section key={group.title} style={{padding:22,background:'#fff',border:'1px solid #E2E8F0',borderRadius:16}}>
+              <h3 style={{margin:'0 0 8px',color:'#0F172A',fontSize:18}}>{group.title}</h3>
+              <p style={{margin:'0 0 16px',color:'#64748B',fontSize:13,lineHeight:1.6}}>{group.description}</p>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                {tools.filter(([, href]) => (group.paths as readonly string[]).includes(href)).map(([label, href]) => (
+                  <Link key={href} href={href} style={{padding:'7px 10px',color:'#2563EB',background:'#EFF6FF',borderRadius:8,textDecoration:'none',fontSize:12,fontWeight:600}}>
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </section>
           ))}
         </nav>
       </div>

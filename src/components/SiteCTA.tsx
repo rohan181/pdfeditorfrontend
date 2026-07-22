@@ -6,7 +6,7 @@ const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Men
 
 export default function SiteCTA() {
   return (
-    <section className="site-cta-sec" style={{background:'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)'}}>
+    <section id="final-editor-cta" className="site-cta-sec" style={{background:'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)'}}>
       <style>{`
         .site-cta-sec { padding:88px 28px; }
         .site-cta-btn { transition:gap .2s, opacity .15s; }
@@ -23,6 +23,7 @@ export default function SiteCTA() {
         </h2>
         <div style={{display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
           <Link href="/pdf-editor" className="site-cta-btn"
+            data-editor-cta
             style={{...FI,display:'inline-flex',alignItems:'center',gap:9,padding:'15px 34px',
               background:'#fff',color:'#0F172A',borderRadius:99,fontSize:16,fontWeight:700,
               textDecoration:'none',letterSpacing:'-0.025em',boxShadow:'0 4px 24px rgba(0,0,0,.18)'}}>

@@ -10,10 +10,22 @@ const HomeScroll = dynamic(() => import('./HomeScroll'), {
 
 function HomeScrollPlaceholder() {
   return (
-    <section
-      aria-hidden="true"
-      style={{ minHeight: 'calc(400vh + 160px)', background: '#F5F5F7' }}
-    />
+    <section className="home-scroll-placeholder" aria-hidden="true">
+      <div className="home-scroll-placeholder-inner">
+        <div className="home-scroll-placeholder-copy">
+          <span>See it in action</span>
+          <strong>Everything in your browser</strong>
+          <p>Upload, edit, sign and export your PDF in four simple steps.</p>
+          <div className="home-scroll-placeholder-dots"><i/><i/><i/><i/></div>
+        </div>
+        <div className="home-scroll-placeholder-window">
+          <div className="home-scroll-placeholder-bar"><i/><i/><i/></div>
+          <div className="home-scroll-placeholder-page">
+            <b/><b/><b/><b/>
+          </div>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -31,7 +43,7 @@ export default function LazyHomeScroll() {
         setShouldLoad(true)
         observer.disconnect()
       },
-      { rootMargin: '200px 0px' },
+      { rootMargin: '800px 0px' },
     )
 
     observer.observe(boundary)

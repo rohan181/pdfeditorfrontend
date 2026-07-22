@@ -328,8 +328,8 @@ const NAV_TIER_LABEL = {
 }
 
 const NAV_LINKS = [
-  { label:'AI Tools', href:'/#tools' },
   { label:'Pricing',  href:'/pricing' },
+  { label:'Guides',   href:'/guides' },
 ]
 
 function Nav() {
@@ -339,10 +339,52 @@ function Nav() {
   const [mobToolsExp, setMobToolsExp] = useState(false)
   const [mobCatOpen, setMobCatOpen] = useState<string|null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout>|null>(null)
+  const openTimer = useRef<ReturnType<typeof setTimeout>|null>(null)
+  const toolsTriggerRef = useRef<HTMLButtonElement>(null)
+  const toolsMenuRef = useRef<HTMLDivElement>(null)
 
-  const openMenu  = () => { clearTimeout(closeTimer.current!); setToolsOpen(true) }
+  const openMenu  = () => {
+    clearTimeout(closeTimer.current!)
+    clearTimeout(openTimer.current!)
+    openTimer.current = setTimeout(()=>setToolsOpen(true), 80)
+  }
+  const openMenuNow = (focusFirst = false) => {
+    clearTimeout(closeTimer.current!)
+    clearTimeout(openTimer.current!)
+    setToolsOpen(true)
+    if (focusFirst) setTimeout(()=>toolsMenuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus(), 0)
+  }
   const closeMenu = () => { closeTimer.current = setTimeout(()=>setToolsOpen(false), 120) }
-  const keepMenu  = () => { clearTimeout(closeTimer.current!) }
+  const keepMenu  = () => { clearTimeout(closeTimer.current!); clearTimeout(openTimer.current!) }
+  const closeMenuNow = (restoreFocus = false) => {
+    clearTimeout(closeTimer.current!)
+    clearTimeout(openTimer.current!)
+    setToolsOpen(false)
+    if (restoreFocus) toolsTriggerRef.current?.focus()
+  }
+
+  useEffect(() => () => {
+    clearTimeout(closeTimer.current!)
+    clearTimeout(openTimer.current!)
+  }, [])
+
+  const handleMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      closeMenuNow(true)
+      return
+    }
+    if (!['ArrowDown','ArrowUp','Home','End'].includes(event.key)) return
+    const items = Array.from(toolsMenuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])
+    if (!items.length) return
+    event.preventDefault()
+    const current = items.indexOf(document.activeElement as HTMLElement)
+    const next = event.key === 'Home' ? 0
+      : event.key === 'End' ? items.length - 1
+      : event.key === 'ArrowDown' ? (current + 1) % items.length
+      : (current <= 0 ? items.length : current) - 1
+    items[next]?.focus()
+  }
 
   const { scrollY } = useScroll()
   const navBg = useTransform(scrollY,[0,80],['rgba(255,255,255,0)','rgba(255,255,255,0.96)'])
@@ -353,12 +395,12 @@ function Nav() {
       <motion.header style={{position:'fixed',inset:'0 0 auto',zIndex:300,height:56,
         background:navBg,backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',
         borderBottom:'1px solid rgba(0,0,0,.07)'}}>
-        <div style={{maxWidth:1280,margin:'0 auto',padding:'0 20px',height:'100%',
+        <div className="home-nav-inner" style={{maxWidth:1280,margin:'0 auto',padding:'0 20px',height:'100%',
           display:'flex',alignItems:'center'}}>
 
           {/* Logo */}
-          <Link href="/" style={{display:'flex',alignItems:'center',textDecoration:'none',marginRight:28,flexShrink:0}}>
-            <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{height:60,width:'auto',display:'block'}} priority />
+          <Link href="/" className="home-nav-logo" style={{display:'flex',alignItems:'center',textDecoration:'none',marginRight:28,flexShrink:0}}>
+            <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{height:42,width:'auto',display:'block'}} priority />
           </Link>
 
           {/* Desktop nav */}
@@ -367,7 +409,13 @@ function Nav() {
             {/* Tools dropdown trigger */}
             <div onMouseEnter={openMenu} onMouseLeave={closeMenu} style={{position:'relative'}}>
               <button
-                onClick={()=>setToolsOpen(v=>!v)}
+                ref={toolsTriggerRef}
+                onClick={()=>toolsOpen ? closeMenuNow() : openMenuNow()}
+                onKeyDown={event=>{
+                  if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault(); openMenuNow(true)
+                  } else if (event.key === 'Escape') closeMenuNow(true)
+                }}
                 aria-expanded={toolsOpen}
                 aria-controls="desktop-tools-menu"
                 aria-haspopup="true"
@@ -427,11 +475,12 @@ function Nav() {
                 </div>
               )
             )}
-            <Link href="/pdf-editor" className="desk nav-cta-btn"
+            <Link href="/pdf-editor" className="desk nav-cta-btn nav-editor-desktop"
+              data-editor-cta
               style={{...FI,display:'inline-flex',alignItems:'center',gap:6,padding:'7px 16px',
                 background:'#2563EB',color:'#fff',borderRadius:99,fontSize:12.5,fontWeight:700,
                 textDecoration:'none',letterSpacing:'-0.02em',flexShrink:0}}>
-              <Upload size={12} strokeWidth={2.5}/> Open Editor
+              <Upload size={12} strokeWidth={2.5}/> <span><span className="nav-editor-open-word">Open </span>Editor</span>
             </Link>
             <button className="mob" onClick={()=>{ setMobOpen(o=>!o); if(mobOpen){ setMobToolsExp(false); setMobCatOpen(null); } }}
               aria-label={mobOpen?'Close menu':'Open menu'}
@@ -463,11 +512,14 @@ function Nav() {
                 background:'rgba(0,0,0,.18)',backdropFilter:'blur(2px)'}}
             />
             <motion.div
+              ref={toolsMenuRef}
               id="desktop-tools-menu"
               role="menu"
+              aria-label="PDF tools"
               initial={{opacity:0,y:-10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}}
               transition={{duration:.18,ease:[.22,1,.36,1]}}
               onMouseEnter={keepMenu} onMouseLeave={closeMenu}
+              onKeyDown={handleMenuKeyDown}
               style={{position:'fixed',top:56,left:0,right:0,zIndex:299,
                 background:'#fff',borderBottom:'1px solid rgba(0,0,0,.07)',
                 boxShadow:'0 16px 48px rgba(0,0,0,.1)'}}>
@@ -475,7 +527,7 @@ function Nav() {
                 <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:4}}>
                   {NAV_CATS.map(cat=>(
                     <div key={cat.label}>
-                      <Link href={cat.href} onClick={()=>setToolsOpen(false)} style={{textDecoration:'none'}}>
+                      <Link role="menuitem" href={cat.href} onClick={()=>closeMenuNow()} style={{textDecoration:'none'}}>
                         <div style={{display:'flex',alignItems:'center',gap:7,
                           padding:'6px 8px 8px',marginBottom:4,
                           borderBottom:`2px solid ${cat.color}22`}}>
@@ -489,7 +541,7 @@ function Nav() {
                       {cat.tools.map(tool=>{
                         const badge = NAV_TIER_LABEL[tool.tier]
                         return (
-                          <Link key={tool.name} href={tool.href} onClick={()=>setToolsOpen(false)} style={{textDecoration:'none'}}>
+                          <Link role="menuitem" key={tool.name} href={tool.href} onClick={()=>closeMenuNow()} style={{textDecoration:'none'}}>
                             <div className="nav-tool-row"
                               style={{display:'flex',alignItems:'center',gap:8,
                                 padding:'5px 8px',borderRadius:8,cursor:'pointer'}}>
@@ -515,7 +567,7 @@ function Nav() {
                 </div>
                 <div style={{marginTop:12,paddingTop:10,borderTop:'1px solid #f0f0f0',
                   display:'flex',justifyContent:'flex-end'}}>
-                  <Link href="#tools" onClick={()=>setToolsOpen(false)}
+                  <Link role="menuitem" href="#tools" onClick={()=>closeMenuNow()}
                     style={{...FI,display:'flex',alignItems:'center',gap:5,
                       fontSize:12,fontWeight:600,color:'#6b7280',textDecoration:'none'}}>
                     See all 35+ tools <ArrowRight size={11} strokeWidth={2.5}/>
@@ -676,7 +728,7 @@ function Nav() {
 // ══════════════════════════════════════════════════════════════════════════════
 function Hero() {
   return (
-    <section style={{background:'#fff',minHeight:'100svh',display:'flex',flexDirection:'column',justifyContent:'center',position:'relative',overflow:'hidden',paddingTop:54}}>
+    <section className="home-hero" style={{background:'#fff',minHeight:'100svh',display:'flex',flexDirection:'column',justifyContent:'center',position:'relative',overflow:'hidden',paddingTop:54}}>
 
       {/* Dot grid */}
       <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(rgba(0,0,0,.04) 1px, transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}}/>
@@ -699,7 +751,7 @@ function Hero() {
             </motion.div>
 
             {/* Headline — SEO-optimised H1 */}
-            <motion.h1 variants={MV} initial="hidden" animate="visible"
+            <motion.h1 className="home-hero-title" variants={MV} initial="hidden" animate="visible"
               style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(34px,4.8vw,76px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 24px'}}>
               <span style={{display:'block',overflow:'hidden'}}>
                 <motion.span style={{display:'block'}} variants={WV}>Free Online PDF Editor</motion.span>
@@ -722,6 +774,7 @@ function Hero() {
               className="hero-ctas">
               <Mag>
                 <Link href="/pdf-editor" className="hero-upload-btn"
+                  data-editor-cta
                   style={{...FI,display:'inline-flex',alignItems:'center',gap:10,padding:'16px 32px',background:'#2563EB',color:'#fff',borderRadius:99,fontSize:16,fontWeight:800,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:'0 6px 32px rgba(37,99,235,.35)'}}>
                   <Upload size={16} strokeWidth={2.5}/> Open PDF Editor
                 </Link>

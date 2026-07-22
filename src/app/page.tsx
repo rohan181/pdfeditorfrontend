@@ -6,9 +6,10 @@ import SitePrivacyNote from '@/components/SitePrivacyNote'
 import SitePricingPreview from '@/components/SitePricingPreview'
 import LazyHomeScroll from '@/components/LazyHomeScroll'
 import LazyHomeAllTools from '@/components/LazyHomeAllTools'
-import SiteFAQ from '@/components/SiteFAQ'
+import SiteFAQ, { FAQ_ITEMS } from '@/components/SiteFAQ'
 import SiteCTA from '@/components/SiteCTA'
 import SiteFooter from '@/components/SiteFooter'
+import MobileEditorShortcut from '@/components/MobileEditorShortcut'
 
 export const metadata: Metadata = {
   title: { absolute: 'Free Online PDF Editor – Edit, Sign, Fill & Convert | EditPDF AI' },
@@ -78,6 +79,7 @@ const jsonLd = [
     sameAs: [
       'https://twitter.com/editpdfai',
       'https://www.linkedin.com/company/editpdfai/',
+      'https://www.trustpilot.com/review/editpdfai.com',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
@@ -93,6 +95,24 @@ const jsonLd = [
     url: 'https://www.editpdfai.com',
     inLanguage: 'en',
     publisher: { '@id': 'https://www.editpdfai.com/#organization' },
+    hasPart: [
+      { '@id': 'https://www.editpdfai.com/pdf-editor', '@type': 'WebPage', name: 'PDF Editor' },
+      { '@id': 'https://www.editpdfai.com/pdf-compressor', '@type': 'WebPage', name: 'PDF Compressor' },
+      { '@id': 'https://www.editpdfai.com/pdf-merger', '@type': 'WebPage', name: 'PDF Merger' },
+      { '@id': 'https://www.editpdfai.com/pdf-signer', '@type': 'WebPage', name: 'PDF Signer' },
+      { '@id': 'https://www.editpdfai.com/pdf-ocr', '@type': 'WebPage', name: 'PDF OCR Scanner' },
+      { '@id': 'https://www.editpdfai.com/ai-pdf-form-filler', '@type': 'WebPage', name: 'AI PDF Form Filler' },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': 'https://www.editpdfai.com/#faq',
+    mainEntity: FAQ_ITEMS.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: q,
+      acceptedAnswer: { '@type': 'Answer', text: a },
+    })),
   },
 ]
 
@@ -112,6 +132,7 @@ export default function HomePage() {
       <SiteFAQ />
       <SiteCTA />
       <SiteFooter />
+      <MobileEditorShortcut />
     </>
   )
 }

@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { useState } from 'react'
 import { GraduationCap, Briefcase, FilePen, Building2, FlaskConical } from 'lucide-react'
 
 const FI = { fontFamily:'var(--font-dm,system-ui,sans-serif)' }
@@ -57,6 +60,9 @@ export default function SiteUseCases() {
       ],
     },
   ]
+  const [active, setActive] = useState(0)
+  const selected = cases[active]
+  const ActiveIcon = selected.Icon
 
   return (
     <section style={{background:'#F8FAFC',padding:'88px 28px 80px',borderTop:'1px solid #E2E8F0'}}>
@@ -73,31 +79,38 @@ export default function SiteUseCases() {
           </p>
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:16}}>
-          {cases.map(({Icon,color,bg,title,desc,tools})=>(
-            <div key={title}
-              style={{background:'#fff',border:'1.5px solid #E2E8F0',borderRadius:20,padding:'24px 20px 20px',
-                display:'flex',flexDirection:'column',gap:12}}>
-              <div style={{width:44,height:44,borderRadius:13,background:bg,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <Icon size={22} color={color} strokeWidth={1.8}/>
-              </div>
-              <div>
-                <div style={{...FI,fontSize:15,fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.03em',marginBottom:6}}>{title}</div>
-                <p style={{...FI,fontSize:13,color:'#6b7280',lineHeight:1.65,margin:'0 0 12px'}}>{desc}</p>
-                <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
-                  {tools.map(t=>(
-                    <Link key={t.name} href={t.href} style={{textDecoration:'none'}}>
-                      <span className="use-case-tool" style={{...MONO,fontSize:9,fontWeight:700,padding:'3px 8px',borderRadius:99,
-                        background:bg,color,letterSpacing:'0.04em',display:'inline-block',
-                        transition:'opacity .12s'}}>
-                        {t.name}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
+        <div className="use-case-tabs" role="tablist" aria-label="Choose a use case" style={{display:'flex',gap:8,overflowX:'auto',paddingBottom:10,marginBottom:18}}>
+          {cases.map(({Icon,title,color},i)=>(
+            <button key={title} id={`use-case-tab-${i}`} type="button" role="tab" aria-selected={active===i}
+              aria-controls="use-case-panel" tabIndex={active===i ? 0 : -1} onClick={()=>setActive(i)}
+              onKeyDown={event=>{
+                if (!['ArrowRight','ArrowLeft','Home','End'].includes(event.key)) return
+                event.preventDefault()
+                const next = event.key==='Home' ? 0 : event.key==='End' ? cases.length-1 : event.key==='ArrowRight' ? (i+1)%cases.length : (i-1+cases.length)%cases.length
+                setActive(next)
+                document.getElementById(`use-case-tab-${next}`)?.focus()
+              }}
+              style={{...FI,display:'inline-flex',alignItems:'center',gap:7,padding:'10px 15px',borderRadius:99,border:`1px solid ${active===i?color:'#E2E8F0'}`,background:active===i?`${color}10`:'#fff',color:active===i?color:'#64748B',fontSize:13,fontWeight:700,whiteSpace:'nowrap',cursor:'pointer'}}>
+              <Icon size={15} strokeWidth={2}/>{title}
+            </button>
           ))}
+        </div>
+
+        <div className="use-case-panel" id="use-case-panel" role="tabpanel" aria-labelledby={`use-case-tab-${active}`} style={{background:'#fff',border:'1px solid #E2E8F0',borderRadius:20,padding:'clamp(22px,4vw,38px)',display:'grid',gridTemplateColumns:'auto 1fr',gap:22,alignItems:'start'}}>
+          <div style={{width:54,height:54,borderRadius:16,background:selected.bg,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <ActiveIcon size={26} color={selected.color} strokeWidth={1.8}/>
+          </div>
+          <div>
+            <h3 style={{...FI,fontSize:22,fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.03em',margin:'0 0 8px'}}>{selected.title}</h3>
+            <p style={{...FI,fontSize:15,color:'#64748B',lineHeight:1.7,maxWidth:660,margin:'0 0 18px'}}>{selected.desc}</p>
+            <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+              {selected.tools.map(t=>(
+                <Link key={t.name} href={t.href} className="use-case-tool" style={{...MONO,fontSize:10,fontWeight:700,padding:'7px 10px',borderRadius:9,background:selected.bg,color:selected.color,textDecoration:'none',letterSpacing:'0.03em'}}>
+                  {t.name}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

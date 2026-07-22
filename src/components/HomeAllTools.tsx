@@ -160,7 +160,7 @@ export default function HomeAllTools() {
   const handleTabClick = useCallback((label: string) => { setActiveTab(label); setSearch(''); setShowAllCats(false) }, [])
 
   return (
-    <section id="tools" style={{background:'#f8f8fa', borderTop:'1px solid #f0f0f0', padding:'88px 28px 100px'}}>
+    <section id="tools" className="tools-directory-enter" style={{background:'#f8f8fa', borderTop:'1px solid #f0f0f0', padding:'88px 28px 100px', minHeight:900}}>
       <div style={{maxWidth:1240, margin:'0 auto'}}>
 
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'100px'}} transition={{duration:.5,ease:E}}
@@ -169,8 +169,11 @@ export default function HomeAllTools() {
             All Tools
           </div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)', fontSize:'clamp(28px,3.5vw,46px)', fontWeight:800, color:'#1d1d1f', letterSpacing:'-0.05em', lineHeight:.96, margin:0}}>
-            35+ tools. One platform.
+            Edit, Convert and Organize PDFs
           </h2>
+          <p style={{...FI,margin:'16px 0 0',maxWidth:760,color:'#64748B',fontSize:15,lineHeight:1.7}}>
+            Choose from browser-based tools for editing, signing, converting, securing and understanding PDF documents.
+          </p>
         </motion.div>
 
         <motion.div initial={{opacity:0,y:10}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:.4,ease:E}}

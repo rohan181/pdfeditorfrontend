@@ -5,11 +5,11 @@ import Link from 'next/link'
 import {
   motion, AnimatePresence,
   useScroll, useTransform,
-  useMotionValue, useSpring,
+  useMotionValue, useSpring, useReducedMotion,
 } from 'framer-motion'
 import {
   Upload, Sparkles, PenTool, Download,
-  Lock, ArrowRight,
+  Lock, ArrowRight, ChevronLeft, ChevronRight,
   FormInput, ScanText, Languages, BrainCircuit,
   MousePointer2, FileText, Layers,
   PenLine, FileType, FileSpreadsheet, Minimize2, Merge,
@@ -49,7 +49,7 @@ function ScreenDrop() {
             <Upload size={13} strokeWidth={2}/> Choose PDF File
           </div>
         </div>
-        <div style={{...MONO,fontSize:9,color:'#64748B',letterSpacing:'0.1em',textTransform:'uppercase'}}>PDF · Up to 100 MB · Runs in your browser</div>
+        <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.1em',textTransform:'uppercase'}}>PDF · Up to 100 MB · Runs in your browser</div>
       </div>
     </div>
   )
@@ -88,7 +88,7 @@ function ScreenAI() {
               <Icon size={11} color={color} strokeWidth={2}/>
             </div>
             <span style={{...FI,fontSize:11,fontWeight:600,color:'#374151'}}>{label}</span>
-            <span style={{marginLeft:'auto',...MONO,fontSize:8.5,color,letterSpacing:'0.05em',
+            <span style={{marginLeft:'auto',...MONO,fontSize:10,color,letterSpacing:'0.05em',
               animation:`blink-text 1.4s ease-in-out ${delay}s infinite`}}>READY</span>
           </motion.div>
         ))}
@@ -115,7 +115,7 @@ function ScreenEditSign() {
           <div style={{flex:1}}/>
           <div style={{display:'flex',alignItems:'center',gap:5,padding:'3px 8px',background:'rgba(226,75,74,.07)',border:'1px solid rgba(226,75,74,.18)',borderRadius:99}}>
             <PenTool size={8} color={RED} strokeWidth={2}/>
-            <span style={{...MONO,fontSize:8,color:RED,letterSpacing:'0.06em'}}>SIGN</span>
+            <span style={{...MONO,fontSize:10,color:RED,letterSpacing:'0.06em'}}>SIGN</span>
           </div>
         </div>
         {[100,85,92,70,88,60].map((w,i)=>(
@@ -125,7 +125,7 @@ function ScreenEditSign() {
               boxShadow:i===2?'0 0 0 2px rgba(99,102,241,.1)':'none'}}/>
         ))}
         <div style={{marginTop:12,padding:'9px 12px',border:'1px dashed #e4e4e7',borderRadius:8,background:'#fafafa'}}>
-          <div style={{fontSize:7,color:'#64748B',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>Signature</div>
+          <div style={{fontSize:10,color:'#64748B',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>Signature</div>
           <svg width="140" height="24" viewBox="0 0 140 24" fill="none">
             <path d="M6 16 C16 4 24 20 34 12 C44 4 56 18 68 9 C79 2 90 16 100 9 C109 3 120 15 130 11"
               stroke={RED} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="400"
@@ -161,7 +161,7 @@ function ScreenExport() {
               <Icon size={13} color={color} strokeWidth={2}/>
             </div>
             <span style={{...FI,fontSize:11,fontWeight:600,color:'#374151'}}>{label}</span>
-            <span style={{marginLeft:'auto',...MONO,fontSize:8.5,color,background:`${color}12`,padding:'2px 6px',borderRadius:4}}>{ext}</span>
+            <span style={{marginLeft:'auto',...MONO,fontSize:10,color,background:`${color}12`,padding:'2px 6px',borderRadius:4}}>{ext}</span>
           </motion.div>
         ))}
         <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:.5}}
@@ -175,19 +175,21 @@ function ScreenExport() {
 }
 
 const GSTEPS = [
-  { n:'01', color:'#818cf8', label:'Upload',      headline:'Upload your PDF',           body:'Upload most PDFs instantly. Drag it in or click to browse — no account needed.',   Screen:ScreenDrop     },
-  { n:'02', color:'#a78bfa', label:'AI Tools',    headline:'Use AI tools instantly',    body:'Summarize, fill forms, OCR scan, translate, and more — all AI-powered.',            Screen:ScreenAI       },
-  { n:'03', color:RED,       label:'Edit & Sign', headline:'Edit, annotate, or sign',   body:'Add text, highlights, comments, and your e-signature in seconds.',                   Screen:ScreenEditSign },
-  { n:'04', color:'#22c55e', label:'Export',      headline:'Download your file',         body:'Convert to Word, Excel, or compress. Your finished file is ready to download.',  Screen:ScreenExport   },
+  { n:'01', color:'#818cf8', label:'Upload',      headline:'Upload your PDF',         body:'Upload most PDFs instantly. Drag it in or click to browse — no account needed.', href:'/pdf-editor',         cta:'Open PDF Editor', Screen:ScreenDrop     },
+  { n:'02', color:'#a78bfa', label:'AI Tools',    headline:'Use AI tools instantly',  body:'Summarize, fill forms, OCR scan, translate, and more — all AI-powered.',          href:'/ai-pdf-form-filler', cta:'Try AI Form Filler', Screen:ScreenAI       },
+  { n:'03', color:RED,       label:'Edit & Sign', headline:'Edit, annotate, or sign', body:'Add text, highlights, comments, and your e-signature in seconds.',                 href:'/pdf-signer',         cta:'Sign a PDF', Screen:ScreenEditSign },
+  { n:'04', color:'#22c55e', label:'Export',      headline:'Download your file',       body:'Convert to Word, Excel, or compress. Your finished file is ready to download.',   href:'/pdf-to-word',        cta:'Explore conversion', Screen:ScreenExport   },
 ]
 
 export default function HomeScroll() {
   const pin = useRef<HTMLDivElement>(null)
   const [step, setStep] = useState(0)
+  const reduceMotion = useReducedMotion()
 
   const { scrollYProgress } = useScroll({ target: pin, offset: ['start start', 'end end'] })
 
   useEffect(() => {
+    if (reduceMotion) return
     let rafId = 0
     const unsub = scrollYProgress.on('change', p => {
       cancelAnimationFrame(rafId)
@@ -197,7 +199,16 @@ export default function HomeScroll() {
       })
     })
     return () => { unsub(); cancelAnimationFrame(rafId) }
-  }, [scrollYProgress])
+  }, [scrollYProgress, reduceMotion])
+
+  const goToStep = useCallback((next: number) => {
+    const targetStep = Math.max(0, Math.min(GSTEPS.length - 1, next))
+    setStep(targetStep)
+    if (reduceMotion || !pin.current) return
+    const start = pin.current.getBoundingClientRect().top + window.scrollY
+    const distance = pin.current.offsetHeight - window.innerHeight
+    window.scrollTo({ top: start + distance * (targetStep / (GSTEPS.length - 1)), behavior: 'smooth' })
+  }, [reduceMotion])
 
   const hintOpacity = useTransform(scrollYProgress, [0, 0.06], [1, 0])
   const barWidth    = useTransform(scrollYProgress, [0, 1], ['0%', '100%'])
@@ -215,8 +226,10 @@ export default function HomeScroll() {
         </motion.div>
       </div>
 
-      <div ref={pin} style={{height:'400vh',position:'relative',overscrollBehavior:'none'}}>
-      <div className="scr-sticky" style={{top:0,height:'100vh',background:'#F5F5F7',overflow:'hidden',display:'flex',flexDirection:'column'}}>
+      <div ref={pin} data-mobile-shortcut-occluder style={{height:reduceMotion?'auto':'400vh',position:'relative',overscrollBehavior:'none'}}>
+      <div className="scr-sticky" tabIndex={0} aria-label="How EditPDF AI works"
+        onKeyDown={e=>{ if(e.key==='ArrowRight') goToStep(step+1); if(e.key==='ArrowLeft') goToStep(step-1) }}
+        style={{top:0,height:reduceMotion?'auto':'100vh',minHeight:reduceMotion?620:undefined,position:reduceMotion?'relative':undefined,background:'#F5F5F7',overflow:'hidden',display:'flex',flexDirection:'column'}}>
 
         <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(rgba(0,0,0,.03) 1px,transparent 1px)',backgroundSize:'32px 32px',pointerEvents:'none'}}/>
 
@@ -241,11 +254,12 @@ export default function HomeScroll() {
             </AnimatePresence>
 
             <div style={{position:'relative',zIndex:1}}>
-            <div className="scr-dots" style={{display:'flex',gap:7,marginBottom:40}}>
+            <div className="scr-dots" role="tablist" aria-label="Walkthrough steps" style={{display:'flex',gap:7,marginBottom:40}}>
               {GSTEPS.map((s,i)=>(
-                <motion.div key={i}
+                <motion.button key={i} type="button" onClick={()=>goToStep(i)}
+                  role="tab" aria-selected={i===step} aria-label={`Step ${s.n}: ${s.label}`}
                   animate={{width:i===step?28:7,background:i===step?s.color:'rgba(0,0,0,.12)'}}
-                  style={{height:7,borderRadius:99}}
+                  style={{height:7,borderRadius:99,border:0,padding:0,cursor:'pointer'}}
                   transition={{duration:.38,ease:E}}/>
               ))}
             </div>
@@ -265,16 +279,27 @@ export default function HomeScroll() {
                 </p>
                 <div className="scr-cta">
                   <Mag>
-                    <Link href="/ai-pdf-form-filler"
+                    <Link href={cur.href}
                       style={{...FI,display:'inline-flex',alignItems:'center',gap:7,fontSize:13,fontWeight:600,color:cur.color,textDecoration:'none',border:`1px solid ${cur.color}40`,padding:'8px 18px',borderRadius:99,background:`${cur.color}08`,transition:'gap .2s'}}
                       onMouseEnter={e=>(e.currentTarget.style.gap='12px')}
                       onMouseLeave={e=>(e.currentTarget.style.gap='7px')}>
-                      Try free <ArrowRight size={13} strokeWidth={2.5}/>
+                      {cur.cta} <ArrowRight size={13} strokeWidth={2.5}/>
                     </Link>
                   </Mag>
                 </div>
               </motion.div>
             </AnimatePresence>
+            <div className="scr-controls" style={{display:'flex',alignItems:'center',gap:8,marginTop:18}}>
+              <button type="button" onClick={()=>goToStep(step-1)} disabled={step===0} aria-label="Previous walkthrough step"
+                style={{width:34,height:34,borderRadius:'50%',border:'1px solid #D1D5DB',background:'#fff',display:'grid',placeItems:'center',cursor:step===0?'default':'pointer',opacity:step===0 ? .4 : 1}}>
+                <ChevronLeft size={15}/>
+              </button>
+              <button type="button" onClick={()=>goToStep(step+1)} disabled={step===GSTEPS.length-1} aria-label="Next walkthrough step"
+                style={{width:34,height:34,borderRadius:'50%',border:'1px solid #D1D5DB',background:'#fff',display:'grid',placeItems:'center',cursor:step===GSTEPS.length-1?'default':'pointer',opacity:step===GSTEPS.length-1 ? .4 : 1}}>
+                <ChevronRight size={15}/>
+              </button>
+              <a href="#tools" style={{...FI,fontSize:12,color:'#64748B',marginLeft:4,textDecoration:'none'}}>Skip walkthrough</a>
+            </div>
             </div>
           </div>
 
