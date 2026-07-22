@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-compressor',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Compress PDF Online Free' }],
+    images: [{ url: '/social/pdf-compressor.png', width: 1200, height: 630, alt: 'Compress PDF Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Compress PDF Online Free',
     description: 'Shrink any PDF file instantly without losing quality.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-compressor.png'],
   },
 }
 

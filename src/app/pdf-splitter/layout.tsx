@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-splitter',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Split PDF Online Free' }],
+    images: [{ url: '/social/pdf-splitter.png', width: 1200, height: 630, alt: 'Split PDF Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Split PDF Online Free',
     description: 'Extract pages or split any PDF into multiple files. Free, instant, no signup.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-splitter.png'],
   },
 }
 

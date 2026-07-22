@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/rotate-pdf',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Rotate PDF Online Free' }],
+    images: [{ url: '/social/rotate-pdf.png', width: 1200, height: 630, alt: 'Rotate PDF Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Rotate PDF Online Free',
     description: 'Rotate any PDF page 90°, 180° or 270° instantly in your browser.',
-    images: ['/opengraph-image'],
+    images: ['/social/rotate-pdf.png'],
   },
 }
 

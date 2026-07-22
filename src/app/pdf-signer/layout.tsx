@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-signer',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Sign PDF Online Free' }],
+    images: [{ url: '/social/pdf-signer.png', width: 1200, height: 630, alt: 'Sign PDF Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Sign PDF Online Free',
     description: 'Draw, type or upload your signature and sign any PDF instantly. Free, no account needed.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-signer.png'],
   },
 }
 

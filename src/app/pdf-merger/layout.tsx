@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-merger',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Merge PDF Files Online Free' }],
+    images: [{ url: '/social/pdf-merger.png', width: 1200, height: 630, alt: 'Merge PDF Files Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Merge PDF Files Online Free',
     description: 'Combine multiple PDFs into one document instantly. No signup required.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-merger.png'],
   },
 }
 

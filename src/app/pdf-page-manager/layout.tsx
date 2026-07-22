@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-page-manager',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Page Manager Online' }],
+    images: [{ url: '/social/pdf-page-manager.png', width: 1200, height: 630, alt: 'PDF Page Manager Online' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF Page Manager Online',
     description: 'Reorder, delete or add pages to any PDF instantly. Free, no signup needed.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-page-manager.png'],
   },
 }
 

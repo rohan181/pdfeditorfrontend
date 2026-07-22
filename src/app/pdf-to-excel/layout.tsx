@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-to-excel',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF to Excel Converter Online Free' }],
+    images: [{ url: '/social/pdf-to-excel.png', width: 1200, height: 630, alt: 'PDF to Excel Converter Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF to Excel Converter Online Free',
     description: 'Convert PDF tables to editable Excel spreadsheets instantly. AI-powered. Free, no signup.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-to-excel.png'],
   },
 }
 

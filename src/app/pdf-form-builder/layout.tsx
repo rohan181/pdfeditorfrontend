@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-form-builder',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Form Builder Online Free' }],
+    images: [{ url: '/social/pdf-form-builder.png', width: 1200, height: 630, alt: 'PDF Form Builder Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF Form Builder Online Free',
     description: 'Create professional fillable PDF forms with drag-and-drop. Free, no signup needed.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-form-builder.png'],
   },
 }
 

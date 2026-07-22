@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/extract-pages',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Extract PDF Pages Online Free' }],
+    images: [{ url: '/social/extract-pages.png', width: 1200, height: 630, alt: 'Extract PDF Pages Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Extract PDF Pages Online Free',
     description: 'Save specific pages from any PDF as a new document. Free, instant, no signup.',
-    images: ['/opengraph-image'],
+    images: ['/social/extract-pages.png'],
   },
 }
 

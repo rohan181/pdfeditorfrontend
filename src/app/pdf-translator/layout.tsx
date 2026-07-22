@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-translator',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'AI PDF Translator Online Free' }],
+    images: [{ url: '/social/pdf-translator.png', width: 1200, height: 630, alt: 'AI PDF Translator Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'AI PDF Translator Online Free',
     description: 'Translate any PDF to 50+ languages with AI. Preserves layout and formatting. Free online.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-translator.png'],
   },
 }
 

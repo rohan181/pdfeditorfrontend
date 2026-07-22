@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-cropper',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Crop PDF Pages Online Free' }],
+    images: [{ url: '/social/pdf-cropper.png', width: 1200, height: 630, alt: 'Crop PDF Pages Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Crop PDF Pages Online Free',
     description: 'Trim margins and crop any PDF page instantly. Free, no signup needed.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-cropper.png'],
   },
 }
 

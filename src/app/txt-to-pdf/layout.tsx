@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/txt-to-pdf',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'TXT to PDF Converter Online Free' }],
+    images: [{ url: '/social/txt-to-pdf.png', width: 1200, height: 630, alt: 'TXT to PDF Converter Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'TXT to PDF Converter Online Free',
     description: 'Convert plain text files to PDF instantly. Free, no signup needed.',
-    images: ['/opengraph-image'],
+    images: ['/social/txt-to-pdf.png'],
   },
 }
 

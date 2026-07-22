@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/delete-pages',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Delete PDF Pages Online Free' }],
+    images: [{ url: '/social/delete-pages.png', width: 1200, height: 630, alt: 'Delete PDF Pages Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Delete PDF Pages Online Free',
     description: 'Remove unwanted pages from any PDF instantly. Free, no signup.',
-    images: ['/opengraph-image'],
+    images: ['/social/delete-pages.png'],
   },
 }
 

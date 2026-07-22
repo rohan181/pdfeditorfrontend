@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/add-page-numbers',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Add Page Numbers to PDF Online Free' }],
+    images: [{ url: '/social/add-page-numbers.png', width: 1200, height: 630, alt: 'Add Page Numbers to PDF Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Add Page Numbers to PDF Online Free',
     description: 'Add page numbers to any PDF instantly. Customise position, font and range. Free online.',
-    images: ['/opengraph-image'],
+    images: ['/social/add-page-numbers.png'],
   },
 }
 

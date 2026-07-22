@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/excel-to-pdf',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Excel to PDF Converter Online Free' }],
+    images: [{ url: '/social/excel-to-pdf.png', width: 1200, height: 630, alt: 'Excel to PDF Converter Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Excel to PDF Converter Online Free',
     description: 'Convert Excel spreadsheets to PDF instantly. Free, no signup needed.',
-    images: ['/opengraph-image'],
+    images: ['/social/excel-to-pdf.png'],
   },
 }
 

@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-redactor',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Redact PDF Online Free' }],
+    images: [{ url: '/social/pdf-redactor.png', width: 1200, height: 630, alt: 'Redact PDF Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Redact PDF Online Free',
     description: 'Permanently remove sensitive information from any PDF. Secure, no server upload.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-redactor.png'],
   },
 }
 

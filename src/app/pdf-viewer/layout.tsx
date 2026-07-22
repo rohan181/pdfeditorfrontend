@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-viewer',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Viewer Online Free' }],
+    images: [{ url: '/social/pdf-viewer.png', width: 1200, height: 630, alt: 'PDF Viewer Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF Viewer Online Free',
     description: 'Open, zoom and read any PDF in your browser. Free, no install needed.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-viewer.png'],
   },
 }
 

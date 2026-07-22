@@ -15,13 +15,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-editor',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Editor — Edit PDFs Online Free' }],
+    images: [{ url: '/social/pdf-editor.png', width: 1200, height: 630, alt: 'PDF Editor — Edit PDFs Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF Editor — Edit, Annotate & Sign PDFs Online Free',
     description: 'Add text, images, shapes, signatures and stamps to any PDF. Free, no signup required.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-editor.png'],
   },
 }
 

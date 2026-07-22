@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/image-to-pdf',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Image to PDF Converter Online Free' }],
+    images: [{ url: '/social/image-to-pdf.png', width: 1200, height: 630, alt: 'Image to PDF Converter Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Image to PDF Converter Online Free',
     description: 'Convert JPG, PNG and other images to PDF instantly. Free, no signup needed.',
-    images: ['/opengraph-image'],
+    images: ['/social/image-to-pdf.png'],
   },
 }
 

@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-ocr',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF OCR — Extract Text from Scanned PDF' }],
+    images: [{ url: '/social/pdf-ocr.png', width: 1200, height: 630, alt: 'PDF OCR — Extract Text from Scanned PDF' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF OCR Online Free',
     description: 'Convert scanned PDFs to searchable editable text with AI OCR. Free, no install.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-ocr.png'],
   },
 }
 

@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/mind-map',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'AI Mind Map Generator from PDF' }],
+    images: [{ url: '/social/mind-map.png', width: 1200, height: 630, alt: 'AI Mind Map Generator from PDF' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'AI Mind Map Generator from PDF',
     description: 'Turn any PDF into a visual mind map with AI. Free online, no signup.',
-    images: ['/opengraph-image'],
+    images: ['/social/mind-map.png'],
   },
 }
 

@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/odt-to-pdf',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'ODT to PDF Converter Online Free' }],
+    images: [{ url: '/social/odt-to-pdf.png', width: 1200, height: 630, alt: 'ODT to PDF Converter Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'ODT to PDF Converter Online Free',
     description: 'Convert ODT files to PDF instantly. Works with LibreOffice. Free, no signup.',
-    images: ['/opengraph-image'],
+    images: ['/social/odt-to-pdf.png'],
   },
 }
 

@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-summarizer',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'AI PDF Summarizer Online Free' }],
+    images: [{ url: '/social/pdf-summarizer.png', width: 1200, height: 630, alt: 'AI PDF Summarizer Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'AI PDF Summarizer Online Free',
     description: 'Summarize any PDF with AI in seconds. Key points, summaries and action items.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-summarizer.png'],
   },
 }
 

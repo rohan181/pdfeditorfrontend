@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/ppt-to-pdf',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PowerPoint to PDF Converter Online Free' }],
+    images: [{ url: '/social/ppt-to-pdf.png', width: 1200, height: 630, alt: 'PowerPoint to PDF Converter Online Free' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PowerPoint to PDF Converter Online Free',
     description: 'Convert PowerPoint slides to PDF instantly. Free, no signup needed.',
-    images: ['/opengraph-image'],
+    images: ['/social/ppt-to-pdf.png'],
   },
 }
 

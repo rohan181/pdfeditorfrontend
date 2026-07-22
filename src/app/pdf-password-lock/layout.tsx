@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-password-lock',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Password Lock' }],
+    images: [{ url: '/social/pdf-password-lock.png', width: 1200, height: 630, alt: 'PDF Password Lock' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'PDF Password Lock — Password Protect PDF Free Online',
     description: 'Add a password to any PDF instantly. AES-256 encryption, free, no account.',
-    images: ['/opengraph-image'],
+    images: ['/social/pdf-password-lock.png'],
   },
 }
 

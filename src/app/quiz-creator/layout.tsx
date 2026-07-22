@@ -12,13 +12,13 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://www.editpdfai.com/quiz-creator',
     siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'AI Quiz Creator from PDF' }],
+    images: [{ url: '/social/quiz-creator.png', width: 1200, height: 630, alt: 'AI Quiz Creator from PDF' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'AI Quiz Creator from PDF',
     description: 'Generate quizzes and flashcards from any PDF with AI. Free online, no signup.',
-    images: ['/opengraph-image'],
+    images: ['/social/quiz-creator.png'],
   },
 }
 
