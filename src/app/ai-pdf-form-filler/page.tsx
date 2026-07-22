@@ -46,7 +46,7 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .open-btn:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,58,237,.4)}
 
 /* Hero */
-.hero{position:relative;z-index:1;padding:80px 0 60px;overflow:visible;background:#fff}
+.hero{position:relative;z-index:1;padding:136px 0 60px;overflow:visible;background:#fff}
 .hero-in{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.2);border-radius:20px;font-family:var(--fm);font-size:9px;letter-spacing:.16em;color:var(--p);margin-bottom:28px}
 .bdot{width:5px;height:5px;border-radius:50%;background:var(--p);box-shadow:0 0 6px var(--p);animation:bdot 2s ease-in-out infinite}
@@ -149,6 +149,11 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .fq{padding:28px 30px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:18px;transition:border-color .18s,transform .18s}
 .fq:hover{border-color:rgba(124,58,237,.2);transform:translateY(-2px)}
 .fq-q{font-family:var(--fd);font-size:15px;font-weight:700;color:#1d1d1f;letter-spacing:-.022em;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px}
+.fq summary{cursor:pointer;list-style:none}
+.fq summary::-webkit-details-marker{display:none}
+.fq summary::after{content:'+';margin-left:auto;color:var(--p);font-size:20px;line-height:1;flex-shrink:0}
+.fq[open] summary::after{content:'−'}
+.fq:not([open]) .fq-q{margin-bottom:0}
 .fq-ic{color:var(--p);flex-shrink:0;margin-top:3px}
 .fq-a{font-size:13.5px;color:var(--fg3);line-height:1.72;padding-left:24px}
 
@@ -195,10 +200,32 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 @media(max-width:600px){
   .wrap{padding:0 20px}
   .fg3d-grid{grid-template-columns:1fr}
-  .hero{padding:56px 0 40px}
+  .hero{padding:96px 0 44px}
+  .h1-a,.h1-b{font-size:clamp(34px,11vw,44px)}
+  .h1-c{font-size:20px;line-height:1.25;margin-top:12px;color:rgba(29,29,31,.48)}
+  .hero-sub{line-height:1.65;margin-bottom:28px}
+  .hero-badge{margin-bottom:20px}
   .cta-row{flex-direction:column;align-items:stretch}
   .btn-p,.btn-s2{justify-content:center}
   .stack-host,.stack-wrap{width:280px;height:370px}
+  .ob1{right:0}.ob2{left:0}.ob3{right:8px}
+  .how-sec,.feat-sec,.faq-sec,.demo-sec{padding:60px 0}
+  .step,.fg3d{padding:22px 20px}
+  .demo-head-row{align-items:flex-start;flex-direction:column;gap:14px;margin-bottom:22px}
+  .demo-body{flex-direction:column;min-height:440px}
+  .demo-left{width:100%;border-right:0;border-bottom:1px solid #ebebeb;flex-direction:row;overflow-x:auto;padding:10px;gap:6px}
+  .demo-left-item{white-space:nowrap;flex-shrink:0}
+  .demo-center{padding:20px 14px 24px;align-items:flex-start}
+  .demo-chrome>div:nth-child(2){display:none!important}
+  .demo-win{border-radius:16px}
+  .faq-grid{gap:8px;margin-top:30px}
+  .fq{padding:0}
+  .fq summary{padding:18px;cursor:pointer;list-style:none}
+  .fq summary::-webkit-details-marker{display:none}
+  .fq-a{padding:0 18px 18px;margin:0}
+  .cta-inner{padding:44px 20px;border-radius:20px}
+  .cta-sub{font-size:14px;line-height:1.6;margin-bottom:28px}
+  .editor-close{top:max(8px,env(safe-area-inset-top))!important;right:8px!important}
   .foot-in{flex-direction:column;align-items:center;text-align:center}
   .foot-nav{justify-content:center}
 }
@@ -213,8 +240,11 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .demo-eye{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0891b2;margin-bottom:14px}
 .demo-h{font-size:clamp(26px,4vw,40px);font-weight:800;color:#1d1d1f;letter-spacing:-.04em;line-height:1;margin-bottom:10px}
 .demo-sub{font-size:15px;color:#6b7280;margin-bottom:40px;line-height:1.6}
+.demo-head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:28px}
+.demo-head-row .demo-sub{margin-bottom:0}
+.demo-toggle{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:8px 14px;border:1.5px solid #d1d5db;border-radius:10px;background:#fff;color:#374151;font:700 12px var(--fu);cursor:pointer;flex-shrink:0}
 .demo-steps{display:flex;gap:6px;margin-bottom:32px;flex-wrap:wrap}
-.demo-dot{height:4px;border-radius:99px;flex:1;min-width:40px;background:#e5e7eb;transition:background .3s}
+.demo-dot{height:8px;border:0;padding:0;border-radius:99px;flex:1;min-width:40px;background:#e5e7eb;transition:background .3s;cursor:pointer}
 .demo-dot.active{background:#0891b2}
 .demo-win{background:#f5f5f7;border-radius:20px;border:1px solid #e5e7eb;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.08)}
 .demo-chrome{background:#F0F0F2;border-bottom:1px solid #e0e0e0;height:36px;display:flex;align-items:center;padding:0 14px;gap:8px}
@@ -227,10 +257,23 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .demo-center{flex:1;display:flex;align-items:center;justify-content:center;padding:28px}
 .demo-label{font-size:12px;font-weight:600;color:#1d1d1f;margin-top:24px;text-align:center}
 .demo-sub-label{font-size:11px;color:#9ca3af;text-align:center;margin-top:4px}
+.ai-compare{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.ai-compare-head,.ai-compare-row{min-width:680px}
+.editor-close{min-height:40px}
 @keyframes pulse-ring{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
 @keyframes scan-line{0%{top:0}100%{top:100%}}
 @keyframes type-in{0%{width:0}100%{width:100%}}
 @keyframes field-fill{0%{opacity:0;transform:translateX(-4px)}100%{opacity:1;transform:none}}
+@media(max-width:600px){
+  .demo-sec{padding:60px 0}
+  .demo-head-row{align-items:flex-start;flex-direction:column;gap:14px;margin-bottom:22px}
+  .demo-body{flex-direction:column;min-height:440px}
+  .demo-left{width:100%;border-right:0;border-bottom:1px solid #ebebeb;flex-direction:row;overflow-x:auto;padding:10px;gap:6px}
+  .demo-left-item{white-space:nowrap;flex-shrink:0}
+  .demo-center{padding:20px 14px 24px;align-items:flex-start}
+  .demo-chrome>div:nth-child(2){display:none!important}
+  .demo-win{border-radius:16px}
+}
 `
 
 const FEATURES = [
@@ -268,12 +311,25 @@ const DEMO = [
 export default function AIPDFFormFillerPage() {
   const [editorOpen, setEditorOpen] = useState(false)
   const [demoStep, setDemoStep] = useState(0)
+  const [demoPlaying, setDemoPlaying] = useState(true)
   const stackRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if (!demoPlaying) return
     const id = setInterval(() => setDemoStep(s => (s + 1) % DEMO.length), 2800)
     return () => clearInterval(id)
+  }, [demoPlaying])
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setDemoPlaying(false)
   }, [])
+
+  useEffect(() => {
+    if (!editorOpen) return
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') closeEditor() }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [editorOpen])
 
   // Always restore scroll on unmount in case editor was open during navigation
   useEffect(() => () => { document.body.style.overflow = '' }, [])
@@ -309,9 +365,9 @@ export default function AIPDFFormFillerPage() {
 
       {/* Fullscreen editor overlay */}
       {editorOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', background: '#f8faff' }}>
+        <div role="dialog" aria-modal="true" aria-label="AI PDF form filler editor" style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', background: '#f8faff' }}>
           <PDFEditor />
-          <button onClick={closeEditor} aria-label="Close editor" style={{ position: 'absolute', top: 10, right: 14, zIndex: 10000, background: 'rgba(30,41,59,.88)', border: '1px solid rgba(255,255,255,.15)', color: '#fff', borderRadius: 8, padding: '4px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
+          <button className="editor-close" onClick={closeEditor} aria-label="Close editor" style={{ position: 'absolute', top: 10, right: 14, zIndex: 10000, background: 'rgba(30,41,59,.88)', border: '1px solid rgba(255,255,255,.15)', color: '#fff', borderRadius: 8, padding: '4px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
             ✕ Close
           </button>
         </div>
@@ -326,7 +382,7 @@ export default function AIPDFFormFillerPage() {
       <SiteNav />
 
       {/* Hero */}
-      <section className="hero" style={{ paddingTop: 'calc(80px + 56px)' }}>
+      <section className="hero">
         <div className="wrap hero-in">
 
           {/* Left — copy */}
@@ -514,13 +570,19 @@ export default function AIPDFFormFillerPage() {
         <div className="wrap">
           <span className="demo-eye">See it in action</span>
           <h2 className="demo-h">Watch AI fill your PDF</h2>
-          <p className="demo-sub">Auto-playing demo — 5 steps, under 15 seconds.</p>
+          <div className="demo-head-row">
+            <p className="demo-sub">Five clear steps from upload to completed PDF.</p>
+            <button className="demo-toggle" type="button" onClick={()=>setDemoPlaying(value=>!value)} aria-pressed={!demoPlaying}>
+              {demoPlaying ? '❚❚ Pause demo' : '▶ Play demo'}
+            </button>
+          </div>
 
           {/* Step progress dots */}
           <div className="demo-steps">
             {DEMO.map((d, i) => (
-              <div key={d.label} className={`demo-dot${i === demoStep ? ' active' : ''}`}
-                onClick={() => setDemoStep(i)} style={{cursor:'pointer', background: i === demoStep ? d.color : '#e5e7eb'}}/>
+              <button type="button" key={d.label} aria-label={`Show step ${i+1}: ${d.label}`} aria-current={i===demoStep?'step':undefined}
+                className={`demo-dot${i === demoStep ? ' active' : ''}`}
+                onClick={() => { setDemoStep(i); setDemoPlaying(false) }} style={{background: i === demoStep ? d.color : '#e5e7eb'}}/>
             ))}
           </div>
 
@@ -697,11 +759,11 @@ export default function AIPDFFormFillerPage() {
           <span className="sec-eye">FAQ</span>
           <h2 className="sec-h">AI PDF form filler — frequently asked questions</h2>
           <div className="faq-grid">
-            {FAQS.map(f => (
-              <div key={f.q} className="fq">
-                <div className="fq-q"><span className="fq-ic">✦</span>{f.q}</div>
+            {FAQS.map((f,i) => (
+              <details key={f.q} className="fq" open={i===0}>
+                <summary className="fq-q"><span className="fq-ic">✦</span>{f.q}</summary>
                 <p className="fq-a">{f.a}</p>
-              </div>
+              </details>
             ))}
           </div>
         </div>
@@ -719,8 +781,8 @@ export default function AIPDFFormFillerPage() {
           </p>
 
           {/* Comparison table */}
-          <div style={{ background: '#fff', borderRadius: 18, border: '1.5px solid #e5e7eb', overflow: 'hidden', marginBottom: 48 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 130px 130px 140px', background: '#f9fafb', borderBottom: '1.5px solid #e5e7eb' }}>
+          <div className="ai-compare" role="region" aria-label="AI form filling comparison" tabIndex={0} style={{ background: '#fff', borderRadius: 18, border: '1.5px solid #e5e7eb', marginBottom: 48 }}>
+            <div className="ai-compare-head" style={{ display: 'grid', gridTemplateColumns: '1fr 130px 130px 140px', background: '#f9fafb', borderBottom: '1.5px solid #e5e7eb' }}>
               {['', 'Manual typing', 'Adobe Acrobat', 'EditPDF AI'].map((h, i) => (
                 <span key={i} style={{ padding: '11px 18px', fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: i === 3 ? '#7c3aed' : '#9ca3af', textAlign: i > 0 ? 'center' : 'left', background: i === 3 ? 'rgba(124,58,237,.04)' : 'transparent', borderLeft: i === 3 ? '1px solid rgba(124,58,237,.12)' : 'none' }}>{h}</span>
               ))}
@@ -734,7 +796,7 @@ export default function AIPDFFormFillerPage() {
               { feat: 'No subscription needed', manual: true, adobe: false, ai: true },
               { feat: 'Works in the browser, no install', manual: false, adobe: false, ai: true },
             ].map(({ feat, manual, adobe, ai }, i, arr) => (
-              <div key={feat} style={{ display: 'grid', gridTemplateColumns: '1fr 130px 130px 140px', borderBottom: i < arr.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'stretch' }}>
+              <div className="ai-compare-row" key={feat} style={{ display: 'grid', gridTemplateColumns: '1fr 130px 130px 140px', borderBottom: i < arr.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'stretch' }}>
                 <span style={{ padding: '12px 18px', fontSize: 13.5, color: '#374151', fontWeight: 500, display: 'flex', alignItems: 'center' }}>{feat}</span>
                 {[manual, adobe, ai].map((v, ci) => (
                   <span key={ci} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, background: ci === 2 ? 'rgba(124,58,237,.04)' : 'transparent', borderLeft: ci === 2 ? '1px solid rgba(124,58,237,.1)' : 'none' }}>

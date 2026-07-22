@@ -3,15 +3,25 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'AI PDF Form Filler — Autofill Any PDF Form Free Online',
   description:
-    'Autofill PDF forms instantly with AI — W-9, job applications, tax forms, rental agreements and more. Paste your details once, AI fills every field. Free, no Adobe Acrobat needed.',
+    'Autofill W-9s, job applications, tax forms and other PDFs with AI. Paste details once, review every field, then sign and download. Five free uses daily.',
   keywords:
     'AI PDF form filler, autofill PDF forms, fill PDF forms online free, PDF form autofill, AI form filling, fill W-9 online, fill PDF job application, fill tax form PDF, PDF filler no Adobe, auto fill PDF forms AI',
   alternates: { canonical: 'https://www.editpdfai.com/ai-pdf-form-filler' },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
   openGraph: {
     title: 'AI PDF Form Filler — Autofill Any PDF Form Free Online',
     description:
-      'Autofill W-9s, job applications, tax forms and any PDF form instantly with AI. Paste your details once — AI fills every field. Free, no Adobe Acrobat needed.',
+      'Autofill PDF forms with AI, review every field, add a signature and download. A free account includes five AI uses daily.',
     type: 'website',
     url: 'https://www.editpdfai.com/ai-pdf-form-filler',
     siteName: 'EditPDF AI',
@@ -28,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'AI PDF Form Filler — Autofill Any PDF Form Free Online',
     description:
-      'Autofill W-9s, job applications, tax forms and any PDF form instantly with AI. Free, no Adobe Acrobat needed.',
+      'Autofill PDF forms with AI, review every field, sign and download. A free account includes five AI uses daily.',
     images: ['/social/ai-pdf-form-filler.png'],
   },
 }
@@ -86,7 +96,7 @@ const jsonLdFaq = {
     {
       '@type': 'Question',
       name: 'Can it fill a scanned PDF form?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Yes. For scanned paper forms saved as image-based PDFs, the built-in OCR engine first extracts the layout and field positions. AI then fills the detected fields using text overlays. The result is a completed PDF that looks identical to a manually filled paper form.' },
+      acceptedAnswer: { '@type': 'Answer', text: 'Yes. For scanned paper forms that have been saved as image-based PDFs, the built-in OCR engine first extracts the layout and field positions. AI then fills the detected fields using text overlays. The result is a completed PDF that looks identical to a manually filled paper form.' },
     },
   ],
 }
@@ -94,14 +104,41 @@ const jsonLdFaq = {
 const jsonLdApp = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/ai-pdf-form-filler#webapp',
   name: 'AI PDF Form Filler',
   url: 'https://www.editpdfai.com/ai-pdf-form-filler',
+  image: 'https://www.editpdfai.com/social/ai-pdf-form-filler.png',
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-  description: 'Fill PDF forms instantly with AI. Auto-detect fields, add text, draw signatures, and download — free, no registration.',
-  featureList: 'AI Form Filling, E-Signatures, PDF Annotation, PDF OCR, Field Auto-Detection, Page Management',
+  isAccessibleForFree: true,
+  offers: [
+    {
+      '@type': 'Offer',
+      name: 'Free',
+      price: '0',
+      priceCurrency: 'USD',
+      url: 'https://www.editpdfai.com/ai-pdf-form-filler',
+      description: 'Five AI uses per day with a free account.',
+    },
+    {
+      '@type': 'Offer',
+      name: 'Pro',
+      price: '1',
+      priceCurrency: 'USD',
+      url: 'https://www.editpdfai.com/pricing',
+      description: 'Unlimited AI uses with the Pro plan.',
+    },
+  ],
+  provider: {
+    '@type': 'Organization',
+    '@id': 'https://www.editpdfai.com/#organization',
+    name: 'EditPDF AI',
+    url: 'https://www.editpdfai.com',
+  },
+  description: 'Autofill PDF forms with AI, review detected fields, add a signature, and download the completed document. A free account includes five AI uses per day.',
+  featureList: ['AI form filling', 'E-signatures', 'PDF annotation', 'PDF OCR', 'Field auto-detection', 'Page management'],
   browserRequirements: 'Requires JavaScript. Works in Chrome, Firefox, Safari, Edge.',
+  inLanguage: 'en',
 }
 
 const jsonLdBreadcrumb = {

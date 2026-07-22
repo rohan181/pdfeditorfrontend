@@ -238,6 +238,9 @@ body { overflow-x:clip; }
 @media(max-width:900px){
   .desk     { display:none; }
   .mob      { display:flex; }
+  .nav-editor-open-word { display:none; }
+  .nav-editor-button { padding:8px 13px !important; min-height:40px; white-space:nowrap; }
+  .home-nav-inner > div:last-child { min-width:0; }
 }
 @media(max-width:680px){
   .r-bento  { grid-template-columns:1fr; }
@@ -341,7 +344,6 @@ body { overflow-x:clip; }
   .home-nav-logo { margin-right:0 !important; }
   .home-nav-logo img { height:36px !important; max-width:104px; }
   .nav-editor-button { display:inline-flex !important; padding:8px 12px !important; min-height:40px; }
-  .nav-editor-open-word { display:none; }
   .home-hero-title { font-size:30px !important; }
   .home-hero { min-height:auto !important; padding-top:108px !important; padding-bottom:52px !important; }
   .popular-tools-grid { grid-template-columns:1fr; }
