@@ -475,7 +475,7 @@ function Nav() {
                 </div>
               )
             )}
-            <Link href="/pdf-editor" className="desk nav-cta-btn nav-editor-desktop"
+            <Link href="/pdf-editor" className="nav-cta-btn nav-editor-button"
               data-editor-cta
               style={{...FI,display:'inline-flex',alignItems:'center',gap:6,padding:'7px 16px',
                 background:'#2563EB',color:'#fff',borderRadius:99,fontSize:12.5,fontWeight:700,

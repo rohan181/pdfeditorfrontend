@@ -17,7 +17,7 @@ const COMPARE = [
 
 export default function SitePricingPreview() {
   return (
-    <section style={{background:'#F8FAFC',padding:'72px 28px',borderTop:'1px solid #E2E8F0'}}>
+    <section className="home-responsive-section" style={{background:'#F8FAFC',padding:'72px 28px',borderTop:'1px solid #E2E8F0'}}>
       <div style={{maxWidth:860,margin:'0 auto'}}>
         <div style={{marginBottom:36,textAlign:'center'}}>
           <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
@@ -32,7 +32,7 @@ export default function SitePricingPreview() {
         </div>
 
         {/* Cards */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:16,marginBottom:20}}>
+        <div className="pricing-card-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:16,marginBottom:20}}>
           {/* Free */}
           <div style={{background:'#fff',borderRadius:20,padding:'28px 28px 24px',border:'1.5px solid #e5e7eb'}}>
             <div style={{marginBottom:20}}>
@@ -89,15 +89,15 @@ export default function SitePricingPreview() {
         </div>
 
         {/* Comparison table — no negative-margin hacks */}
-        <div style={{background:'#fff',borderRadius:16,border:'1.5px solid #e5e7eb',overflow:'hidden',marginBottom:16}}>
+        <div className="pricing-compare" style={{background:'#fff',borderRadius:16,border:'1.5px solid #e5e7eb',overflow:'hidden',marginBottom:16}}>
           {/* Header row */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',background:'#f9fafb',borderBottom:'1.5px solid #e5e7eb'}}>
+          <div className="pricing-compare-row" style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',background:'#f9fafb',borderBottom:'1.5px solid #e5e7eb'}}>
             <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#64748B',padding:'10px 20px'}}>Feature</span>
             <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#64748B',textAlign:'center',padding:'10px 8px'}}>Free</span>
             <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#7C3AED',textAlign:'center',padding:'10px 20px',background:'rgba(124,58,237,.05)',borderLeft:'1px solid rgba(124,58,237,.12)'}}>Pro ✦</span>
           </div>
           {COMPARE.map(({label,free,pro},i)=>(
-            <div key={label} style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',
+            <div className="pricing-compare-row" key={label} style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',
               borderBottom: i < COMPARE.length-1 ? '1px solid #f3f4f6' : 'none',alignItems:'stretch'}}>
               <span style={{...FI,fontSize:13,color:'#374151',fontWeight:500,padding:'11px 20px',display:'flex',alignItems:'center'}}>{label}</span>
               <span style={{textAlign:'center',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',padding:'11px 8px'}}>

@@ -32,7 +32,7 @@ export const FAQ_ITEMS = [
 
 export default function SiteFAQ() {
   return (
-    <section style={{background:'#fff',padding:'80px 28px',borderTop:'1px solid #f0f0f0'}}>
+    <section className="home-responsive-section" style={{background:'#fff',padding:'80px 28px',borderTop:'1px solid #f0f0f0'}}>
       <style dangerouslySetInnerHTML={{ __html: `
         .faq-item { border-bottom:1px solid #f0f0f0; }
         .faq-item summary {

@@ -34,7 +34,7 @@ const TIER_BADGE: Record<ToolTier, { label: string; bg: string; color: string }>
 
 export default function SitePopularTools() {
   return (
-    <section style={{background:'#fff',padding:'64px 28px 32px',borderTop:'1px solid #E2E8F0'}}>
+    <section className="home-responsive-section popular-tools-section" style={{background:'#fff',padding:'64px 28px 32px',borderTop:'1px solid #E2E8F0'}}>
       <div style={{maxWidth:1100,margin:'0 auto'}}>
         <div style={{marginBottom:36}}>
           <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>

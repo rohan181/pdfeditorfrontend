@@ -83,6 +83,7 @@ function ToolsPlaceholder() {
 
   return (
     <section
+      className="home-responsive-section tools-fallback-section"
       id="tools"
       style={{ minHeight: 900, padding: '88px 28px', background: '#f8f8fa', borderTop: '1px solid #f0f0f0' }}
     >
@@ -96,7 +97,7 @@ function ToolsPlaceholder() {
         <p style={{margin:'0 0 40px',maxWidth:760,color:'#64748B',fontSize:15,lineHeight:1.7}}>
           Choose from browser-based tools for editing, signing, converting, securing and understanding PDF documents.
         </p>
-        <nav aria-label="PDF tool categories" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(330px,1fr))', gap: 18 }}>
+        <nav className="tools-fallback-grid" aria-label="PDF tool categories" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(330px,1fr))', gap: 18 }}>
           {groups.map(group => (
             <section key={group.title} style={{padding:22,background:'#fff',border:'1px solid #E2E8F0',borderRadius:16}}>
               <h3 style={{margin:'0 0 8px',color:'#0F172A',fontSize:18}}>{group.title}</h3>

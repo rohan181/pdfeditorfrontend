@@ -170,6 +170,7 @@ body { overflow-x:clip; }
 .nav-link:hover { color:#1d1d1f !important; }
 .nav-cta-btn { transition:gap .2s; }
 .nav-cta-btn:hover { gap:10px !important; }
+.nav-editor-button { display:inline-flex !important; visibility:visible !important; opacity:1 !important; }
 .nav-tool-row { transition:background .1s; }
 .nav-tool-row:hover { background:#f5f5f7 !important; }
 .hero-upload-btn { transition:gap .2s; }
@@ -259,12 +260,25 @@ body { overflow-x:clip; }
   .use-case-tabs { margin-left:-16px; margin-right:-16px; padding-left:16px; padding-right:16px; scrollbar-width:none; }
   .use-case-tabs::-webkit-scrollbar { display:none; }
   .use-case-panel { grid-template-columns:1fr !important; gap:14px !important; }
+  .home-responsive-section { padding-left:16px !important; padding-right:16px !important; }
+  .popular-tools-section { padding-top:48px !important; padding-bottom:28px !important; }
+  .tools-fallback-grid { grid-template-columns:1fr !important; }
+  .pricing-card-grid { grid-template-columns:1fr !important; }
+  .pricing-card-grid > div { padding:24px 20px 22px !important; }
+  .pricing-compare-row { grid-template-columns:minmax(0,1fr) 58px 76px !important; }
+  .pricing-compare-row > span { padding-left:8px !important; padding-right:8px !important; overflow-wrap:anywhere; }
+  .tool-category-header { padding:16px !important; align-items:flex-start !important; }
+  .home-footer { padding-left:18px !important; padding-right:18px !important; }
 }
 @media(max-width:420px){
   .r-tgrid  { grid-template-columns:1fr; }
   .sec-pad  { padding:48px 16px 28px; }
   .tools-sec{ padding:48px 14px; }
   .cta-sec  { padding:60px 16px; }
+  .home-responsive-section { padding-top:56px !important; padding-bottom:56px !important; }
+  .pricing-compare-row { grid-template-columns:minmax(0,1fr) 52px 68px !important; }
+  .pricing-compare-row > span { font-size:11px !important; }
+  .faq-item summary { padding:17px 0 !important; font-size:14px !important; }
 }
 
 /* ── hero grid ── */
@@ -316,7 +330,7 @@ body { overflow-x:clip; }
   .home-nav-inner { padding-left:10px !important; padding-right:10px !important; gap:6px; }
   .home-nav-logo { margin-right:0 !important; }
   .home-nav-logo img { height:36px !important; max-width:104px; }
-  .nav-editor-desktop { display:inline-flex !important; padding:8px 12px !important; min-height:40px; }
+  .nav-editor-button { display:inline-flex !important; padding:8px 12px !important; min-height:40px; }
   .nav-editor-open-word { display:none; }
   .home-hero-title { font-size:30px !important; }
   .home-hero { min-height:auto !important; padding-top:108px !important; padding-bottom:52px !important; }

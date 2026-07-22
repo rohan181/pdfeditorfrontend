@@ -65,7 +65,7 @@ export default function SiteUseCases() {
   const ActiveIcon = selected.Icon
 
   return (
-    <section style={{background:'#F8FAFC',padding:'88px 28px 80px',borderTop:'1px solid #E2E8F0'}}>
+    <section className="home-responsive-section" style={{background:'#F8FAFC',padding:'88px 28px 80px',borderTop:'1px solid #E2E8F0'}}>
       <div style={{maxWidth:1200,margin:'0 auto'}}>
         <div style={{marginBottom:48}}>
           <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>

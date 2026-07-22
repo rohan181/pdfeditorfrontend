@@ -160,7 +160,7 @@ export default function HomeAllTools() {
   const handleTabClick = useCallback((label: string) => { setActiveTab(label); setSearch(''); setShowAllCats(false) }, [])
 
   return (
-    <section id="tools" className="tools-directory-enter" style={{background:'#f8f8fa', borderTop:'1px solid #f0f0f0', padding:'88px 28px 100px', minHeight:900}}>
+    <section id="tools" className="tools-directory-enter home-responsive-section" style={{background:'#f8f8fa', borderTop:'1px solid #f0f0f0', padding:'88px 28px 100px', minHeight:900}}>
       <div style={{maxWidth:1240, margin:'0 auto'}}>
 
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'100px'}} transition={{duration:.5,ease:E}}
@@ -313,7 +313,7 @@ export default function HomeAllTools() {
             ) : (
               <div>
                 {activeCat && (
-                  <div style={{display:'flex', alignItems:'center', gap:16, marginBottom:32, padding:'20px 24px',
+                  <div className="tool-category-header" style={{display:'flex', alignItems:'center', gap:16, marginBottom:32, padding:'20px 24px',
                     background:`linear-gradient(135deg,${activeCat.color}08,${activeCat.color}03)`,
                     border:`1.5px solid ${activeCat.color}20`, borderRadius:18}}>
                     <div style={{width:52,height:52,borderRadius:14,background:activeCat.light,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>

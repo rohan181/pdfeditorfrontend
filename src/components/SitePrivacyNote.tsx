@@ -12,7 +12,7 @@ const CARDS = [
 
 export default function SitePrivacyNote() {
   return (
-    <section style={{background:'#0F172A',padding:'80px 28px',borderTop:'1px solid #1E293B'}}>
+    <section className="home-responsive-section" style={{background:'#0F172A',padding:'80px 28px',borderTop:'1px solid #1E293B'}}>
       <div style={{maxWidth:1200,margin:'0 auto'}}>
         <div style={{marginBottom:40,textAlign:'center'}}>
           <div style={{...MONO,fontSize:10,color:'#475569',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>

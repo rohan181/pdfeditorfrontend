@@ -51,7 +51,7 @@ const toolCols = [
 
 export default function SiteFooter() {
   return (
-    <footer style={{ background: '#f5f5f7', borderTop: '1px solid #e5e5ea', padding: '56px 28px 0' }}>
+    <footer className="home-footer" style={{ background: '#f5f5f7', borderTop: '1px solid #e5e5ea', padding: '56px 28px 0' }}>
       <style>{`
         .sf-footer-grid { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr 1fr; gap:36px; align-items:start; margin-bottom:48px; }
         @media(max-width:900px){ .sf-footer-grid{ grid-template-columns:1fr 1fr !important; gap:32px !important; } }
