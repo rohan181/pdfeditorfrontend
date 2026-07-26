@@ -5,7 +5,7 @@ const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Men
 
 export const FAQ_ITEMS = [
   {
-    q: 'Is EditPDF AI really free?',
+    q: 'Can I use these online PDF tools for free without signing up?',
     a: 'Yes. All core PDF tools — edit, merge, split, compress, sign, watermark, and more — are free with no limits and no account required. AI features (Form Filler, Summarizer, OCR, etc.) include 5 free uses per day. Upgrade to Pro (US$1/month) for unlimited AI use.',
   },
   {

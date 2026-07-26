@@ -655,7 +655,7 @@ const data: Record<string, ToolSEOData> = {
     whatIs: [
       'What is a PDF translator?',
       'A PDF translator extracts the text from a PDF and uses AI to translate it into a different language, then delivers the result as a new PDF with the original layout preserved. Instead of receiving a plain text dump, you get a translated document that mirrors the structure of the original — paragraphs, headings, and sections in the right order.',
-      'PDF translation removes the language barrier for contracts, technical manuals, academic papers, and business correspondence. EditPDF AI supports over 50 languages in both directions and uses large language models that understand context, producing translations significantly more natural than word-for-word machine translation.',
+      'PDF translation removes the language barrier for contracts, technical manuals, academic papers, and business correspondence. EditPDF AI supports 77 languages in both directions and uses large language models that understand context, producing translations significantly more natural than word-for-word machine translation.',
     ],
     users: [
       { who: 'Global business teams', why: 'Translate supplier contracts, partner agreements, and technical specifications received in a foreign language for internal review.' },
@@ -671,11 +671,11 @@ const data: Record<string, ToolSEOData> = {
     ],
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF you want translated. The document\'s text content is extracted for translation.' },
-      { title: 'Choose target language', body: 'Select from 50+ supported languages. The AI preserves the original document structure while translating the text.' },
+      { title: 'Choose target language', body: 'Select from 77 supported languages. The AI preserves the original document structure while translating the text.' },
       { title: 'Download the translated PDF', body: 'The translated content is placed back into a PDF with the original layout preserved — not a plain text dump.' },
     ],
     faqs: [
-      { q: 'How many languages are supported?', a: 'Over 50 languages are supported for both input and output, including English, Spanish, French, German, Portuguese, Arabic, Chinese, Japanese, Korean, Hindi, and more.' },
+      { q: 'How many languages are supported?', a: 'The translator offers 77 source and target languages, including English, Spanish, French, German, Portuguese, Arabic, Chinese, Japanese, Korean, Hindi, and more.' },
       { q: 'Does the translated PDF keep the original layout?', a: 'Yes. The translation is placed back into the original PDF page structure, preserving paragraph positions and formatting. Complex multi-column layouts may have minor differences.' },
       { q: 'How is the translation quality?', a: 'Translation is powered by advanced large language models that understand context, so the quality is significantly better than word-for-word machine translation.' },
       { q: 'Can it translate technical or legal documents?', a: 'Yes. The AI handles domain-specific terminology in legal, medical, and technical documents, keeping specialised terms accurate where possible.' },

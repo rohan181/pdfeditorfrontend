@@ -883,6 +883,7 @@ export default function ImageToPDFPage() {
           </div>
           <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" multiple style={{display:'none'}} onChange={e=>{if(e.target.files)loadFiles(e.target.files);e.target.value=''}} />
         </div>
+        <ToolSEOSection {...toolSeoData['image-to-pdf']} />
       </>
     )
   }

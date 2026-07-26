@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'PDF Watermarker — Add Text & Image Watermarks to PDFs Free',
+  title: 'Add a Watermark to PDF Online Free',
   description:
-    'Add custom text or image watermarks to any PDF online for free. Control position, opacity, angle, font size and color. No signup, no install — works in your browser.',
+    'Add text or image watermarks to PDFs online. Control the position, opacity, angle, font size and color. Free, with no signup or installation.',
   keywords:
     'PDF watermark, add watermark to PDF, watermark PDF online, text watermark, image watermark, free PDF watermark tool, PDF stamp, watermark remover',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-watermark' },

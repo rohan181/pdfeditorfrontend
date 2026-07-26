@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'PDF to Excel Converter Online Free — PDF to XLSX',
-  description: 'Convert PDF tables and data to Excel spreadsheets online for free. Get an editable XLSX file with accurate rows and columns. AI-powered extraction. No signup.',
+  description: 'Convert PDF tables into editable Excel XLSX spreadsheets online. Extract accurate rows and columns with AI-powered conversion. No signup required.',
   keywords: 'PDF to Excel, PDF to XLSX, convert PDF to Excel online free, PDF table to Excel, PDF to spreadsheet converter',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-to-excel' },
   robots: { index: true, follow: true },

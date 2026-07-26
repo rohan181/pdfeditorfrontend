@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: { absolute: 'Pricing & Plans | EditPDF AI' },
-  description: 'Compare EditPDF AI free and Pro plans. Upgrade for unlimited AI form filling, OCR, translation, mind maps, quiz creation and priority processing. Cancel anytime.',
+  description: 'Compare EditPDF AI Free and Pro plans. Get unlimited AI form filling, OCR, translation, mind maps and quiz creation. Cancel Pro anytime.',
   keywords: 'EditPDF AI pricing, PDF editor plans, AI PDF editor price, EditPDF AI Pro, PDF tool subscription',
   alternates: { canonical: 'https://www.editpdfai.com/pricing' },
   robots: { index: true, follow: true },

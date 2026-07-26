@@ -646,6 +646,7 @@ export default function PDFRedactorPage() {
           </div>
         </div>
       </div>
+      <ToolSEOSection {...toolSeoData['pdf-redactor']} />
     </>
   )
 

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Image to PDF Converter Online Free — JPG, PNG to PDF',
-  description: 'Convert JPG, PNG, WebP and other images to PDF online for free. Combine multiple images into one PDF. Adjust size, orientation and margins. No signup needed.',
+  description: 'Convert JPG, PNG and WebP images to PDF online for free. Combine multiple images and adjust page size, orientation and margins. No signup required.',
   keywords: 'image to PDF, JPG to PDF, PNG to PDF, convert image to PDF online free, photo to PDF, picture to PDF converter',
   alternates: { canonical: 'https://www.editpdfai.com/image-to-pdf' },
   robots: { index: true, follow: true },

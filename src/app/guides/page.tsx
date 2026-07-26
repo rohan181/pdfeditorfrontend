@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import guides from '@/lib/guidesData'
+import SiteFooter from '@/components/SiteFooter'
 
 export const metadata: Metadata = {
   title: { absolute: 'PDF Guides & How-To Articles | EditPDF AI' },
@@ -95,6 +96,8 @@ export default function GuidesPage() {
           Open the free PDF editor →
         </Link>
       </section>
+
+      <SiteFooter />
 
       <style>{`
         .guide-card:hover { border-color: ${ACCENT}; box-shadow: 0 4px 20px rgba(79,127,250,.12); }

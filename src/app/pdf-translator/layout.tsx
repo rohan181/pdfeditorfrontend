@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'AI PDF Translator Online Free — Translate PDF to Any Language',
-  description: 'Translate PDF documents to 50+ languages with AI. Preserve the original layout and formatting. Translate contracts, reports and forms in seconds. Free online.',
+  title: 'AI PDF Translator — Translate PDFs Online',
+  description: 'Translate PDF documents into 77 languages with AI. Translate contracts, reports and forms in seconds, then download the result online.',
   keywords: 'PDF translator, translate PDF online, PDF translation AI, translate PDF to English, PDF to Spanish, AI document translator, translate PDF free',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-translator' },
   robots: { index: true, follow: true },
   openGraph: {
     title: 'AI PDF Translator Online Free — Translate PDF to Any Language',
-    description: 'Translate any PDF to 50+ languages with AI while preserving the original layout. Free online.',
+    description: 'Translate any PDF into 77 languages with AI. Translate documents online and download the result.',
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-translator',
     siteName: 'EditPDF AI',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'AI PDF Translator Online Free',
-    description: 'Translate any PDF to 50+ languages with AI. Preserves layout and formatting. Free online.',
+    description: 'Translate any PDF into 77 languages with AI and download the result online.',
     images: ['/social/pdf-translator.png'],
   },
 }
@@ -30,7 +30,7 @@ const jsonLd = {
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-  description: 'Translate PDF documents to 50+ languages with AI. Preserve the original layout and formatting.',
+  description: 'Translate PDF documents into 77 languages with AI and download the result online.',
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {

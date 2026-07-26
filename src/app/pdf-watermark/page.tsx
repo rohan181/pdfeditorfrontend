@@ -377,6 +377,7 @@ export default function PDFWatermarkPage() {
               </div>
             </div>
           </section>
+          <ToolSEOSection {...toolSeoData['pdf-watermark']} />
           <SiteFooter />
         </div>
       </>

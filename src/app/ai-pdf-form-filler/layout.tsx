@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'AI PDF Form Filler — Autofill Any PDF Form Free Online',
+  title: 'AI PDF Form Filler — Autofill PDF Forms Online',
   description:
-    'Autofill W-9s, job applications, tax forms and other PDFs with AI. Paste details once, review every field, then sign and download. Five free uses daily.',
+    'Autofill W-9s, applications and scanned PDF forms with AI. Review, sign and download online. A free account includes five daily AI uses.',
   keywords:
-    'AI PDF form filler, autofill PDF forms, fill PDF forms online free, PDF form autofill, AI form filling, fill W-9 online, fill PDF job application, fill tax form PDF, PDF filler no Adobe, auto fill PDF forms AI',
+    'AI PDF form filler, fill PDF forms online, autofill PDF forms, automatic PDF form filler, PDF form autofill, AI form filling, fill W-9 online, fillable PDF editor, scanned PDF form filler',
   alternates: { canonical: 'https://www.editpdfai.com/ai-pdf-form-filler' },
   robots: {
     index: true,
@@ -19,9 +19,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'AI PDF Form Filler — Autofill Any PDF Form Free Online',
+    title: 'AI PDF Form Filler — Autofill Forms Online',
     description:
-      'Autofill PDF forms with AI, review every field, add a signature and download. A free account includes five AI uses daily.',
+      'Use AI to autofill PDF forms online, review every field, add a signature and download. A free account includes five AI uses daily.',
     type: 'website',
     url: 'https://www.editpdfai.com/ai-pdf-form-filler',
     siteName: 'EditPDF AI',
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AI PDF Form Filler — Autofill Any PDF Form Free Online',
+    title: 'AI PDF Form Filler — Autofill Forms Online',
     description:
       'Autofill PDF forms with AI, review every field, sign and download. A free account includes five AI uses daily.',
     images: ['/social/ai-pdf-form-filler.png'],
@@ -150,12 +150,63 @@ const jsonLdBreadcrumb = {
   ],
 }
 
+const jsonLdHowTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  '@id': 'https://www.editpdfai.com/ai-pdf-form-filler#how-to',
+  name: 'How to fill a PDF form online with AI',
+  description: 'Upload a PDF form, provide your details, review the AI-filled fields, add a signature and download the completed PDF.',
+  totalTime: 'PT2M',
+  tool: [
+    { '@type': 'HowToTool', name: 'EditPDF AI Form Filler' },
+    { '@type': 'HowToTool', name: 'A web browser' },
+  ],
+  step: [
+    {
+      '@type': 'HowToStep',
+      position: 1,
+      name: 'Upload your PDF',
+      text: 'Choose an interactive, flat or scanned PDF form. The document loads in your browser.',
+      url: 'https://www.editpdfai.com/ai-pdf-form-filler#how',
+    },
+    {
+      '@type': 'HowToStep',
+      position: 2,
+      name: 'Describe your details',
+      text: 'Enter your information in plain language. AI matches the information to the corresponding form fields.',
+      url: 'https://www.editpdfai.com/ai-pdf-form-filler#how',
+    },
+    {
+      '@type': 'HowToStep',
+      position: 3,
+      name: 'Review, sign and download',
+      text: 'Review every filled field, correct anything necessary, add your signature and export the completed PDF.',
+      url: 'https://www.editpdfai.com/ai-pdf-form-filler#how',
+    },
+  ],
+}
+
+const jsonLdWebPage = {
+  '@context': 'https://schema.org',
+  '@type': 'WebPage',
+  '@id': 'https://www.editpdfai.com/ai-pdf-form-filler#webpage',
+  url: 'https://www.editpdfai.com/ai-pdf-form-filler',
+  name: 'AI PDF Form Filler — Autofill PDF Forms Online',
+  description: 'Autofill interactive, flat and scanned PDF forms with AI, review each field, sign and download.',
+  inLanguage: 'en',
+  isPartOf: { '@id': 'https://www.editpdfai.com/#website' },
+  about: { '@id': 'https://www.editpdfai.com/ai-pdf-form-filler#webapp' },
+  mainEntity: { '@id': 'https://www.editpdfai.com/ai-pdf-form-filler#webapp' },
+}
+
 export default function EditorLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdHowTo) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebPage) }} />
       {children}
     </>
   )

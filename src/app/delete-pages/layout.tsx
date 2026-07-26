@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Delete PDF Pages Online Free — Remove Pages from PDF',
-  description: 'Delete pages from a PDF online for free. Select and remove single pages, multiple pages or a page range. Download the cleaned PDF instantly. No signup needed.',
+  description: 'Delete pages from a PDF online for free. Remove individual pages or a page range, then download the cleaned PDF instantly. No signup required.',
   keywords: 'delete PDF pages, remove pages from PDF, delete page PDF online free, remove PDF page, PDF page remover',
   alternates: { canonical: 'https://www.editpdfai.com/delete-pages' },
   robots: { index: true, follow: true },

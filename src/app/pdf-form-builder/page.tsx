@@ -1126,6 +1126,7 @@ export default function PDFFormBuilderPage() {
           </div>
         </div>
       </div>
+      <ToolSEOSection {...toolSeoData['pdf-form-builder']} />
     </>
   )
 

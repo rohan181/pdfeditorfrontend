@@ -445,7 +445,7 @@ export default function DeletePages() {
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `2px dashed ${isDrop ? '#dc2626' : '#d1d5db'}`, borderRadius: 16, cursor: 'pointer', background: isDrop ? '#fff5f5' : 'transparent', minHeight: 300, textAlign: 'center', gap: 14 }}
             >
               <div style={{ fontSize: 52 }}>🗑</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#1d1d1f', letterSpacing: '-.03em' }}>Delete PDF Pages</div>
+              <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1d1d1f', letterSpacing: '-.03em', margin: 0 }}>Delete PDF Pages</h1>
               <div style={{ fontSize: 13, color: 'rgba(0,0,0,.42)', lineHeight: 1.7, maxWidth: 380 }}>
                 Upload a PDF, mark the pages you want to remove — by clicking thumbnails, typing a range like <strong>2-4, 7</strong>, or using quick selectors — then download a clean PDF without them.
               </div>

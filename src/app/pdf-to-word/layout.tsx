@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'PDF to Word Converter Online Free — PDF to DOCX',
-  description: 'Convert PDF to editable Word documents online for free. Get a DOCX file that preserves text, tables and layout. Fast, accurate AI conversion. No signup needed.',
+  description: 'Convert PDFs into editable Word DOCX documents online. Preserve text, tables and layout with fast AI-powered conversion. No signup required.',
   keywords: 'PDF to Word, PDF to DOCX, convert PDF to Word online free, PDF to DOC, PDF to editable Word, PDF converter',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-to-word' },
   robots: { index: true, follow: true },

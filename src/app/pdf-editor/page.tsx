@@ -112,6 +112,8 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar-track{background:#f5f5f7}
 ::-webkit-scrollbar-thumb{background:rgba(37,99,235,.2);border-radius:2px}
 :focus-visible{outline:2px solid var(--p);outline-offset:3px}
+.editor-close{min-height:42px;position:fixed!important;top:max(10px,env(safe-area-inset-top))!important;right:max(14px,env(safe-area-inset-right))!important;bottom:auto!important;box-shadow:0 8px 28px rgba(15,23,42,.24)}
+@media(max-width:600px){.editor-close{top:max(8px,env(safe-area-inset-top))!important;right:8px!important}}
 `
 
 const TOOLS = [
@@ -126,8 +128,8 @@ const TOOLS = [
 ]
 
 const FAQS = [
-  { q: 'Can I edit any PDF for free?', a: 'Yes. The PDF Editor is completely free with no subscription, no credit card and no account required. Upload any PDF and start editing immediately.' },
-  { q: 'Does the editor work on scanned documents?', a: 'Yes. The built-in OCR engine detects and makes scanned, image-based PDFs fully editable so you can overlay text and annotations anywhere.' },
+  { q: 'How can I edit a PDF online for free without signing up?', a: 'Upload your file to the free PDF Editor and start editing immediately. There is no subscription, credit card or account required. Add text, images, annotations or signatures, then download the completed PDF.' },
+  { q: 'Can I edit a scanned PDF?', a: 'Yes. You can add text, highlights, drawings, signatures and other content over a scanned PDF. Use the separate PDF OCR tool when you need to extract selectable text from scanned pages.' },
   { q: 'Can I add a digital signature?', a: 'Yes. Draw a freehand signature, type your name in a handwriting style, or upload a signature image and place it anywhere on the document with drag-and-drop precision.' },
   { q: 'Is my file uploaded to a server?', a: 'No. All editing happens locally inside your browser. Your PDF never leaves your device — nothing is stored or transmitted.' },
   { q: 'Can I reorder or delete pages?', a: 'Yes. Open the Page Manager panel to drag pages into any order, rotate individual pages, delete unwanted ones, or insert blank pages anywhere.' },
@@ -168,6 +170,7 @@ export default function PDFEditorPage() {
         }}>
           <PDFEditor hideChatFill hideAutoFill />
           <button
+            className="editor-close"
             onClick={closeEditor}
             aria-label="Close editor"
             style={{
@@ -196,7 +199,7 @@ export default function PDFEditorPage() {
             <span className="h1-main">Free Online PDF Editor</span>
           </h1>
           <p className="hero-sub">
-            The complete toolkit for working with PDFs. Add text, images, shapes, highlights and signatures. Manage pages, apply stamps, draw freehand and download — instantly, in your browser, for free.
+            Edit PDF files online for free. Add text, images, shapes, highlights and signatures, organize pages, apply stamps and download from your browser with no signup.
           </p>
           <div className="hero-cta-row">
             <button className="btn-primary" onClick={openEditor} aria-label="Open PDF editor">
@@ -219,8 +222,8 @@ export default function PDFEditorPage() {
       <section className="tools-sec" aria-labelledby="tools-h">
         <div className="wrap">
           <span className="sec-eyebrow">// EDITING TOOLS</span>
-          <h2 id="tools-h" className="sec-h">8 tools. Every edit covered.</h2>
-          <p className="sec-sub">Everything you need to mark up, sign and publish a PDF — no plugins, no account.</p>
+          <h2 id="tools-h" className="sec-h">Online PDF editing tools</h2>
+          <p className="sec-sub">Use this free PDF editor to add text, annotate, sign and organize PDF pages — no plugins or account required.</p>
           <div className="tools-grid" role="list">
             {TOOLS.map(({ icon, title, desc, bar }) => (
               <article key={title} className="tcard" role="listitem" style={{ '--bar': bar } as React.CSSProperties}>
@@ -237,8 +240,11 @@ export default function PDFEditorPage() {
       <section className="steps-sec" aria-labelledby="how-h">
         <div className="wrap inner">
           <span className="sec-eyebrow">// HOW IT WORKS</span>
-          <h2 id="how-h" className="sec-h">Open. Edit. Download.</h2>
+          <h2 id="how-h" className="sec-h">How to edit a PDF online</h2>
           <p className="sec-sub">No learning curve. No install. Be done in seconds.</p>
+          <p style={{ margin: '-20px 0 30px', fontSize: 13.5, color: '#64748b' }}>
+            Need a detailed walkthrough? Read <Link href="/guides/how-to-edit-a-pdf-without-adobe" style={{ color: '#1d4ed8', fontWeight: 700 }}>how to edit a PDF without Adobe Acrobat</Link>.
+          </p>
           <div className="steps" role="list">
             {([
               ['1', 'Upload Your PDF', 'Drag and drop any PDF — scanned, flat or interactive. The editor loads it instantly inside your browser, no upload to any server.'],
@@ -259,7 +265,7 @@ export default function PDFEditorPage() {
       <section className="faq-sec" aria-labelledby="faq-h">
         <div className="wrap">
           <span className="sec-eyebrow">// FAQ</span>
-          <h2 id="faq-h" className="sec-h">Common questions.</h2>
+          <h2 id="faq-h" className="sec-h">Free online PDF editor FAQs</h2>
           <p className="sec-sub">Everything you need to know before opening your first PDF.</p>
           <div className="faq-grid">
             {FAQS.map(({ q, a }) => (
@@ -293,7 +299,12 @@ export default function PDFEditorPage() {
       </section>
 
       {/* Footer */}
-      <ToolSEOSection {...toolSeoData['pdf-editor']} />
+      <ToolSEOSection
+        {...toolSeoData['pdf-editor']}
+        showSteps={false}
+        showFaq={false}
+        includeSchema={false}
+      />
       <SiteFooter />
     </div>
   )

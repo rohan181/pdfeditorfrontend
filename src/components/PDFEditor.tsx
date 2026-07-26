@@ -1,6 +1,7 @@
 'use client'
 import '@/styles/editor.css'
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { v4 as uuidv4 } from 'uuid'
 import DraggableElement from './DraggableElement'
 import PageSidebar from './PageSidebar'
@@ -307,6 +308,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }: { hideChatFill?: boolean; hideAutoFill?: boolean } = {}) {
+  const { isLoaded: isAuthLoaded, isSignedIn } = useUser()
   const { loadOpenCV, detectRectangles, drawBoxesOnCanvas } = useScannedDetection()
   const canvasRef = useRef<HTMLCanvasElement>(null)  // kept for compat; primary: canvasRefsMap
   const canvasRefsMap = useRef<Record<string, HTMLCanvasElement | null>>({})
@@ -1647,6 +1649,14 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
   }, [slotIdx, slots, sources, detectFieldsFromTextLayer])
 
   const openChatFill = useCallback(async () => {
+    // Gate the AI chat before opening it or starting field-detection requests.
+    // UpgradeGateProvider owns the shared sign-in prompt for this event.
+    if (!isAuthLoaded) return
+    if (!isSignedIn) {
+      window.dispatchEvent(new CustomEvent('signin-needed'))
+      return
+    }
+
     setShowChatFill(true)
 
     // 1. Already an AcroForm? Use it directly — positions are perfect.
@@ -1687,7 +1697,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
     // 3. Scanned PDF or no bytes — fall back to detection (pipeline → vision)
     detectFieldsForChat().catch(console.error)
-  }, [loadPageFields, detectFieldsFromTextLayer, detectFieldsForChat, slots, slotIdx, sources])
+  }, [isAuthLoaded, isSignedIn, loadPageFields, detectFieldsFromTextLayer, detectFieldsForChat, slots, slotIdx, sources])
 
   const applyAutoFill = useCallback((filled: FilledField[]) => {
     // fieldName → new elements built for that field this run
@@ -4328,4 +4338,3 @@ const mobileIconBtn: React.CSSProperties = {
   color: '#fff', cursor: 'pointer', width: 34, height: 34,
   fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
 }
-

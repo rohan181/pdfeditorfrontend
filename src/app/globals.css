@@ -303,7 +303,8 @@ body { overflow-x:clip; }
     padding-right:max(12px,env(safe-area-inset-right)) !important;
   }
   .mobile-nav-drawer { width:min(100%,360px) !important; }
-  .scr-sticky { padding-top:54px; box-sizing:border-box; }
+  .scr-pin { height:400svh !important; overscroll-behavior-y:contain !important; }
+  .scr-sticky { height:100svh !important; padding-top:54px; box-sizing:border-box; }
   .scr-row    { flex-direction:column !important; gap:12px !important; padding:16px 20px 0 !important; align-items:stretch !important; justify-content:flex-start !important; }
   .scr-left   { width:100% !important; }
   .scr-dots   { margin-bottom:16px !important; }

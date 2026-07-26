@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'AI Mind Map Generator from PDF — Visualise Any Document',
-  description: 'Generate visual mind maps from any PDF with AI. Turn reports, research papers, books and notes into structured, interactive mind maps in seconds. Free online.',
+  description: 'Generate an interactive mind map from any PDF with AI. Visualise reports, research papers, books and notes as a structured knowledge graph.',
   keywords: 'AI mind map generator, PDF to mind map, mind map from PDF, AI mind map, visual mind map generator, PDF visualiser',
   alternates: { canonical: 'https://www.editpdfai.com/mind-map' },
   robots: { index: true, follow: true },

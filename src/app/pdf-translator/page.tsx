@@ -446,10 +446,10 @@ export default function PDFTranslatorPage() {
             {!file && !streaming && !output && (
               <div className="hero">
                 <div className="hero-badge">🌐 AI Translation</div>
-                <h1 className="hero-h1">Translate any <em>PDF</em><br/>into 80+ languages</h1>
+                <h1 className="hero-h1">Translate any <em>PDF</em><br/>into 77 languages</h1>
                 <p className="hero-sub">Upload a PDF, pick your target language, and get a clean streaming translation powered by Claude.</p>
                 <div className="feat-grid">
-                  <div className="feat"><div className="feat-icon">🌍</div><div className="feat-t">80+ Languages</div><div className="feat-d">From Arabic to Zulu</div></div>
+                  <div className="feat"><div className="feat-icon">🌍</div><div className="feat-t">77 Languages</div><div className="feat-d">From Afrikaans to Zulu</div></div>
                   <div className="feat"><div className="feat-icon">⚡</div><div className="feat-t">Streaming Output</div><div className="feat-d">See results as they arrive</div></div>
                   <div className="feat"><div className="feat-icon">📄</div><div className="feat-t">Download PDF / TXT</div><div className="feat-d">Save translated document</div></div>
                 </div>

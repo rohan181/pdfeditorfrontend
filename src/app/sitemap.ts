@@ -6,7 +6,10 @@ function url(
   path: string,
   priority: number,
   changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] = 'monthly',
-  _lastModified = '2026-07-19',
+  // Kept as an optional compatibility argument so existing entries remain
+  // readable; intentionally omitted from the XML until dates can be derived
+  // from a reliable content source.
+  _lastModified?: string,
 ): MetadataRoute.Sitemap[number] {
   return { url: `${BASE}${path}`, changeFrequency, priority }
 }
@@ -14,11 +17,11 @@ function url(
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     // ── Home ──────────────────────────────────────────────────────────────────
-    url('/',                    1.0, 'weekly',   '2026-07-22'),
+    url('/',                    1.0, 'weekly',   '2026-07-23'),
 
     // ── Flagship tools ────────────────────────────────────────────────────────
-    url('/ai-pdf-form-filler',  0.95, 'monthly', '2026-07-19'),
-    url('/pdf-editor',          0.95, 'monthly', '2026-07-19'),
+    url('/ai-pdf-form-filler',  0.95, 'monthly', '2026-07-23'),
+    url('/pdf-editor',          0.95, 'monthly', '2026-07-23'),
     url('/pdf-viewer',          0.90, 'monthly', '2026-01-01'),
     url('/pdf-cropper',         0.85, 'monthly', '2026-01-01'),
 

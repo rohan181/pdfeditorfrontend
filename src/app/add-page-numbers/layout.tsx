@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Add Page Numbers to PDF Online Free — Number PDF Pages',
-  description: 'Add page numbers to PDF documents online for free. Choose position, font, size and starting number. Apply to all pages or a custom range. No install needed.',
+  description: 'Add page numbers to PDFs online for free. Choose the position, font, size, starting number and page range. No installation or signup required.',
   keywords: 'add page numbers to PDF, number PDF pages online, PDF page numbering, add footer to PDF, PDF page numbers free',
   alternates: { canonical: 'https://www.editpdfai.com/add-page-numbers' },
   robots: { index: true, follow: true },

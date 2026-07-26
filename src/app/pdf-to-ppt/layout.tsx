@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'PDF to PowerPoint Converter Online Free — PDF to PPTX',
-  description: 'Convert PDF to editable PowerPoint presentations online for free. Each PDF page becomes a slide. Preserves text, images and layout. No signup, works in browser.',
+  description: 'Convert PDFs into editable PowerPoint presentations online. Turn each PDF page into a PPTX slide while preserving text, images and layout.',
   keywords: 'PDF to PowerPoint, PDF to PPTX, convert PDF to PPT online free, PDF to presentation, PDF to slides converter',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-to-ppt' },
   robots: { index: true, follow: true },

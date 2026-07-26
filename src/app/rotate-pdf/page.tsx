@@ -420,7 +420,7 @@ export default function RotatePDF() {
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: `2px dashed ${isDrop ? '#7c3aed' : '#d1d5db'}`, borderRadius: 16, cursor: 'pointer', background: isDrop ? '#faf5ff' : 'transparent', minHeight: 300, textAlign: 'center', gap: 12 }}
             >
               <div style={{ fontSize: 52 }}>🔄</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#1d1d1f', letterSpacing: '-.03em' }}>Rotate PDF Pages</div>
+              <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1d1d1f', letterSpacing: '-.03em', margin: 0 }}>Rotate PDF Pages</h1>
               <div style={{ fontSize: 13, color: 'rgba(0,0,0,.42)', lineHeight: 1.7, maxWidth: 360 }}>
                 Upload a PDF to see all pages as thumbnails. Rotate individual pages or all pages at once, then download the result.
               </div>

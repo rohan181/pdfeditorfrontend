@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Sign PDF Online Free — eSign Documents Instantly',
-  description: 'Sign PDF documents online for free. Draw, type or upload your signature and place it anywhere on the PDF. No account required — sign and download instantly.',
+  description: 'Sign PDFs online for free. Draw, type or upload your signature, place it anywhere in the document and download it instantly. No account required.',
   keywords: 'sign PDF online, eSign PDF, electronic signature PDF, PDF signer, digital signature PDF, sign PDF free',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-signer' },
   robots: { index: true, follow: true },

@@ -12,13 +12,13 @@ import SiteFooter from '@/components/SiteFooter'
 import MobileEditorShortcut from '@/components/MobileEditorShortcut'
 
 export const metadata: Metadata = {
-  title: { absolute: 'Free Online PDF Editor – Edit, Sign, Fill & Convert | EditPDF AI' },
-  description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — edit, sign, OCR, translate, summarise and fill forms. Free, no account needed.',
-  keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, editpdfai',
+  title: { absolute: 'Free PDF Tools Online — Edit, Sign & Convert' },
+  description: 'Use 35+ free online PDF tools to edit, sign, fill, merge, compress and convert PDFs. Core tools need no account; AI tools include five free daily uses.',
+  keywords: 'PDF editor, PDF converter, free online PDF tools, edit PDF online for free without signup, edit and sign PDF online free, merge PDF files online, compress PDF without losing quality, convert PDF to Word online, fill PDF forms online, AI PDF tools, EditPDF AI',
   alternates: { canonical: 'https://www.editpdfai.com' },
   openGraph: {
-    title: 'Free Online PDF Editor – Edit, Sign, Fill & Convert | EditPDF AI',
-    description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — free, no account needed.',
+    title: 'Free Online PDF Tools — Edit, Sign, Fill & Convert',
+    description: 'Use 35+ online PDF tools to edit, sign, fill, merge, compress and convert PDFs. Core tools are free with no account.',
     type: 'website',
     url: 'https://www.editpdfai.com',
     siteName: 'EditPDF AI',
@@ -26,13 +26,13 @@ export const metadata: Metadata = {
       url: '/social/home.png',
       width: 1200,
       height: 630,
-      alt: 'EditPDF AI — Free online PDF editor with 35+ tools',
+      alt: 'EditPDF AI — 35+ free online PDF tools',
     }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Free Online PDF Editor — Edit, Sign, Fill & Convert',
-    description: 'Edit smarter with 35+ PDF tools for editing, signing, OCR, conversion and AI workflows.',
+    title: 'Free Online PDF Tools — Edit, Sign, Fill & Convert',
+    description: 'Use 35+ PDF tools for editing, signing, filling, OCR, compression, conversion and AI workflows.',
     images: ['/social/home.png'],
   },
 }
@@ -60,7 +60,7 @@ const jsonLd = [
       { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD', url: 'https://www.editpdfai.com/pdf-editor' },
       { '@type': 'Offer', name: 'Pro', price: '1', priceCurrency: 'USD', url: 'https://www.editpdfai.com/pricing' },
     ],
-    description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — free, no account needed.',
+    description: 'Use 35+ online PDF tools to edit, sign, fill, merge, compress and convert documents. Core tools are free with no account.',
   },
   {
     '@context': 'https://schema.org',

@@ -1,5 +1,6 @@
 'use client'
 import React from 'react'
+import Link from 'next/link'
 import { toolMetaMap } from '@/lib/toolMeta'
 
 export interface ToolSEOStep    { title: string; body: string }
@@ -16,6 +17,9 @@ interface Props {
   formats?: ToolSEOFormats
   privacy?: string
   toolSlug?: string
+  showSteps?: boolean
+  showFaq?: boolean
+  includeSchema?: boolean
 }
 
 const PURPLE  = '#4F7FFA'
@@ -23,7 +27,19 @@ const BG      = '#f7f8fa'
 
 const BASE = 'https://www.editpdfai.com'
 
-export default function ToolSEOSection({ steps, faqs, whatIs, users, related, formats, privacy, toolSlug }: Props) {
+const GUIDES_BY_TOOL: Record<string, { href: string; label: string }[]> = {
+  'pdf-editor': [{ href: '/guides/how-to-edit-a-pdf-without-adobe', label: 'How to edit a PDF without Adobe Acrobat' }],
+  'pdf-compressor': [{ href: '/guides/how-to-reduce-pdf-file-size', label: 'How to reduce PDF file size without losing quality' }],
+  'ai-pdf-form-filler': [{ href: '/guides/how-to-fill-out-a-pdf-form-automatically', label: 'How to fill out a PDF form automatically with AI' }],
+  'pdf-signer': [{ href: '/guides/how-to-sign-a-pdf-online', label: 'How to sign a PDF online without printing' }],
+  'pdf-ocr': [{ href: '/guides/how-to-make-a-scanned-pdf-searchable', label: 'How to make a scanned PDF searchable' }],
+  'pdf-merger': [{ href: '/guides/how-to-merge-pdf-files', label: 'How to merge PDF files on any device' }],
+  'pdf-redactor': [{ href: '/guides/how-to-redact-sensitive-information-from-a-pdf', label: 'How to permanently redact sensitive information from a PDF' }],
+  'word-to-pdf': [{ href: '/guides/pdf-vs-word-which-format-to-use', label: 'PDF vs Word: which document format should you use?' }],
+  'pdf-to-word': [{ href: '/guides/pdf-vs-word-which-format-to-use', label: 'PDF vs Word: which document format should you use?' }],
+}
+
+export default function ToolSEOSection({ steps, faqs, whatIs, users, related, formats, privacy, toolSlug, showSteps = true, showFaq = true, includeSchema = true }: Props) {
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -35,6 +51,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
   }
 
   const relatedTools = related ?? []
+  const relevantGuides = toolSlug ? GUIDES_BY_TOOL[toolSlug] ?? [] : []
 
   const toolMeta = toolSlug ? toolMetaMap[toolSlug] : null
 
@@ -60,11 +77,11 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
 
   return (
     <div style={{ fontFamily: 'var(--font-inter,system-ui,sans-serif)', color: '#1d1d1f' }}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      {breadcrumbSchema && (
+      {includeSchema && showFaq && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
+      {includeSchema && breadcrumbSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       )}
-      {softwareSchema && (
+      {includeSchema && softwareSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }} />
       )}
 
@@ -84,9 +101,12 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
             )}
             {users && (
               <div>
-                <h2 style={{ fontSize: 'clamp(20px,2.2vw,28px)', fontWeight: 800, letterSpacing: '-.04em', color: '#1d1d1f', marginBottom: 24 }}>
-                  Who uses it?
+                <h2 style={{ fontSize: 'clamp(20px,2.2vw,28px)', fontWeight: 800, letterSpacing: '-.04em', color: '#1d1d1f', marginBottom: 10 }}>
+                  Practical examples
                 </h2>
+                <p style={{ fontSize: 14.5, color: '#6b7280', lineHeight: 1.7, margin: '0 0 24px', maxWidth: 680 }}>
+                  Common ways people use this tool in real documents and day-to-day workflows.
+                </p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 14 }}>
                   {users.map((u, i) => (
                     <div key={i} style={{ background: BG, borderRadius: 14, padding: '18px 16px', border: '1.5px solid #e8eaed' }}>
@@ -102,7 +122,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
       )}
 
       {/* ── How it works ── */}
-      <section style={{ background: BG, borderTop: '1px solid #ebebeb', padding: '56px 24px' }}>
+      {showSteps && <section style={{ background: BG, borderTop: '1px solid #ebebeb', padding: '56px 24px' }}>
         <div style={{ maxWidth: 860, margin: '0 auto' }}>
           <h2 style={{ fontSize: 'clamp(20px,2.5vw,28px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 36px', textAlign: 'center' }}>
             How it works
@@ -119,7 +139,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
             ))}
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* ── Formats + Privacy ── */}
       {(formats || privacy) && (
@@ -175,7 +195,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
       )}
 
       {/* ── FAQ ── */}
-      <section style={{ padding: '56px 24px 72px', background: BG, borderTop: '1px solid #ebebeb' }}>
+      {showFaq && <section style={{ padding: '56px 24px 72px', background: BG, borderTop: '1px solid #ebebeb' }}>
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
           <h2 style={{ fontSize: 'clamp(20px,2.5vw,28px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 32px', textAlign: 'center' }}>
             Frequently asked questions
@@ -198,7 +218,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
             ))}
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* ── Related tools ── */}
       {relatedTools.length > 0 && (
@@ -211,7 +231,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
               {relatedTools.map(r => {
                 const meta = toolMetaMap[r.slug]
                 return (
-                  <a
+                  <Link
                     key={r.slug}
                     href={`/${r.slug}`}
                     style={{
@@ -234,10 +254,26 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
                       <span style={{ fontSize: 16, color: PURPLE, flexShrink: 0, marginLeft: 8 }}>→</span>
                     </div>
                     {meta && <p style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.6, margin: 0 }}>{meta.desc}</p>}
-                  </a>
+                  </Link>
                 )
               })}
             </div>
+          </div>
+        </section>
+      )}
+
+      {relevantGuides.length > 0 && (
+        <section style={{ background: BG, borderTop: '1px solid #ebebeb', padding: '44px 24px 56px' }}>
+          <div style={{ maxWidth: 720, margin: '0 auto' }}>
+            <h2 style={{ fontSize: 'clamp(19px,2.3vw,26px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 18px' }}>
+              Step-by-step guides
+            </h2>
+            {relevantGuides.map(guide => (
+              <Link key={guide.href} href={guide.href} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '16px 18px', background: '#fff', border: '1.5px solid #e8eaed', borderRadius: 14, color: '#1d1d1f', textDecoration: 'none', fontSize: 14, fontWeight: 700 }}>
+                <span>{guide.label}</span>
+                <span aria-hidden="true" style={{ color: PURPLE }}>Read guide →</span>
+              </Link>
+            ))}
           </div>
         </section>
       )}

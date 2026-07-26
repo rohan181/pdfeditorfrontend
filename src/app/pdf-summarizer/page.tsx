@@ -315,6 +315,7 @@ export default function PDFSummarizerPage() {
           <input ref={fileInputRef} type="file" accept="application/pdf" style={{display:'none'}}
             onChange={e=>{const f=e.target.files?.[0];if(f)loadFile(f);e.target.value=''}} />
         </div>
+        <ToolSEOSection {...toolSeoData['pdf-summarizer']} />
       </>
     )
   }

@@ -187,6 +187,11 @@ export default function HomeScroll() {
   const reduceMotion = useReducedMotion()
 
   const { scrollYProgress } = useScroll({ target: pin, offset: ['start start', 'end end'] })
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 140,
+    damping: 30,
+    mass: 0.35,
+  })
 
   useEffect(() => {
     if (reduceMotion) return
@@ -210,8 +215,8 @@ export default function HomeScroll() {
     window.scrollTo({ top: start + distance * (targetStep / (GSTEPS.length - 1)), behavior: 'smooth' })
   }, [reduceMotion])
 
-  const hintOpacity = useTransform(scrollYProgress, [0, 0.06], [1, 0])
-  const barWidth    = useTransform(scrollYProgress, [0, 1], ['0%', '100%'])
+  const hintOpacity = useTransform(smoothProgress, [0, 0.06], [1, 0])
+  const barWidth    = useTransform(smoothProgress, [0, 1], ['0%', '100%'])
   const cur = GSTEPS[step]
   const ScreenComp = cur.Screen
 
@@ -226,7 +231,7 @@ export default function HomeScroll() {
         </motion.div>
       </div>
 
-      <div ref={pin} data-mobile-shortcut-occluder style={{height:reduceMotion?'auto':'400vh',position:'relative',overscrollBehavior:'none'}}>
+      <div ref={pin} className="scr-pin" data-mobile-shortcut-occluder style={{height:reduceMotion?'auto':'400vh',position:'relative',overscrollBehavior:'none'}}>
       <div className="scr-sticky" tabIndex={0} aria-label="How EditPDF AI works"
         onKeyDown={e=>{ if(e.key==='ArrowRight') goToStep(step+1); if(e.key==='ArrowLeft') goToStep(step-1) }}
         style={{top:0,height:reduceMotion?'auto':'100vh',minHeight:reduceMotion?620:undefined,position:reduceMotion?'relative':undefined,background:'#F5F5F7',overflow:'hidden',display:'flex',flexDirection:'column'}}>
@@ -267,7 +272,7 @@ export default function HomeScroll() {
             <AnimatePresence mode="sync">
               <motion.div key={step}
                 initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-10}}
-                transition={{duration:.22,ease:E}}>
+                transition={{duration:.28,ease:E}}>
                 <div style={{...MONO,fontSize:10,letterSpacing:'0.16em',textTransform:'uppercase',color:cur.color,marginBottom:10}}>
                   STEP {cur.n} — {cur.label}
                 </div>
@@ -332,10 +337,10 @@ export default function HomeScroll() {
               <div className="scr-screen" style={{position:'relative',height:390,overflow:'hidden',background:'#F5F5F7'}}>
                 <AnimatePresence mode="sync">
                   <motion.div key={step}
-                    initial={{opacity:0,scale:.96}}
-                    animate={{opacity:1,scale:1}}
-                    exit={{opacity:0,scale:1.02}}
-                    transition={{duration:.22,ease:[0.22,1,0.36,1]}}
+                    initial={{opacity:0,y:10}}
+                    animate={{opacity:1,y:0}}
+                    exit={{opacity:0,y:-8}}
+                    transition={{duration:.28,ease:[0.22,1,0.36,1]}}
                     style={{position:'absolute',inset:0}}>
                     <ScreenComp />
                   </motion.div>

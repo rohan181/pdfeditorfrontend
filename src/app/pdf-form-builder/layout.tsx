@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'PDF Form Builder Online Free — Create Fillable PDF Forms',
-  description: 'Build fillable PDF forms online for free. Add text fields, checkboxes, dropdowns, signatures and more. Create professional forms without any design software.',
+  description: 'Create fillable PDF forms online for free. Add text fields, checkboxes, dropdowns and signatures without installing specialist design software.',
   keywords: 'PDF form builder, create fillable PDF, make PDF form online, PDF form creator, fillable PDF builder, online form creator PDF',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-form-builder' },
   robots: { index: true, follow: true },

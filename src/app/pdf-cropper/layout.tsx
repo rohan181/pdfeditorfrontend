@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Crop PDF Pages Online Free — Trim PDF Margins',
-  description: 'Crop PDF pages online for free. Trim margins, remove whitespace or crop to a specific area. Works on single pages or the entire document. No install needed.',
+  description: 'Crop PDF pages online for free. Trim margins, remove whitespace or select a specific area on one page or the entire document. No installation needed.',
   keywords: 'crop PDF, trim PDF margins, crop PDF pages online, PDF cropper, remove white border PDF, crop PDF free',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-cropper' },
   robots: { index: true, follow: true },

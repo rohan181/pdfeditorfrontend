@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import guides, { guideMap, type Guide, type ContentBlock } from '@/lib/guidesData'
+import SiteFooter from '@/components/SiteFooter'
 
 export function generateStaticParams() {
   return guides.map(g => ({ slug: g.slug }))
@@ -13,11 +14,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const guide = guideMap[slug]
   if (!guide) return {}
   return {
-    title:       { absolute: `${guide.seoTitle} | EditPDF AI` },
+    title:       { absolute: guide.seoTitle },
     description: guide.description,
     alternates:  { canonical: `https://www.editpdfai.com/guides/${guide.slug}` },
     openGraph: {
-      title:       `${guide.seoTitle} | EditPDF AI`,
+      title:       guide.seoTitle,
       description: guide.description,
       type:        'article',
       url:         `https://www.editpdfai.com/guides/${guide.slug}`,
@@ -93,7 +94,7 @@ function GuideContent({ guide }: { guide: Guide }) {
       '@type': 'Organization',
       name:    'EditPDF AI',
       url:     'https://www.editpdfai.com',
-      logo:    { '@type': 'ImageObject', url: 'https://www.editpdfai.com/logo.png' },
+      logo:    { '@type': 'ImageObject', url: 'https://www.editpdfai.com/logo-square.svg', width: 512, height: 512 },
     },
     breadcrumb: {
       '@type': 'BreadcrumbList',
@@ -213,6 +214,8 @@ function GuideContent({ guide }: { guide: Guide }) {
           </div>
         </section>
       )}
+
+      <SiteFooter />
 
       <style>{`
         .more-guide-card:hover { border-color: ${PURPLE}; box-shadow: 0 4px 16px rgba(79,127,250,.1); }

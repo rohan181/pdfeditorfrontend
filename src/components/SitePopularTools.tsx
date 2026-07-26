@@ -41,14 +41,16 @@ export default function SitePopularTools() {
             Most used
           </div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,38px)',fontWeight:800,color:'#0F172A',letterSpacing:'-0.04em',lineHeight:1,margin:0}}>
-            Popular PDF Tools
+            Popular PDF Editor &amp; Converter Tools
           </h2>
           <p style={{...FI,fontSize:15,color:'#64748B',lineHeight:1.7,maxWidth:720,margin:'16px 0 0'}}>
-            Use these free online tools in your browser for <Link href="/pdf-editor" style={{color:'#2563EB',fontWeight:600}}>editing PDFs</Link>,{' '}
-            <Link href="/pdf-signer" style={{color:'#2563EB',fontWeight:600}}>filling and signing forms</Link>,{' '}
-            <Link href="/pdf-compressor" style={{color:'#2563EB',fontWeight:600}}>compressing files</Link>, organizing pages, and converting documents.
+            Use the free <Link href="/pdf-editor" style={{color:'#2563EB',fontWeight:600}}>PDF editor online</Link>,{' '}
+            <Link href="/pdf-signer" style={{color:'#2563EB',fontWeight:600}}>sign PDF</Link> tools,{' '}
+            <Link href="/pdf-merger" style={{color:'#2563EB',fontWeight:600}}>merge PDF</Link> tool,{' '}
+            <Link href="/pdf-compressor" style={{color:'#2563EB',fontWeight:600}}>PDF compressor</Link>, and PDF converter tools directly in your browser.
             Core tools work without an account, while optional AI tools can <Link href="/pdf-ocr" style={{color:'#7C3AED',fontWeight:600}}>OCR scanned pages</Link>,{' '}
             <Link href="/pdf-summarizer" style={{color:'#7C3AED',fontWeight:600}}>summarize documents</Link>, translate content, and automate form filling.
+            Whether you need to edit and sign a PDF online for free, merge PDF files, or convert a PDF to Word, each tool opens in a focused workspace.
           </p>
         </div>
         <div className="popular-tools-grid" style={{display:'flex',flexWrap:'wrap',gap:12}}>

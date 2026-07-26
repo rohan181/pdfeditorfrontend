@@ -243,6 +243,10 @@ export default function HtmlToPdf() {
         {/* ── Sidebar ── */}
         <aside style={S.sb}>
 
+          <h1 style={{ fontSize:18, fontWeight:800, color:'#1d1d1f', letterSpacing:'-.03em', margin:'16px 16px 4px' }}>
+            HTML to PDF Converter
+          </h1>
+
           {/* Input mode tabs */}
           <div style={S.sec}>
             <div style={S.lbl}>HTML Source</div>

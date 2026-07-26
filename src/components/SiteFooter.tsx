@@ -23,13 +23,40 @@ const toolCols = [
     ['Quiz Creator',    '/quiz-creator'],
     ['PDF Translator',  '/pdf-translator'],
   ]},
-  { title: 'PDF Tools', color: '#2563eb', links: [
+  { title: 'Edit & Pages', color: '#2563eb', links: [
     ['PDF Editor',      '/pdf-editor'],
+    ['PDF Viewer',      '/pdf-viewer'],
+    ['PDF E-Signer',    '/pdf-signer'],
+    ['PDF Annotator',   '/pdf-annotate'],
+    ['Page Manager',    '/pdf-page-manager'],
+    ['PDF Cropper',     '/pdf-cropper'],
+    ['Rotate Pages',    '/rotate-pdf'],
+    ['Extract Pages',   '/extract-pages'],
+    ['Delete Pages',    '/delete-pages'],
+    ['Add Page Numbers','/add-page-numbers'],
+  ]},
+  { title: 'Convert',   color: '#16a34a', links: [
+    ['PDF to Word',     '/pdf-to-word'],
+    ['PDF to Excel',    '/pdf-to-excel'],
+    ['PDF to PowerPoint','/pdf-to-ppt'],
+    ['PDF to Images',   '/pdf-to-images'],
+    ['Word to PDF',     '/word-to-pdf'],
+    ['Excel to PDF',    '/excel-to-pdf'],
+    ['PowerPoint to PDF','/ppt-to-pdf'],
+    ['Image to PDF',    '/image-to-pdf'],
+    ['Text to PDF',     '/txt-to-pdf'],
+    ['RTF to PDF',      '/rtf-to-pdf'],
+    ['ODT to PDF',      '/odt-to-pdf'],
+    ['HTML to PDF',     '/html-to-pdf'],
+  ]},
+  { title: 'Protect & Organize', color: '#dc2626', links: [
+    ['PDF Password Lock','/pdf-password-lock'],
+    ['PDF Watermark',   '/pdf-watermark'],
+    ['PDF Redactor',    '/pdf-redactor'],
     ['PDF Merger',      '/pdf-merger'],
     ['PDF Compressor',  '/pdf-compressor'],
     ['PDF Splitter',    '/pdf-splitter'],
-    ['PDF Watermarker', '/pdf-watermark'],
-    ['Image to PDF',    '/image-to-pdf'],
+    ['PDF Form Builder','/pdf-form-builder'],
   ]},
   { title: 'Guides',    color: '#0891b2', links: [
     ['Edit PDF Without Adobe',   '/guides/how-to-edit-a-pdf-without-adobe'],
@@ -45,7 +72,7 @@ const toolCols = [
     ['Privacy Policy',  '/privacy'],
     ['Terms of Service','/terms'],
     ['Contact',         '/contact'],
-    ['Support',         'mailto:support@editpdfai.com'],
+    ['Support',         '/support'],
   ]},
 ]
 
@@ -53,7 +80,7 @@ export default function SiteFooter() {
   return (
     <footer className="home-footer" style={{ background: '#f5f5f7', borderTop: '1px solid #e5e5ea', padding: '56px 28px 0' }}>
       <style>{`
-        .sf-footer-grid { display:grid; grid-template-columns:1.5fr 1fr 1fr 1fr 1fr; gap:36px; align-items:start; margin-bottom:48px; }
+        .sf-footer-grid { display:grid; grid-template-columns:1.45fr repeat(6,minmax(0,1fr)); gap:24px; align-items:start; margin-bottom:48px; }
         @media(max-width:900px){ .sf-footer-grid{ grid-template-columns:1fr 1fr !important; gap:32px !important; } }
         @media(max-width:600px){ .sf-footer-grid{ grid-template-columns:1fr !important; gap:24px !important; } }
         .sf-link { display:block; font-size:13px; color:#6b7280; text-decoration:none; font-weight:500; margin-bottom:10px; letter-spacing:-0.01em; transition:color .12s, transform .12s; }

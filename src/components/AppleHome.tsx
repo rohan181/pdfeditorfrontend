@@ -755,7 +755,7 @@ function Hero() {
             <motion.h1 className="home-hero-title" variants={MV} initial="hidden" animate="visible"
               style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(34px,4.8vw,76px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 24px'}}>
               <span style={{display:'block',overflow:'hidden'}}>
-                <motion.span style={{display:'block'}} variants={WV}>Free Online PDF Editor</motion.span>
+                <motion.span style={{display:'block'}} variants={WV}>Free Online PDF Tools</motion.span>
               </span>
               <span style={{display:'block',overflow:'hidden',marginTop:'0.1em'}}>
                 <motion.span style={{display:'block'}} variants={WV}>
@@ -767,7 +767,7 @@ function Hero() {
             {/* Sub */}
             <motion.p initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.7}}
               style={{...FI,fontSize:'clamp(15px,1.6vw,18px)',color:'#6E6E73',lineHeight:1.65,maxWidth:400,margin:'0 0 32px',letterSpacing:'-0.01em',fontWeight:400}}>
-              35+ PDF tools powered by AI. Core tools free with no account. AI tools free with a sign-in — 5 uses per day.
+              A free PDF editor, PDF converter, merger, compressor and form-filling toolkit with 35+ browser-based tools. Core tools need no account; AI tools include 5 free daily uses.
             </motion.p>
 
             {/* CTAs */}

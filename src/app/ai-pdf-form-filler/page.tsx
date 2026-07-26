@@ -1,17 +1,36 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
-import PDFEditor from '@/components/PDFEditor'
+import dynamic from 'next/dynamic'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
-import ToolSEOSection from '@/components/ToolSEOSection'
-import toolSeoData from '@/lib/toolSeoData'
+
+const PDFEditor = dynamic(() => import('@/components/PDFEditor'), {
+  ssr: false,
+  loading: () => (
+    <div className="editor-loading" role="status" aria-live="polite">
+      <div className="editor-loading-card">
+        <div className="editor-loading-icon" aria-hidden="true">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <div className="editor-loading-title">Preparing your AI PDF editor</div>
+        <div className="editor-loading-copy">Loading form detection, editing and signing tools…</div>
+        <div className="editor-loading-track" aria-hidden="true"><span /></div>
+        <div className="editor-loading-private">✓ Your PDF stays in your browser</div>
+      </div>
+    </div>
+  ),
+})
+
+const preloadEditor = () => { void import('@/components/PDFEditor') }
 
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 :root{
-  --bg:#ffffff;--fg:#1d1d1f;--fg2:rgba(29,29,31,.65);--fg3:rgba(29,29,31,.42);
+  --bg:#ffffff;--fg:#1d1d1f;--fg2:rgba(29,29,31,.72);--fg3:rgba(29,29,31,.62);
   --b:rgba(0,0,0,.08);--bh:rgba(0,0,0,.14);
   --p:#7c3aed;--p2:#6d28d9;--pl:#8b5cf6;--c:#0891b2;--g:#16a34a;
   --fd:var(--font-jakarta,'Plus Jakarta Sans',sans-serif);
@@ -46,21 +65,21 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .open-btn:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,58,237,.4)}
 
 /* Hero */
-.hero{position:relative;z-index:1;padding:136px 0 60px;overflow:visible;background:#fff}
-.hero-in{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+.hero{position:relative;z-index:1;padding:96px 0 64px;overflow:visible;background:#fff}
+.hero-in{display:grid;grid-template-columns:1.1fr .9fr;gap:72px;align-items:center}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.2);border-radius:20px;font-family:var(--fm);font-size:9px;letter-spacing:.16em;color:var(--p);margin-bottom:28px}
 .bdot{width:5px;height:5px;border-radius:50%;background:var(--p);box-shadow:0 0 6px var(--p);animation:bdot 2s ease-in-out infinite}
 @keyframes bdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
 .hero-h1{font-family:var(--fd);font-weight:800;letter-spacing:-.055em;line-height:.92;margin-bottom:26px}
-.h1-a{display:block;font-size:clamp(44px,6vw,74px);color:#1d1d1f}
-.h1-b{display:block;font-size:clamp(44px,6vw,74px);background:linear-gradient(110deg,#7c3aed 0%,#6366f1 45%,#0891b2 100%);background-size:220% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gflow 4s linear infinite}
+.h1-a{display:block;font-size:clamp(42px,4.7vw,64px);color:#1d1d1f}
+.h1-b{display:block;font-size:clamp(42px,4.7vw,64px);background:linear-gradient(110deg,#7c3aed 0%,#6366f1 45%,#0891b2 100%);background-size:220% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gflow 4s linear infinite}
 @keyframes gflow{0%{background-position:0% center}100%{background-position:220% center}}
-.h1-c{display:block;font-size:clamp(28px,4vw,54px);color:rgba(29,29,31,.18);font-weight:700;margin-top:8px}
+.h1-c{display:block;font-size:clamp(18px,2vw,24px);color:#64748b;font-weight:700;letter-spacing:-.035em;line-height:1.25;margin-top:16px}
 .hero-sub{font-size:clamp(14px,1.5vw,16.5px);color:var(--fg2);line-height:1.8;margin-bottom:36px;max-width:480px}
 .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px}
-.btn-p{display:inline-flex;align-items:center;gap:9px;padding:14px 30px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);border-radius:12px;font-family:var(--fd);font-size:14.5px;font-weight:700;color:#fff;border:none;cursor:pointer;transition:transform .18s,box-shadow .18s;box-shadow:0 8px 30px rgba(124,58,237,.3)}
+.btn-p{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:14px 30px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);border-radius:12px;font-family:var(--fd);font-size:14.5px;font-weight:700;color:#fff;border:none;cursor:pointer;transition:transform .18s,box-shadow .18s;box-shadow:0 8px 30px rgba(124,58,237,.3)}
 .btn-p:hover{transform:translateY(-2px);box-shadow:0 18px 50px rgba(124,58,237,.4)}
-.btn-s2{display:inline-flex;align-items:center;gap:8px;padding:14px 24px;background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;font-size:14px;font-weight:500;color:var(--fg2);text-decoration:none;transition:all .18s}
+.btn-s2{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:14px 24px;background:#fff;border:1.5px solid #d1d5db;border-radius:12px;font-size:14px;font-weight:600;color:var(--fg2);text-decoration:none;transition:all .18s}
 .btn-s2:hover{background:#f9fafb;border-color:#d1d5db;color:var(--fg)}
 .h-pills{display:flex;gap:8px;flex-wrap:wrap}
 .hpill{display:inline-flex;align-items:center;gap:4px;padding:6px 13px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:20px;font-size:11.5px;color:var(--fg3)}
@@ -199,10 +218,16 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 }
 @media(max-width:600px){
   .wrap{padding:0 20px}
-  .fg3d-grid{grid-template-columns:1fr}
-  .hero{padding:96px 0 44px}
+  .fg3d-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:34px}
+  .fg3d{padding:18px 14px}
+  .fg3d-ic{width:44px;height:44px;border-radius:13px;font-size:20px;margin-bottom:14px}
+  .fg3d-title{font-size:14px;line-height:1.25}
+  .fg3d-desc{font-size:12px;line-height:1.55}
+  .audience-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  .audience-card{padding:16px 14px!important}
+  .hero{padding:64px 0 44px}
   .h1-a,.h1-b{font-size:clamp(34px,11vw,44px)}
-  .h1-c{font-size:20px;line-height:1.25;margin-top:12px;color:rgba(29,29,31,.48)}
+  .h1-c{font-size:17px;line-height:1.35;margin-top:12px;color:#64748b}
   .hero-sub{line-height:1.65;margin-bottom:28px}
   .hero-badge{margin-bottom:20px}
   .cta-row{flex-direction:column;align-items:stretch}
@@ -228,6 +253,9 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
   .editor-close{top:max(8px,env(safe-area-inset-top))!important;right:8px!important}
   .foot-in{flex-direction:column;align-items:center;text-align:center}
   .foot-nav{justify-content:center}
+  .related-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .related-card{padding:16px 14px;min-height:112px}
+  .related-desc{display:none}
 }
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:#f5f5f7}
@@ -259,7 +287,17 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .demo-sub-label{font-size:11px;color:#9ca3af;text-align:center;margin-top:4px}
 .ai-compare{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
 .ai-compare-head,.ai-compare-row{min-width:680px}
-.editor-close{min-height:40px}
+.editor-close{min-height:42px;position:fixed!important;top:max(10px,env(safe-area-inset-top))!important;right:max(14px,env(safe-area-inset-right))!important;bottom:auto!important;box-shadow:0 8px 28px rgba(15,23,42,.24)}
+.editor-loading{flex:1;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 42%,rgba(124,58,237,.08),transparent 38%),#f5f7fc;color:#64748b}
+.editor-loading-card{width:min(420px,100%);padding:38px 30px 30px;text-align:center;background:#fff;border:1px solid rgba(99,102,241,.16);border-radius:22px;box-shadow:0 18px 55px rgba(51,65,85,.1)}
+.editor-loading-icon{width:64px;height:64px;margin:0 auto 18px;display:grid;place-items:center;border-radius:18px;color:#6d5ce7;background:linear-gradient(145deg,#f3f0ff,#ebe9ff);animation:editor-float 1.8s ease-in-out infinite}
+.editor-loading-title{font:800 19px/1.25 var(--fd);letter-spacing:-.025em;color:#172033;margin-bottom:8px}
+.editor-loading-copy{font-size:13px;line-height:1.55;color:#64748b}
+.editor-loading-track{height:5px;overflow:hidden;border-radius:99px;background:#eef0f6;margin:22px auto 17px;max-width:260px}
+.editor-loading-track span{display:block;width:42%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#8b5cf6,#6366f1,#0891b2);animation:editor-load 1.15s ease-in-out infinite}
+.editor-loading-private{font-size:11.5px;font-weight:650;color:#15803d}
+@keyframes editor-load{0%{transform:translateX(-110%)}100%{transform:translateX(350%)}}
+@keyframes editor-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @keyframes pulse-ring{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
 @keyframes scan-line{0%{top:0}100%{top:100%}}
 @keyframes type-in{0%{width:0}100%{width:100%}}
@@ -322,6 +360,11 @@ export default function AIPDFFormFillerPage() {
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setDemoPlaying(false)
+  }, [])
+
+  useEffect(() => {
+    const id = window.setTimeout(preloadEditor, 1200)
+    return () => window.clearTimeout(id)
   }, [])
 
   useEffect(() => {
@@ -396,11 +439,11 @@ export default function AIPDFFormFillerPage() {
               <span className="h1-c">5 Free Uses/Day — Sign In Required</span>
             </h1>
             <p className="hero-sub">
-              Upload any PDF, paste your details once, and let AI detect and fill the fields for you.
+              Use our online AI PDF form filler to upload any PDF, paste your details once, and automatically fill every matching field.
             </p>
             <div className="cta-row">
-              <button className="btn-p" onClick={openEditor}>
-                Start AI Form Filler — 5 Free Uses/Day
+              <button className="btn-p" onClick={openEditor} onPointerEnter={preloadEditor} onFocus={preloadEditor}>
+                Fill My PDF with AI
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
               </button>
               <a className="btn-s2" href="#features">See features</a>
@@ -514,7 +557,7 @@ export default function AIPDFFormFillerPage() {
               Traditional PDF form filling is tedious: open Acrobat, click field by field, type the same address you typed last week, repeat for the next form. AI form filling removes this entirely. Our tool detects both native AcroForm fields (the clickable boxes in an interactive PDF) and non-interactive forms (flat PDFs with underlines or tables). For scanned paper forms, OCR reads the layout first, then AI fills the detected fields.
             </p>
             <p style={{ fontSize: 16, color: '#374151', lineHeight: 1.8 }}>
-              The result: a completed, signable, downloadable PDF in seconds — with no Adobe Acrobat subscription, no desktop software, and no account required for core tools.
+              The result: a completed, signable PDF you can review field by field before downloading. No Adobe Acrobat subscription or desktop software is required. AI filling requires a free account; manual editing and signing remain available as core tools.
             </p>
           </div>
 
@@ -523,7 +566,7 @@ export default function AIPDFFormFillerPage() {
             <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(22px,2.5vw,32px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 28 }}>
               Who uses AI PDF form filling?
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 16 }}>
+            <div className="audience-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 16 }}>
               {[
                 { who: 'Job seekers', why: 'Auto-fill job application PDFs from a CV — name, contact, work history — in one paste instead of retyping everything.' },
                 { who: 'Freelancers & contractors', why: 'Complete W-9, 1099, and client onboarding forms without manually entering the same business details every time.' },
@@ -532,7 +575,7 @@ export default function AIPDFFormFillerPage() {
                 { who: 'HR & recruiting teams', why: 'Populate employee onboarding packets and benefits enrollment forms from existing data in seconds.' },
                 { who: 'Legal & real estate', why: 'Fill lease agreements, disclosure forms, and standard legal documents without copying and re-entering client details.' },
               ].map(u => (
-                <div key={u.who} style={{ background: '#f7f8fa', borderRadius: 14, padding: '20px 18px', border: '1.5px solid #e8eaed' }}>
+                <div key={u.who} className="audience-card" style={{ background: '#f7f8fa', borderRadius: 14, padding: '20px 18px', border: '1.5px solid #e8eaed' }}>
                   <div style={{ fontFamily: 'var(--fd)', fontSize: 14, fontWeight: 800, color: '#1d1d1f', marginBottom: 7, letterSpacing: '-.02em' }}>{u.who}</div>
                   <p style={{ fontSize: 13.5, color: '#6b7280', lineHeight: 1.65, margin: 0 }}>{u.why}</p>
                 </div>
@@ -627,7 +670,7 @@ export default function AIPDFFormFillerPage() {
                     <div style={{border:'2px dashed #c7d2fe',borderRadius:16,padding:'40px 24px',textAlign:'center',background:'rgba(99,102,241,.03)',animation:'pulse-ring 2s ease-in-out infinite'}}>
                       <div style={{fontSize:40,marginBottom:12}}>📄</div>
                       <div style={{fontSize:14,fontWeight:700,color:'#1d1d1f',marginBottom:6}}>Drop your PDF here</div>
-                      <div style={{fontSize:12,color:'#9ca3af'}}>or click to browse · up to 100 MB</div>
+                      <div style={{fontSize:12,color:'#9ca3af'}}>or click to browse · up to 50 MB</div>
                       <div style={{marginTop:16,display:'inline-block',padding:'9px 22px',background:'#6366f1',borderRadius:99,fontSize:12,fontWeight:700,color:'#fff'}}>Choose PDF File</div>
                     </div>
                   )}
@@ -711,8 +754,11 @@ export default function AIPDFFormFillerPage() {
       <section className="how-sec" id="how">
         <div className="wrap">
           <span className="sec-eye">Simple process</span>
-          <h2 className="sec-h">How to auto-fill a PDF<br />form with AI</h2>
+          <h2 className="sec-h">How to fill a PDF form<br />online with AI</h2>
           <p className="sec-sub">No learning curve. Upload, describe your details, download the completed form.</p>
+          <p style={{ margin: '-22px auto 32px', maxWidth: 620, textAlign: 'center', fontSize: 13.5, color: '#64748b', lineHeight: 1.6 }}>
+            Prefer a detailed walkthrough? Read <Link href="/guides/how-to-fill-out-a-pdf-form-automatically" style={{ color: '#6d28d9', fontWeight: 700 }}>how to fill out a PDF form automatically</Link>.
+          </p>
           <div className="steps">
             {[
               { n: '1', t: 'Upload your PDF', d: 'Drag and drop any PDF — AcroForm, flat or scanned. Loads instantly in your browser, no server processing.' },
@@ -733,7 +779,7 @@ export default function AIPDFFormFillerPage() {
       <section className="feat-sec" id="features">
         <div className="wrap">
           <span className="sec-eye">Capabilities</span>
-          <h2 className="sec-h">Everything you need<br />inside one editor</h2>
+          <h2 className="sec-h">Automatic PDF form filler<br />features</h2>
           <p className="sec-sub">AI-powered filling is just the start — a full PDF toolkit right alongside it.</p>
           <div className="fg3d-grid">
             {FEATURES.map(f => (
@@ -774,7 +820,7 @@ export default function AIPDFFormFillerPage() {
         <div className="wrap" style={{ maxWidth: 1000 }}>
           <span style={{ fontFamily: 'var(--fm)', fontSize: 9, fontWeight: 700, letterSpacing: '.18em', color: 'var(--p)', textTransform: 'uppercase', display: 'block', marginBottom: 12, opacity: .7 }}>Why AI</span>
           <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(24px,3vw,36px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 12 }}>
-            AI form filling vs typing manually
+            AI PDF form filler vs typing manually
           </h2>
           <p style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.7, marginBottom: 40, maxWidth: 560 }}>
             Every minute you spend clicking form fields and retyping the same details is a minute wasted. Here is how AI form filling compares to doing it manually or with Adobe Acrobat.
@@ -848,7 +894,7 @@ export default function AIPDFFormFillerPage() {
       <section className="related-sec">
         <div className="wrap">
           <p className="related-label">More PDF Tools</p>
-          <h2 className="related-h">Everything you need for PDFs</h2>
+          <h2 className="related-h">Related online PDF tools</h2>
           <div className="related-grid">
             <Link href="/pdf-editor" className="related-card">
               <div className="related-icon" style={{ background: 'rgba(99,102,241,0.1)' }}>
@@ -917,15 +963,13 @@ export default function AIPDFFormFillerPage() {
             <div className="cta-glow" />
             <h2 className="cta-h">Start filling PDFs<br />with AI right now</h2>
             <p className="cta-sub">5 free AI uses per day. Sign in required. Upgrade to Pro for unlimited use.</p>
-            <button className="btn-p" onClick={openEditor} style={{ margin: '0 auto' }}>
+            <button className="btn-p" onClick={openEditor} onPointerEnter={preloadEditor} onFocus={preloadEditor} style={{ margin: '0 auto' }}>
               Start AI Form Filler
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
           </div>
         </div>
       </section>
-
-      <ToolSEOSection {...toolSeoData['ai-pdf-form-filler']} />
 
       {/* Footer — same as homepage */}
       <SiteFooter />

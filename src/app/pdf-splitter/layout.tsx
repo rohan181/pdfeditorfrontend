@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Split PDF Online Free — Extract Pages from PDF',
-  description: 'Split a PDF into multiple files online for free. Extract specific pages, split by range, or separate every page. No install, works in your browser.',
-  keywords: 'split PDF, split PDF online free, extract pages from PDF, PDF splitter, divide PDF, separate PDF pages',
+  title: 'Split PDF Online Free — Separate PDF Files by Range',
+  description: 'Split a PDF into multiple files online for free. Separate every page or divide one PDF into custom page ranges directly in your browser.',
+  keywords: 'split PDF, split PDF online free, PDF splitter, divide PDF into multiple files, separate PDF pages by range',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-splitter' },
   robots: { index: true, follow: true },
   openGraph: {
-    title: 'Split PDF Online Free — Extract Pages from PDF',
-    description: 'Split any PDF by page range or extract individual pages. Free, no signup needed.',
+    title: 'Split PDF Online Free — Separate Files by Range',
+    description: 'Split a PDF into separate files by custom page range or divide every page. Free, no signup needed.',
     type: 'website',
     url: 'https://www.editpdfai.com/pdf-splitter',
     siteName: 'EditPDF AI',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Split PDF Online Free',
-    description: 'Extract pages or split any PDF into multiple files. Free, instant, no signup.',
+    description: 'Split any PDF into multiple files by page range. Free, instant and no signup.',
     images: ['/social/pdf-splitter.png'],
   },
 }
@@ -30,7 +30,7 @@ const jsonLd = {
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: 'Web',
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-  description: 'Split a PDF into multiple files online for free. Extract specific pages, split by range, or separate every page.',
+  description: 'Split a PDF into multiple files online by custom page range or separate every page.',
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {

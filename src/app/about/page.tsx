@@ -63,7 +63,7 @@ const orgSchema = {
   '@id': 'https://www.editpdfai.com/#organization',
   name: 'EditPDF AI',
   url: 'https://www.editpdfai.com',
-  logo: 'https://www.editpdfai.com/logo.png',
+  logo: 'https://www.editpdfai.com/logo-square.svg',
   foundingDate: '2026',
   areaServed: 'Worldwide',
   contactPoint: {

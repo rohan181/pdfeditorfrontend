@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'AI Quiz Creator from PDF — Generate Quizzes Instantly',
-  description: 'Create quizzes and flashcards from any PDF with AI. Generate multiple-choice, true/false and open-ended questions from textbooks, notes and study materials.',
+  description: 'Create quizzes and flashcards from PDFs with AI. Generate multiple-choice, true-or-false and open-ended questions from your study materials.',
   keywords: 'AI quiz creator, quiz from PDF, generate quiz from PDF, PDF to quiz, AI quiz generator, flashcard generator from PDF',
   alternates: { canonical: 'https://www.editpdfai.com/quiz-creator' },
   robots: { index: true, follow: true },

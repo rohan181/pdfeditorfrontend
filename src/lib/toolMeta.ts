@@ -25,7 +25,7 @@ const toolMeta: ToolMeta[] = [
   { slug: 'rtf-to-pdf',         name: 'RTF to PDF',           desc: 'Convert Rich Text Format files to PDF' },
   { slug: 'pdf-ocr',            name: 'PDF OCR',              desc: 'Extract text from scanned PDFs and images' },
   { slug: 'pdf-summarizer',     name: 'PDF Summarizer',       desc: 'Get an AI-generated summary of any PDF' },
-  { slug: 'pdf-translator',     name: 'PDF Translator',       desc: 'Translate PDF documents into 50+ languages' },
+  { slug: 'pdf-translator',     name: 'PDF Translator',       desc: 'Translate PDF documents into 77 languages' },
   { slug: 'pdf-redactor',       name: 'PDF Redactor',         desc: 'Permanently remove sensitive content from PDFs' },
   { slug: 'pdf-annotate',       name: 'PDF Annotate',         desc: 'Highlight, comment, and mark up PDF documents' },
   { slug: 'pdf-form-builder',   name: 'PDF Form Builder',     desc: 'Create fillable PDF forms with drag-and-drop fields' },

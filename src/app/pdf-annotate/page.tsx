@@ -428,7 +428,7 @@ export default function PDFAnnotate() {
           <span style={{ fontSize:14, fontWeight:700, color:'#fff', letterSpacing:'-.03em' }}>EditPDF<span style={{ marginLeft:2, background:'linear-gradient(90deg,#4F7FFA,#8B3FEC)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}> AI</span></span>
         </Link>
         <span style={{ fontSize:11, color:'rgba(255,255,255,.25)' }}>›</span>
-        <span style={{ fontSize:13, fontWeight:700, color:'#fff' }}>PDF Annotator</span>
+        <h1 style={{ fontSize:13, fontWeight:700, color:'#fff', margin:0 }}>PDF Annotator</h1>
 
         {/* Undo / Redo */}
         <div style={{ display:'flex', gap:4, marginLeft:8 }}>

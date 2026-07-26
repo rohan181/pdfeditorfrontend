@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Annotate PDF Online Free — Highlight, Comment & Mark Up PDFs',
-  description: 'Annotate PDF documents online for free. Highlight text, add comments, draw shapes, sticky notes and freehand markup. Works in your browser, no install needed.',
+  title: 'Annotate PDF Online — Highlight, Comment & Draw',
+  description: 'Annotate PDFs online for free. Highlight text, add comments, draw shapes, insert sticky notes and add freehand markup directly in your browser.',
   keywords: 'annotate PDF, highlight PDF online, PDF annotation, PDF markup, comment on PDF, PDF highlighter, PDF sticky notes online',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-annotate' },
   robots: { index: true, follow: true },

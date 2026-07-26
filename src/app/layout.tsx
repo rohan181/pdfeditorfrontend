@@ -10,7 +10,7 @@ const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['600', '700', '
 const dm = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '700'], variable: '--font-dm', display: 'swap' })
 
 export const metadata: Metadata = {
-  title: { default: 'EditPDF AI — Edit smarter. Finish faster.', template: '%s | EditPDF AI' },
+  title: { default: 'EditPDF AI — Edit smarter. Finish faster.', template: '%s' },
   description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — edit, sign, OCR, translate, summarise and fill forms. Free, no account needed.',
   keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, PDF annotator, PDF OCR, PDF compressor, editpdfai',
   authors: [{ name: 'EditPDF AI', url: 'https://www.editpdfai.com' }],

@@ -196,7 +196,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 /* Landing */
 .landing{flex:1;display:flex;align-items:center;justify-content:center;padding:40px}
 .landing-inner{max-width:560px;width:100%;text-align:center}
-.landing-title{font-size:32px;font-weight:800;color:#1d1d1f;letter-spacing:-.04em;margin-bottom:10px}
+.landing-title{font-size:32px;font-weight:800;color:#1d1d1f;letter-spacing:-.04em;margin:0 0 10px}
 .landing-sub{font-size:14px;color:rgba(0,0,0,.4);margin-bottom:32px;line-height:1.6}
 .landing-drop{border:2px dashed #d0d0d0;border-radius:18px;padding:48px 32px;cursor:pointer;transition:all .15s;background:#fafafa}
 .landing-drop:hover,.landing-drop.over{border-color:#0891b2;background:#ecfeff}
@@ -433,7 +433,7 @@ export default function MindMapPage() {
           <SiteNav />
           <div className="landing">
             <div className="landing-inner">
-              <div className="landing-title">PDF Mind Map</div>
+              <h1 className="landing-title">PDF Mind Map</h1>
               <div className="landing-sub">Upload multiple PDFs and instantly visualise connections between them as a colour-coded knowledge graph.</div>
               <div className={`landing-drop${landDrop ? ' over' : ''}`}
                 onClick={() => fileRef.current?.click()}

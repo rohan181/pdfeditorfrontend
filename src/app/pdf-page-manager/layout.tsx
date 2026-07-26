@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'PDF Page Manager — Reorder, Delete & Add PDF Pages Online',
+  title: 'PDF Page Manager — Reorder, Delete & Add Pages',
   description: 'Manage PDF pages online for free. Drag to reorder, delete unwanted pages, add blank pages and rotate individual pages. No software install required.',
   keywords: 'PDF page manager, reorder PDF pages, delete PDF pages, add page to PDF, rearrange PDF pages, PDF page organizer',
   alternates: { canonical: 'https://www.editpdfai.com/pdf-page-manager' },
