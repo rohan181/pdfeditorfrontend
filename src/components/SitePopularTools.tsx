@@ -44,12 +44,12 @@ export default function SitePopularTools() {
             Popular PDF Editor &amp; Converter Tools
           </h2>
           <p style={{...FI,fontSize:15,color:'#64748B',lineHeight:1.7,maxWidth:720,margin:'16px 0 0'}}>
-            Use the free <Link href="/pdf-editor" style={{color:'#2563EB',fontWeight:600}}>PDF editor online</Link>,{' '}
-            <Link href="/pdf-signer" style={{color:'#2563EB',fontWeight:600}}>sign PDF</Link> tools,{' '}
-            <Link href="/pdf-merger" style={{color:'#2563EB',fontWeight:600}}>merge PDF</Link> tool,{' '}
-            <Link href="/pdf-compressor" style={{color:'#2563EB',fontWeight:600}}>PDF compressor</Link>, and PDF converter tools directly in your browser.
-            Core tools work without an account, while optional AI tools can <Link href="/pdf-ocr" style={{color:'#7C3AED',fontWeight:600}}>OCR scanned pages</Link>,{' '}
-            <Link href="/pdf-summarizer" style={{color:'#7C3AED',fontWeight:600}}>summarize documents</Link>, translate content, and automate form filling.
+            Use the free <Link prefetch={false} href="/pdf-editor" style={{color:'#2563EB',fontWeight:600}}>PDF editor online</Link>,{' '}
+            <Link prefetch={false} href="/pdf-signer" style={{color:'#2563EB',fontWeight:600}}>sign PDF</Link> tools,{' '}
+            <Link prefetch={false} href="/pdf-merger" style={{color:'#2563EB',fontWeight:600}}>merge PDF</Link> tool,{' '}
+            <Link prefetch={false} href="/pdf-compressor" style={{color:'#2563EB',fontWeight:600}}>PDF compressor</Link>, and PDF converter tools directly in your browser.
+            Core tools work without an account, while optional AI tools can <Link prefetch={false} href="/pdf-ocr" style={{color:'#7C3AED',fontWeight:600}}>OCR scanned pages</Link>,{' '}
+            <Link prefetch={false} href="/pdf-summarizer" style={{color:'#7C3AED',fontWeight:600}}>summarize documents</Link>, translate content, and automate form filling.
             Whether you need to edit and sign a PDF online for free, merge PDF files, or convert a PDF to Word, each tool opens in a focused workspace.
           </p>
         </div>
@@ -61,6 +61,7 @@ export default function SitePopularTools() {
               <Link
                 key={href}
                 href={href}
+                prefetch={false}
                 className="pop-tool-link"
                 style={{
                   '--hl-bg': iconColor+'0d',

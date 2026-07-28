@@ -131,9 +131,6 @@ function Tilt({ children }:{ children:React.ReactNode }) {
   )
 }
 
-const MV = { hidden:{}, visible:{ transition:{ staggerChildren:.08, delayChildren:.04 } } }
-const WV = { hidden:{y:'110%',opacity:0}, visible:{ y:'0%',opacity:1, transition:{ duration:.7, ease:[0.22,1,0.36,1] as [number,number,number,number] } } }
-
 const CC = { hidden:{}, visible:{ transition:{ staggerChildren:.04, delayChildren:.05 } } }
 const CI = { hidden:{opacity:0,y:20,scale:.98}, visible:{ opacity:1,y:0,scale:1, transition:{ duration:.42, ease:[0.22,1,0.36,1] as [number,number,number,number] } } }
 
@@ -399,7 +396,7 @@ function Nav() {
           display:'flex',alignItems:'center'}}>
 
           {/* Logo */}
-          <Link href="/" className="home-nav-logo" style={{display:'flex',alignItems:'center',textDecoration:'none',marginRight:28,flexShrink:0}}>
+          <Link prefetch={false} href="/" className="home-nav-logo" style={{display:'flex',alignItems:'center',textDecoration:'none',marginRight:28,flexShrink:0}}>
             <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{height:42,width:'auto',display:'block'}} priority />
           </Link>
 
@@ -437,7 +434,7 @@ function Nav() {
 
             {/* Plain links */}
             {NAV_LINKS.map(({label,href})=>(
-              <Link key={label} href={href} style={{textDecoration:'none'}}>
+              <Link prefetch={false} key={label} href={href} style={{textDecoration:'none'}}>
                 <span className="nav-link"
                   style={{...FI,display:'inline-flex',alignItems:'center',gap:4,
                     padding:'5px 11px',fontSize:13,fontWeight:500,borderRadius:8,
@@ -453,7 +450,7 @@ function Nav() {
             {isLoaded && (
               isSignedIn ? (
                 <div className="desk" style={{display:'flex',alignItems:'center',gap:8}}>
-                  <Link href="/dashboard"
+                  <Link prefetch={false} href="/dashboard"
                     style={{...FI,fontSize:12.5,fontWeight:700,color:'#1d1d1f',
                       textDecoration:'none',padding:'6px 14px',borderRadius:99,
                       border:'1.5px solid rgba(0,0,0,.16)',background:'#fff',
@@ -475,7 +472,7 @@ function Nav() {
                 </div>
               )
             )}
-            <Link href="/pdf-editor" className="nav-cta-btn nav-editor-button"
+            <Link prefetch={false} href="/pdf-editor" className="nav-cta-btn nav-editor-button"
               data-editor-cta
               style={{...FI,display:'inline-flex',alignItems:'center',gap:6,padding:'7px 16px',
                 background:'#2563EB',color:'#fff',borderRadius:99,fontSize:12.5,fontWeight:700,
@@ -527,7 +524,7 @@ function Nav() {
                 <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:4}}>
                   {NAV_CATS.map(cat=>(
                     <div key={cat.label}>
-                      <Link role="menuitem" href={cat.href} onClick={()=>closeMenuNow()} style={{textDecoration:'none'}}>
+                      <Link prefetch={false} role="menuitem" href={cat.href} onClick={()=>closeMenuNow()} style={{textDecoration:'none'}}>
                         <div style={{display:'flex',alignItems:'center',gap:7,
                           padding:'6px 8px 8px',marginBottom:4,
                           borderBottom:`2px solid ${cat.color}22`}}>
@@ -541,7 +538,7 @@ function Nav() {
                       {cat.tools.map(tool=>{
                         const badge = NAV_TIER_LABEL[tool.tier]
                         return (
-                          <Link role="menuitem" key={tool.name} href={tool.href} onClick={()=>closeMenuNow()} style={{textDecoration:'none'}}>
+                          <Link prefetch={false} role="menuitem" key={tool.name} href={tool.href} onClick={()=>closeMenuNow()} style={{textDecoration:'none'}}>
                             <div className="nav-tool-row"
                               style={{display:'flex',alignItems:'center',gap:8,
                                 padding:'5px 8px',borderRadius:8,cursor:'pointer'}}>
@@ -567,7 +564,7 @@ function Nav() {
                 </div>
                 <div style={{marginTop:12,paddingTop:10,borderTop:'1px solid #f0f0f0',
                   display:'flex',justifyContent:'flex-end'}}>
-                  <Link role="menuitem" href="#tools" onClick={()=>closeMenuNow()}
+                  <Link prefetch={false} role="menuitem" href="#tools" onClick={()=>closeMenuNow()}
                     style={{...FI,display:'flex',alignItems:'center',gap:5,
                       fontSize:12,fontWeight:600,color:'#6b7280',textDecoration:'none'}}>
                     See all 35+ tools <ArrowRight size={11} strokeWidth={2.5}/>
@@ -638,7 +635,7 @@ function Nav() {
                           {cat.tools.map(tool=>{
                             const badge = NAV_TIER_LABEL[tool.tier]
                             return (
-                              <Link key={tool.name} href={tool.href} onClick={()=>{ setMobOpen(false); setMobToolsExp(false); setMobCatOpen(null) }} style={{textDecoration:'none',display:'block'}}>
+                              <Link prefetch={false} key={tool.name} href={tool.href} onClick={()=>{ setMobOpen(false); setMobToolsExp(false); setMobCatOpen(null) }} style={{textDecoration:'none',display:'block'}}>
                                 <div style={{display:'flex',alignItems:'center',gap:12,
                                   height:52,padding:'0 20px 0 24px',
                                   borderTop:'1px solid #f5f6f8',
@@ -663,7 +660,7 @@ function Nav() {
                     ))}
 
                     {/* See all */}
-                    <Link href="/#tools" onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
+                    <Link prefetch={false} href="/#tools" onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
                       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,
                         height:48,...FI,fontSize:13,fontWeight:700,color:'#2563eb'}}>
                         See all 35+ tools <ArrowRight size={13} strokeWidth={2.5}/>
@@ -675,7 +672,7 @@ function Nav() {
 
               {/* Plain links */}
               {NAV_LINKS.map(({label,href})=>(
-                <Link key={label} href={href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
+                <Link prefetch={false} key={label} href={href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,height:52,padding:'0 20px',
                     borderBottom:'1px solid #f0f0f0',...FI,fontSize:15,fontWeight:600,
                     color:'#1d1d1f',WebkitTapHighlightColor:'transparent'}}>
@@ -688,7 +685,7 @@ function Nav() {
               {isLoaded && (
                 <div style={{padding:'16px 20px',borderBottom:'1px solid #f0f0f0'}}>
                   {isSignedIn ? (
-                    <Link href="/dashboard" onClick={()=>setMobOpen(false)}
+                    <Link prefetch={false} href="/dashboard" onClick={()=>setMobOpen(false)}
                       style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:6,
                         fontSize:15,fontWeight:700,color:'#1d1d1f',textDecoration:'none',
                         padding:'13px',borderRadius:12,border:'1.5px solid #e5e7eb',background:'#fff'}}>
@@ -709,7 +706,7 @@ function Nav() {
 
               {/* Open Editor CTA */}
               <div style={{padding:'16px 20px',marginTop:'auto'}}>
-                <Link href="/pdf-editor" onClick={()=>setMobOpen(false)}
+                <Link prefetch={false} href="/pdf-editor" onClick={()=>setMobOpen(false)}
                   style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:8,
                     padding:'16px',background:'#2563EB',color:'#fff',borderRadius:14,
                     fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.02em'}}>
@@ -752,29 +749,29 @@ function Hero() {
             </motion.div>
 
             {/* Headline — SEO-optimised H1 */}
-            <motion.h1 className="home-hero-title" variants={MV} initial="hidden" animate="visible"
+            <h1 className="home-hero-title"
               style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(34px,4.8vw,76px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 24px'}}>
               <span style={{display:'block',overflow:'hidden'}}>
-                <motion.span style={{display:'block'}} variants={WV}>Free Online PDF Tools</motion.span>
+                <span style={{display:'block'}}>Free Online PDF Tools</span>
               </span>
               <span style={{display:'block',overflow:'hidden',marginTop:'0.1em'}}>
-                <motion.span style={{display:'block'}} variants={WV}>
+                <span style={{display:'block'}}>
                   Edit, Sign, Fill &amp; Convert <span className="grad-brand">PDFs</span>
-                </motion.span>
+                </span>
               </span>
-            </motion.h1>
+            </h1>
 
             {/* Sub */}
-            <motion.p initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.7}}
+            <p
               style={{...FI,fontSize:'clamp(15px,1.6vw,18px)',color:'#6E6E73',lineHeight:1.65,maxWidth:400,margin:'0 0 32px',letterSpacing:'-0.01em',fontWeight:400}}>
               A free PDF editor, PDF converter, merger, compressor and form-filling toolkit with 35+ browser-based tools. Core tools need no account; AI tools include 5 free daily uses.
-            </motion.p>
+            </p>
 
             {/* CTAs */}
             <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.85}}
               className="hero-ctas">
               <Mag>
-                <Link href="/pdf-editor" className="hero-upload-btn"
+                <Link prefetch={false} href="/pdf-editor" className="hero-upload-btn"
                   data-editor-cta
                   style={{...FI,display:'inline-flex',alignItems:'center',gap:10,padding:'16px 32px',background:'#2563EB',color:'#fff',borderRadius:99,fontSize:16,fontWeight:800,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:'0 6px 32px rgba(37,99,235,.35)'}}>
                   <Upload size={16} strokeWidth={2.5}/> Open PDF Editor
@@ -1101,7 +1098,7 @@ export function ProductDemo() {
 
         {/* CTA */}
         <div style={{textAlign:'center',marginTop:28}}>
-          <Link href="/pdf-editor"
+          <Link prefetch={false} href="/pdf-editor"
             style={{...FI,display:'inline-flex',alignItems:'center',gap:7,fontSize:14,fontWeight:700,
               color:'#fff',background:'#2563EB',textDecoration:'none',
               padding:'11px 28px',borderRadius:99,letterSpacing:'-0.02em',

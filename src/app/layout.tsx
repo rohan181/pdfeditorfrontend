@@ -6,8 +6,8 @@ import UpgradeGateProvider from '@/components/UpgradeGateProvider'
 import './globals.css'
 
 // Two font families only — Jakarta for headings (LCP-critical), DM Sans for body/UI
-const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: ['600', '700', '800'], variable: '--font-jakarta', display: 'swap' })
-const dm = DM_Sans({ subsets: ['latin'], weight: ['400', '500', '700'], variable: '--font-dm', display: 'swap' })
+const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: 'variable', variable: '--font-jakarta', display: 'swap' })
+const dm = DM_Sans({ subsets: ['latin'], weight: 'variable', variable: '--font-dm', display: 'swap' })
 
 export const metadata: Metadata = {
   title: { default: 'EditPDF AI — Edit smarter. Finish faster.', template: '%s' },
