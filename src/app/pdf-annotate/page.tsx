@@ -1,8 +1,10 @@
 'use client'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import toolSeoData from '@/lib/toolSeoData'
+import SiteFooter from '@/components/SiteFooter'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Tool = 'select' | 'highlight' | 'underline' | 'strikethrough' | 'comment' | 'rect' | 'arrow' | 'pen' | 'text'
@@ -72,12 +74,12 @@ function PageView({ pdfDoc, pageNum, scale, tool, color, annotations, selectedId
     return () => { cancelled = true }
   }, [pdfDoc, pageNum, scale])
 
-  const norm = (e: React.MouseEvent<SVGSVGElement>): Pt => {
+  const norm = (e: React.PointerEvent<SVGSVGElement>): Pt => {
     const r = e.currentTarget.getBoundingClientRect()
     return { x: (e.clientX - r.left) / cw, y: (e.clientY - r.top) / ch }
   }
 
-  const onDown = (e: React.MouseEvent<SVGSVGElement>) => {
+  const onDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if (tool === 'select') { onSelect(null); return }
     e.preventDefault()
     const pt = norm(e)
@@ -96,7 +98,7 @@ function PageView({ pdfDoc, pageNum, scale, tool, color, annotations, selectedId
     }
   }
 
-  const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!drawing.current) return
     const pt = norm(e)
     if (tool === 'pen') {
@@ -198,7 +200,7 @@ function PageView({ pdfDoc, pageNum, scale, tool, color, annotations, selectedId
       {cw > 0 && ch > 0 && (
         <svg width={cw} height={ch}
           style={{ position:'absolute', inset:0, cursor: toolCursor[tool], userSelect:'none' as const, touchAction:'none' }}
-          onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
+          onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onPointerLeave={onUp}
         >
           {/* Transparent background – clears selection on click */}
           <rect x={0} y={0} width={cw} height={ch} fill="transparent"
@@ -416,16 +418,13 @@ export default function PDFAnnotate() {
 
   return (
     <>
-    <div style={S.page}>
+    <div className="responsive-tool-shell responsive-tool-shell-dark" style={S.page}>
       {/* ── Nav ── */}
       <nav style={S.nav}>
         <Link href="/" style={{ display:'inline-flex', alignItems:'center', gap:8, textDecoration:'none' }}>
-          <svg width="27" height="27" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs><linearGradient id="lg-pa" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#e11d48"/></linearGradient></defs>
-            <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32" stroke="url(#lg-pa)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="38" cy="27" r="5" fill="url(#lg-pa)"/>
-          </svg>
-          <span style={{ fontSize:14, fontWeight:700, color:'#fff', letterSpacing:'-.03em' }}>EditPDF<span style={{ marginLeft:2, background:'linear-gradient(90deg,#4F7FFA,#8B3FEC)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}> AI</span></span>
+          <span style={{ display:'inline-flex', background:'#fff', borderRadius:6, padding:'1px 4px' }}>
+            <Image src="/logo-v2.svg" alt="EditPDF AI" width={380} height={100} style={{ width:'114px', height:'30px' }} priority />
+          </span>
         </Link>
         <span style={{ fontSize:11, color:'rgba(255,255,255,.25)' }}>›</span>
         <h1 style={{ fontSize:13, fontWeight:700, color:'#fff', margin:0 }}>PDF Annotator</h1>
@@ -467,9 +466,9 @@ export default function PDFAnnotate() {
         )}
       </nav>
 
-      <div style={S.work}>
+      <div className="responsive-tool-work" style={S.work}>
         {/* ── Left sidebar: tools + annotation list ── */}
-        <aside style={S.lsb}>
+        <aside className="responsive-tool-sidebar" style={S.lsb}>
           {/* Tool palette */}
           <div style={{ padding:'12px 10px', borderBottom:'1px solid rgba(255,255,255,.07)', display:'grid', gridTemplateColumns:'1fr 1fr', gap:5 }}>
             {TOOL_DEF.map(t => (
@@ -525,7 +524,7 @@ export default function PDFAnnotate() {
         </aside>
 
         {/* ── Main PDF view ── */}
-        <main ref={mainRef} style={S.main}>
+        <main ref={mainRef} className="responsive-tool-main" style={S.main}>
           {!file && !loading && (
             <div
               onClick={() => fileRef.current?.click()}
@@ -646,6 +645,7 @@ export default function PDFAnnotate() {
         onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }}/>
     </div>
     <ToolSEOSection {...toolSeoData['pdf-annotate']} />
+    <SiteFooter />
     </>
   )
 }

@@ -1,11 +1,18 @@
 'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import PDFEditor from '@/components/PDFEditor'
+import dynamic from 'next/dynamic'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import toolSeoData from '@/lib/toolSeoData'
+
+// The editor pulls in PDF rendering and editing engines. Keep them out of the
+// landing-page critical path and fetch them only after the visitor opens it.
+const PDFEditor = dynamic(() => import('@/components/PDFEditor'), {
+  ssr: false,
+  loading: () => <div role="status" aria-live="polite" style={{margin:'auto',fontSize:14,color:'#475569'}}>Loading PDF editor…</div>,
+})
 
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -208,7 +215,7 @@ export default function PDFEditorPage() {
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </button>
-            <Link href="/ai-pdf-form-filler" className="btn-sec">AI Form Filler →</Link>
+            <Link prefetch={false} href="/ai-pdf-form-filler" className="btn-sec">AI Form Filler →</Link>
           </div>
           <div className="hero-pills" role="list" aria-label="Key features">
             {(['📝 Text', '🖼️ Images', '✍️ Signatures', '🔆 Highlights', '🔷 Shapes', '📄 Pages', '🏷️ Stamps', '⬇️ Export'] as const).map(f => (

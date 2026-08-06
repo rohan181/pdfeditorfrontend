@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import Image from 'next/image'
+import SiteFooter from '@/components/SiteFooter'
 
 const FREE_FEATURES = [
   '5 AI uses per day',
@@ -346,6 +347,8 @@ export default function PricingContent() {
           No contracts · Cancel anytime · Secured by Stripe
         </p>
       </div>
+
+      <SiteFooter />
 
     </div>
   )

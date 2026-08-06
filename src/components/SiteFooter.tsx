@@ -94,7 +94,7 @@ export default function SiteFooter() {
 
           {/* Brand */}
           <div>
-            <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', marginBottom: 14 }}>
+            <Link prefetch={false} href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none', marginBottom: 14 }}>
               <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} />
             </Link>
 
@@ -138,7 +138,7 @@ export default function SiteFooter() {
                 {title}
               </div>
               {links.map(([l, h]) => (
-                <Link key={l} href={h} className="sf-link" style={FI}>{l}</Link>
+                <Link prefetch={false} key={l} href={h} className="sf-link" style={FI}>{l}</Link>
               ))}
             </div>
           ))}
@@ -152,11 +152,11 @@ export default function SiteFooter() {
             </span>
             <div style={{ display: 'flex', gap: 12 }}>
               {[['Privacy', '/privacy'], ['Terms', '/terms'], ['Contact', '/contact']].map(([l, h]) => (
-                <Link key={l} href={h} className="sf-bot-link" style={FI}>{l}</Link>
+                <Link prefetch={false} key={l} href={h} className="sf-bot-link" style={FI}>{l}</Link>
               ))}
             </div>
           </div>
-          <Link href="/pdf-editor"
+          <Link prefetch={false} href="/pdf-editor"
             style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#fff', textDecoration: 'none', padding: '7px 16px', borderRadius: 99, background: '#1d1d1f', letterSpacing: '-0.02em' }}>
             <Upload size={11} strokeWidth={2.5} /> Upload PDF
           </Link>

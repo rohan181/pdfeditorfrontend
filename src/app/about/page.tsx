@@ -6,6 +6,21 @@ export const metadata: Metadata = {
   title: { absolute: 'About EditPDF AI – Our Story and Privacy Approach' },
   description: 'EditPDF AI is an independent PDF tool suite built in Australia. Learn who we are, how your files are handled, and why we keep 35+ tools permanently free.',
   alternates: { canonical: 'https://www.editpdfai.com/about' },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: 'About EditPDF AI – Our Story and Privacy Approach',
+    description: 'Learn how EditPDF AI builds free, private browser-based PDF tools for everyone.',
+    type: 'website',
+    url: 'https://www.editpdfai.com/about',
+    siteName: 'EditPDF AI',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'About EditPDF AI' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About EditPDF AI',
+    description: 'Free, private browser-based PDF tools built for everyone.',
+    images: ['/opengraph-image'],
+  },
 }
 
 const VALUES = [

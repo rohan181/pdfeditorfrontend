@@ -16,6 +16,30 @@ export const metadata: Metadata = {
     siteName: 'EditPDF AI',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Guides by EditPDF AI' }],
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PDF Guides & How-To Articles | EditPDF AI',
+    description: 'Practical PDF guides with clear steps and direct links to free tools.',
+    images: ['/opengraph-image'],
+  },
+  robots: { index: true, follow: true },
+}
+
+const guidesSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'PDF Guides & How-To Articles',
+  description: 'Step-by-step guides for editing, compressing, signing, merging and securing PDF documents.',
+  url: 'https://www.editpdfai.com/guides',
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: guides.map((guide, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: guide.title,
+      url: `https://www.editpdfai.com/guides/${guide.slug}`,
+    })),
+  },
 }
 
 const ACCENT = '#4F7FFA'
@@ -23,6 +47,7 @@ const ACCENT = '#4F7FFA'
 export default function GuidesPage() {
   return (
     <div style={{ fontFamily: 'var(--font-dm,system-ui,sans-serif)', color: '#1d1d1f', background: '#fff', minHeight: '100vh' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guidesSchema) }} />
 
       {/* Nav */}
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>

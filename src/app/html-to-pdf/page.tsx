@@ -228,7 +228,7 @@ export default function HtmlToPdf() {
 
   return (
     <>
-    <div style={S.page}>
+    <div className="responsive-tool-shell" style={S.page}>
       {/* Nav */}
       <SiteNav />
 
@@ -239,9 +239,9 @@ export default function HtmlToPdf() {
         </div>
       )}
 
-      <div style={S.work}>
+      <div className="responsive-tool-work" style={S.work}>
         {/* ── Sidebar ── */}
-        <aside style={S.sb}>
+        <aside className="responsive-tool-sidebar" style={S.sb}>
 
           <h1 style={{ fontSize:18, fontWeight:800, color:'#1d1d1f', letterSpacing:'-.03em', margin:'16px 16px 4px' }}>
             HTML to PDF Converter
@@ -395,7 +395,7 @@ export default function HtmlToPdf() {
         </aside>
 
         {/* ── Main: split editor + preview ── */}
-        <main style={S.main}>
+        <main className="responsive-tool-main" style={S.main}>
           <div style={{ flex:1, display:'flex', overflow:'hidden' }}>
 
             {/* Code editor */}

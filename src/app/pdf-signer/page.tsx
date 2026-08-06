@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib'
+import BrandImage from 'next/image'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -93,11 +93,11 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .saved-chip-del:hover{background:#E24B4A;color:#fff}
 
 /* Placed sig overlay */
-.sig-ov{position:absolute;cursor:move;user-select:none}
+.sig-ov{position:absolute;cursor:move;user-select:none;touch-action:none}
 .sig-ov img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
 .sig-ov.sel{outline:2px solid #6366f1;outline-offset:2px}
 .sig-del{position:absolute;top:-10px;right:-10px;width:20px;height:20px;border-radius:50%;background:#E24B4A;border:2px solid #fff;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;box-shadow:0 2px 5px rgba(0,0,0,.25);line-height:1}
-.sig-resize{position:absolute;bottom:-5px;right:-5px;width:10px;height:10px;background:#6366f1;border:2px solid #fff;border-radius:2px;cursor:se-resize;z-index:10}
+.sig-resize{position:absolute;bottom:-5px;right:-5px;width:10px;height:10px;background:#6366f1;border:2px solid #fff;border-radius:2px;cursor:se-resize;z-index:10;touch-action:none}
 .sig-rot{position:absolute;top:-24px;left:50%;transform:translateX(-50%);width:18px;height:18px;background:#fff;border:1.5px solid #6366f1;border-radius:50%;cursor:grab;display:flex;align-items:center;justify-content:center;font-size:10px;z-index:10;line-height:1}
 .sig-date{position:absolute;bottom:-17px;left:0;font-size:9px;color:rgba(0,0,0,.45);white-space:nowrap;pointer-events:none;font-weight:500}
 
@@ -203,6 +203,19 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .u-feat-icon{font-size:20px;margin-bottom:5px}
 .u-feat-ttl{font-size:11px;font-weight:700;color:#1d1d1f;margin-bottom:3px}
 .u-feat-body{font-size:10px;color:rgba(0,0,0,.38);line-height:1.5}
+@media(max-width:900px){
+  .pg{height:auto;min-height:100dvh;overflow:visible}
+  .body{flex:none;flex-direction:column;overflow:visible}
+  .thumbs{width:100%;flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid #e8e8e8}
+  .thumb{width:68px;min-width:68px}
+  .canvas-area{min-height:58dvh;align-items:flex-start;padding:14px;overflow:auto}
+  .right{width:100%;overflow:visible;border-left:0;border-top:1px solid #e8e8e8}
+  .saved-bar{overflow-x:auto;min-width:max-content;align-self:flex-start}
+  .nav-file{display:none}.sign-fab{margin-left:auto}
+  .modal-back{padding:10px}.modal{max-height:calc(100dvh - 20px)}
+  .font-grid{grid-template-columns:repeat(2,1fr)}
+  .u-hero{margin-bottom:24px}.uc{padding:32px 16px}.u-feats{grid-template-columns:1fr}
+}
 `
 
 export default function PDFSignerPage() {
@@ -431,7 +444,7 @@ export default function PDFSignerPage() {
 
   // ── Global drag / resize / rotate ─────────────────────────────────────────
   useEffect(() => {
-    const mm = (e: MouseEvent) => {
+    const mm = (e: PointerEvent) => {
       if (dragRef.current) {
         const { id, scx, scy, ox, oy, page } = dragRef.current
         const wrap = pageWrapRefs.current[page]; if (!wrap) return
@@ -463,9 +476,14 @@ export default function PDFSignerPage() {
       }
     }
     const mu = () => { dragRef.current = null; resizeRef.current = null; rotateRef.current = null }
-    document.addEventListener('mousemove', mm)
-    document.addEventListener('mouseup', mu)
-    return () => { document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu) }
+    document.addEventListener('pointermove', mm)
+    document.addEventListener('pointerup', mu)
+    document.addEventListener('pointercancel', mu)
+    return () => {
+      document.removeEventListener('pointermove', mm)
+      document.removeEventListener('pointerup', mu)
+      document.removeEventListener('pointercancel', mu)
+    }
   }, [])
 
   // ── Drag/drop PDF ──────────────────────────────────────────────────────────
@@ -511,6 +529,7 @@ export default function PDFSignerPage() {
     if (!pdfBytes) return
     setApplying(true)
     try {
+      const { PDFDocument, rgb, degrees, StandardFonts } = await import('pdf-lib')
       const pdfDoc = await PDFDocument.load(pdfBytes)
       const pages  = pdfDoc.getPages()
       for (const ps of placed) {
@@ -627,14 +646,7 @@ export default function PDFSignerPage() {
         {/* Nav */}
         <nav className="nav">
           <Link href="/" className="logo">
-            <div className="logo-mark">
-              <svg width="27" height="27" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="lg-ps" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#e11d48"/></linearGradient></defs>
-                <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32" stroke="url(#lg-ps)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="38" cy="27" r="5" fill="url(#lg-ps)"/>
-              </svg>
-            </div>
-            <span className="logo-name">EditPDF<span className="logo-ai"> AI</span></span>
+            <BrandImage src="/logo-v2.svg" alt="EditPDF AI" width={380} height={100} style={{ width: '114px', height: '30px' }} priority />
           </Link>
           <span className="nav-sep">›</span>
           <span className="nav-title">E-Signer</span>
@@ -668,7 +680,7 @@ export default function PDFSignerPage() {
           {/* Canvas */}
           <div className="canvas-area" ref={canvasAreaRef}
             style={{ cursor: placingUrl ? 'crosshair' : undefined }}
-            onMouseMove={e => { if (placingUrl) setGhostPos({ x: e.clientX, y: e.clientY }) }}
+            onPointerMove={e => { if (placingUrl) setGhostPos({ x: e.clientX, y: e.clientY }) }}
             onMouseLeave={() => setGhostPos(null)}
             onClick={() => { if (!placingUrl) setSelId(null) }}>
 
@@ -709,7 +721,7 @@ export default function PDFSignerPage() {
                       return (
                         <div key={ps.id} className={`sig-ov${sel?' sel':''}`}
                           style={{ position:'absolute', left:ps.x*cw, top:ps.y*ch, width:ps.w*cw, height:ps.h*ch, transform:`rotate(${ps.rotation}deg)`, transformOrigin:'center' }}
-                          onMouseDown={e => {
+                          onPointerDown={e => {
                             e.stopPropagation(); setSelId(ps.id)
                             const wrap = pageWrapRefs.current[pi]!
                             dragRef.current = { id:ps.id, scx:e.clientX, scy:e.clientY, ox:ps.x*wrap.offsetWidth, oy:ps.y*wrap.offsetHeight, page:pi }
@@ -718,9 +730,9 @@ export default function PDFSignerPage() {
                           {sel && (
                             <>
                               <button className="sig-del" onClick={e => { e.stopPropagation(); setPlaced(p=>p.filter(x=>x.id!==ps.id)); setSelId(null) }}>×</button>
-                              <div className="sig-resize" onMouseDown={e => { e.stopPropagation(); e.preventDefault(); resizeRef.current = { id:ps.id, scx:e.clientX, scy:e.clientY, ow:ps.w, oh:ps.h, page:pi } }} />
+                              <div className="sig-resize" onPointerDown={e => { e.stopPropagation(); e.preventDefault(); resizeRef.current = { id:ps.id, scx:e.clientX, scy:e.clientY, ow:ps.w, oh:ps.h, page:pi } }} />
                               <div className="sig-rot" title="Rotate"
-                                onMouseDown={e => {
+                                onPointerDown={e => {
                                   e.stopPropagation(); e.preventDefault()
                                   const wrap = pageWrapRefs.current[pi]!
                                   const rect = wrap.getBoundingClientRect()
@@ -777,9 +789,9 @@ export default function PDFSignerPage() {
                   <div className="rp-ttl">Date Stamp</div>
                   <div className="rp-row">
                     <span className="rp-lbl">Show date</span>
-                    <div className={`tog${selPlaced.dateStamp?' on':' off'}`} onClick={() => setPlaced(p=>p.map(x=>x.id!==selId?x:{...x,dateStamp:!x.dateStamp}))}>
-                      <div className="tok" />
-                    </div>
+                    <button type="button" className={`tog${selPlaced.dateStamp?' on':' off'}`} aria-pressed={selPlaced.dateStamp} aria-label="Show date stamp" onClick={() => setPlaced(p=>p.map(x=>x.id!==selId?x:{...x,dateStamp:!x.dateStamp}))}>
+                      <span className="tok" />
+                    </button>
                   </div>
                   {selPlaced.dateStamp && (
                     <input className="rp-num" style={{ width:'100%', marginTop:5, fontSize:10 }}

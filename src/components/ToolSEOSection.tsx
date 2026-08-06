@@ -76,7 +76,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
   } : null
 
   return (
-    <div style={{ fontFamily: 'var(--font-inter,system-ui,sans-serif)', color: '#1d1d1f' }}>
+    <div className="tool-seo-section" style={{ fontFamily: 'var(--font-inter,system-ui,sans-serif)', color: '#1d1d1f' }}>
       {includeSchema && showFaq && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
       {includeSchema && breadcrumbSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
@@ -87,10 +87,13 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
 
       {/* ── What is + Who uses ── */}
       {(whatIs || users) && (
-        <section style={{ background: '#fff', borderTop: '1px solid #ebebeb', padding: '64px 24px' }}>
+        <section aria-label={toolMeta ? `About ${toolMeta.name}` : 'About this PDF tool'} style={{ background: '#fff', borderTop: '1px solid #ebebeb', padding: '64px 24px' }}>
           <div style={{ maxWidth: 960, margin: '0 auto' }}>
             {whatIs && (
-              <div style={{ maxWidth: 720, marginBottom: users ? 56 : 0 }}>
+              <div className="tool-seo-intro" style={{ maxWidth: 720, marginBottom: users ? 56 : 0 }}>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: PURPLE, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>
+                  Clear, practical guidance
+                </div>
                 <h2 style={{ fontSize: 'clamp(22px,2.5vw,32px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 20 }}>
                   {whatIs[0]}
                 </h2>
@@ -109,7 +112,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 14 }}>
                   {users.map((u, i) => (
-                    <div key={i} style={{ background: BG, borderRadius: 14, padding: '18px 16px', border: '1.5px solid #e8eaed' }}>
+                    <div className="tool-seo-card" key={i} style={{ background: BG, borderRadius: 14, padding: '18px 16px', border: '1.5px solid #e8eaed' }}>
                       <div style={{ fontSize: 13.5, fontWeight: 800, color: '#1d1d1f', marginBottom: 6, letterSpacing: '-.02em' }}>{u.who}</div>
                       <p style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.65, margin: 0 }}>{u.why}</p>
                     </div>
@@ -129,7 +132,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 20 }}>
             {steps.map((s, i) => (
-              <div key={i} style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1.5px solid #e8eaed' }}>
+              <div className="tool-seo-card" key={i} style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', border: '1.5px solid #e8eaed' }}>
                 <div style={{ width: 32, height: 32, borderRadius: 10, background: PURPLE, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
                   <span style={{ fontSize: 13, fontWeight: 800, color: '#fff' }}>{i + 1}</span>
                 </div>
@@ -202,14 +205,14 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {faqs.map((f, i) => (
-              <details key={i} style={{ background: '#fff', borderRadius: 14, border: '1.5px solid #e8eaed', overflow: 'hidden' }}>
+              <details className="tool-seo-faq" key={i} style={{ background: '#fff', borderRadius: 14, border: '1.5px solid #e8eaed', overflow: 'hidden' }}>
                 <summary style={{
                   padding: '16px 20px', fontWeight: 700, fontSize: 14.5, color: '#1d1d1f',
                   cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   letterSpacing: '-.01em',
                 }}>
                   {f.q}
-                  <span style={{ fontSize: 18, color: PURPLE, marginLeft: 12, flexShrink: 0, lineHeight: 1 }}>+</span>
+                  <span className="tool-seo-faq-icon" aria-hidden="true" style={{ fontSize: 18, color: PURPLE, marginLeft: 12, flexShrink: 0, lineHeight: 1 }}>+</span>
                 </summary>
                 <div style={{ padding: '0 20px 16px', fontSize: 14, color: '#4b5563', lineHeight: 1.7 }}>
                   {f.a}
@@ -227,13 +230,15 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
             <h2 style={{ fontSize: 'clamp(20px,2.5vw,28px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 28px', textAlign: 'center' }}>
               Related tools
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 14 }}>
+            <nav aria-label="Related PDF tools" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 14 }}>
               {relatedTools.map(r => {
                 const meta = toolMetaMap[r.slug]
                 return (
                   <Link
+                    className="tool-seo-related"
                     key={r.slug}
                     href={`/${r.slug}`}
+                    prefetch={false}
                     style={{
                       display: 'block', textDecoration: 'none',
                       background: BG, borderRadius: 14, padding: '18px 18px 16px',
@@ -257,7 +262,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
                   </Link>
                 )
               })}
-            </div>
+            </nav>
           </div>
         </section>
       )}
@@ -269,11 +274,40 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
               Step-by-step guides
             </h2>
             {relevantGuides.map(guide => (
-              <Link key={guide.href} href={guide.href} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '16px 18px', background: '#fff', border: '1.5px solid #e8eaed', borderRadius: 14, color: '#1d1d1f', textDecoration: 'none', fontSize: 14, fontWeight: 700 }}>
+              <Link className="tool-seo-guide" prefetch={false} key={guide.href} href={guide.href} style={{ display: 'flex', justifyContent: 'space-between', gap: 16, padding: '16px 18px', background: '#fff', border: '1.5px solid #e8eaed', borderRadius: 14, color: '#1d1d1f', textDecoration: 'none', fontSize: 14, fontWeight: 700 }}>
                 <span>{guide.label}</span>
                 <span aria-hidden="true" style={{ color: PURPLE }}>Read guide →</span>
               </Link>
             ))}
+          </div>
+        </section>
+      )}
+
+      {toolSlug && toolMeta && (
+        <section aria-label={`${toolMeta.name} actions`} style={{ background: '#fff', borderTop: '1px solid #ebebeb', padding: '64px 24px 72px' }}>
+          <div className="tool-seo-cta" style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center', padding: '40px 24px', borderRadius: 20, background: 'linear-gradient(135deg,#eff6ff 0%,#f5f3ff 100%)', border: '1.5px solid #dbeafe' }}>
+            <div style={{ fontSize: 10.5, fontWeight: 800, color: PURPLE, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>
+              Free online PDF tool
+            </div>
+            <h2 style={{ fontSize: 'clamp(23px,3vw,34px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, margin: '0 0 12px', color: '#0f172a' }}>
+              Ready to use {toolMeta.name}?
+            </h2>
+            <p style={{ maxWidth: 560, margin: '0 auto 24px', fontSize: 14.5, lineHeight: 1.7, color: '#475569' }}>
+              {toolMeta.desc} Return to the tool above to choose your file, or browse the complete PDF toolkit for another task.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                className="tool-seo-primary-action"
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                style={{ border: 0, borderRadius: 999, padding: '12px 22px', background: '#2563eb', color: '#fff', fontSize: 13.5, fontWeight: 800, cursor: 'pointer' }}
+              >
+                Use {toolMeta.name}
+              </button>
+              <Link className="tool-seo-secondary-action" prefetch={false} href="/#tools" style={{ display: 'inline-flex', alignItems: 'center', borderRadius: 999, padding: '12px 22px', background: '#fff', border: '1.5px solid #cbd5e1', color: '#334155', textDecoration: 'none', fontSize: 13.5, fontWeight: 700 }}>
+                Browse all PDF tools
+              </Link>
+            </div>
           </div>
         </section>
       )}

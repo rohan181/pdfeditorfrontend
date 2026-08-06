@@ -794,7 +794,7 @@ function Hero() {
                 { icon:<Sparkles size={12} color="#7c3aed" strokeWidth={2.5}/>, label:'AI: 5 free uses/day' },
               ].map(({icon,label},i)=>(
                 <span key={label} style={{display:'flex',alignItems:'center',gap:5}}>
-                  {i>0&&<span style={{width:3,height:3,borderRadius:'50%',background:'#ddd',display:'inline-block',marginRight:2}}/>}
+                  {i>0&&<span className="hero-trust-separator" aria-hidden="true" style={{width:3,height:3,borderRadius:'50%',background:'#ddd',display:'inline-block',marginRight:2}}/>}
                   {icon}
                   <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.42)',letterSpacing:'0.05em',textTransform:'uppercase'}}>{label}</span>
                 </span>

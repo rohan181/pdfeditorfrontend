@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -131,6 +132,15 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .lp-uc{max-width:680px;margin:0 auto;padding:56px 24px;width:100%}
 .lp-drop{border:2px dashed #d0d0d0;border-radius:16px;padding:48px 24px;text-align:center;cursor:pointer;transition:all .17s;background:#fafafa}
 .lp-drop:hover,.lp-drop.over{border-color:#8b5cf6;background:#faf5ff}
+@media(max-width:900px){
+  .pg{min-height:100dvh;padding-top:56px;overflow:visible}
+  .workspace{flex:none;flex-direction:column;overflow:visible}
+  .left{width:100%;overflow:visible;border-right:0;border-bottom:1px solid #e8e8e8}
+  .main{min-height:52dvh;overflow:visible}
+  .hero{padding:32px 16px}.hero-feats{grid-template-columns:1fr;width:100%}
+  .result{padding:22px 16px}.result-header{flex-direction:column}.result-actions{flex-wrap:wrap}
+  .err-box{margin:18px 16px}.lp-uc{padding:32px 16px}
+}
 `
 
 // ── Simple Markdown → HTML renderer (just H2, ul/li, p, **bold**) ──────────
@@ -328,14 +338,7 @@ export default function PDFSummarizerPage() {
       <div className="pg">
         <nav className="nav">
           <Link href="/" className="logo">
-            <div className="logo-mark">
-              <svg width="27" height="27" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="lg-sm" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#e11d48"/></linearGradient></defs>
-                <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32" stroke="url(#lg-sm)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="38" cy="27" r="5" fill="url(#lg-sm)"/>
-              </svg>
-            </div>
-            <span className="logo-name">EditPDF<span className="logo-ai"> AI</span></span>
+            <Image src="/logo-v2.svg" alt="EditPDF AI" width={380} height={100} style={{ width: '114px', height: '30px' }} priority />
           </Link>
           <span className="nav-sep">›</span>
           <span className="nav-title">PDF Summarizer AI</span>

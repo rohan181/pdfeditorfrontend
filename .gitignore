@@ -26,6 +26,10 @@ next-env.d.ts
 
 # ── OS files ──────────────────────────────────────────────────────────────────
 .DS_Store
+
+# Playwright generated artifacts
+/playwright-report/
+/test-results/
 Thumbs.db
 
 # ── Editor ────────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import BrandImage from 'next/image'
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
@@ -474,6 +475,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 @keyframes spin{to{transform:rotate(360deg)}}
 .conv-lbl{font-size:14px;font-weight:700;color:#1d1d1f}
 .conv-sub{font-size:11px;color:rgba(0,0,0,.38);margin-top:5px}
+.err-bar{margin:10px 16px;padding:10px 14px;border:1px solid rgba(220,38,38,.22);border-radius:9px;background:#fff5f5;color:#dc2626;font-size:12px;font-weight:600;text-align:center}
 .lp{min-height:100vh;display:flex;flex-direction:column;background:#fff}
 .lp-uc{max-width:700px;margin:0 auto;padding:56px 24px;width:100%}
 .lp-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;background:#fffbeb;border:1px solid rgba(245,158,11,.3);border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.08em;color:#d97706;margin-bottom:14px;text-transform:uppercase}
@@ -496,7 +498,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .scan-close:hover{background:#e0e0e0;color:#111}
 .scan-body{flex:1;display:flex;overflow:hidden;min-height:0}
 .scan-left{flex:1;background:#2a2a2e;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0}
-.scan-canvas{display:block;max-width:100%;max-height:100%;object-fit:contain}
+.scan-canvas{display:block;max-width:100%;max-height:100%;object-fit:contain;touch-action:none}
 .scan-right{width:230px;flex-shrink:0;border-left:1px solid #f0f0f0;overflow-y:auto;display:flex;flex-direction:column;gap:0}
 .sr-sec{padding:12px 14px;border-bottom:1px solid #f0f0f0}
 .sr-ttl{font-size:10px;font-weight:700;color:rgba(0,0,0,.3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
@@ -517,6 +519,18 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .sf-apply:hover:not(:disabled){background:#d97706}
 .sf-apply:disabled{opacity:.38;cursor:not-allowed}
 .corner-hint{font-size:10px;color:rgba(255,255,255,.5);text-align:center;position:absolute;bottom:8px;left:0;right:0;pointer-events:none}
+@media(max-width:900px){
+  .pg{height:auto;min-height:100dvh;overflow:visible}
+  .body{flex:none;flex-direction:column;overflow:visible}
+  .main{order:2;overflow:visible;padding:14px;min-height:48dvh}
+  .right{order:1;width:100%;max-height:none;overflow:visible;border-left:0;border-bottom:1px solid #e8e8e8}
+  .img-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .drop-z{margin:16px auto 0;padding:36px 18px}
+  .lp-uc{padding:32px 16px}.lp-feats{grid-template-columns:1fr}
+  .scan-body{flex-direction:column;overflow-y:auto}
+  .scan-left{min-height:42dvh}.scan-right{width:100%;border-left:0;border-top:1px solid #f0f0f0;overflow:visible}
+  .scan-foot{padding:10px 12px}
+}
 `
 
 export default function ImageToPDFPage() {
@@ -538,6 +552,7 @@ export default function ImageToPDFPage() {
   const [scanBgRemove,  setScanBgRemove]  = useState(false)
   const [scanProcessing,setScanProcessing]= useState(false)
   const [autoDetecting, setAutoDetecting] = useState(false)
+  const [error, setError] = useState('')
 
   const fileInputRef   = useRef<HTMLInputElement>(null)
   const dropZoneRef    = useRef<HTMLDivElement>(null)
@@ -548,6 +563,7 @@ export default function ImageToPDFPage() {
 
   // ── Load images (with HEIC conversion) ──────────────────────────────────
   const loadFiles = useCallback((files: FileList | File[]) => {
+    setError('')
     const isHeic = (f: File) =>
       f.type === 'image/heic' || f.type === 'image/heif' ||
       /\.(heic|heif)$/i.test(f.name)
@@ -566,6 +582,7 @@ export default function ImageToPDFPage() {
           blob = Array.isArray(result) ? result[0] : result
         } catch {
           console.warn('HEIC conversion failed for', file.name)
+          setError(`Could not read ${file.name}. Try converting it to JPG or PNG first.`)
           return
         }
       }
@@ -644,6 +661,7 @@ export default function ImageToPDFPage() {
   // ── Convert to PDF ───────────────────────────────────────────────────────
   const convert = async () => {
     if (!images.length) return
+    setError('')
     setConverting(true)
     try {
       const pdfDoc = await PDFDocument.create()
@@ -678,6 +696,9 @@ export default function ImageToPDFPage() {
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a'); a.href=url; a.download=`images-to-pdf-${Date.now()}.pdf`; a.click()
       URL.revokeObjectURL(url)
+    } catch (e) {
+      console.error(e)
+      setError('Could not create the PDF. Check the images and try again.')
     } finally { setConverting(false); setProgress('') }
   }
 
@@ -762,7 +783,7 @@ export default function ImageToPDFPage() {
   useEffect(() => { if (scanItem) drawScanCanvas() }, [scanCorners, scanFilter, scanBgRemove, drawScanCanvas, scanItem])
 
   // ── Smart Scan: corner drag ───────────────────────────────────────────────
-  const onScanMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const onScanMouseDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const cv = scanCanvasRef.current!
     const rect = cv.getBoundingClientRect()
     const mx = (e.clientX-rect.left)*(cv.width/rect.width)
@@ -771,7 +792,7 @@ export default function ImageToPDFPage() {
       if (Math.hypot(mx-x*cv.width, my-y*cv.height) < 18) scanDragCorner.current = i
     })
   }
-  const onScanMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const onScanMouseMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const i = scanDragCorner.current; if (i === null) return
     const cv = scanCanvasRef.current!
     const rect = cv.getBoundingClientRect()
@@ -875,6 +896,7 @@ export default function ImageToPDFPage() {
                 {['JPG','PNG','WEBP','GIF','BMP','HEIC'].map(f=><span key={f} className="fmt-chip">{f}</span>)}
               </div>
             </div>
+            {error && <div role="alert" className="err-bar">{error}</div>}
             <div className="lp-feats">
               {[{icon:'📷',t:'Smart Scan',b:'Auto-detect & crop document edges, fix perspective'},{icon:'🎨',t:'Filters',b:'Enhanced, B&W, sepia, sharpen — per image'},{icon:'🔒',t:'100% private',b:'In-browser only — no server uploads'}].map(f=>(
                 <div key={f.t} className="lp-feat"><div className="lp-feat-icon">{f.icon}</div><div className="lp-feat-ttl">{f.t}</div><div className="lp-feat-body">{f.b}</div></div>
@@ -896,14 +918,7 @@ export default function ImageToPDFPage() {
       <div className="pg">
         <nav className="nav">
           <Link href="/" className="logo">
-            <div className="logo-mark">
-              <svg width="27" height="27" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="lg-it" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#e11d48"/></linearGradient></defs>
-                <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32" stroke="url(#lg-it)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="38" cy="27" r="5" fill="url(#lg-it)"/>
-              </svg>
-            </div>
-            <span className="logo-name">EditPDF<span className="logo-ai"> AI</span></span>
+            <BrandImage src="/logo-v2.svg" alt="EditPDF AI" width={380} height={100} style={{ width: '114px', height: '30px' }} priority />
           </Link>
           <span className="nav-sep">›</span>
           <span className="nav-title">Image → PDF</span>
@@ -912,6 +927,7 @@ export default function ImageToPDFPage() {
           <button className="nbtn sec" onClick={() => setImages([])}>← New</button>
           <button className="nbtn pri" disabled={converting} onClick={convert}>{converting?'Converting…':'↓ Convert to PDF'}</button>
         </nav>
+        {error && <div role="alert" className="err-bar">{error}</div>}
 
         <div className="body">
           <div className="main" ref={mainDropRef}>
@@ -935,7 +951,7 @@ export default function ImageToPDFPage() {
                     <div className="img-card-dims">{img.w}×{img.h}</div>
                     <div className="img-card-actions">
                       <button className="ic-btn" onClick={e=>{e.stopPropagation();openScan(img)}}>✨ Scan</button>
-                      <button className="ic-btn del" onClick={e=>{e.stopPropagation();setImages(p=>p.filter(x=>x.id!==img.id))}}>✕</button>
+                      <button className="ic-btn del" aria-label={`Remove ${img.file.name}`} onClick={e=>{e.stopPropagation();setImages(p=>p.filter(x=>x.id!==img.id))}}>✕</button>
                     </div>
                   </div>
                 </div>
@@ -992,7 +1008,7 @@ export default function ImageToPDFPage() {
             <div className="rp-sec">
               <div className="tog-row">
                 <span className="tog-lbl">Page numbers</span>
-                <div className={`tog${pageNums?' on':' off'}`} onClick={()=>setPageNums(p=>!p)}><div className="tok"/></div>
+                <button type="button" className={`tog${pageNums?' on':' off'}`} aria-pressed={pageNums} aria-label="Include page numbers" onClick={()=>setPageNums(p=>!p)}><span className="tok"/></button>
               </div>
             </div>
             <div style={{padding:14,marginTop:'auto'}}>
@@ -1028,7 +1044,7 @@ export default function ImageToPDFPage() {
                 <div className="scan-title">✨ Smart Scan</div>
                 <div className="scan-subtitle">{scanItem.file.name} · {scanItem.w}×{scanItem.h}</div>
               </div>
-              <button className="scan-close" onClick={() => setScanItem(null)}>×</button>
+              <button className="scan-close" aria-label="Close smart scan" onClick={() => setScanItem(null)}>×</button>
             </div>
 
             <div className="scan-body">
@@ -1036,9 +1052,10 @@ export default function ImageToPDFPage() {
               <div className="scan-left">
                 <canvas ref={scanCanvasRef} className="scan-canvas"
                   style={{cursor:'crosshair'}}
-                  onMouseDown={onScanMouseDown}
-                  onMouseMove={onScanMouseMove}
-                  onMouseUp={onScanMouseUp}
+                  onPointerDown={onScanMouseDown}
+                  onPointerMove={onScanMouseMove}
+                  onPointerUp={onScanMouseUp}
+                  onPointerCancel={onScanMouseUp}
                   onMouseLeave={onScanMouseUp}/>
                 <div className="corner-hint">Drag corner handles · TL TR BR BL</div>
               </div>
@@ -1077,7 +1094,7 @@ export default function ImageToPDFPage() {
                   <div className="sr-ttl">Background</div>
                   <div className="tog-row">
                     <span className="tog-lbl">Remove white bg</span>
-                    <div className={`tog${scanBgRemove?' on':' off'}`} onClick={() => setScanBgRemove(p=>!p)}><div className="tok"/></div>
+                    <button type="button" className={`tog${scanBgRemove?' on':' off'}`} aria-pressed={scanBgRemove} aria-label="Remove white background" onClick={() => setScanBgRemove(p=>!p)}><span className="tok"/></button>
                   </div>
                   <div className="rp-hint" style={{marginTop:6}}>Strips near-white pixels to transparent — useful for receipts & signatures.</div>
                 </div>

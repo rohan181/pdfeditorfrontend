@@ -1,13 +1,21 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans, DM_Sans } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import UpgradeGateProvider from '@/components/UpgradeGateProvider'
+import PdfResultDock from '@/components/PdfResultDock'
 import './globals.css'
 
 // Two font families only — Jakarta for headings (LCP-critical), DM Sans for body/UI
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'], weight: 'variable', variable: '--font-jakarta', display: 'swap' })
 const dm = DM_Sans({ subsets: ['latin'], weight: 'variable', variable: '--font-dm', display: 'swap' })
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  colorScheme: 'light',
+}
 
 export const metadata: Metadata = {
   title: { default: 'EditPDF AI — Edit smarter. Finish faster.', template: '%s' },
@@ -73,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body style={{ fontFamily: 'var(--font-dm), system-ui, sans-serif' }}>
           <UpgradeGateProvider />
           {children}
+          <PdfResultDock />
           <SpeedInsights />
         </body>
       </html>

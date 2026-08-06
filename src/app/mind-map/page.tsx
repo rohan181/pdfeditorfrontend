@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -159,7 +160,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 
 /* Graph area */
 .graph-area{flex:1;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 50%, #f0f9ff 0%, #f5f5f7 100%)}
-.graph-svg{display:block;width:100%;height:100%;cursor:grab}
+.graph-svg{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
 .graph-svg:active{cursor:grabbing}
 
 /* Graph controls */
@@ -210,6 +211,17 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .feat-icon{font-size:20px;margin-bottom:4px}
 .feat-t{font-size:11px;font-weight:700;color:#1d1d1f;margin-bottom:2px}
 .feat-d{font-size:10px;color:rgba(0,0,0,.38);line-height:1.5}
+@media(max-width:900px){
+  .pg{height:auto;min-height:100dvh;overflow:visible}
+  .body{flex:none;flex-direction:column;overflow:visible}
+  .sb{width:100%;max-height:none;overflow:visible;border-right:0;border-bottom:1px solid #e8e8e8}
+  .src-list{max-height:220px}
+  .graph-area{min-height:62dvh;width:100%}
+  .detail{width:100%;max-height:none;border-left:0;border-top:1px solid #e8e8e8}
+  .landing{padding:28px 16px}.landing-title{font-size:27px}.landing-drop{padding:34px 18px}
+  .feat-row{grid-template-columns:1fr}
+  .map-title{max-width:70%;overflow:hidden;text-overflow:ellipsis}
+}
 `
 
 // ─── component ────────────────────────────────────────────────────────────────
@@ -387,11 +399,11 @@ export default function MindMapPage() {
   }
 
   // ── pan / zoom ──────────────────────────────────────────────────────────────
-  const onSvgDown = (e: React.MouseEvent<SVGSVGElement>) => {
+  const onSvgDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if ((e.target as Element).closest('g.node')) return
     dragRef.current = { sx: e.clientX, sy: e.clientY, ox: vp.x, oy: vp.y }
   }
-  const onSvgMove = (e: React.MouseEvent<SVGSVGElement>) => {
+  const onSvgMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!dragRef.current) return
     setVp(v => ({ ...v, x: dragRef.current!.ox + (e.clientX - dragRef.current!.sx), y: dragRef.current!.oy + (e.clientY - dragRef.current!.sy) }))
   }
@@ -469,14 +481,7 @@ export default function MindMapPage() {
       <div className="pg">
         <nav className="nav">
           <Link href="/" className="logo">
-            <div className="logo-mark">
-            <svg width="27" height="27" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs><linearGradient id="lg-mm" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#e11d48"/></linearGradient></defs>
-              <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32" stroke="url(#lg-mm)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="38" cy="27" r="5" fill="url(#lg-mm)"/>
-            </svg>
-          </div>
-            <span className="logo-name">EditPDF<span className="logo-ai"> AI</span></span>
+            <Image src="/logo-v2.svg" alt="EditPDF AI" width={380} height={100} style={{ width: '114px', height: '30px' }} priority />
           </Link>
           <span className="nav-sep">›</span>
           <span className="nav-title">PDF Mind Map</span>
@@ -579,8 +584,8 @@ export default function MindMapPage() {
 
                 {/* SVG graph */}
                 <svg ref={svgRef} className="graph-svg"
-                  onMouseDown={onSvgDown} onMouseMove={onSvgMove}
-                  onMouseUp={onSvgUp}    onMouseLeave={onSvgUp}
+                  onPointerDown={onSvgDown} onPointerMove={onSvgMove}
+                  onPointerUp={onSvgUp} onPointerCancel={onSvgUp} onPointerLeave={onSvgUp}
                   onWheel={onWheel}
                   onClick={() => selectNode(null)}>
 

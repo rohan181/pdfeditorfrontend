@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -124,8 +124,26 @@ export default function SiteNav() {
   // mobile drawer
   const [mobOpen,  setMobOpen]  = useState(false)
   const [toolsExp, setToolsExp] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
 
   const closeMob = () => { setMobOpen(false); setToolsExp(false) }
+
+  useEffect(() => {
+    if (!mobOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeMob()
+        requestAnimationFrame(() => menuButtonRef.current?.focus())
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [mobOpen])
 
   const { scrollY } = useScroll()
   const navBg = useTransform(scrollY, [0, 80], ['rgba(255,255,255,0)', 'rgba(255,255,255,0.97)'])
@@ -141,8 +159,8 @@ export default function SiteNav() {
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', height: '100%', display: 'flex', alignItems: 'center', gap: 4 }}>
 
           {/* Logo */}
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', marginRight: 20, flexShrink: 0 }}>
-            <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 60, width: 'auto', display: 'block' }} priority />
+          <Link prefetch={false} href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', marginRight: 20, flexShrink: 0 }}>
+            <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 42, width: 'auto', display: 'block' }} priority />
           </Link>
 
           {/* Desktop nav links — hidden on ≤900px via CSS */}
@@ -160,7 +178,7 @@ export default function SiteNav() {
             </div>
 
             {NAV_LINKS.map(({ label, href }) => (
-              <Link key={label} href={href} className="sn-desk-only" style={{ textDecoration: 'none' }}>
+              <Link prefetch={false} key={label} href={href} className="sn-desk-only" style={{ textDecoration: 'none' }}>
                 <motion.span whileHover={{ color: '#1d1d1f' }}
                   style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 11px', fontSize: 13, fontWeight: 500, borderRadius: 8, color: 'rgba(0,0,0,.52)' }}>
                   {label}
@@ -173,7 +191,7 @@ export default function SiteNav() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexShrink: 0 }}>
             {isLoaded && isSignedIn ? (
               <>
-                <Link href="/dashboard" className="sn-desk-only"
+                <Link prefetch={false} href="/dashboard" className="sn-desk-only"
                   style={{ ...FI, fontSize: 12.5, fontWeight: 700, color: '#1d1d1f', textDecoration: 'none',
                     padding: '6px 14px', borderRadius: 99, border: '1.5px solid rgba(0,0,0,.16)', background: '#fff' }}>
                   Dashboard
@@ -191,14 +209,16 @@ export default function SiteNav() {
             ) : null}
 
             {/* Open Editor — desktop only */}
-            <Link href="/pdf-editor" className="sn-desk-only"
+            <Link prefetch={false} href="/pdf-editor" className="sn-desk-only"
               style={{ ...FI, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', background: '#1d1d1f', color: '#fff', borderRadius: 99, fontSize: 12.5, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.02em' }}>
               <Upload size={12} strokeWidth={2.5} /> Open Editor
             </Link>
 
             {/* Hamburger — mobile only */}
-            <button className="sn-mob-only" onClick={() => { setMobOpen(o => !o); if (mobOpen) setToolsExp(false); }}
+            <button ref={menuButtonRef} className="sn-mob-only" onClick={() => { setMobOpen(o => !o); if (mobOpen) setToolsExp(false); }}
               aria-label={mobOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobOpen}
+              aria-controls="site-mobile-navigation"
               style={{ ...TAP, width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(0,0,0,.12)', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span key={mobOpen ? 'x' : 'm'}
@@ -219,11 +239,17 @@ export default function SiteNav() {
         {toolsOpen && (
           <>
             <motion.div
+              aria-hidden="true"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .15 }}
               onClick={() => setToolsOpen(false)}
               style={{ position: 'fixed', inset: '56px 0 0', zIndex: 298, background: 'rgba(0,0,0,.2)', backdropFilter: 'blur(2px)' }}
             />
             <motion.div
+              id="site-mobile-navigation"
+              className="mobile-nav-drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Site navigation"
               initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
               transition={{ duration: .18, ease: [.22, 1, .36, 1] }}
               onMouseEnter={keepMenu} onMouseLeave={closeMenu}
@@ -232,7 +258,7 @@ export default function SiteNav() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 4 }}>
                   {NAV_CATS.map(cat => (
                     <div key={cat.label}>
-                      <Link href={cat.href} onClick={() => setToolsOpen(false)} style={{ textDecoration: 'none' }}>
+                      <Link prefetch={false} href={cat.href} onClick={() => setToolsOpen(false)} style={{ textDecoration: 'none' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 8px 8px', marginBottom: 4, borderBottom: `2px solid ${cat.color}22` }}>
                           <div style={{ width: 24, height: 24, borderRadius: 7, background: `${cat.color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <cat.Icon size={12} color={cat.color} strokeWidth={2} />
@@ -243,7 +269,7 @@ export default function SiteNav() {
                       {cat.tools.map(tool => {
                         const badge = TIER_BADGE[tool.tier]
                         return (
-                          <Link key={tool.name} href={tool.href} onClick={() => setToolsOpen(false)} style={{ textDecoration: 'none' }}>
+                          <Link prefetch={false} key={tool.name} href={tool.href} onClick={() => setToolsOpen(false)} style={{ textDecoration: 'none' }}>
                             <motion.div whileHover={{ background: '#f5f5f7' }} transition={{ duration: .08 }}
                               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: 8 }}>
                               <div style={{ width: 26, height: 38, borderRadius: 7, background: tool.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -263,7 +289,7 @@ export default function SiteNav() {
                   ))}
                 </div>
                 <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'flex-end' }}>
-                  <Link href="/#tools" onClick={() => setToolsOpen(false)}
+                  <Link prefetch={false} href="/#tools" onClick={() => setToolsOpen(false)}
                     style={{ ...FI, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: '#6b7280', textDecoration: 'none' }}>
                     See all 35+ tools <ArrowRight size={11} strokeWidth={2.5} />
                   </Link>
@@ -296,6 +322,8 @@ export default function SiteNav() {
                 {/* "Tools" header row */}
                 <button
                   onClick={() => setToolsExp(v => !v)}
+                  aria-expanded={toolsExp}
+                  aria-controls="site-mobile-tools"
                   style={{ ...TAP, width: '100%', display: 'flex', alignItems: 'center', padding: '0 20px', height: 52, background: 'transparent', border: 'none', outline: 'none' }}>
                   <span style={{ ...FI, fontSize: 15, fontWeight: 700, color: '#1d1d1f', flex: 1, textAlign: 'left' }}>All Tools</span>
                   <span style={{ display: 'flex', transition: 'transform .2s', transform: toolsExp ? 'rotate(180deg)' : 'rotate(0deg)' }}>
@@ -304,7 +332,7 @@ export default function SiteNav() {
                 </button>
 
                 {/* Flat tools panel — all tools visible, grouped by category header */}
-                <div style={{ overflow: 'hidden', maxHeight: toolsExp ? 4000 : 0, transition: 'max-height .35s ease' }}>
+                <div id="site-mobile-tools" style={{ overflow: 'hidden', maxHeight: toolsExp ? 4000 : 0, transition: 'max-height .35s ease' }}>
                   <div style={{ background: '#f9fafb', borderTop: '1px solid #f0f0f0' }}>
                     {NAV_CATS.map(cat => (
                       <div key={cat.label}>
@@ -319,7 +347,7 @@ export default function SiteNav() {
                         {cat.tools.map(tool => {
                           const badge = TIER_BADGE[tool.tier]
                           return (
-                            <Link key={tool.name} href={tool.href} onClick={closeMob} style={{ textDecoration: 'none', display: 'block' }}>
+                            <Link prefetch={false} key={tool.name} href={tool.href} onClick={closeMob} style={{ textDecoration: 'none', display: 'block' }}>
                               <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 11, padding: '0 20px 0 20px', height: 46, borderBottom: '1px solid #f0f1f3', background: '#fff' }}>
                                 <div style={{ width: 28, height: 28, borderRadius: 8, background: tool.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                   <tool.Icon size={13} color="#fff" strokeWidth={1.8} />
@@ -343,7 +371,7 @@ export default function SiteNav() {
 
               {/* ── Plain nav links ── */}
               {NAV_LINKS.map(({ label, href }) => (
-                <Link key={label} href={href} onClick={closeMob} style={{ textDecoration: 'none', display: 'block' }}>
+                <Link prefetch={false} key={label} href={href} onClick={closeMob} style={{ textDecoration:'none', display:'block' }}>
                   <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 8, height: 52, padding: '0 20px', borderBottom: '1px solid #f0f0f0', ...FI, fontSize: 15, fontWeight: 600, color: '#1d1d1f' }}>
                     {label}
                   </div>
@@ -354,7 +382,7 @@ export default function SiteNav() {
               {isLoaded && (
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
                   {isSignedIn ? (
-                    <Link href="/dashboard" onClick={closeMob}
+                    <Link prefetch={false} href="/dashboard" onClick={closeMob}
                       style={{ ...FI, display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 15, fontWeight: 700, color: '#1d1d1f', textDecoration: 'none',
                         padding: '13px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff' }}>
@@ -374,7 +402,7 @@ export default function SiteNav() {
 
               {/* ── Open Editor CTA ── */}
               <div style={{ padding: '16px 20px', marginTop: 'auto' }}>
-                <Link href="/pdf-editor" onClick={closeMob}
+                <Link prefetch={false} href="/pdf-editor" onClick={closeMob}
                   style={{ ...FI, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px', background: '#1d1d1f', color: '#fff', borderRadius: 14, fontSize: 15, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.02em' }}>
                   <Upload size={16} strokeWidth={2.5} /> Open Editor
                 </Link>

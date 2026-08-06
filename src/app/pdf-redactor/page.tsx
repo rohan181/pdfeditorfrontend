@@ -496,13 +496,13 @@ export default function PDFRedactorPage() {
   }, [curPage, pages.length])
 
   // ── Mouse position helper ───────────────────────────────────────────────────
-  const relPos = (e: React.MouseEvent) => {
+  const relPos = (e: React.PointerEvent) => {
     const r = wrapRef.current!.getBoundingClientRect()
     return { x: e.clientX - r.left, y: e.clientY - r.top }
   }
 
   // ── Mouse events ────────────────────────────────────────────────────────────
-  const onMouseDown = (e: React.MouseEvent) => {
+  const onMouseDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return
     e.preventDefault()
     if (tool === 'dropper') {
@@ -516,7 +516,7 @@ export default function PDFRedactorPage() {
     const p = relPos(e); setDrawing(true); setDrawStart(p); setDrawCur(p)
   }
 
-  const onMouseMove = (e: React.MouseEvent) => {
+  const onMouseMove = (e: React.PointerEvent) => {
     if (tool === 'dropper') {
       if (!canvasRef.current || !magCanvasRef.current) return
       const pos = relPos(e)
@@ -527,7 +527,7 @@ export default function PDFRedactorPage() {
     if (drawing) setDrawCur(relPos(e))
   }
 
-  const onMouseUp = (e: React.MouseEvent) => {
+  const onMouseUp = (e: React.PointerEvent) => {
     if (tool === 'dropper') return
     if (!drawing || !drawStart) return
     setDrawing(false)
@@ -777,10 +777,11 @@ export default function PDFRedactorPage() {
               <div
                 ref={wrapRef}
                 className={`canvas-wrap mode-${tool}`}
-                onMouseDown={onMouseDown}
-                onMouseMove={onMouseMove}
-                onMouseUp={onMouseUp}
-                onMouseLeave={onMouseLeave}
+                onPointerDown={onMouseDown}
+                onPointerMove={onMouseMove}
+                onPointerUp={onMouseUp}
+                onPointerCancel={onMouseUp}
+                onPointerLeave={onMouseLeave}
               >
                 <canvas ref={canvasRef} />
 

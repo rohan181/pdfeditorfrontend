@@ -266,7 +266,7 @@ export default function PDFCompressorPage() {
                         <div className="file-name">{file.name}</div>
                         <div className="file-size">{fmt(file.size)}</div>
                       </div>
-                      <button className="file-rm" onClick={reset}>✕</button>
+                      <button className="file-rm" onClick={reset} aria-label="Remove file">✕</button>
                     </div>
 
                     {/* Compression levels */}

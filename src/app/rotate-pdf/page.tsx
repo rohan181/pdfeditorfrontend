@@ -1,8 +1,10 @@
 'use client'
 import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import toolSeoData from '@/lib/toolSeoData'
+import SiteFooter from '@/components/SiteFooter'
 
 function fmtBytes(b: number) {
   return b < 1048576 ? `${(b / 1024).toFixed(0)} KB` : `${(b / 1048576).toFixed(1)} MB`
@@ -254,18 +256,11 @@ export default function RotatePDF() {
 
   return (
     <>
-    <div style={S.page}>
+    <div className="responsive-tool-shell" style={S.page}>
       {/* Nav */}
       <nav style={S.nav}>
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-          <svg width="27" height="27" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs><linearGradient id="lg-rp" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#e11d48"/></linearGradient></defs>
-            <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32" stroke="url(#lg-rp)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="38" cy="27" r="5" fill="url(#lg-rp)"/>
-          </svg>
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#0D1B4B', letterSpacing: '-.03em' }}>
-            EditPDF<span style={{ marginLeft: 2, background: 'linear-gradient(90deg,#4F7FFA,#8B3FEC)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}> AI</span>
-          </span>
+          <Image src="/logo-v2.svg" alt="EditPDF AI" width={380} height={100} style={{ width: '114px', height: '30px' }} priority />
         </Link>
         <span style={{ fontSize: 11, color: 'rgba(0,0,0,.2)' }}>›</span>
         <span style={{ fontSize: 13, fontWeight: 700, color: '#1d1d1f' }}>Rotate Pages</span>
@@ -295,9 +290,9 @@ export default function RotatePDF() {
         )}
       </nav>
 
-      <div style={S.work}>
+      <div className="responsive-tool-work" style={S.work}>
         {/* ── Sidebar ── */}
-        <aside style={S.sb}>
+        <aside className="responsive-tool-sidebar" style={S.sb}>
 
           {/* File info */}
           {file && (
@@ -409,7 +404,7 @@ export default function RotatePDF() {
         </aside>
 
         {/* ── Main area ── */}
-        <main style={S.main}>
+        <main className="responsive-tool-main" style={S.main}>
           {/* Drop zone */}
           {!file && !loading && (
             <div
@@ -504,6 +499,7 @@ export default function RotatePDF() {
         onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }}/>
     </div>
     <ToolSEOSection {...toolSeoData['rotate-pdf']} />
+    <SiteFooter />
     </>
   )
 }

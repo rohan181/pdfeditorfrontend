@@ -128,6 +128,13 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 
 .err-bar{margin:14px 16px;padding:10px 14px;background:#fff5f5;border:1px solid rgba(220,38,38,.2);border-radius:8px;font-size:12px;color:#dc2626}
 .spin-sm{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@media(max-width:900px){
+  .pg{height:auto;min-height:100dvh;overflow:visible}
+  .workspace{flex:none;flex-direction:column;overflow:visible}
+  .sb{width:100%;overflow:visible;border-right:0;border-bottom:1px solid #e8e8e8}
+  .main{min-height:52dvh;overflow:visible}.toolbar{height:auto;min-height:44px;padding:8px 12px;overflow-x:auto}
+  .output{padding:20px 16px}.hero{padding:32px 16px}.feat-grid{grid-template-columns:1fr;width:100%}
+}
 `
 
 // ─── Download format options ──────────────────────────────────────────────────
@@ -330,7 +337,7 @@ export default function PDFToWordPage() {
                     <div className="file-name" title={file.name}>{file.name}</div>
                     <div className="file-meta">{fmtBytes(file.size)}{pages ? ` · ${pages} pages` : ''}</div>
                   </div>
-                  <button className="file-rm" onClick={reset}>×</button>
+                  <button className="file-rm" onClick={reset} aria-label="Remove file">×</button>
                 </div>
               )}
             </div>

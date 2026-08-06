@@ -1,8 +1,10 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import toolSeoData from '@/lib/toolSeoData'
+import SiteFooter from '@/components/SiteFooter'
 
 type Position = 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right'
 type Format   = 'number' | 'page-n' | 'n-of-total' | 'page-n-of-total'
@@ -226,18 +228,11 @@ export default function AddPageNumbers() {
 
   return (
     <>
-    <div style={S.page}>
+    <div className="responsive-tool-shell" style={S.page}>
       {/* Nav */}
       <nav style={S.nav}>
         <Link href="/" style={{ display:'inline-flex', alignItems:'center', gap:8, textDecoration:'none' }}>
-          <svg width="27" height="27" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs><linearGradient id="lg-ap" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#e11d48"/></linearGradient></defs>
-            <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32" stroke="url(#lg-ap)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="38" cy="27" r="5" fill="url(#lg-ap)"/>
-          </svg>
-          <span style={{ fontSize:14, fontWeight:700, color:'#0D1B4B', letterSpacing:'-.03em' }}>
-            EditPDF<span style={{ marginLeft:2, background:'linear-gradient(90deg,#4F7FFA,#8B3FEC)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}> AI</span>
-          </span>
+          <Image src="/logo-v2.svg" alt="EditPDF AI" width={380} height={100} style={{ width:'114px', height:'30px' }} priority />
         </Link>
         <span style={{ fontSize:11, color:'rgba(0,0,0,.2)' }}>›</span>
         <span style={{ fontSize:13, fontWeight:700, color:'#1d1d1f' }}>Add Page Numbers</span>
@@ -250,9 +245,9 @@ export default function AddPageNumbers() {
         )}
       </nav>
 
-      <div style={S.work}>
+      <div className="responsive-tool-work" style={S.work}>
         {/* ── Sidebar ── */}
-        <aside style={S.sb}>
+        <aside className="responsive-tool-sidebar" style={S.sb}>
 
           {/* File */}
           <div style={S.sec}>
@@ -448,7 +443,7 @@ export default function AddPageNumbers() {
         </aside>
 
         {/* ── Main / Preview ── */}
-        <main style={S.main}>
+        <main className="responsive-tool-main" style={S.main}>
           <div style={S.body}>
 
             {/* No file state */}
@@ -535,6 +530,7 @@ export default function AddPageNumbers() {
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
     </div>
     <ToolSEOSection {...toolSeoData['add-page-numbers']} />
+    <SiteFooter />
     </>
   )
 }

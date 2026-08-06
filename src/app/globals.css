@@ -36,7 +36,72 @@
   --gradient-strong: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
 }
 
-/* overflow managed per-page via JS */
+html {
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+  overflow-x:clip;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+body {
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+  overflow-x:clip;
+}
+main, section, article, aside, header, footer, nav { min-width:0; }
+img, video { max-width:100%; height:auto; }
+input, textarea, select { max-width:100%; }
+pre, code { max-width:100%; overflow-wrap:anywhere; }
+
+.pdf-result-dock {
+  position:fixed;
+  z-index:950;
+  right:max(18px,env(safe-area-inset-right));
+  bottom:max(18px,env(safe-area-inset-bottom));
+  width:min(440px,calc(100vw - 32px));
+  padding:10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid rgba(15,23,42,.12);
+  border-radius:14px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 16px 48px rgba(15,23,42,.18);
+  -webkit-backdrop-filter:blur(18px);
+  backdrop-filter:blur(18px);
+}
+
+/* Safari prefix for translucent tool surfaces; solid backgrounds remain the fallback. */
+.proc-overlay,.saved-bar,.modal-back,.converting,.scan-back,
+.g-ctrl button,.g-hint,.map-title,.page-badge {
+  -webkit-backdrop-filter:var(--tool-backdrop-filter,blur(8px));
+}
+.pdf-result-dock-copy { min-width:0; flex:1; display:flex; align-items:center; gap:8px; }
+.pdf-result-dock-icon {
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:34px; height:34px; border-radius:9px; background:#fee2e2; color:#b91c1c;
+  font:800 9px var(--font-dm,system-ui,sans-serif); letter-spacing:.04em;
+}
+.pdf-result-dock-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#334155; font-size:12px; font-weight:700; }
+.pdf-result-dock button { min-height:38px; padding:8px 12px; border-radius:9px; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; }
+.pdf-result-preview { border:1px solid #cbd5e1; background:#fff; color:#334155; }
+.pdf-result-download { border:1px solid #2563eb; background:#2563eb; color:#fff; }
+.pdf-result-close { width:34px; padding:0 !important; border:0; background:transparent; color:#64748b; font-size:18px !important; }
+.pdf-result-preview:hover { border-color:#2563eb; color:#2563eb; }
+.pdf-result-download:hover { background:#1d4ed8; border-color:#1d4ed8; }
+
+@media(max-width:600px){
+  .pdf-result-dock {
+    left:12px; right:12px; bottom:max(10px,env(safe-area-inset-bottom));
+    width:auto; display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  }
+  .pdf-result-dock-copy { grid-column:1 / -1; }
+  .pdf-result-dock button { min-height:46px; }
+  .pdf-result-close { position:absolute; top:7px; right:7px; width:34px; min-height:34px !important; }
+  .pdf-result-dock-copy { padding-right:30px; }
+}
 
 /* ── Glassmorphism ─────────────────────────────────────────────────────────── */
 .glass-panel {
@@ -55,6 +120,70 @@
 @media (max-width: 639px) {
   /* Tighter canvas padding on small screens */
   .canvas-wrap { padding: 10px !important; }
+
+  /* Shared tool-page landing patterns. A number of tools use locally scoped
+     CSS strings, so these important mobile constraints provide a consistent
+     final safety layer across every route. */
+  .pg, .lp, .upload-pg { width:100% !important; max-width:100vw !important; }
+  .wrap, .uc, .lp-uc { width:100% !important; max-width:100% !important; padding-left:16px !important; padding-right:16px !important; }
+  .hero, .u-hero { max-width:100% !important; }
+  .hero h1, .hero-h1, .u-h1 { overflow-wrap:anywhere; }
+  .hero p, .hero-sub, .u-sub { max-width:100% !important; }
+  .feat-grid, .hero-feats, .u-feats, .info-grid { grid-template-columns:1fr !important; }
+  .result-header { flex-direction:column !important; }
+  .result-actions { width:100% !important; flex-wrap:wrap !important; }
+  .modal-back { padding:8px !important; }
+  .modal { max-height:calc(100dvh - 16px) !important; border-radius:12px !important; }
+  .modal-body { padding-left:14px !important; padding-right:14px !important; }
+  .font-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  .drop, .drop-z, .lp-drop, .u-drop { padding-left:16px !important; padding-right:16px !important; }
+
+  /* Native mobile ergonomics: avoid iOS focus zoom and keep interactive
+     controls comfortably tappable without enlarging icon-only canvas tools. */
+  input:not([type='range']):not([type='color']):not([type='checkbox']):not([type='radio']),
+  textarea,
+  select { font-size:16px !important; }
+  button:not(.tog):not(.sig-resize):not(.sig-rot):not(.sig-del):not(.saved-chip-del),
+  [role='button'] { min-height:44px; }
+  details > summary { min-height:48px; }
+
+  /* Data and editor controls remain usable instead of widening the page. */
+  table { display:block; width:100%; max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .toolbar, .main-top, .saved-bar, .result-actions, .levels, .tabs, .tab-bar {
+    max-width:100% !important;
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .toolbar::-webkit-scrollbar, .main-top::-webkit-scrollbar, .saved-bar::-webkit-scrollbar,
+  .result-actions::-webkit-scrollbar, .levels::-webkit-scrollbar, .tabs::-webkit-scrollbar { display:none; }
+
+  /* Better reading rhythm and less wasted space on narrow devices. */
+  .home-footer { padding-top:40px !important; padding-bottom:max(8px,env(safe-area-inset-bottom)) !important; }
+  .sf-footer-grid { margin-bottom:32px !important; }
+  .sf-link { min-height:38px; display:flex !important; align-items:center; margin-bottom:2px !important; }
+  .card, .tcard, .step, .fq, .h-feat, .u-feat, .info-card { max-width:100% !important; }
+  .tool-seo-card:hover, .tool-seo-related:hover { transform:none; }
+  .tool-seo-section > section { padding-left:16px !important; padding-right:16px !important; }
+  .tool-seo-section > section:not(:last-child) { padding-top:42px !important; padding-bottom:48px !important; }
+  .tool-seo-intro { margin-bottom:38px !important; }
+  .tool-seo-faq summary { padding:16px !important; gap:12px; line-height:1.4; }
+  .tool-seo-faq > div { padding-left:16px !important; padding-right:16px !important; }
+  .tool-seo-related { padding:16px !important; }
+  .tool-seo-guide { align-items:center; padding:16px !important; }
+  .tool-seo-guide > span:last-child { white-space:nowrap; }
+  .tool-seo-cta { padding:30px 18px !important; border-radius:16px !important; }
+  .tool-seo-primary-action, .tool-seo-secondary-action {
+    width:100%;
+    min-height:48px;
+    justify-content:center;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-cta-row, .cta-row, .result-btns, .modal-foot { flex-wrap:wrap !important; }
+  .hero-cta-row > *, .cta-row > * { width:100% !important; justify-content:center !important; }
+  .strokes, .palette, .m-tabs { overflow-x:auto !important; max-width:100% !important; }
 }
 
 @media (max-width: 1023px) {
@@ -88,6 +217,44 @@ button:active { opacity: 0.8; }
 textarea:focus { outline: none; }
 button:disabled, [aria-disabled="true"] { opacity:.55; cursor:not-allowed !important; }
 a, button { -webkit-tap-highlight-color:transparent; }
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,[role='button']:focus-visible {
+  outline:3px solid rgba(37,99,235,.42);
+  outline-offset:2px;
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after {
+    scroll-behavior:auto !important;
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+}
+
+/* Shared tool-page interaction language. */
+.tool-seo-card, .tool-seo-related, .tool-seo-guide {
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.tool-seo-card:hover, .tool-seo-related:hover, .tool-seo-guide:hover {
+  transform:translateY(-2px);
+  border-color:#93c5fd !important;
+  box-shadow:0 10px 26px rgba(37,99,235,.09) !important;
+}
+.tool-seo-faq { transition:border-color .18s ease, box-shadow .18s ease; }
+.tool-seo-faq[open] {
+  border-color:#bfdbfe !important;
+  box-shadow:0 8px 24px rgba(37,99,235,.07);
+}
+.tool-seo-faq-icon { transition:transform .18s ease; }
+.tool-seo-faq[open] .tool-seo-faq-icon { transform:rotate(45deg); }
+.tool-seo-primary-action, .tool-seo-secondary-action {
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.tool-seo-primary-action:hover {
+  transform:translateY(-1px);
+  box-shadow:0 8px 20px rgba(37,99,235,.24);
+}
+.tool-seo-secondary-action:hover { border-color:#93c5fd !important; }
 
 /* Safe areas are scoped to the fixed mobile surfaces. Applying inset padding
    to every nav changes the header height and can clip its controls on iOS. */
@@ -174,6 +341,18 @@ body { overflow-x:clip; }
 .nav-editor-button { display:inline-flex !important; visibility:visible !important; opacity:1 !important; }
 .nav-tool-row { transition:background .1s; }
 .nav-tool-row:hover { background:#f5f5f7 !important; }
+
+/* Compact header used by the full-screen tool workspaces. */
+.pg > .nav {
+  min-height:52px;
+  padding:8px 16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-shrink:0;
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid rgba(0,0,0,.08);
+}
 .hero-upload-btn { transition:gap .2s; }
 .hero-upload-btn:hover { gap:16px !important; }
 .tool-card { transition:transform .18s ease,box-shadow .18s ease; }
@@ -233,6 +412,9 @@ body { overflow-x:clip; }
   .r-bento { grid-template-columns:repeat(2,1fr); }
 }
 @media(max-width:900px){
+  button,[role='button'] {
+    min-height:36px !important;
+  }
   .footer-grid { grid-template-columns:1fr 1fr !important; gap:32px !important; }
 }
 @media(max-width:900px){
@@ -255,7 +437,10 @@ body { overflow-x:clip; }
   .tools-legend { gap:10px; }
   .hero-ctas{ flex-direction:column; align-items:stretch; }
   .hero-ctas a { justify-content:center; text-align:center; }
-  .hero-trust { gap:8px; }
+  .hero-trust { gap:10px; align-items:flex-start; }
+  .home-hero .hero-grid { gap:32px; }
+  .home-hero .hero-ctas { margin-bottom:24px; }
+  .home-hero p { max-width:34rem !important; }
   .popular-tools-grid { display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px !important; }
   .popular-tools-grid > a { min-width:0; padding:10px 11px !important; }
   .popular-tools-grid > a > div:nth-child(2) { min-width:0; }
@@ -283,6 +468,11 @@ body { overflow-x:clip; }
   .pricing-compare-row { grid-template-columns:minmax(0,1fr) 52px 68px !important; }
   .pricing-compare-row > span { font-size:11px !important; }
   .faq-item summary { padding:17px 0 !important; font-size:14px !important; }
+  .home-hero { padding-top:96px !important; padding-bottom:44px !important; }
+  .home-hero-title { line-height:1.02 !important; }
+  .hero-trust { display:grid; grid-template-columns:1fr; }
+  .hero-trust > span { min-height:24px; }
+  .hero-trust-separator { display:none !important; }
 }
 
 /* ── hero grid ── */
@@ -357,4 +547,72 @@ body { overflow-x:clip; }
   .scr-right { width:58% !important; }
   .scr-screen { height:calc(100dvh - 74px) !important; max-height:300px; }
   .scr-dots { margin-bottom:8px !important; }
+}
+
+/* Shared mobile treatment for the tool workspaces that use inline layout styles. */
+@media(max-width:900px){
+  .pg > .nav {
+    min-height:52px;
+    padding:8px 12px;
+    flex-wrap:wrap;
+    gap:6px 8px;
+  }
+  .pg > .nav img { width:96px !important; height:auto !important; }
+  .pg > .nav .nav-file,
+  .pg > .nav .nav-count { display:none; }
+  .responsive-tool-shell {
+    height:auto !important;
+    min-height:100dvh !important;
+    overflow:visible !important;
+  }
+  .responsive-tool-shell > nav {
+    height:auto !important;
+    min-height:52px;
+    padding:8px 12px !important;
+    flex-wrap:wrap !important;
+    gap:6px 8px !important;
+  }
+  .responsive-tool-shell > nav img {
+    width:96px !important;
+    height:auto !important;
+  }
+  .responsive-tool-shell > nav > span:not(:last-child) {
+    max-width:132px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  /* Keep compact editor icon controls comfortably tappable on phones. */
+  .responsive-tool-shell button {
+    min-width:36px !important;
+  }
+  .responsive-tool-work {
+    display:flex !important;
+    flex:initial !important;
+    flex-direction:column !important;
+    overflow:visible !important;
+    min-width:0 !important;
+  }
+  .responsive-tool-sidebar {
+    width:100% !important;
+    max-width:none !important;
+    max-height:none !important;
+    flex:none !important;
+    overflow:visible !important;
+    border-right:0 !important;
+    border-left:0 !important;
+    border-bottom:1px solid #e8e8e8 !important;
+  }
+  .responsive-tool-main {
+    width:100% !important;
+    min-width:0 !important;
+    min-height:52dvh !important;
+    flex:none !important;
+    overflow-x:auto !important;
+    overflow-y:visible !important;
+    padding:18px 14px !important;
+  }
+  .responsive-tool-shell-dark .responsive-tool-sidebar {
+    border-bottom-color:rgba(255,255,255,.08) !important;
+  }
 }

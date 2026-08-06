@@ -444,7 +444,7 @@ export default function ExcelToPDFPage() {
                       {fmt(file?.size ?? 0)} · {sheets.length} sheet{sheets.length !== 1 ? 's' : ''} · {totalRows.toLocaleString()} total rows
                     </div>
                   </div>
-                  <button className="file-rm" onClick={reset}>×</button>
+                  <button className="file-rm" onClick={reset} aria-label="Remove file">×</button>
                 </div>
               </div>
 

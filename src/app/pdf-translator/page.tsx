@@ -146,6 +146,13 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 /* Progress bar */
 .prog{height:2px;background:#e0e0e0;flex-shrink:0}
 .prog-fill{height:100%;background:linear-gradient(90deg,#4f46e5,#818cf8);transition:width .4s ease}
+@media(max-width:900px){
+  .pg{height:auto;min-height:100dvh;overflow:visible}
+  .workspace{flex:none;flex-direction:column;overflow:visible}
+  .sb{width:100%;overflow:visible;border-right:0;border-bottom:1px solid #e8e8e8}
+  .main{min-height:52dvh;overflow:visible}.toolbar{height:auto;min-height:44px;padding:8px 12px;overflow-x:auto}
+  .output{padding:20px 16px}.hero{padding:32px 16px}.feat-grid{grid-template-columns:1fr;width:100%}
+}
 `
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -359,7 +366,7 @@ export default function PDFTranslatorPage() {
                     <div className="file-name" title={file.name}>{file.name}</div>
                     <div className="file-meta">{fmtBytes(file.size)}{pages ? ` · ${pages}p` : ''}</div>
                   </div>
-                  <button className="file-rm" onClick={reset}>×</button>
+                  <button className="file-rm" onClick={reset} aria-label="Remove file">×</button>
                 </div>
               )}
             </div>

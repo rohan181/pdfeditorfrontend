@@ -108,7 +108,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 
 /* Canvas */
 .canvas-area{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:24px;gap:20px;background:#e8e8ea;min-height:0}
-.canvas-wrap{position:relative;display:inline-block;box-shadow:0 4px 32px rgba(0,0,0,.16);border-radius:2px;line-height:0;flex-shrink:0}
+.canvas-wrap{position:relative;display:inline-block;box-shadow:0 4px 32px rgba(0,0,0,.16);border-radius:2px;line-height:0;flex-shrink:0;touch-action:none}
 .canvas-wrap.mode-select{cursor:default}
 .canvas-wrap canvas{display:block;max-width:100%}
 
@@ -162,6 +162,19 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 
 /* blank canvas guide lines */
 .canvas-guide{position:absolute;inset:0;pointer-events:none;border:1px dashed rgba(99,102,241,.12)}
+@media(max-width:900px){
+  .editor-pg{height:auto;min-height:100dvh;overflow:visible}
+  .editor-body{flex:none;flex-direction:column;overflow:visible}
+  .sidebar{width:100%;max-height:220px;border-right:0;border-bottom:1px solid #e8e8e8}
+  .page-list{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden}
+  .page-thumb-btn{min-width:130px}
+  .center-panel{min-height:68dvh;overflow:visible}
+  .toolbar{flex-wrap:nowrap;overflow-x:auto;padding:8px 10px}
+  .canvas-area{min-height:52dvh;align-items:flex-start;padding:14px;overflow:auto}
+  .props-panel{width:100%;max-height:65dvh;border-left:0;border-top:1px solid #e8e8e8}
+  .apply-bar{flex-wrap:wrap}.apply-btn{min-width:100%}.new-file-btn{flex:1}
+  .hint-strip{white-space:normal}
+}
 `
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -460,14 +473,14 @@ export default function PDFFormBuilderPage() {
   }
 
   // ── Canvas mouse down — deselect only ────────────────────────────────────
-  const onCanvasMouseDown = (e: React.MouseEvent) => {
+  const onCanvasMouseDown = (e: React.PointerEvent) => {
     if (e.button !== 0) return
     setSelectedId(null)
   }
 
   // ── Global mouse move / up — drag & resize only ───────────────────────────
   useEffect(() => {
-    const mm = (e: MouseEvent) => {
+    const mm = (e: PointerEvent) => {
       if (dragRef.current) {
         const { id, scx, scy, ox, oy, page } = dragRef.current
         const wrap = pageWrapRefs.current[page]
@@ -517,15 +530,13 @@ export default function PDFFormBuilderPage() {
     }
     const mu = () => { dragRef.current = null; resizeRef.current = null; tableResizeRef.current = null }
 
-    window.addEventListener('mousemove', mm)
-    window.addEventListener('mouseup',   mu)
-    window.addEventListener('touchmove', mm as EventListener, { passive: false })
-    window.addEventListener('touchend',  mu)
+    window.addEventListener('pointermove', mm)
+    window.addEventListener('pointerup', mu)
+    window.addEventListener('pointercancel', mu)
     return () => {
-      window.removeEventListener('mousemove', mm)
-      window.removeEventListener('mouseup',   mu)
-      window.removeEventListener('touchmove', mm as EventListener)
-      window.removeEventListener('touchend',  mu)
+      window.removeEventListener('pointermove', mm)
+      window.removeEventListener('pointerup', mu)
+      window.removeEventListener('pointercancel', mu)
     }
   }, [])
 
@@ -599,7 +610,7 @@ export default function PDFFormBuilderPage() {
   }, [])
 
   // ── Field interaction ─────────────────────────────────────────────────────
-  const onFieldMouseDown = (e: React.MouseEvent, id: string) => {
+  const onFieldMouseDown = (e: React.PointerEvent, id: string) => {
     e.stopPropagation()
     setSelectedId(id)
     const f    = fields.find(ff => ff.id === id)!
@@ -609,7 +620,7 @@ export default function PDFFormBuilderPage() {
     dragRef.current = { id, scx: e.clientX, scy: e.clientY, ox: f.x * cw, oy: f.y * ch, page: f.page }
   }
 
-  const onResizeMouseDown = (e: React.MouseEvent, id: string) => {
+  const onResizeMouseDown = (e: React.PointerEvent, id: string) => {
     e.stopPropagation(); e.preventDefault()
     const f = fields.find(ff => ff.id === id)!
     resizeRef.current = { id, scx: e.clientX, scy: e.clientY, ow: f.w, oh: f.h, page: f.page }
@@ -755,7 +766,7 @@ export default function PDFFormBuilderPage() {
     e.target.value = ''
   }
 
-  const onDocMouseDown = (e: React.MouseEvent, id: string) => {
+  const onDocMouseDown = (e: React.PointerEvent, id: string) => {
     e.stopPropagation(); setSelectedId(id)
     const d    = docElements.find(dd => dd.id === id)!
     const wrap = pageWrapRefs.current[d.page]
@@ -764,7 +775,7 @@ export default function PDFFormBuilderPage() {
     dragRef.current = { id, scx: e.clientX, scy: e.clientY, ox: d.x * cw, oy: d.y * ch, page: d.page }
   }
 
-  const onDocResizeMouseDown = (e: React.MouseEvent, id: string) => {
+  const onDocResizeMouseDown = (e: React.PointerEvent, id: string) => {
     e.stopPropagation(); e.preventDefault()
     const d = docElements.find(dd => dd.id === id)!
     resizeRef.current = { id, scx: e.clientX, scy: e.clientY, ow: d.w, oh: d.h, page: d.page }
@@ -1110,7 +1121,7 @@ export default function PDFFormBuilderPage() {
           </div>
 
           {/* Info row */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:48 }}>
+          <div className="info-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:48 }}>
             <div style={{ padding:16, background:'#fafafa', border:'1px solid #e8e8e8', borderRadius:12 }}>
               <div style={{ fontSize:13, fontWeight:700, marginBottom:4 }}>📝 6 Field Types</div>
               <div style={{ fontSize:12, color:'rgba(0,0,0,.45)', lineHeight:1.6 }}>Text, textarea, checkbox, dropdown, date, number — all become native AcroForm fields.</div>
@@ -1535,7 +1546,7 @@ export default function PDFFormBuilderPage() {
                 const pageFields = fields.filter(f => f.page === pageIdx)
                 const pageDocs   = docElements.filter(d => d.page === pageIdx)
                 return (
-                <div key={pageIdx} ref={el => { pageWrapRefs.current[pageIdx] = el }} className="canvas-wrap mode-select" onMouseDown={onCanvasMouseDown}>
+                <div key={pageIdx} ref={el => { pageWrapRefs.current[pageIdx] = el }} className="canvas-wrap mode-select" onPointerDown={onCanvasMouseDown}>
                   <canvas ref={el => { pageCanvasRefs.current[pageIdx] = el }} />
                   {mode === 'blank' && <div className="canvas-guide" />}
 
@@ -1576,7 +1587,7 @@ export default function PDFFormBuilderPage() {
                         border: sel ? selBorder : idleBorderStyle,
                         borderBottom: sel ? undefined : underlineBorderBottom,
                         borderRadius: f.borderStyle === 'underline' && !sel ? 0 : undefined }}
-                      onMouseDown={e => onFieldMouseDown(e, f.id)}
+                      onPointerDown={e => onFieldMouseDown(e, f.id)}
                     >
                       {/* Ruled lines for multiline+dash */}
                       {isMultiDash && Array.from({ length: lineCount }).map((_, i) => (
@@ -1642,7 +1653,7 @@ export default function PDFFormBuilderPage() {
                         {f.type === 'dropdown' && <span style={{ marginLeft:'auto', fontSize:9, opacity:.35 }}>▼</span>}
                       </div>
                       <button className="field-del" onClick={e => { e.stopPropagation(); deleteField(f.id) }}>✕</button>
-                      {sel && <div className="resize-se" onMouseDown={e => { e.stopPropagation(); onResizeMouseDown(e, f.id) }} />}
+                      {sel && <div className="resize-se" onPointerDown={e => { e.stopPropagation(); onResizeMouseDown(e, f.id) }} />}
                     </div>
                   )
                   return (
@@ -1686,7 +1697,7 @@ export default function PDFFormBuilderPage() {
                       background: de.type === 'table' ? 'transparent' : 'rgba(255,255,255,.88)',
                       boxShadow: sel ? '0 0 0 1px #f59e0b, 0 2px 10px rgba(245,158,11,.2)' : undefined,
                     }}
-                      onMouseDown={e => onDocMouseDown(e, de.id)}
+                      onPointerDown={e => onDocMouseDown(e, de.id)}
                     >
                       {de.type === 'static-text' && (() => {
                         const isEditingText = editingTextId === de.id
@@ -1822,7 +1833,7 @@ export default function PDFFormBuilderPage() {
                                     cursor:'col-resize', pointerEvents:'auto',
                                     display:'flex', alignItems:'stretch', justifyContent:'center',
                                   }}
-                                    onMouseDown={e => {
+                                    onPointerDown={e => {
                                       e.stopPropagation(); e.preventDefault()
                                       tableResizeRef.current = {
                                         docId: de.id, axis:'col', idx: c,
@@ -1842,7 +1853,7 @@ export default function PDFFormBuilderPage() {
                                     cursor:'row-resize', pointerEvents:'auto',
                                     display:'flex', flexDirection:'column', alignItems:'stretch', justifyContent:'center',
                                   }}
-                                    onMouseDown={e => {
+                                    onPointerDown={e => {
                                       e.stopPropagation(); e.preventDefault()
                                       tableResizeRef.current = {
                                         docId: de.id, axis:'row', idx: r,
@@ -1877,7 +1888,7 @@ export default function PDFFormBuilderPage() {
                       )}
                       {/* Resize handle */}
                       {sel && (
-                        <div className="resize-se" onMouseDown={e => { e.stopPropagation(); onDocResizeMouseDown(e, de.id) }} />
+                        <div className="resize-se" onPointerDown={e => { e.stopPropagation(); onDocResizeMouseDown(e, de.id) }} />
                       )}
                     </div>
                   )

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -175,6 +176,20 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 .feat-icon{font-size:22px;margin-bottom:5px}
 .feat-ttl{font-size:11px;font-weight:700;color:#1d1d1f;margin-bottom:2px}
 .feat-body{font-size:10px;color:rgba(0,0,0,.38);line-height:1.5}
+@media(max-width:900px){
+  .pg{height:auto;min-height:100dvh;overflow:visible}
+  .body{flex:none;flex-direction:column;overflow:visible}
+  .sidebar{width:100%;max-height:210px;border-right:0;border-bottom:1px solid #e8e8e8}
+  .sb-pages{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden}
+  .page-chip{min-width:132px;margin-bottom:0}
+  .settings{width:100%;overflow:visible;border-left:0;border-bottom:1px solid #e8e8e8}
+  .main{min-height:64dvh;overflow:visible}
+  .main-top{flex-wrap:wrap;padding:9px 12px}
+  .split{flex-direction:column;overflow:visible}
+  .preview-pane{width:100%;min-height:46dvh;border-right:0;border-bottom:1px solid #e8e8e8}
+  .text-pane{min-height:44dvh}.text-area{min-height:280px}
+  .lp-uc{padding:32px 16px}.feat-grid{grid-template-columns:1fr}
+}
 `
 
 function fmtBytes(n: number) {
@@ -751,14 +766,7 @@ export default function PDFOCRPage() {
         {/* Nav */}
         <nav className="nav">
           <Link href="/" className="logo">
-            <div className="logo-mark">
-              <svg width="27" height="27" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs><linearGradient id="lg-oc" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#e11d48"/></linearGradient></defs>
-                <path d="M0 0H38C44 0 48 6 48 13.5C48 21 44 27 38 27H10M10 27V48H0V0M10 27H32" stroke="url(#lg-oc)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="38" cy="27" r="5" fill="url(#lg-oc)"/>
-              </svg>
-            </div>
-            <span className="logo-name">EditPDF<span className="logo-ai"> AI</span></span>
+            <Image src="/logo-v2.svg" alt="EditPDF AI" width={380} height={100} style={{ width: '114px', height: '30px' }} priority />
           </Link>
           <span className="nav-sep">›</span>
           <span className="nav-title">OCR Scanner</span>
@@ -984,7 +992,7 @@ export default function PDFOCRPage() {
             <div className="st-sec">
               <div className="tog-row">
                 <span className="tog-lbl">Skip text pages</span>
-                <div className={`tog${useNative?' on':' off'}`} onClick={()=>setUseNative(p=>!p)}><div className="tok"/></div>
+                <button type="button" className={`tog${useNative?' on':' off'}`} aria-pressed={useNative} aria-label="Skip pages that already contain text" onClick={()=>setUseNative(p=>!p)}><span className="tok"/></button>
               </div>
               <div className="st-hint">If enabled, pages that already have extractable text are read directly without using AI — much faster and free.</div>
             </div>
