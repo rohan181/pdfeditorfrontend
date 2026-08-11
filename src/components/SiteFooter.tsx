@@ -17,6 +17,7 @@ const CATS = [
 const toolCols = [
   { title: 'AI Tools',  color: '#7c3aed', links: [
     ['AI PDF Form Filler',  '/ai-pdf-form-filler'],
+    ['Chat with PDF',   '/chat-with-pdf'],
     ['PDF OCR Scanner', '/pdf-ocr'],
     ['PDF Summarizer',  '/pdf-summarizer'],
     ['PDF Mind Map',    '/mind-map'],
@@ -34,6 +35,7 @@ const toolCols = [
     ['Extract Pages',   '/extract-pages'],
     ['Delete Pages',    '/delete-pages'],
     ['Add Page Numbers','/add-page-numbers'],
+    ['PDF Page Labels', '/pdf-page-labels'],
   ]},
   { title: 'Convert',   color: '#16a34a', links: [
     ['PDF to Word',     '/pdf-to-word'],
@@ -51,12 +53,25 @@ const toolCols = [
   ]},
   { title: 'Protect & Organize', color: '#dc2626', links: [
     ['PDF Password Lock','/pdf-password-lock'],
+    ['Unlock PDF',       '/pdf-unlock'],
     ['PDF Watermark',   '/pdf-watermark'],
     ['PDF Redactor',    '/pdf-redactor'],
     ['PDF Merger',      '/pdf-merger'],
     ['PDF Compressor',  '/pdf-compressor'],
     ['PDF Splitter',    '/pdf-splitter'],
     ['PDF Form Builder','/pdf-form-builder'],
+    ['Repair PDF',      '/pdf-repair'],
+    ['Flatten PDF',     '/pdf-flatten'],
+    ['Compare PDF',     '/pdf-compare'],
+    ['Remove PDF Metadata','/remove-pdf-metadata'],
+    ['Extract PDF Attachments','/extract-pdf-attachments'],
+    ['Extract PDF Images','/extract-pdf-images'],
+    ['Export PDF Form Data','/export-pdf-form-data'],
+    ['Extract PDF Bookmarks','/extract-pdf-bookmarks'],
+    ['PDF Bookmarks Manager','/pdf-bookmarks-manager'],
+    ['Extract PDF Links', '/extract-pdf-links'],
+    ['Remove PDF Links', '/remove-pdf-links'],
+    ['Export PDF Comments', '/export-pdf-comments'],
   ]},
   { title: 'Guides',    color: '#0891b2', links: [
     ['Edit PDF Without Adobe',   '/guides/how-to-edit-a-pdf-without-adobe'],

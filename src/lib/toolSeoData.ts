@@ -11,6 +11,40 @@ interface ToolSEOData {
 
 const data: Record<string, ToolSEOData> = {
 
+  'chat-with-pdf': {
+    toolSlug: 'chat-with-pdf',
+    whatIs: [
+      'What is Chat with PDF?',
+      'Chat with PDF is an AI document question-and-answer tool. It reads the searchable text in a PDF, finds the pages most relevant to your question, and writes a grounded response with page references and short supporting quotes.',
+      'EditPDF AI extracts page text locally in your browser. For each question, only the relevant text excerpts, your question, and recent chat context are sent to the AI service. Returned citation quotes are checked against the extracted source page before they are shown.',
+    ],
+    users: [
+      { who: 'Students and researchers', why: 'Ask focused questions about papers, readings, reports, and source documents while keeping a clear path back to the cited page.' },
+      { who: 'Legal and compliance teams', why: 'Find clauses, dates, obligations, exceptions, and risks in searchable contracts and policy documents.' },
+      { who: 'Business teams', why: 'Review proposals, reports, manuals, and project documents without repeatedly scanning every page.' },
+      { who: 'Analysts and consultants', why: 'Extract precise facts, figures, assumptions, and recommendations from long PDF documents with supporting evidence.' },
+    ],
+    related: [
+      { slug: 'pdf-summarizer', label: 'Generate a complete PDF summary' },
+      { slug: 'pdf-ocr', label: 'Make a scanned PDF searchable first' },
+      { slug: 'pdf-compare', label: 'Compare two document versions' },
+      { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+    ],
+    steps: [
+      { title: 'Choose a searchable PDF', body: 'Select a PDF up to 50 MB and 1,000 pages. Text is extracted page by page inside your browser.' },
+      { title: 'Ask a document question', body: 'Ask about the main points, a specific clause, names, figures, dates, obligations, risks, or anything else present in the document.' },
+      { title: 'Check the cited evidence', body: 'Read the answer, then open its page citation cards to inspect the exact source quotes used as evidence.' },
+    ],
+    faqs: [
+      { q: 'Does Chat with PDF cite its answers?', a: 'Yes. Answers can include page cards with exact supporting quotes. Each returned quote is checked against the extracted text from that page before the citation is displayed.' },
+      { q: 'Is my entire PDF uploaded to the AI?', a: 'No. The PDF file is parsed locally. Only selected relevant page text, your question, and a limited amount of recent chat history are sent to the AI service for an answer.' },
+      { q: 'Can I chat with a scanned PDF?', a: 'A scan usually contains page images rather than searchable text. Run PDF OCR first to create searchable text, then open the OCR result in Chat with PDF.' },
+      { q: 'Can I use a password-protected PDF?', a: 'The browser cannot extract text from a locked PDF without authorization. Use Unlock PDF with the correct password, then chat with the unlocked copy.' },
+      { q: 'How many questions can I ask?', a: 'Signed-in free users can make up to five AI requests per day across limited AI tools. Pro users have higher or unlimited access according to the current plan.' },
+      { q: 'Should I rely on an AI answer without checking it?', a: 'No. AI can misunderstand context. Use the verified quote cards to check important legal, medical, financial, academic, or business information against the original PDF.' },
+    ],
+  },
+
   'pdf-splitter': {
     whatIs: [
       'What is a PDF splitter?',
@@ -184,10 +218,10 @@ const data: Record<string, ToolSEOData> = {
       { who: 'Individuals', why: 'Secure personal documents — tax returns, ID scans, medical records — stored in cloud services or shared via messaging apps.' },
     ],
     related: [
+      { slug: 'pdf-unlock', label: 'Remove a known PDF password' },
       { slug: 'pdf-watermark', label: 'Add a watermark to your PDF' },
       { slug: 'pdf-redactor', label: 'Redact text before locking' },
       { slug: 'pdf-signer', label: 'Digitally sign your PDF' },
-      { slug: 'pdf-editor', label: 'Edit the PDF before locking' },
     ],
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF you want to protect. It is processed entirely in your browser.' },
@@ -200,6 +234,480 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Can I remove the password from a PDF I own?', a: 'If you know the password, yes — open the protected PDF in our tool and use the Remove Password option.' },
       { q: 'Does password protection prevent copying text?', a: 'You can restrict copying by setting a permissions password. Without the permissions password, the viewer cannot copy text from the PDF.' },
       { q: 'Is my PDF sent to a server?', a: 'No. Encryption runs in your browser using WebAssembly. Your document and password are never transmitted over the internet.' },
+    ],
+  },
+
+  'pdf-unlock': {
+    toolSlug: 'pdf-unlock',
+    whatIs: [
+      'What does unlocking a PDF do?',
+      'Unlocking a PDF removes its standard password encryption and permission restrictions, producing a copy that can be opened without entering the password. You must provide the correct user or owner password when the document requires one.',
+      'EditPDF AI runs QPDF through WebAssembly inside your browser. The document and password never leave your device, and pages are not converted to images, so text, links, forms, fonts, and image quality are preserved.',
+    ],
+    users: [
+      { who: 'Document owners', why: 'Remove a password from a personal document so it can be opened more conveniently on trusted devices.' },
+      { who: 'Finance and administration teams', why: 'Unlock authorized statements, reports, or records before combining them into internal workflows.' },
+      { who: 'Legal professionals', why: 'Create an authorized working copy of a protected document for annotation, review, or filing.' },
+      { who: 'Students and researchers', why: 'Remove known protection from course material they are authorized to use for quoting, notes, or accessibility tools.' },
+    ],
+    related: [
+      { slug: 'pdf-password-lock', label: 'Protect a PDF with a new password' },
+      { slug: 'pdf-editor', label: 'Edit the unlocked PDF' },
+      { slug: 'pdf-merger', label: 'Merge the unlocked PDF' },
+      { slug: 'pdf-compressor', label: 'Compress the unlocked PDF' },
+    ],
+    steps: [
+      { title: 'Choose your protected PDF', body: 'Select a password-protected PDF up to 100 MB. The file is read locally and is never uploaded.' },
+      { title: 'Enter the current password', body: 'Provide the user or owner password that already opens the document, then confirm you are authorized to modify it.' },
+      { title: 'Download the unlocked copy', body: 'QPDF removes standard encryption in your browser and downloads a quality-preserving copy that no longer asks for the password.' },
+    ],
+    faqs: [
+      { q: 'Can this tool recover a forgotten PDF password?', a: 'No. It does not guess, recover, or brute-force passwords. For a password-protected file, you must supply the correct user or owner password.' },
+      { q: 'Is my PDF uploaded to a server?', a: 'No. QPDF runs through WebAssembly in a browser worker. Your PDF bytes and password stay on your device.' },
+      { q: 'Can it remove printing or copying restrictions?', a: 'Yes, when the PDF opens without a password or when you provide an authorized user or owner password. The downloaded copy has standard PDF encryption and permission restrictions removed.' },
+      { q: 'Will unlocking reduce the quality of my PDF?', a: 'No. The PDF structure is rewritten without rasterizing its pages, so embedded text, vector graphics, and images retain their original quality.' },
+      { q: 'Does it work with every protected PDF?', a: 'It supports standard password-based PDF encryption handled by QPDF. Certificate-encrypted files, enterprise rights-management systems, and third-party DRM are not supported.' },
+    ],
+  },
+
+  'pdf-repair': {
+    toolSlug: 'pdf-repair',
+    whatIs: [
+      'What does repairing a PDF do?',
+      'Repairing a PDF rebuilds recoverable structural information such as damaged cross-reference data, inconsistent object references, and malformed page-tree entries. It creates a new copy without changing the original file.',
+      'EditPDF AI runs a structural preflight and QPDF through WebAssembly inside your browser. It attempts safe automatic recovery and rewrites the readable document structure, while preserving recoverable text, links, images, fonts, forms, and vector content.',
+    ],
+    users: [
+      { who: 'Office and administration teams', why: 'Recover reports or forms that stopped opening after an incomplete download, transfer, or storage problem.' },
+      { who: 'Students and researchers', why: 'Repair readable course material or papers that produce cross-reference or damaged-file errors in a PDF viewer.' },
+      { who: 'Design and production teams', why: 'Rewrite malformed exports from older software before archiving, sharing, or sending them to print.' },
+      { who: 'Document owners', why: 'Create a clean working copy of a recoverable personal PDF while keeping the damaged original unchanged.' },
+    ],
+    related: [
+      { slug: 'pdf-unlock', label: 'Unlock a password-protected PDF first' },
+      { slug: 'pdf-viewer', label: 'Check the repaired PDF' },
+      { slug: 'pdf-compressor', label: 'Compress the repaired copy' },
+      { slug: 'pdf-editor', label: 'Edit the repaired PDF' },
+    ],
+    steps: [
+      { title: 'Choose the damaged PDF', body: 'Select a PDF up to 100 MB. The original file is read locally and is never uploaded or modified.' },
+      { title: 'Rebuild recoverable structure', body: 'The tool corrects common cross-reference pointer errors, then QPDF rewrites readable object data into a clean PDF copy.' },
+      { title: 'Download and review', body: 'Download the repaired file, open it in a PDF viewer, and confirm that every expected page and element is present.' },
+    ],
+    faqs: [
+      { q: 'Can every corrupted PDF be repaired?', a: 'No. Automatic repair can rebuild recoverable structure, but it cannot recreate content that is missing, overwritten, or irreversibly corrupted.' },
+      { q: 'Is my damaged PDF uploaded to a server?', a: 'No. The repair engine runs through WebAssembly in a browser worker, so the PDF bytes stay on your device.' },
+      { q: 'Will repairing reduce the quality of my PDF?', a: 'Pages are not converted to images. Recoverable text, vector graphics, fonts, images, links, and forms are copied into a rewritten PDF structure without intentional quality reduction.' },
+      { q: 'Can it repair a password-protected PDF?', a: 'Not without the valid password. Use Unlock PDF with the known password first, then repair the resulting unlocked copy.' },
+      { q: 'What kinds of damage can it recover?', a: 'It may recover missing or invalid startxref pointers, some malformed cross-reference structures, and similar structural issues that can be rewritten safely.' },
+    ],
+  },
+
+  'pdf-flatten': {
+    toolSlug: 'pdf-flatten',
+    whatIs: [
+      'What does flattening a PDF do?',
+      'Flattening makes interactive or layered PDF content permanent. It is commonly used after completing a form, adding comments, or preparing a final copy for printing and distribution.',
+      'EditPDF AI provides two methods. Form Fields Only converts AcroForm values into normal page content while preserving selectable text, vectors, links, and original images. Full Visual Flatten renders each visible page into a high-resolution single layer so supported annotations and form appearances look consistent everywhere.',
+    ],
+    users: [
+      { who: 'Form recipients', why: 'Turn completed form values into permanent page content before submitting or archiving a final copy.' },
+      { who: 'Legal and compliance teams', why: 'Create a stable review copy whose visible markings and form values cannot be casually changed in a PDF viewer.' },
+      { who: 'Print and production teams', why: 'Bake visible page elements into consistent layers to reduce annotation and appearance differences between viewers and printers.' },
+      { who: 'Freelancers and small businesses', why: 'Finalize invoices, approvals, and client forms before sharing them outside the organization.' },
+    ],
+    related: [
+      { slug: 'pdf-form-builder', label: 'Create a fillable PDF form' },
+      { slug: 'pdf-annotate', label: 'Add annotations before flattening' },
+      { slug: 'pdf-compressor', label: 'Compress the flattened PDF' },
+      { slug: 'pdf-viewer', label: 'Review the final PDF' },
+    ],
+    steps: [
+      { title: 'Choose your PDF', body: 'Select a PDF up to 100 MB. The tool checks its page count, form fields, and digital-signature status locally.' },
+      { title: 'Choose a flattening method', body: 'Use Form Fields Only to preserve document quality and selectable content, or Full Visual Flatten to bake visible annotations and forms into page images.' },
+      { title: 'Download and review', body: 'Download the permanent copy and confirm the expected values and annotations are visible before sharing or archiving it.' },
+    ],
+    faqs: [
+      { q: 'Which flattening mode should I use?', a: 'Use Form Fields Only for completed AcroForm fields when you want to preserve searchable text, vectors, links, and original image quality. Use Full Visual Flatten when visible annotations and consistent appearance are more important than interactivity or text selection.' },
+      { q: 'Does flattening make a PDF impossible to edit?', a: 'It removes the selected interactive or layered behavior, but no PDF should be treated as tamper-proof. Specialized software can still modify page content. Use cryptographic signatures when authenticity must be verifiable.' },
+      { q: 'Will flattening invalidate a digital signature?', a: 'Yes. Flattening changes the document bytes, so an existing cryptographic signature will no longer validate. The tool detects common signature structures and requires acknowledgment before continuing.' },
+      { q: 'Does Full Visual Flatten preserve searchable text?', a: 'No. Full Visual Flatten creates high-resolution page images, so text selection, search, live links, tags, and accessibility structure are removed. Form Fields Only preserves those features.' },
+      { q: 'Is my PDF uploaded to a server?', a: 'No. Inspection, form flattening, visual rendering, and PDF generation all happen inside your browser.' },
+    ],
+  },
+
+  'pdf-compare': {
+    toolSlug: 'pdf-compare',
+    whatIs: [
+      'What does comparing two PDFs show?',
+      'PDF comparison checks the same page position in two document versions and identifies visible changes, text revisions, page-size differences, and pages that were added or removed. It is useful when a revised contract, report, proof, or form must be checked against its earlier version.',
+      'EditPDF AI renders both documents locally, compares their pixels at your chosen sensitivity, and separately checks extracted page text. Changed pages can be reviewed as a red difference map or side by side, and a CSV summary can be downloaded for your records.',
+    ],
+    users: [
+      { who: 'Legal and compliance teams', why: 'Review revised agreements, policies, and filings for visual or textual changes before approval.' },
+      { who: 'Editors and proofreaders', why: 'Compare exported proofs to confirm that requested copy and layout corrections were applied.' },
+      { who: 'Design and production teams', why: 'Find moved elements, changed images, annotation differences, and altered page dimensions between exports.' },
+      { who: 'Business and project teams', why: 'Check reports, proposals, invoices, and forms against an earlier version without sharing confidential files.' },
+    ],
+    related: [
+      { slug: 'pdf-annotate', label: 'Annotate the revised PDF' },
+      { slug: 'pdf-flatten', label: 'Flatten a final review copy' },
+      { slug: 'pdf-viewer', label: 'Review either PDF' },
+      { slug: 'pdf-editor', label: 'Correct the revised PDF' },
+    ],
+    steps: [
+      { title: 'Choose both PDF versions', body: 'Select the original and revised PDFs, each up to 100 MB and 150 pages. Both files stay in your browser.' },
+      { title: 'Choose comparison sensitivity', body: 'Balanced works for most revisions. Strict finds subtle color changes, while Relaxed ignores mild rendering and compression noise.' },
+      { title: 'Review and export results', body: 'Inspect changed pages with a difference map or side-by-side view, then download the page-level CSV report if needed.' },
+    ],
+    faqs: [
+      { q: 'Does PDF comparison find text changes?', a: 'Yes. The tool separately compares normalized page text, so it can report a text change even when that content is invisible or the visible pixel difference is very small.' },
+      { q: 'What do red areas in the difference map mean?', a: 'Red pixels exceed the selected color-difference threshold. Unchanged content is shown in pale grayscale so the changed areas are easier to locate.' },
+      { q: 'Which sensitivity should I choose?', a: 'Use Balanced for typical document revisions. Strict is useful for subtle design changes but may flag anti-aliasing differences. Relaxed is better for PDFs that were recompressed or generated by different software.' },
+      { q: 'Does the tool compare metadata or digital signatures?', a: 'It detects byte-for-byte identical files, but the normal comparison focuses on visible pages, extracted text, dimensions, and page count. It does not provide a metadata audit or validate cryptographic signatures.' },
+      { q: 'Are my PDFs uploaded to a server?', a: 'No. PDF rendering, text extraction, pixel comparison, previews, and report generation happen locally in your browser.' },
+    ],
+  },
+
+  'remove-pdf-metadata': {
+    toolSlug: 'remove-pdf-metadata',
+    whatIs: [
+      'What does removing PDF metadata do?',
+      'PDF metadata can contain an author name, document title, editing software, creation and modification dates, search keywords, XMP records, and internal document identifiers. Removing it creates a cleaner sharing copy without those common hidden properties.',
+      'EditPDF AI removes the PDF Info dictionary, XMP metadata, document IDs, and page-level metadata references. You can also clear hidden author and timestamp fields from non-form annotations. Pages are not rasterized, so text, images, links, forms, bookmarks, and accessibility structure remain intact.',
+    ],
+    users: [
+      { who: 'Privacy-conscious professionals', why: 'Remove common author, software, timestamp, and identifier fields before sharing a document outside the organization.' },
+      { who: 'Legal and compliance teams', why: 'Prepare a cleaner review or disclosure copy while preserving visible pages, links, forms, and document structure.' },
+      { who: 'Journalists and researchers', why: 'Reduce hidden source-identifying information in a PDF before publishing or sending it to collaborators.' },
+      { who: 'Job seekers and small businesses', why: 'Clean exported CVs, proposals, invoices, and reports of unintended author or editing-application details.' },
+    ],
+    related: [
+      { slug: 'pdf-redactor', label: 'Redact visible sensitive content' },
+      { slug: 'pdf-flatten', label: 'Flatten forms and annotations' },
+      { slug: 'extract-pdf-attachments', label: 'Review embedded attachments' },
+      { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+    ],
+    steps: [
+      { title: 'Choose and inspect your PDF', body: 'Select a PDF up to 100 MB. The tool checks common document properties, XMP, page metadata, document IDs, and annotation identity fields locally.' },
+      { title: 'Choose annotation cleanup', body: 'Keep the default option to clear hidden author, timestamp, and annotation-ID fields while preserving visible comments and form fields.' },
+      { title: 'Clean, download, and review', body: 'Create a sanitized copy, download it, and review visible content, filenames, form values, bookmarks, and embedded attachments before sharing.' },
+    ],
+    faqs: [
+      { q: 'What PDF metadata does this tool remove?', a: 'It removes the PDF Info dictionary, standard document properties, XMP metadata streams, trailer document IDs, and common page or object metadata references. The optional annotation cleanup removes author, creation date, modification date, and annotation-ID fields from non-form annotations.' },
+      { q: 'Will removing metadata reduce PDF quality?', a: 'No. The pages are rewritten without rasterizing them, so text, vector graphics, original images, links, bookmarks, form fields, and accessibility structure are preserved.' },
+      { q: 'Does it remove comments or form values?', a: 'Visible comments and markup are preserved. With annotation cleanup enabled, only their hidden identity fields are cleared. Form field names and values are intentionally preserved because changing them could alter the document.' },
+      { q: 'What about embedded attachments and filenames?', a: 'Embedded attachments are preserved and may have their own filenames or metadata. The downloaded PDF also has a filename, and visible content or bookmarks may reveal information. Review the entire cleaned copy before sharing.' },
+      { q: 'Will cleaning metadata invalidate a digital signature?', a: 'Yes. Metadata cleaning rewrites the PDF bytes, so an existing cryptographic signature will no longer validate. The tool warns when it detects common digital-signature structures.' },
+      { q: 'Is my PDF uploaded to a server?', a: 'No. Inspection, metadata removal, rewriting, and verification all run locally inside your browser.' },
+    ],
+  },
+
+  'extract-pdf-attachments': {
+    toolSlug: 'extract-pdf-attachments',
+    whatIs: [
+      'What are PDF attachments?',
+      'A PDF can contain complete files inside the document package. These may appear in an attachments panel, be associated with the document or a page, or be connected to a paperclip-style file annotation. Common examples include spreadsheets, XML invoice data, source documents, images, and supporting evidence.',
+      'EditPDF AI checks the document embedded-files name tree, associated-file arrays, and page file annotations. It decodes supported embedded-file streams and lets you download the original bytes individually or package multiple files into a ZIP. The PDF itself is never changed.',
+    ],
+    users: [
+      { who: 'Accounting and finance teams', why: 'Recover XML, CSV, spreadsheet, or receipt data packaged inside invoice and archival PDF files.' },
+      { who: 'Legal and compliance teams', why: 'Collect supporting documents, exhibits, and evidence embedded in a PDF without manually opening every attachment annotation.' },
+      { who: 'Design and production teams', why: 'Retrieve source images, data files, and other assets included with a delivered PDF package.' },
+      { who: 'Researchers and archivists', why: 'Extract supplementary datasets and source materials stored as PDF associated files or standard attachments.' },
+    ],
+    related: [
+      { slug: 'remove-pdf-metadata', label: 'Remove PDF metadata before sharing' },
+      { slug: 'extract-pages', label: 'Extract selected PDF pages' },
+      { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+      { slug: 'pdf-viewer', label: 'Open and review the PDF' },
+    ],
+    steps: [
+      { title: 'Choose your PDF', body: 'Select a PDF up to 100 MB. The document is read locally and remains unchanged.' },
+      { title: 'Review detected attachments', body: 'The tool scans document attachments, associated files, and file annotations, then shows each filename, size, declared type, and source.' },
+      { title: 'Download safely', body: 'Download one file at a time or create a ZIP for multiple attachments. Filenames are sanitized, but unknown extracted files should still be scanned before opening.' },
+    ],
+    faqs: [
+      { q: 'Which PDF attachments can this tool find?', a: 'It checks the standard EmbeddedFiles name tree, document and page associated-file arrays, and FileAttachment annotations. This covers ordinary attachment panels, many PDF/A-3 associated files, and paperclip-style page attachments.' },
+      { q: 'Does extraction change the original PDF?', a: 'No. The tool only reads the PDF and creates separate downloads. It does not rewrite, remove, or save changes to the source document.' },
+      { q: 'Are extracted attachments safe to open?', a: 'Not necessarily. An embedded file can contain active content or malware just like an email attachment. The tool does not preview or execute extracted content. Scan files from unknown sources before opening them.' },
+      { q: 'Why might an attachment not be extracted?', a: 'A damaged PDF, password protection, non-standard embedded-file structure, unsupported stream encoding, or browser memory limits can prevent extraction. The tool supports up to 500 files, 200 MB per extracted file, and 300 MB total extracted data.' },
+      { q: 'Can I download every attachment at once?', a: 'Yes. When multiple files are found, use Download all as ZIP. Duplicate and unsafe filenames are normalized so files cannot create unintended folders inside the archive.' },
+      { q: 'Is my PDF or its attachments uploaded?', a: 'No. PDF inspection, stream decoding, and ZIP creation all run locally inside your browser.' },
+    ],
+  },
+
+  'extract-pdf-images': {
+    toolSlug: 'extract-pdf-images',
+    whatIs: [
+      'What does extracting images from a PDF mean?',
+      'A PDF page can combine text, vector paths, and embedded bitmap images. Image extraction finds those underlying raster pictures—such as photographs, screenshots, and scanned image regions—and saves them separately instead of taking a screenshot of the complete page.',
+      'EditPDF AI scans Image XObjects and inline bitmap operations on every page, decodes their pixels with PDF.js, and exports unique images as lossless PNG files. Repeated images are downloaded once while their page locations and usage count remain visible.',
+    ],
+    users: [
+      { who: 'Design and marketing teams', why: 'Recover photographs, product images, and raster assets from approved brochures, reports, and creative proofs.' },
+      { who: 'Researchers and students', why: 'Extract charts stored as bitmap images, scanned figures, and photographs for authorized study or citation workflows.' },
+      { who: 'Publishers and content teams', why: 'Collect embedded visual assets from archived PDFs without cropping full-page screenshots by hand.' },
+      { who: 'Business and operations teams', why: 'Retrieve screenshots, receipts, logos stored as bitmaps, and supporting pictures from document packages.' },
+    ],
+    related: [
+      { slug: 'pdf-to-images', label: 'Convert complete PDF pages to images' },
+      { slug: 'extract-pdf-attachments', label: 'Extract files attached to the PDF' },
+      { slug: 'pdf-ocr', label: 'Extract text from scanned pages' },
+      { slug: 'pdf-viewer', label: 'Review the source PDF' },
+    ],
+    steps: [
+      { title: 'Choose your PDF', body: 'Select a PDF up to 100 MB and 300 pages. The file stays in your browser.' },
+      { title: 'Scan embedded bitmaps', body: 'The tool finds page Image XObjects and inline images, decodes supported transparency, and deduplicates identical pixel content.' },
+      { title: 'Preview and download', body: 'Review dimensions, page locations, and usage counts, then download one lossless PNG or package every unique image into a ZIP.' },
+    ],
+    faqs: [
+      { q: 'How is this different from PDF to Images?', a: 'PDF to Images renders each complete page, including text, margins, and vector artwork. Extract PDF Images recovers only standalone bitmap images used inside page content.' },
+      { q: 'Does the tool extract images at their original size?', a: 'It exports the decoded bitmap pixel dimensions provided by the PDF. The PNG conversion is lossless, although it may have a different file size from the compressed stream stored inside the PDF.' },
+      { q: 'Why are some logos or charts missing?', a: 'They may be drawn using vector paths, text, gradients, or stencil masks rather than stored as standalone bitmap images. Those page instructions cannot be extracted as ordinary pictures by this tool.' },
+      { q: 'Why are repeated images shown only once?', a: 'The tool hashes the lossless PNG pixels and combines identical images. Each result lists the pages and total placements where that image appeared.' },
+      { q: 'What are the browser safety limits?', a: 'The source PDF can contain up to 300 pages and 500 unique images. Individual images over 40 million pixels are skipped, and total decoded pixel limits prevent browser memory exhaustion.' },
+      { q: 'Is my PDF uploaded to a server?', a: 'No. PDF parsing, image decoding, hashing, preview generation, and ZIP creation all happen locally inside your browser.' },
+    ],
+  },
+
+  'export-pdf-form-data': {
+    toolSlug: 'export-pdf-form-data',
+    whatIs: [
+      'What is PDF form data export?',
+      'A fillable PDF normally stores answers in an AcroForm field tree. Each field can have a name, type, value, validation flags, available choices, and one or more page widgets that control where it appears.',
+      'EditPDF AI reads that structured field data and exports it as CSV or JSON. It supports standard text, checkbox, radio, dropdown, option-list, button, and signature fields while leaving the source PDF unchanged. Signature fields expose only Signed or Unsigned status—cryptographic signature contents and certificates are deliberately omitted.',
+    ],
+    users: [
+      { who: 'Operations teams', why: 'Move submitted PDF form answers into spreadsheets, internal systems, and review queues without retyping each response.' },
+      { who: 'Researchers and analysts', why: 'Turn batches of authorized survey or intake form answers into structured rows for validation and analysis.' },
+      { who: 'Developers and QA teams', why: 'Inspect field names, types, flags, options, widget counts, and page locations while testing form-generation workflows.' },
+      { who: 'Small businesses', why: 'Export values from applications, orders, checklists, and onboarding forms into reusable CSV or JSON records.' },
+    ],
+    related: [
+      { slug: 'pdf-form-builder', label: 'Create fillable PDF fields' },
+      { slug: 'ai-pdf-form-filler', label: 'Fill a PDF form with AI' },
+      { slug: 'pdf-to-excel', label: 'Convert PDF tables to Excel' },
+      { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+    ],
+    steps: [
+      { title: 'Choose your fillable PDF', body: 'Select one PDF up to 100 MB and 500 pages. Parsing happens locally, and the source document is not modified.' },
+      { title: 'Review detected fields', body: 'Check field names, types, current values, page locations, flags, and options. Any XFA limitation, unreadable value, signature field, or orphan widget is reported.' },
+      { title: 'Download CSV or JSON', body: 'Include or exclude empty fields, then export spreadsheet-friendly CSV or structured JSON. CSV cells that look like formulas are neutralized for safer opening.' },
+    ],
+    faqs: [
+      { q: 'Which PDF field types can be exported?', a: 'The tool reads standard AcroForm text fields, checkboxes, radio groups, dropdowns, option lists, push buttons, and signature fields. It also reports required, read-only, and export flags, options, widget counts, and page locations.' },
+      { q: 'Does the export include digital signature data?', a: 'No. A signature field is reported only as Signed or Unsigned. Cryptographic contents, certificates, byte ranges, and signer details are never copied into CSV or JSON.' },
+      { q: 'What happens with XFA forms?', a: 'Dynamic XFA datasets are not supported. If a PDF contains both XFA and standard AcroForm fields, the standard fields are exported and a warning is shown. An XFA-only form may have no exportable fields.' },
+      { q: 'Is the CSV safe to open in a spreadsheet?', a: 'The tool quotes every cell and prefixes values that begin like spreadsheet formulas, including equals, plus, minus, and at signs. You should still handle exported personal data according to your organization’s security policy.' },
+      { q: 'Does exporting change the original PDF?', a: 'No. The tool only reads the field structure and creates a separate CSV or JSON download. The PDF bytes are not rewritten.' },
+      { q: 'Is my PDF form uploaded?', a: 'No. PDF parsing, field inspection, previews, CSV creation, and JSON creation all happen locally inside your browser. Analytics receive counts and size buckets, never filenames, field names, or values.' },
+    ],
+  },
+
+  'extract-pdf-bookmarks': {
+    toolSlug: 'extract-pdf-bookmarks',
+    whatIs: [
+      'What are PDF bookmarks?',
+      'PDF bookmarks are entries in a document outline that help readers jump to chapters, sections, appendices, web pages, or locations in another PDF. Unlike a printed table of contents, bookmarks are stored as a separate hierarchy with parent and child relationships.',
+      'EditPDF AI reads that outline hierarchy and resolves direct page references plus named destinations stored in legacy dictionaries or modern PDF name trees. Web links and external-PDF actions are reported as text but never opened. CSV provides a flat spreadsheet view, while JSON preserves the nested tree.',
+    ],
+    users: [
+      { who: 'Publishers and editors', why: 'Audit chapter and section navigation before releasing manuals, reports, ebooks, and long-form publications.' },
+      { who: 'Accessibility teams', why: 'Check whether long PDFs provide a logical, navigable outline and identify bookmarks that do not resolve to local pages.' },
+      { who: 'Developers and QA teams', why: 'Inspect outline depth, destination modes, named destinations, and external actions while testing PDF-generation pipelines.' },
+      { who: 'Researchers and archivists', why: 'Export the structural table of contents from authorized reports and collections into reusable JSON or CSV records.' },
+    ],
+    related: [
+      { slug: 'pdf-viewer', label: 'Open and review the PDF' },
+      { slug: 'extract-pages', label: 'Extract bookmarked pages' },
+      { slug: 'pdf-page-manager', label: 'Reorganize PDF pages' },
+      { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+    ],
+    steps: [
+      { title: 'Choose your PDF', body: 'Select one PDF up to 100 MB and 2,000 pages. The document stays on your device and is not rewritten.' },
+      { title: 'Review the outline tree', body: 'Inspect bookmark titles, hierarchy paths, resolved page numbers, view modes, child counts, named destinations, and external action classifications.' },
+      { title: 'Download CSV or JSON', body: 'Use CSV for a flat spreadsheet-friendly outline or JSON to retain nested children and structured destination metadata.' },
+    ],
+    faqs: [
+      { q: 'What is the difference between PDF bookmarks and a table of contents?', a: 'A visible table of contents is ordinary page content. PDF bookmarks are interactive outline objects stored separately in the file. A document can have either one, both, or neither.' },
+      { q: 'Can the tool resolve named PDF destinations?', a: 'Yes. It checks both the legacy catalog Dests dictionary and the modern Names/Dests name tree, then resolves supported destination arrays to page numbers.' },
+      { q: 'Does the tool open web links or external PDFs?', a: 'No. URI, remote GoTo, named, and other actions are classified and displayed as text only. The tool never follows or executes a bookmark action.' },
+      { q: 'Why does a bookmark show as unresolved?', a: 'Its destination may be missing, damaged, cyclic, use an unsupported action, point outside the current PDF, or reference a page object that no longer exists. Available title and target information is still exported.' },
+      { q: 'Which export should I choose?', a: 'CSV is useful for spreadsheets and audits because every bookmark becomes one row with depth and path columns. JSON is better for software workflows because it preserves the original nested child hierarchy.' },
+      { q: 'Is my PDF uploaded or modified?', a: 'No. Outline parsing, destination resolution, previews, and export generation happen locally in your browser. The source PDF is read-only and remains unchanged.' },
+    ],
+  },
+
+  'pdf-bookmarks-manager': {
+    toolSlug: 'pdf-bookmarks-manager',
+    whatIs: [
+      'What does a PDF bookmarks manager do?',
+      'A PDF bookmarks manager edits the interactive outline shown in a PDF reader’s bookmarks or navigation panel. Bookmark entries can point to pages, contain nested children, start open or closed, or invoke supported web, remote-PDF, and named actions.',
+      'EditPDF AI loads the existing outline into a visual tree where you can rename entries, change page targets, add root or child bookmarks, reorder siblings, choose open or closed state, and delete bookmarks. Saving rebuilds every parent, child, previous, next, first, last, and count link together, then downloads a new PDF while leaving the source unchanged.',
+    ],
+    users: [
+      { who: 'Publishers and technical writers', why: 'Create accurate chapter and section navigation for manuals, reports, ebooks, standards, and long-form documents.' },
+      { who: 'Accessibility teams', why: 'Improve keyboard and assistive-technology navigation by organizing long PDFs into a logical outline hierarchy.' },
+      { who: 'Legal and compliance teams', why: 'Retarget or rename navigation entries after assembling exhibits, disclosures, policies, and review bundles.' },
+      { who: 'Developers and document teams', why: 'Repair malformed or outdated outlines after page insertion, deletion, conversion, or automated PDF generation.' },
+    ],
+    related: [
+      { slug: 'extract-pdf-bookmarks', label: 'Audit or export the bookmark tree' },
+      { slug: 'pdf-page-manager', label: 'Reorganize PDF pages' },
+      { slug: 'extract-pages', label: 'Extract selected PDF pages' },
+      { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+    ],
+    steps: [
+      { title: 'Choose your PDF', body: 'Select a PDF up to 100 MB and 2,000 pages. Existing bookmarks and supported destinations are loaded locally into an editable tree.' },
+      { title: 'Edit the outline', body: 'Rename and retarget page bookmarks, add root or child entries, move siblings up or down, change open state, or delete unwanted branches.' },
+      { title: 'Download the rebuilt PDF', body: 'The manager creates a new PDF with a fully linked outline. The original document remains unchanged and can be kept as a backup.' },
+    ],
+    faqs: [
+      { q: 'Can I add bookmarks to a PDF that has none?', a: 'Yes. After loading the PDF, choose Add root bookmark. You can then rename it, select its page, add child bookmarks, and build a complete hierarchy.' },
+      { q: 'What happens to web links and external PDF bookmarks?', a: 'Supported URI, remote GoTo, and named actions are preserved. They are shown as classified destinations and can be converted to ordinary page bookmarks with the Set page button.' },
+      { q: 'Can I move a bookmark under a different parent?', a: 'You can add child bookmarks and reorder entries within the same parent. Cross-parent drag-and-drop is not currently supported; create a child under the desired parent and remove the old entry.' },
+      { q: 'Does editing bookmarks change page quality?', a: 'No. Pages are not rasterized or re-rendered. The document structure is rewritten with a new outline, while page content, images, and vectors retain their original quality.' },
+      { q: 'Will editing bookmarks invalidate a digital signature?', a: 'Yes. Any saved outline changes rewrite PDF bytes, so an existing cryptographic signature will no longer validate. The manager detects common signature structures and requires explicit acknowledgement before saving.' },
+      { q: 'Is my PDF uploaded or modified in place?', a: 'No. Parsing, editing, outline reconstruction, and PDF generation happen locally in your browser. A new PDF is downloaded and the source file remains unchanged.' },
+    ],
+  },
+
+  'pdf-page-labels': {
+    toolSlug: 'pdf-page-labels',
+    whatIs: [
+      'What are PDF page labels?',
+      'PDF page labels are navigation names stored separately from printed page content. A viewer can show front matter as i, ii, iii, restart the main document at 1, label appendices A, B, C, or display identifiers such as EX-1 while the underlying PDF page order stays unchanged.',
+      'EditPDF AI loads the standards-based PageLabels number tree into a range editor. Each range can choose decimal, Roman, alphabetic, or prefix-only labels, an optional prefix, and a starting number. Saving creates a new PDF with a rebuilt number tree and does not rasterize or repaint any page.',
+    ],
+    users: [
+      { who: 'Publishers and technical writers', why: 'Label covers, front matter, chapters, indexes, and appendices so viewer navigation matches the document structure.' },
+      { who: 'Legal and compliance teams', why: 'Create exhibit, schedule, disclosure, and attachment labels with prefixes and independent numbering restarts.' },
+      { who: 'Researchers and universities', why: 'Use Roman-numeral preliminary pages and restart decimal numbering at the beginning of a thesis, paper, or report.' },
+      { who: 'Accessibility and QA teams', why: 'Align PDF viewer navigation with visible page references without altering page content or image quality.' },
+    ],
+    related: [
+      { slug: 'add-page-numbers', label: 'Print visible numbers on pages' },
+      { slug: 'pdf-page-manager', label: 'Reorder or rotate PDF pages' },
+      { slug: 'pdf-bookmarks-manager', label: 'Edit document bookmarks' },
+      { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+    ],
+    steps: [
+      { title: 'Choose your PDF', body: 'Select one PDF up to 100 MB and 2,000 pages. Existing custom page-label ranges are read locally from the PDF number tree.' },
+      { title: 'Define label ranges', body: 'Choose where each range begins, select decimal, Roman, letter, or prefix-only style, then set an optional prefix and starting value.' },
+      { title: 'Preview and download', body: 'Review the navigation labels for individual PDF pages, then download a new file with the rebuilt label tree. Page artwork remains unchanged.' },
+    ],
+    faqs: [
+      { q: 'What is the difference between page labels and printed page numbers?', a: 'Page labels are metadata used by compatible PDF viewers for navigation, thumbnail captions, and page lookup. Printed page numbers are visible marks painted onto each page. Use Add Page Numbers when you need numbers to appear on the page itself.' },
+      { q: 'Can I use Roman numerals for front matter and restart at page 1?', a: 'Yes. Create a lowercase Roman range beginning on PDF page 1, then add a decimal range at the first body page with a starting number of 1.' },
+      { q: 'Can page labels include prefixes?', a: 'Yes. A prefix can be combined with decimal, Roman, or letter numbering, such as A-1, EX-IV, or Appendix-C. Prefix-only ranges are also supported.' },
+      { q: 'What does Restore PDF defaults do?', a: 'It removes the custom PageLabels number tree from the downloaded copy. PDF viewers then use ordinary sequential page numbers beginning at 1.' },
+      { q: 'Will page labels change page quality or layout?', a: 'No. The tool updates document navigation metadata only. Existing page content streams, images, text, vectors, dimensions, and order are not re-rendered.' },
+      { q: 'Is my PDF uploaded?', a: 'No. Page-label parsing, previews, number-tree reconstruction, and PDF generation happen locally in your browser. The source file is never modified in place.' },
+    ],
+  },
+
+  'extract-pdf-links': {
+    toolSlug: 'extract-pdf-links',
+    whatIs: [
+      'What does a PDF link extractor find?',
+      'A PDF link extractor reads interactive Link annotations stored on document pages. Those annotations can open websites or email addresses, jump to another page or named destination, reference another PDF, launch a file, submit a form, or invoke another PDF action. Visible URL text without an annotation is not clickable and is therefore not reported.',
+      'EditPDF AI classifies each link, resolves supported local destinations, and records its source page, clickable rectangle, view mode, target, and accessibility description. Targets are decoded as text only. The tool never opens a URL or file, and embedded JavaScript is flagged without returning or executing the script body.',
+    ],
+    users: [
+      { who: 'Accessibility and compliance teams', why: 'Audit interactive targets, link descriptions, page locations, and unresolved destinations in published documents.' },
+      { who: 'Publishers and document editors', why: 'Review website, email, cross-reference, appendix, and external-document links before releasing reports and manuals.' },
+      { who: 'Security and QA teams', why: 'Identify file launches, form submissions, remote documents, and JavaScript actions without opening or executing them.' },
+      { who: 'Researchers and archivists', why: 'Export a structured inventory of references and linked resources from authorized PDF collections.' },
+    ],
+    related: [
+      { slug: 'pdf-viewer', label: 'Open and review the PDF' },
+      { slug: 'pdf-bookmarks-manager', label: 'Edit PDF bookmarks' },
+      { slug: 'pdf-page-manager', label: 'Reorganize linked pages' },
+      { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+    ],
+    steps: [
+      { title: 'Choose your PDF', body: 'Select one PDF up to 100 MB and 2,000 pages. The document is parsed locally and never modified.' },
+      { title: 'Review and filter links', body: 'Inspect page numbers, target classifications, local destinations, view modes, rectangle coordinates, descriptions, and safety warnings.' },
+      { title: 'Download CSV or JSON', body: 'Export every extracted record. CSV is useful for audits and spreadsheets, while JSON retains typed destinations and structured rectangles.' },
+    ],
+    faqs: [
+      { q: 'Does the extractor open or test any link?', a: 'No. URLs, files, destinations, and actions are decoded as text only. The browser is never directed to a target and no linked file is opened.' },
+      { q: 'Why is visible URL text missing from the results?', a: 'A printed URL is ordinary page text unless it has an interactive Link annotation. This tool reports actual clickable annotations and actions, not every string that resembles a URL.' },
+      { q: 'Which link types are recognized?', a: 'The tool classifies web, email, phone, internal-page, external-PDF, file-launch, form-submission, named, JavaScript, other, and unresolved actions.' },
+      { q: 'What happens to embedded JavaScript actions?', a: 'They are counted and clearly flagged, but their script body is not opened, returned in exports, or executed.' },
+      { q: 'What are the rectangle coordinates?', a: 'They describe the clickable area in PDF page coordinate units: its lower-left x and y position plus width and height. They help editors locate and remediate annotations.' },
+      { q: 'Is my PDF uploaded or changed?', a: 'No. Link parsing, destination resolution, filtering, CSV creation, and JSON creation happen locally in your browser. The source PDF remains read-only.' },
+    ],
+  },
+
+  'remove-pdf-links': {
+    toolSlug: 'remove-pdf-links',
+    whatIs: [
+      'What does a PDF link remover change?',
+      'A PDF link remover deletes page-level Link annotations: the invisible clickable rectangles that can open websites, start emails or calls, jump between pages, launch files, submit forms, or invoke actions. It does not erase visible URL text, underlines, QR codes, or artwork drawn on the page.',
+      'EditPDF AI first inventories the links without opening any target, then removes only Link annotations from a new PDF copy. Other annotation types, form widgets, bookmarks, page labels, text, images, and vector content are preserved. The output is reopened locally and verified before download.',
+    ],
+    users: [
+      { who: 'Publishers and document editors', why: 'Create a non-clickable distribution copy while keeping citations, URL text, and page design visible.' },
+      { who: 'Security and compliance teams', why: 'Disable website, file-launch, form-submission, and JavaScript link actions before controlled document sharing.' },
+      { who: 'Teachers and assessment teams', why: 'Remove clickable answer links and external resources from examination or classroom PDFs.' },
+      { who: 'Archivists and records teams', why: 'Preserve page appearance while preventing obsolete or untrusted links from being activated.' },
+    ],
+    related: [
+      { slug: 'extract-pdf-links', label: 'Audit PDF links before removal' },
+      { slug: 'pdf-viewer', label: 'Review the link-free copy' },
+      { slug: 'remove-pdf-metadata', label: 'Remove hidden PDF metadata' },
+      { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+    ],
+    steps: [
+      { title: 'Choose your PDF', body: 'Select one PDF up to 100 MB and 2,000 pages. Link annotations are classified locally without opening their targets.' },
+      { title: 'Review the removal summary', body: 'Check how many links and pages are affected, including external targets, internal jumps, and JavaScript link actions.' },
+      { title: 'Remove and download', body: 'Create a new PDF with all page Link annotations removed. The result is reopened and verified before it is downloaded.' },
+    ],
+    faqs: [
+      { q: 'Will visible URLs disappear from the page?', a: 'No. The tool removes invisible clickable annotation rectangles and their actions. Printed URL text, link-colored text, underlines, QR codes, and page artwork remain visible.' },
+      { q: 'Which clickable links are removed?', a: 'All page Link annotations are removed, including web, email, phone, internal-page, remote-PDF, file-launch, form-submission, named, JavaScript, and unrecognized link actions.' },
+      { q: 'Are forms, comments, and bookmarks preserved?', a: 'Yes. Only annotations whose subtype is Link are removed. Form widgets, comments, markup, bookmarks, page labels, page order, text, images, and vectors are retained.' },
+      { q: 'Does this remove document-level JavaScript or embedded files?', a: 'No. This tool removes actions attached to page Link annotations. It does not claim to sanitize document-open actions, embedded files, QR codes, or scripts stored elsewhere in the PDF.' },
+      { q: 'What happens to digital signatures?', a: 'Any PDF rewrite changes file bytes and invalidates existing cryptographic signatures. The tool detects common signature markers and requires acknowledgement before creating the new copy.' },
+      { q: 'Is the output checked?', a: 'Yes. The downloaded copy is reopened locally and scanned again. A download is only prepared when the page count is unchanged and no page Link annotations remain.' },
+      { q: 'Is my PDF uploaded?', a: 'No. Inspection, annotation removal, PDF generation, and verification happen locally in your browser. The original file is never modified in place.' },
+    ],
+  },
+
+  'export-pdf-comments': {
+    toolSlug: 'export-pdf-comments',
+    whatIs: [
+      'What can a PDF comment exporter extract?',
+      'A PDF comment exporter reads review annotations stored separately from normal page content. These can include sticky notes, text boxes, highlights, underlines, strikeouts, squiggly marks, stamps, ink drawings, shapes, carets, attachment markers, redaction marks, and other annotation types.',
+      'EditPDF AI exports the review context around each annotation: physical PDF page, type, author, subject, comment text, creation and modification dates, annotation ID, workflow state, reply relationship, color, opacity, and rectangle coordinates when available. Link annotations, form widgets, and popup containers are excluded so the report focuses on review markup rather than interactive controls.',
+    ],
+    users: [
+      { who: 'Editors and publishing teams', why: 'Collect reviewer notes, highlights, and corrections into a sortable spreadsheet before revising a document.' },
+      { who: 'Legal and compliance teams', why: 'Create an auditable inventory of markup authors, dates, pages, subjects, states, and reply relationships.' },
+      { who: 'Teachers and academic reviewers', why: 'Export feedback from annotated assignments, manuscripts, theses, and research papers for tracking or grading.' },
+      { who: 'Accessibility and migration teams', why: 'Locate annotations by page and rectangle when remediating documents or moving review data into another system.' },
+    ],
+    related: [
+      { slug: 'pdf-annotate', label: 'Add comments and highlights' },
+      { slug: 'pdf-flatten', label: 'Make visible annotations permanent' },
+      { slug: 'remove-pdf-metadata', label: 'Clear annotation identity metadata' },
+      { slug: 'extract-pdf-links', label: 'Audit link annotations separately' },
+    ],
+    steps: [
+      { title: 'Choose your PDF', body: 'Select one PDF up to 100 MB and 2,000 pages. The document stays read-only and is parsed locally.' },
+      { title: 'Review and filter annotations', body: 'Inspect annotation totals, pages, authors, replies, types, comment text, subjects, dates, and page rectangles.' },
+      { title: 'Download CSV or JSON', body: 'Export every review record. CSV is ready for spreadsheets, while JSON preserves arrays, rectangles, reply IDs, colors, opacity, and workflow fields.' },
+    ],
+    faqs: [
+      { q: 'Which PDF annotations are included?', a: 'The exporter includes notes, text boxes, highlights, underlines, strikeouts, squiggles, stamps, ink, shapes, carets, attachment annotations, redaction annotations, media annotations, and other non-link review annotations.' },
+      { q: 'Why are links and form fields excluded?', a: 'Links and widgets are interactive controls rather than review comments. Excluding them prevents hyperlink rectangles and form fields from overwhelming the comment report. Use Extract PDF Links or Export PDF Form Data for those objects.' },
+      { q: 'Are replies connected to their parent comments?', a: 'Yes when the PDF stores a standard IRT reply reference to another exported annotation. The parent record number is included in CSV and JSON.' },
+      { q: 'Why does an annotation have no comment text?', a: 'Some markup is meaningful visually without a text note, such as a highlight, drawing, shape, stamp, or redaction area. These records remain in the export with their type and location.' },
+      { q: 'Are PDF dates converted?', a: 'Supported PDF date strings are normalized to ISO 8601 UTC timestamps. Unusual or invalid date values are retained as stored rather than discarded.' },
+      { q: 'Does exporting change or flatten the PDF?', a: 'No. The source PDF stays read-only. The tool only creates CSV or JSON files and never changes annotations or page content.' },
+      { q: 'Is my PDF uploaded?', a: 'No. Annotation parsing, reply resolution, filtering, and export generation happen locally in your browser.' },
     ],
   },
 

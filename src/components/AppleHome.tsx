@@ -20,8 +20,8 @@ import {
   FilePen, MessageSquareText,
   ListOrdered, RotateCw, Scissors, Trash2,
   FileType, FileSpreadsheet, Presentation, Table, MonitorPlay, Code, ImagePlus, Images,
-  KeyRound, Stamp, EyeOff, PenTool,
-  Minimize2, Merge, Split, FormInput,
+  KeyRound, Stamp, EyeOff, PenTool, UnlockKeyhole,
+  Minimize2, Merge, Split, FormInput, Wrench, GitCompareArrows, Fingerprint, Paperclip, ImageDown, Link2, Unlink2,
 } from 'lucide-react'
 
 // ─── tokens ──────────────────────────────────────────────────────────────────
@@ -45,6 +45,7 @@ const CATS = [
 const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon; iconBg:string; desc:string; tier:'free'|'ai'|'pro' }[] = [
   // ── AI ──────────────────────────────────────────────────────────────────────
   { name:'AI Form Filler',    tag:'LIVE', href:'/ai-pdf-form-filler', cat:'AI',       Icon:WandSparkles,    iconBg:'linear-gradient(135deg,#7c3aed,#a855f7)', desc:'Auto-fill any PDF form with AI',        tier:'ai'   },
+  { name:'Chat with PDF',     tag:'LIVE', href:'/chat-with-pdf',      cat:'AI',       Icon:MessageSquareText,iconBg:'linear-gradient(135deg,#6d28d9,#a855f7)', desc:'Ask questions with page citations',      tier:'ai'   },
   { name:'PDF OCR Scanner',   tag:'LIVE', href:'/pdf-ocr',            cat:'AI',       Icon:ScanText,        iconBg:'linear-gradient(135deg,#6366f1,#818cf8)', desc:'Extract text from scanned PDFs',        tier:'ai'   },
   { name:'PDF Summarizer',    tag:'LIVE', href:'/pdf-summarizer',     cat:'AI',       Icon:Sparkles,        iconBg:'linear-gradient(135deg,#8b5cf6,#c084fc)', desc:'Get instant AI summaries',              tier:'ai'   },
   { name:'PDF Mind Map',      tag:'LIVE', href:'/mind-map',           cat:'AI',       Icon:BrainCircuit,    iconBg:'linear-gradient(135deg,#a855f7,#d946ef)', desc:'Visualise ideas from any PDF',          tier:'ai'   },
@@ -58,6 +59,7 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   { name:'PDF Page Manager',  tag:'LIVE', href:'/pdf-page-manager',   cat:'Pages',    Icon:Layers,          iconBg:'linear-gradient(135deg,#f59e0b,#fbbf24)', desc:'Drag-and-drop page reordering',         tier:'free' },
   { name:'PDF Cropper',       tag:'LIVE', href:'/pdf-cropper',        cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Crop & trim PDF page margins',          tier:'free' },
   { name:'Add Page Numbers',  tag:'LIVE', href:'/add-page-numbers',   cat:'Pages',    Icon:ListOrdered,     iconBg:'linear-gradient(135deg,#f97316,#fb923c)', desc:'Add custom page numbers to PDF',        tier:'free' },
+  { name:'PDF Page Labels',   tag:'LIVE', href:'/pdf-page-labels',    cat:'Pages',    Icon:ListOrdered,     iconBg:'linear-gradient(135deg,#c2410c,#fb923c)', desc:'Set Roman numerals, prefixes, and ranges',tier:'free' },
   { name:'Rotate PDF Pages',  tag:'LIVE', href:'/rotate-pdf',         cat:'Pages',    Icon:RotateCw,        iconBg:'linear-gradient(135deg,#ea580c,#f97316)', desc:'Rotate any pages to any angle',         tier:'free' },
   { name:'Extract Pages',     tag:'LIVE', href:'/extract-pages',      cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Pull specific pages into a new PDF',    tier:'free' },
   { name:'Delete Pages',      tag:'LIVE', href:'/delete-pages',       cat:'Pages',    Icon:Trash2,          iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Remove unwanted pages permanently',     tier:'free' },
@@ -76,6 +78,7 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   { name:'PDF to Images',     tag:'LIVE', href:'/pdf-to-images',      cat:'Convert',  Icon:Images,          iconBg:'linear-gradient(135deg,#db2777,#ec4899)', desc:'Export every page as an image',         tier:'free' },
   // ── Protect ─────────────────────────────────────────────────────────────────
   { name:'PDF Password Lock', tag:'LIVE', href:'/pdf-password-lock',  cat:'Protect',  Icon:KeyRound,        iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Encrypt with a strong password',        tier:'free' },
+  { name:'Unlock PDF',        tag:'LIVE', href:'/pdf-unlock',         cat:'Protect',  Icon:UnlockKeyhole,   iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Remove a password you already know',    tier:'free' },
   { name:'PDF Watermarker',   tag:'LIVE', href:'/pdf-watermark',      cat:'Protect',  Icon:Stamp,           iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Add visible or hidden watermarks',      tier:'free' },
   { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor',       cat:'Protect',  Icon:EyeOff,          iconBg:'linear-gradient(135deg,#374151,#6b7280)', desc:'Permanently black out sensitive text',  tier:'free' },
   { name:'PDF E-Signer',      tag:'LIVE', href:'/pdf-signer',         cat:'Protect',  Icon:PenTool,         iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Sign and collect signatures',           tier:'free' },
@@ -84,6 +87,18 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   { name:'PDF Merger',        tag:'LIVE', href:'/pdf-merger',         cat:'Organize', Icon:Merge,           iconBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', desc:'Combine multiple PDFs into one',        tier:'free' },
   { name:'PDF Splitter',      tag:'LIVE', href:'/pdf-splitter',       cat:'Organize', Icon:Split,           iconBg:'linear-gradient(135deg,#e11d48,#f43f5e)', desc:'Split one PDF into many files',         tier:'free' },
   { name:'PDF Form Builder',  tag:'LIVE', href:'/pdf-form-builder',   cat:'Organize', Icon:FormInput,       iconBg:'linear-gradient(135deg,#0369a1,#0ea5e9)', desc:'Create fillable PDF forms',             tier:'free' },
+  { name:'Repair PDF',        tag:'LIVE', href:'/pdf-repair',         cat:'Organize', Icon:Wrench,          iconBg:'linear-gradient(135deg,#ea580c,#fb923c)', desc:'Recover damaged PDF structure',         tier:'free' },
+  { name:'Flatten PDF',       tag:'LIVE', href:'/pdf-flatten',        cat:'Organize', Icon:Layers,          iconBg:'linear-gradient(135deg,#0f766e,#2dd4bf)', desc:'Make forms and annotations permanent', tier:'free' },
+  { name:'Compare PDF',       tag:'LIVE', href:'/pdf-compare',        cat:'Organize', Icon:GitCompareArrows,iconBg:'linear-gradient(135deg,#4338ca,#818cf8)', desc:'Find visual and text changes',           tier:'free' },
+  { name:'Remove PDF Metadata',tag:'LIVE', href:'/remove-pdf-metadata',cat:'Organize', Icon:Fingerprint,     iconBg:'linear-gradient(135deg,#0369a1,#38bdf8)', desc:'Strip hidden properties and IDs',        tier:'free' },
+  { name:'Extract PDF Attachments',tag:'LIVE',href:'/extract-pdf-attachments',cat:'Organize',Icon:Paperclip,iconBg:'linear-gradient(135deg,#0f766e,#2dd4bf)',desc:'Download files embedded in a PDF',tier:'free' },
+  { name:'Extract PDF Images',tag:'LIVE',href:'/extract-pdf-images',cat:'Organize',Icon:ImageDown,iconBg:'linear-gradient(135deg,#7e22ce,#c084fc)',desc:'Recover bitmap images from PDF pages',tier:'free' },
+  { name:'Export PDF Form Data',tag:'LIVE',href:'/export-pdf-form-data',cat:'Organize',Icon:FileSpreadsheet,iconBg:'linear-gradient(135deg,#0e7490,#22d3ee)',desc:'Download fillable fields as CSV or JSON',tier:'free' },
+  { name:'Extract PDF Bookmarks',tag:'LIVE',href:'/extract-pdf-bookmarks',cat:'Organize',Icon:ListOrdered,iconBg:'linear-gradient(135deg,#1d4ed8,#60a5fa)',desc:'Export the PDF outline tree and destinations',tier:'free' },
+  { name:'PDF Bookmarks Manager',tag:'LIVE',href:'/pdf-bookmarks-manager',cat:'Organize',Icon:ListOrdered,iconBg:'linear-gradient(135deg,#4338ca,#818cf8)',desc:'Add, edit, nest, or remove PDF bookmarks',tier:'free' },
+  { name:'Extract PDF Links',tag:'LIVE',href:'/extract-pdf-links',cat:'Organize',Icon:Link2,iconBg:'linear-gradient(135deg,#0f766e,#2dd4bf)',desc:'Audit clickable links and destinations',tier:'free' },
+  { name:'Remove PDF Links',tag:'LIVE',href:'/remove-pdf-links',cat:'Organize',Icon:Unlink2,iconBg:'linear-gradient(135deg,#be123c,#fb7185)',desc:'Disable clickable links in a PDF',tier:'free' },
+  { name:'Export PDF Comments',tag:'LIVE',href:'/export-pdf-comments',cat:'Organize',Icon:MessageSquareText,iconBg:'linear-gradient(135deg,#6d28d9,#a78bfa)',desc:'Export comments, markup, authors, and replies',tier:'free' },
 ]
 
 
@@ -257,6 +272,7 @@ const NAV_CATS: AHNavCat[] = [
     label:'AI Tools', href:'/ai-pdf-form-filler', color:'#7c3aed', Icon:Sparkles,
     tools:[
       { name:'AI Form Filler', href:'/ai-pdf-form-filler', tier:'ai',   Icon:WandSparkles,  bg:'#7c3aed' },
+      { name:'Chat with PDF',  href:'/chat-with-pdf',      tier:'ai',   Icon:MessageSquareText, bg:'#6d28d9' },
       { name:'PDF Summarizer', href:'/pdf-summarizer',     tier:'ai',   Icon:Sparkles,      bg:'#8b5cf6' },
       { name:'OCR Scanner',    href:'/pdf-ocr',            tier:'ai',   Icon:ScanText,      bg:'#6366f1' },
       { name:'PDF Translator', href:'/pdf-translator',     tier:'ai',   Icon:Languages,     bg:'#0891b2' },
@@ -278,6 +294,7 @@ const NAV_CATS: AHNavCat[] = [
       { name:'Page Manager',     href:'/pdf-page-manager', tier:'free', Icon:Layers,      bg:'#f59e0b' },
       { name:'PDF Cropper',      href:'/pdf-cropper',      tier:'free', Icon:Scissors,    bg:'#0d9488' },
       { name:'Add Page Numbers', href:'/add-page-numbers', tier:'free', Icon:ListOrdered, bg:'#f97316' },
+      { name:'Page Labels',      href:'/pdf-page-labels',   tier:'free', Icon:ListOrdered, bg:'#c2410c' },
       { name:'Rotate PDF',       href:'/rotate-pdf',       tier:'free', Icon:RotateCw,    bg:'#ea580c' },
       { name:'Extract Pages',    href:'/extract-pages',    tier:'free', Icon:Scissors,    bg:'#0891b2' },
       { name:'Delete Pages',     href:'/delete-pages',     tier:'free', Icon:Trash2,      bg:'#dc2626' },
@@ -303,6 +320,7 @@ const NAV_CATS: AHNavCat[] = [
     tools:[
       { name:'PDF E-Signer',  href:'/pdf-signer',        tier:'free', Icon:PenTool,  bg:'#0d9488' },
       { name:'Password Lock', href:'/pdf-password-lock', tier:'free', Icon:KeyRound, bg:'#dc2626' },
+      { name:'Unlock PDF',    href:'/pdf-unlock',        tier:'free', Icon:UnlockKeyhole, bg:'#2563eb' },
       { name:'Watermark',     href:'/pdf-watermark',     tier:'free', Icon:Stamp,    bg:'#2563eb' },
       { name:'PDF Redactor',  href:'/pdf-redactor',      tier:'free', Icon:EyeOff,   bg:'#374151' },
     ],
@@ -314,6 +332,18 @@ const NAV_CATS: AHNavCat[] = [
       { name:'PDF Splitter', href:'/pdf-splitter',     tier:'free', Icon:Split,      bg:'#e11d48' },
       { name:'Compress PDF', href:'/pdf-compressor',   tier:'free', Icon:Minimize2,  bg:'#d97706' },
       { name:'Form Builder', href:'/pdf-form-builder', tier:'free', Icon:FormInput,  bg:'#0369a1' },
+      { name:'Repair PDF',   href:'/pdf-repair',       tier:'free', Icon:Wrench,     bg:'#ea580c' },
+      { name:'Flatten PDF',  href:'/pdf-flatten',      tier:'free', Icon:Layers,     bg:'#0d9488' },
+      { name:'Compare PDF',  href:'/pdf-compare',      tier:'free', Icon:GitCompareArrows, bg:'#4f46e5' },
+      { name:'Remove Metadata', href:'/remove-pdf-metadata', tier:'free', Icon:Fingerprint, bg:'#0284c7' },
+      { name:'Extract Attachments', href:'/extract-pdf-attachments', tier:'free', Icon:Paperclip, bg:'#0d9488' },
+      { name:'Extract Images', href:'/extract-pdf-images', tier:'free', Icon:ImageDown, bg:'#9333ea' },
+      { name:'Export Form Data', href:'/export-pdf-form-data', tier:'free', Icon:FileSpreadsheet, bg:'#0891b2' },
+      { name:'Extract Bookmarks', href:'/extract-pdf-bookmarks', tier:'free', Icon:ListOrdered, bg:'#2563eb' },
+      { name:'Manage Bookmarks', href:'/pdf-bookmarks-manager', tier:'free', Icon:ListOrdered, bg:'#4f46e5' },
+      { name:'Extract Links', href:'/extract-pdf-links', tier:'free', Icon:Link2, bg:'#0d9488' },
+      { name:'Remove Links', href:'/remove-pdf-links', tier:'free', Icon:Unlink2, bg:'#e11d48' },
+      { name:'Export Comments', href:'/export-pdf-comments', tier:'free', Icon:MessageSquareText, bg:'#7c3aed' },
     ],
   },
 ]
@@ -384,7 +414,7 @@ function Nav() {
   }
 
   const { scrollY } = useScroll()
-  const navBg = useTransform(scrollY,[0,80],['rgba(255,255,255,0)','rgba(255,255,255,0.96)'])
+  const navBg = useTransform(scrollY,[0,80],['rgba(255,255,255,0.94)','rgba(255,255,255,0.98)'])
 
   return (
     <>
@@ -722,119 +752,90 @@ function Nav() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-//  HERO — split: text left · browser mockup right
+//  HERO — one document at the centre of a constellation of real tools
 // ══════════════════════════════════════════════════════════════════════════════
 function Hero() {
+  const orbitTools = [
+    { code:'01', label:'Edit', detail:'Text & images', href:'/pdf-editor', Icon:FilePen, pos:'node-edit' },
+    { code:'02', label:'AI Fill', detail:'Forms, finished', href:'/ai-pdf-form-filler', Icon:WandSparkles, pos:'node-fill' },
+    { code:'03', label:'Sign', detail:'Add approval', href:'/pdf-signer', Icon:PenLine, pos:'node-sign' },
+    { code:'04', label:'OCR', detail:'Make it searchable', href:'/pdf-ocr', Icon:ScanLine, pos:'node-ocr' },
+    { code:'05', label:'Compress', detail:'Make it sendable', href:'/pdf-compressor', Icon:Minimize2, pos:'node-compress' },
+    { code:'06', label:'Translate', detail:'Any language', href:'/pdf-translator', Icon:Languages, pos:'node-translate' },
+    { code:'07', label:'Convert', detail:'Word, Excel, PPT', href:'/pdf-to-word', Icon:FileType, pos:'node-convert' },
+    { code:'08', label:'Protect', detail:'Lock & redact', href:'/pdf-password-lock', Icon:KeyRound, pos:'node-protect' },
+  ]
+
   return (
-    <section className="home-hero" style={{background:'#fff',minHeight:'100svh',display:'flex',flexDirection:'column',justifyContent:'center',position:'relative',overflow:'hidden',paddingTop:54}}>
+    <section className="home-hero constellation-hero">
+      <div className="constellation-grid" aria-hidden="true" />
+      <span className="constellation-index index-left" aria-hidden="true">EDITPDF / UNIVERSE 01</span>
+      <span className="constellation-index index-right" aria-hidden="true">35 TOOLS / ONE FILE</span>
 
-      {/* Dot grid */}
-      <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(rgba(0,0,0,.04) 1px, transparent 1px)',backgroundSize:'36px 36px',pointerEvents:'none'}}/>
-
-      {/* Ambient glows */}
-      <div style={{position:'absolute',top:'-20%',left:'-10%',width:700,height:700,borderRadius:'50%',background:'radial-gradient(circle, rgba(59,130,246,.10) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
-      <div style={{position:'absolute',bottom:'-15%',right:'-5%',width:600,height:600,borderRadius:'50%',background:'radial-gradient(circle, rgba(139,92,246,.08) 0%, transparent 70%)',filter:'blur(80px)',pointerEvents:'none'}}/>
-
-      {/* Content grid */}
-      <div style={{maxWidth:1200,margin:'0 auto',padding:'0 clamp(16px,5vw,48px)',width:'100%',position:'relative',zIndex:2}}>
-        <div className="hero-grid">
-
-          {/* ── LEFT: text ── */}
-          <div>
-            {/* Eyebrow */}
-            <motion.div initial={{opacity:0,y:14}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.1}}
-              style={{display:'flex',alignItems:'center',gap:10,marginBottom:32}}>
-              <span style={{width:5,height:5,borderRadius:'50%',background:'#3B82F6',display:'inline-block',animation:'pdot 2s ease-in-out infinite'}}/>
-              <span style={{...MONO,fontSize:10.5,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase'}}>Edit smarter. Finish faster.</span>
-            </motion.div>
-
-            {/* Headline — SEO-optimised H1 */}
-            <h1 className="home-hero-title"
-              style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(34px,4.8vw,76px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 24px'}}>
-              <span style={{display:'block',overflow:'hidden'}}>
-                <span style={{display:'block'}}>Free Online PDF Tools</span>
-              </span>
-              <span style={{display:'block',overflow:'hidden',marginTop:'0.1em'}}>
-                <span style={{display:'block'}}>
-                  Edit, Sign, Fill &amp; Convert <span className="grad-brand">PDFs</span>
-                </span>
-              </span>
+      <div className="constellation-shell">
+        <div className="constellation-intro">
+          <motion.div className="constellation-copy" initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.62,ease:E,delay:.05}}>
+            <div className="constellation-kicker"><Sparkles size={12}/> One file. Every possibility.</div>
+            <h1 className="home-hero-title constellation-title">
+              <span className="constellation-title-plain">One PDF.</span>{' '}
+              <span className="constellation-title-gradient">35 ways forward.</span>
             </h1>
+            <p>Start with one document and choose what happens next—edit, sign, scan, translate, compress or protect it, all in your browser.</p>
+          </motion.div>
 
-            {/* Sub */}
-            <p
-              style={{...FI,fontSize:'clamp(15px,1.6vw,18px)',color:'#6E6E73',lineHeight:1.65,maxWidth:400,margin:'0 0 32px',letterSpacing:'-0.01em',fontWeight:400}}>
-              A free PDF editor, PDF converter, merger, compressor and form-filling toolkit with 35+ browser-based tools. Core tools need no account; AI tools include 5 free daily uses.
-            </p>
-
-            {/* CTAs */}
-            <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:.55,ease:E,delay:.85}}
-              className="hero-ctas">
-              <Mag>
-                <Link prefetch={false} href="/pdf-editor" className="hero-upload-btn"
-                  data-editor-cta
-                  style={{...FI,display:'inline-flex',alignItems:'center',gap:10,padding:'16px 32px',background:'#2563EB',color:'#fff',borderRadius:99,fontSize:16,fontWeight:800,textDecoration:'none',letterSpacing:'-0.025em',boxShadow:'0 6px 32px rgba(37,99,235,.35)'}}>
-                  <Upload size={16} strokeWidth={2.5}/> Open PDF Editor
-                </Link>
-              </Mag>
-              <Mag>
-                <a href="#tools"
-                  style={{...FI,display:'inline-flex',alignItems:'center',gap:6,padding:'14px 22px',background:'transparent',color:'rgba(0,0,0,.5)',border:'1px solid rgba(0,0,0,.12)',borderRadius:99,fontSize:15,fontWeight:500,textDecoration:'none',letterSpacing:'-0.01em'}}>
-                  Explore Tools <ChevronRight size={14} strokeWidth={2}/>
-                </a>
-              </Mag>
-            </motion.div>
-
-            {/* Trust row */}
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.5,delay:1.05}}
-              className="hero-trust">
-              {[
-                { icon:<CheckCircle2 size={12} color="#16a34a" strokeWidth={2.5}/>, label:'35+ Free tools' },
-                { icon:<Shield size={12} color="#0891b2" strokeWidth={2.5}/>, label:'Browser-based · private' },
-                { icon:<Sparkles size={12} color="#7c3aed" strokeWidth={2.5}/>, label:'AI: 5 free uses/day' },
-              ].map(({icon,label},i)=>(
-                <span key={label} style={{display:'flex',alignItems:'center',gap:5}}>
-                  {i>0&&<span className="hero-trust-separator" aria-hidden="true" style={{width:3,height:3,borderRadius:'50%',background:'#ddd',display:'inline-block',marginRight:2}}/>}
-                  {icon}
-                  <span style={{...MONO,fontSize:10,color:'rgba(0,0,0,.42)',letterSpacing:'0.05em',textTransform:'uppercase'}}>{label}</span>
-                </span>
-              ))}
-            </motion.div>
-          </div>
-
-          {/* ── RIGHT: browser mockup ── */}
-          <div className="hero-visual" style={{position:'relative',overflow:'visible'}}>
-            {/* Glow behind frame */}
-            <div style={{position:'absolute',inset:-60,background:'radial-gradient(ellipse, rgba(59,130,246,.08) 0%, rgba(139,92,246,.06) 50%, transparent 70%)',filter:'blur(40px)',pointerEvents:'none'}}/>
-
-            {/* Browser — entry animation + infinite float */}
-            <motion.div
-              initial={{opacity:0,x:40,scale:0.96}}
-              animate={{opacity:1,x:0,scale:1}}
-              transition={{duration:.75,ease:[0.22,1,0.36,1],delay:.5}}>
-              <div style={{animation:'float-y 4s ease-in-out infinite'}}>
-                <Tilt><BrowserUI /></Tilt>
-              </div>
-            </motion.div>
-          </div>
-
+          <motion.div className="constellation-actions" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.5,ease:E,delay:.4}}>
+            <Link href="/pdf-editor" className="constellation-primary" data-editor-cta><Upload size={16}/> Open a PDF <ArrowRight size={15}/></Link>
+            <a href="#tools" className="constellation-secondary">Browse all tools <ArrowUpRight size={14}/></a>
+            <div className="constellation-proof"><Shield size={13}/> Browser private <i/> No account needed <i/> AI: 5 free uses/day</div>
+          </motion.div>
         </div>
+
+        <motion.div
+          className="constellation-stage"
+          initial={{opacity:0,scale:.96}}
+          animate={{opacity:1,scale:1}}
+          transition={{duration:.78,ease:[0.22,1,0.36,1],delay:.16}}
+          aria-label="A central PDF surrounded by eight available tools"
+        >
+          <div className="constellation-orbit orbit-one" aria-hidden="true" />
+          <div className="constellation-orbit orbit-two" aria-hidden="true" />
+          <div className="constellation-orbit orbit-three" aria-hidden="true" />
+          <div className="constellation-axis axis-x" aria-hidden="true" />
+          <div className="constellation-axis axis-y" aria-hidden="true" />
+
+          <Link href="/pdf-editor" className="constellation-core" data-editor-cta>
+            <div className="constellation-page-fold"><span/></div>
+            <div className="constellation-core-meta"><span>PDF / INPUT</span><i>READY</i></div>
+            <div className="constellation-core-icon"><FileText size={25} strokeWidth={1.7}/><i/></div>
+            <small>START HERE</small>
+            <strong>Choose a PDF</strong>
+            <span>open your workspace <ArrowRight size={13}/></span>
+            <div className="constellation-core-lines" aria-hidden="true"><i/><i/><i/></div>
+          </Link>
+
+          <nav className="constellation-tools" aria-label="PDF tool constellation">
+            {orbitTools.map(({code,label,detail,href,Icon,pos},index)=>(
+              <motion.div key={label} className={`constellation-node ${pos}`}
+                initial={{opacity:0,scale:.9}}
+                animate={{opacity:1,scale:1}}
+                transition={{duration:.4,ease:E,delay:.32+index*.045}}>
+                <Link href={href}>
+                  <small>{code}</small>
+                  <span><Icon size={15} strokeWidth={1.8}/></span>
+                  <div><strong>{label}</strong><em>{detail}</em></div>
+                  <ArrowUpRight size={11}/>
+                </Link>
+              </motion.div>
+            ))}
+          </nav>
+
+          <div className="constellation-pulse pulse-one" aria-hidden="true" />
+          <div className="constellation-pulse pulse-two" aria-hidden="true" />
+          <div className="constellation-pulse pulse-three" aria-hidden="true" />
+        </motion.div>
       </div>
 
-      {/* Bottom bar */}
-      <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:.5,delay:1.2}}
-        style={{position:'absolute',bottom:0,left:0,right:0,height:44,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 28px',borderTop:'1px solid rgba(0,0,0,.06)',zIndex:3}}>
-        <div style={{...MONO,fontSize:11,color:'#999',letterSpacing:'0.1em',display:'flex',alignItems:'center',gap:8}}>
-          <span style={{width:20,height:1,background:'rgba(0,0,0,.15)',display:'inline-block'}}/>
-          <ScrollPct/>
-        </div>
-        <div className="desk" style={{gap:24}}>
-          {['35+ Tools','Free PDF Tools','AI: 5/day Free','Pro: Unlimited AI'].map(t=>(
-            <span key={t} style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.08em',textTransform:'uppercase'}}>{t}</span>
-          ))}
-        </div>
-        <span style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.08em',textTransform:'uppercase'}}>Popular tools below</span>
-      </motion.div>
+      <div className="constellation-footer-line"><span>INPUT · PDF</span><i/><strong>CHOOSE YOUR NEXT MOVE</strong><i/><span>OUTPUT · ANYTHING</span></div>
     </section>
   )
 }

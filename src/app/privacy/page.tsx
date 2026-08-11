@@ -31,7 +31,7 @@ function Ul({ items }: { items: string[] }) {
 }
 
 export default function PrivacyPage() {
-  const updated = 'July 1, 2025'
+  const updated = 'August 11, 2026'
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>
@@ -81,7 +81,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="3. Cookies and analytics">
-          <P>We use minimal, privacy-friendly analytics to understand how the site is used (page visits, feature usage). No cross-site tracking cookies are set.</P>
+          <P>We use Cloudflare Web Analytics for aggregate traffic and performance, PostHog for deliberately named feature-usage events, and Google Analytics 4 for aggregate traffic attribution. These services are configured without analytics cookies or individual user profiles. We do not send document content, file names, email addresses, or URL query strings to analytics providers.</P>
           <P>Authentication (sign-in sessions) uses cookies managed by Clerk. These are necessary for keeping you signed in and are not used for advertising.</P>
         </Section>
 
@@ -91,6 +91,9 @@ export default function PrivacyPage() {
             'Stripe — payment processing for Pro subscriptions. Stripe processes card data under PCI-DSS compliance. We store only your Stripe customer ID and subscription status.',
             'Anthropic (Claude) — AI text processing for AI features. Text context from your PDF is sent to Anthropic\'s API. Anthropic\'s privacy policy applies to data they receive.',
             'Supabase — database for subscription status and daily AI usage counts. No document content is stored.',
+            'Cloudflare Web Analytics — privacy-first aggregate traffic and performance measurement.',
+            'PostHog — cookieless aggregate page views and deliberately named feature-usage events; session recording and individual profiles are disabled.',
+            'Google Analytics 4 — cookieless aggregate page views and traffic attribution; advertising storage and personalisation are disabled.',
           ]} />
         </Section>
 

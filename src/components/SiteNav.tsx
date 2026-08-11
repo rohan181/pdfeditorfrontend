@@ -8,11 +8,11 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import {
   Upload, FilePen, Minimize2, Merge, Split, PenTool,
-  FileType, FileSpreadsheet, Presentation, Sparkles, KeyRound, Layers,
+  FileType, FileSpreadsheet, Presentation, Sparkles, KeyRound, Layers, UnlockKeyhole,
   WandSparkles, ScanText, Languages, BrainCircuit, ClipboardList,
   ImagePlus, Images, Stamp, Scissors, EyeOff, Trash2,
   MessageSquareText, MonitorPlay, RotateCw,
-  ListOrdered, Table, Code, FormInput,
+  ListOrdered, Table, Code, FormInput, Wrench, GitCompareArrows, Fingerprint, Paperclip, ImageDown, Link2, Unlink2,
   ChevronDown, X, Menu, ArrowRight,
 } from 'lucide-react'
 
@@ -30,6 +30,7 @@ const NAV_CATS: NavCat[] = [
     label: 'AI Tools', href: '/ai-pdf-form-filler', color: '#7c3aed', Icon: Sparkles,
     tools: [
       { name: 'AI Form Filler', href: '/ai-pdf-form-filler', tier: 'ai',   Icon: WandSparkles,  bg: '#7c3aed' },
+      { name: 'Chat with PDF',  href: '/chat-with-pdf',      tier: 'ai',   Icon: MessageSquareText, bg: '#6d28d9' },
       { name: 'PDF Summarizer', href: '/pdf-summarizer',     tier: 'ai',   Icon: Sparkles,      bg: '#8b5cf6' },
       { name: 'OCR Scanner',    href: '/pdf-ocr',            tier: 'ai',   Icon: ScanText,      bg: '#6366f1' },
       { name: 'PDF Translator', href: '/pdf-translator',     tier: 'ai',   Icon: Languages,     bg: '#0891b2' },
@@ -51,6 +52,7 @@ const NAV_CATS: NavCat[] = [
       { name: 'Page Manager',     href: '/pdf-page-manager', tier: 'free', Icon: Layers,      bg: '#f59e0b' },
       { name: 'PDF Cropper',      href: '/pdf-cropper',      tier: 'free', Icon: Scissors,    bg: '#0d9488' },
       { name: 'Add Page Numbers', href: '/add-page-numbers', tier: 'free', Icon: ListOrdered, bg: '#f97316' },
+      { name: 'Page Labels',      href: '/pdf-page-labels',   tier: 'free', Icon: ListOrdered, bg: '#c2410c' },
       { name: 'Rotate PDF',       href: '/rotate-pdf',       tier: 'free', Icon: RotateCw,    bg: '#ea580c' },
       { name: 'Extract Pages',    href: '/extract-pages',    tier: 'free', Icon: Scissors,    bg: '#0891b2' },
       { name: 'Delete Pages',     href: '/delete-pages',     tier: 'free', Icon: Trash2,      bg: '#dc2626' },
@@ -76,6 +78,7 @@ const NAV_CATS: NavCat[] = [
     tools: [
       { name: 'PDF E-Signer',  href: '/pdf-signer',        tier: 'free', Icon: PenTool,  bg: '#0d9488' },
       { name: 'Password Lock', href: '/pdf-password-lock', tier: 'free', Icon: KeyRound, bg: '#dc2626' },
+      { name: 'Unlock PDF', href: '/pdf-unlock', tier: 'free', Icon: UnlockKeyhole, bg: '#2563eb' },
       { name: 'Watermark',     href: '/pdf-watermark',     tier: 'free', Icon: Stamp,    bg: '#2563eb' },
       { name: 'PDF Redactor',  href: '/pdf-redactor',      tier: 'free', Icon: EyeOff,   bg: '#374151' },
     ],
@@ -87,6 +90,18 @@ const NAV_CATS: NavCat[] = [
       { name: 'PDF Splitter', href: '/pdf-splitter',     tier: 'free', Icon: Split,      bg: '#e11d48' },
       { name: 'Compress PDF', href: '/pdf-compressor',   tier: 'free', Icon: Minimize2,  bg: '#d97706' },
       { name: 'Form Builder', href: '/pdf-form-builder', tier: 'free', Icon: FormInput,  bg: '#0369a1' },
+      { name: 'Repair PDF',   href: '/pdf-repair',       tier: 'free', Icon: Wrench,     bg: '#ea580c' },
+      { name: 'Flatten PDF',  href: '/pdf-flatten',      tier: 'free', Icon: Layers,     bg: '#0d9488' },
+      { name: 'Compare PDF',  href: '/pdf-compare',      tier: 'free', Icon: GitCompareArrows, bg: '#4f46e5' },
+      { name: 'Remove Metadata', href: '/remove-pdf-metadata', tier: 'free', Icon: Fingerprint, bg: '#0284c7' },
+      { name: 'Extract Attachments', href: '/extract-pdf-attachments', tier: 'free', Icon: Paperclip, bg: '#0d9488' },
+      { name: 'Extract Images', href: '/extract-pdf-images', tier: 'free', Icon: ImageDown, bg: '#9333ea' },
+      { name: 'Export Form Data', href: '/export-pdf-form-data', tier: 'free', Icon: FileSpreadsheet, bg: '#0891b2' },
+      { name: 'Extract Bookmarks', href: '/extract-pdf-bookmarks', tier: 'free', Icon: ListOrdered, bg: '#2563eb' },
+      { name: 'Manage Bookmarks', href: '/pdf-bookmarks-manager', tier: 'free', Icon: ListOrdered, bg: '#4f46e5' },
+      { name: 'Extract Links', href: '/extract-pdf-links', tier: 'free', Icon: Link2, bg: '#0d9488' },
+      { name: 'Remove Links', href: '/remove-pdf-links', tier: 'free', Icon: Unlink2, bg: '#e11d48' },
+      { name: 'Export Comments', href: '/export-pdf-comments', tier: 'free', Icon: MessageSquareText, bg: '#7c3aed' },
     ],
   },
 ]

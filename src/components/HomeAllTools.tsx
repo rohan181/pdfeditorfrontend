@@ -10,8 +10,8 @@ import {
   FilePen, MessageSquareText,
   ListOrdered, RotateCw, Scissors, Trash2,
   FileText, FileType, FileSpreadsheet, Presentation, Table, MonitorPlay, Code, ImagePlus, Images,
-  KeyRound, Stamp, EyeOff, PenTool,
-  Minimize2, Merge, Split, FormInput,
+  KeyRound, Stamp, EyeOff, PenTool, UnlockKeyhole,
+  Minimize2, Merge, Split, FormInput, Wrench, GitCompareArrows, Fingerprint, Paperclip, ImageDown, Link2, Unlink2,
 } from 'lucide-react'
 
 const E   = [0.25, 0.46, 0.45, 0.94] as [number,number,number,number]
@@ -29,6 +29,7 @@ const CATS = [
 
 const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon; iconBg:string; desc:string; tier:'free'|'ai'|'pro' }[] = [
   { name:'AI PDF Form Filler', tag:'LIVE', href:'/ai-pdf-form-filler', cat:'AI',       Icon:WandSparkles,    iconBg:'linear-gradient(135deg,#7c3aed,#a855f7)', desc:'Autofill PDF forms with AI — W-9, job applications, tax forms', tier:'ai' },
+  { name:'Chat with PDF',      tag:'LIVE', href:'/chat-with-pdf',      cat:'AI',       Icon:MessageSquareText,iconBg:'linear-gradient(135deg,#6d28d9,#a855f7)', desc:'Ask questions with page citations',      tier:'ai'   },
   { name:'PDF OCR Scanner',   tag:'LIVE', href:'/pdf-ocr',            cat:'AI',       Icon:ScanText,        iconBg:'linear-gradient(135deg,#6366f1,#818cf8)', desc:'Extract text from scanned PDFs',        tier:'ai'   },
   { name:'PDF Summarizer',    tag:'LIVE', href:'/pdf-summarizer',     cat:'AI',       Icon:Sparkles,        iconBg:'linear-gradient(135deg,#8b5cf6,#c084fc)', desc:'Get instant AI summaries',              tier:'ai'   },
   { name:'PDF Mind Map',      tag:'LIVE', href:'/mind-map',           cat:'AI',       Icon:BrainCircuit,    iconBg:'linear-gradient(135deg,#a855f7,#d946ef)', desc:'Visualise ideas from any PDF',          tier:'ai'   },
@@ -40,6 +41,7 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   { name:'PDF Page Manager',  tag:'LIVE', href:'/pdf-page-manager',   cat:'Pages',    Icon:Layers,          iconBg:'linear-gradient(135deg,#f59e0b,#fbbf24)', desc:'Drag-and-drop page reordering',         tier:'free' },
   { name:'PDF Cropper',       tag:'LIVE', href:'/pdf-cropper',        cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Crop & trim PDF page margins',          tier:'free' },
   { name:'Add Page Numbers',  tag:'LIVE', href:'/add-page-numbers',   cat:'Pages',    Icon:ListOrdered,     iconBg:'linear-gradient(135deg,#f97316,#fb923c)', desc:'Add custom page numbers to PDF',        tier:'free' },
+  { name:'PDF Page Labels',   tag:'LIVE', href:'/pdf-page-labels',    cat:'Pages',    Icon:ListOrdered,     iconBg:'linear-gradient(135deg,#c2410c,#fb923c)', desc:'Set Roman numerals, prefixes, and ranges',tier:'free' },
   { name:'Rotate PDF Pages',  tag:'LIVE', href:'/rotate-pdf',         cat:'Pages',    Icon:RotateCw,        iconBg:'linear-gradient(135deg,#ea580c,#f97316)', desc:'Rotate any pages to any angle',         tier:'free' },
   { name:'Extract Pages',     tag:'LIVE', href:'/extract-pages',      cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Pull specific pages into a new PDF',    tier:'free' },
   { name:'Delete Pages',      tag:'LIVE', href:'/delete-pages',       cat:'Pages',    Icon:Trash2,          iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Remove unwanted pages permanently',     tier:'free' },
@@ -56,6 +58,7 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   { name:'Image to PDF',      tag:'LIVE', href:'/image-to-pdf',       cat:'Convert',  Icon:ImagePlus,       iconBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', desc:'Turn photos & images into PDF',         tier:'free' },
   { name:'PDF to Images',     tag:'LIVE', href:'/pdf-to-images',      cat:'Convert',  Icon:Images,          iconBg:'linear-gradient(135deg,#db2777,#ec4899)', desc:'Export every page as an image',         tier:'free' },
   { name:'PDF Password Lock', tag:'LIVE', href:'/pdf-password-lock',  cat:'Protect',  Icon:KeyRound,        iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Encrypt with a strong password',        tier:'free' },
+  { name:'Unlock PDF',        tag:'LIVE', href:'/pdf-unlock',         cat:'Protect',  Icon:UnlockKeyhole,   iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Remove a password you already know',    tier:'free' },
   { name:'PDF Watermarker',   tag:'LIVE', href:'/pdf-watermark',      cat:'Protect',  Icon:Stamp,           iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Add visible or hidden watermarks',      tier:'free' },
   { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor',       cat:'Protect',  Icon:EyeOff,          iconBg:'linear-gradient(135deg,#374151,#6b7280)', desc:'Permanently black out sensitive text',  tier:'free' },
   { name:'PDF E-Signer',      tag:'LIVE', href:'/pdf-signer',         cat:'Protect',  Icon:PenTool,         iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Sign and collect signatures',           tier:'free' },
@@ -63,6 +66,18 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   { name:'PDF Merger',        tag:'LIVE', href:'/pdf-merger',         cat:'Organize', Icon:Merge,           iconBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', desc:'Combine multiple PDFs into one',        tier:'free' },
   { name:'PDF Splitter',      tag:'LIVE', href:'/pdf-splitter',       cat:'Organize', Icon:Split,           iconBg:'linear-gradient(135deg,#e11d48,#f43f5e)', desc:'Split one PDF into many files',         tier:'free' },
   { name:'PDF Form Builder',  tag:'LIVE', href:'/pdf-form-builder',   cat:'Organize', Icon:FormInput,       iconBg:'linear-gradient(135deg,#0369a1,#0ea5e9)', desc:'Create fillable PDF forms',             tier:'free' },
+  { name:'Repair PDF',        tag:'LIVE', href:'/pdf-repair',         cat:'Organize', Icon:Wrench,          iconBg:'linear-gradient(135deg,#ea580c,#fb923c)', desc:'Recover damaged PDF structure',         tier:'free' },
+  { name:'Flatten PDF',       tag:'LIVE', href:'/pdf-flatten',        cat:'Organize', Icon:Layers,          iconBg:'linear-gradient(135deg,#0f766e,#2dd4bf)', desc:'Make forms and annotations permanent', tier:'free' },
+  { name:'Compare PDF',       tag:'LIVE', href:'/pdf-compare',        cat:'Organize', Icon:GitCompareArrows,iconBg:'linear-gradient(135deg,#4338ca,#818cf8)', desc:'Find visual and text changes',           tier:'free' },
+  { name:'Remove PDF Metadata',tag:'LIVE', href:'/remove-pdf-metadata',cat:'Organize', Icon:Fingerprint,     iconBg:'linear-gradient(135deg,#0369a1,#38bdf8)', desc:'Strip hidden properties and IDs',        tier:'free' },
+  { name:'Extract PDF Attachments',tag:'LIVE',href:'/extract-pdf-attachments',cat:'Organize',Icon:Paperclip,iconBg:'linear-gradient(135deg,#0f766e,#2dd4bf)',desc:'Download files embedded in a PDF',tier:'free' },
+  { name:'Extract PDF Images',tag:'LIVE',href:'/extract-pdf-images',cat:'Organize',Icon:ImageDown,iconBg:'linear-gradient(135deg,#7e22ce,#c084fc)',desc:'Recover bitmap images from PDF pages',tier:'free' },
+  { name:'Export PDF Form Data',tag:'LIVE',href:'/export-pdf-form-data',cat:'Organize',Icon:FileSpreadsheet,iconBg:'linear-gradient(135deg,#0e7490,#22d3ee)',desc:'Download fillable fields as CSV or JSON',tier:'free' },
+  { name:'Extract PDF Bookmarks',tag:'LIVE',href:'/extract-pdf-bookmarks',cat:'Organize',Icon:ListOrdered,iconBg:'linear-gradient(135deg,#1d4ed8,#60a5fa)',desc:'Export the PDF outline tree and destinations',tier:'free' },
+  { name:'PDF Bookmarks Manager',tag:'LIVE',href:'/pdf-bookmarks-manager',cat:'Organize',Icon:ListOrdered,iconBg:'linear-gradient(135deg,#4338ca,#818cf8)',desc:'Add, edit, nest, or remove PDF bookmarks',tier:'free' },
+  { name:'Extract PDF Links',tag:'LIVE',href:'/extract-pdf-links',cat:'Organize',Icon:Link2,iconBg:'linear-gradient(135deg,#0f766e,#2dd4bf)',desc:'Audit clickable links and destinations',tier:'free' },
+  { name:'Remove PDF Links',tag:'LIVE',href:'/remove-pdf-links',cat:'Organize',Icon:Unlink2,iconBg:'linear-gradient(135deg,#be123c,#fb7185)',desc:'Disable clickable links in a PDF',tier:'free' },
+  { name:'Export PDF Comments',tag:'LIVE',href:'/export-pdf-comments',cat:'Organize',Icon:MessageSquareText,iconBg:'linear-gradient(135deg,#6d28d9,#a78bfa)',desc:'Export comments, markup, authors, and replies',tier:'free' },
 ]
 
 const TOOL_FILTERS = [

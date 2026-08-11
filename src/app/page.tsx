@@ -23,17 +23,17 @@ export const metadata: Metadata = {
     url: 'https://www.editpdfai.com',
     siteName: 'EditPDF AI',
     images: [{
-      url: '/social/home.png',
+      url: '/social/home-constellation.png',
       width: 1200,
       height: 630,
-      alt: 'EditPDF AI — 35+ free online PDF tools',
+      alt: 'EditPDF AI — One PDF. 35 ways forward.',
     }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Free Online PDF Tools — Edit, Sign, Fill & Convert',
     description: 'Use 35+ PDF tools for editing, signing, filling, OCR, compression, conversion and AI workflows.',
-    images: ['/social/home.png'],
+    images: ['/social/home-constellation.png'],
   },
 }
 

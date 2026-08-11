@@ -28,6 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // ── AI-powered tools ──────────────────────────────────────────────────────
     url('/pdf-ocr',             0.85, 'monthly', '2026-01-01'),
     url('/pdf-summarizer',      0.85, 'monthly', '2026-01-01'),
+    url('/chat-with-pdf',       0.90, 'monthly', '2026-08-11'),
     url('/mind-map',            0.85, 'monthly', '2026-01-01'),
     url('/pdf-translator',      0.85, 'monthly', '2026-01-01'),
     url('/quiz-creator',        0.85, 'monthly', '2026-01-01'),
@@ -47,9 +48,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url('/extract-pages',       0.75, 'monthly', '2026-01-01'),
     url('/delete-pages',        0.75, 'monthly', '2026-01-01'),
     url('/add-page-numbers',    0.75, 'monthly', '2026-01-01'),
+    url('/pdf-page-labels',     0.80, 'monthly', '2026-08-11'),
 
     // ── Security & protection ─────────────────────────────────────────────────
     url('/pdf-password-lock',   0.80, 'monthly', '2026-01-01'),
+    url('/pdf-unlock',          0.80, 'monthly', '2026-08-11'),
+    url('/pdf-repair',          0.80, 'monthly', '2026-08-11'),
+    url('/pdf-flatten',         0.80, 'monthly', '2026-08-11'),
+    url('/pdf-compare',         0.80, 'monthly', '2026-08-11'),
+    url('/remove-pdf-metadata', 0.80, 'monthly', '2026-08-11'),
+    url('/extract-pdf-attachments', 0.80, 'monthly', '2026-08-11'),
+    url('/extract-pdf-images',  0.80, 'monthly', '2026-08-11'),
+    url('/export-pdf-form-data', 0.80, 'monthly', '2026-08-11'),
+    url('/extract-pdf-bookmarks', 0.80, 'monthly', '2026-08-11'),
+    url('/pdf-bookmarks-manager', 0.80, 'monthly', '2026-08-11'),
+    url('/extract-pdf-links',  0.80, 'monthly', '2026-08-11'),
+    url('/remove-pdf-links',   0.80, 'monthly', '2026-08-11'),
+    url('/export-pdf-comments', 0.80, 'monthly', '2026-08-11'),
     url('/pdf-watermark',       0.80, 'monthly', '2026-01-01'),
 
     // ── Convert to PDF ────────────────────────────────────────────────────────

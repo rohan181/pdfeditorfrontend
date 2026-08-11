@@ -4,6 +4,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import UpgradeGateProvider from '@/components/UpgradeGateProvider'
 import PdfResultDock from '@/components/PdfResultDock'
+import Analytics from '@/components/Analytics'
 import './globals.css'
 
 // Two font families only — Jakarta for headings (LCP-critical), DM Sans for body/UI
@@ -83,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <PdfResultDock />
           <SpeedInsights />
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>

@@ -15,6 +15,7 @@ function ToolsPlaceholder() {
     ['PDF Viewer', '/pdf-viewer'],
     ['PDF Annotator', '/pdf-annotate'],
     ['AI PDF Form Filler', '/ai-pdf-form-filler'],
+    ['Chat with PDF', '/chat-with-pdf'],
     ['PDF OCR Scanner', '/pdf-ocr'],
     ['PDF Summarizer', '/pdf-summarizer'],
     ['PDF Translator', '/pdf-translator'],
@@ -29,10 +30,24 @@ function ToolsPlaceholder() {
     ['Extract PDF Pages', '/extract-pages'],
     ['Delete PDF Pages', '/delete-pages'],
     ['Add PDF Page Numbers', '/add-page-numbers'],
+    ['PDF Page Labels', '/pdf-page-labels'],
     ['PDF E-Signer', '/pdf-signer'],
     ['PDF Watermark', '/pdf-watermark'],
     ['PDF Redactor', '/pdf-redactor'],
     ['PDF Password Lock', '/pdf-password-lock'],
+    ['Unlock PDF', '/pdf-unlock'],
+    ['Repair PDF', '/pdf-repair'],
+    ['Flatten PDF', '/pdf-flatten'],
+    ['Compare PDF', '/pdf-compare'],
+    ['Remove PDF Metadata', '/remove-pdf-metadata'],
+    ['Extract PDF Attachments', '/extract-pdf-attachments'],
+    ['Extract PDF Images', '/extract-pdf-images'],
+    ['Export PDF Form Data', '/export-pdf-form-data'],
+    ['Extract PDF Bookmarks', '/extract-pdf-bookmarks'],
+    ['PDF Bookmarks Manager', '/pdf-bookmarks-manager'],
+    ['Extract PDF Links', '/extract-pdf-links'],
+    ['Remove PDF Links', '/remove-pdf-links'],
+    ['Export PDF Comments', '/export-pdf-comments'],
     ['PDF Form Builder', '/pdf-form-builder'],
     ['PDF to Word', '/pdf-to-word'],
     ['PDF to Excel', '/pdf-to-excel'],
@@ -52,7 +67,7 @@ function ToolsPlaceholder() {
     {
       title: 'AI PDF Tools',
       description: 'Extract, understand and transform document content with OCR, summaries, translation, quizzes and automated form filling.',
-      paths: ['/ai-pdf-form-filler', '/pdf-ocr', '/pdf-summarizer', '/pdf-translator', '/mind-map', '/quiz-creator'],
+      paths: ['/ai-pdf-form-filler', '/chat-with-pdf', '/pdf-ocr', '/pdf-summarizer', '/pdf-translator', '/mind-map', '/quiz-creator'],
     },
     {
       title: 'Edit and Annotate PDFs',
@@ -62,7 +77,7 @@ function ToolsPlaceholder() {
     {
       title: 'Manage PDF Pages',
       description: 'Reorder, crop, rotate, extract, delete and number PDF pages without installing desktop software.',
-      paths: ['/pdf-page-manager', '/pdf-cropper', '/rotate-pdf', '/extract-pages', '/delete-pages', '/add-page-numbers'],
+      paths: ['/pdf-page-manager', '/pdf-cropper', '/rotate-pdf', '/extract-pages', '/delete-pages', '/add-page-numbers', '/pdf-page-labels'],
     },
     {
       title: 'Convert PDF Files',
@@ -72,12 +87,12 @@ function ToolsPlaceholder() {
     {
       title: 'Protect and Sign PDFs',
       description: 'Sign documents, add watermarks, redact confidential information and protect PDF files with passwords.',
-      paths: ['/pdf-signer', '/pdf-watermark', '/pdf-redactor', '/pdf-password-lock'],
+      paths: ['/pdf-signer', '/pdf-watermark', '/pdf-redactor', '/pdf-password-lock', '/pdf-unlock'],
     },
     {
       title: 'Organize and Compress PDFs',
       description: 'Reduce file size or combine and separate documents for easier storage, email and sharing.',
-      paths: ['/pdf-compressor', '/pdf-merger', '/pdf-splitter'],
+      paths: ['/pdf-compressor', '/pdf-merger', '/pdf-splitter', '/pdf-repair', '/pdf-flatten', '/pdf-compare', '/remove-pdf-metadata', '/extract-pdf-attachments', '/extract-pdf-images', '/export-pdf-form-data', '/extract-pdf-bookmarks', '/pdf-bookmarks-manager', '/extract-pdf-links', '/remove-pdf-links', '/export-pdf-comments'],
     },
   ] as const
 
