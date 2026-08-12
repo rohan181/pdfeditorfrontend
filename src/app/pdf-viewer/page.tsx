@@ -60,7 +60,7 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .loading-sub{font-size:12px;color:rgba(0,0,0,.38)}
 
 /* ── Viewer ── */
-.viewer{flex:1;display:flex;flex-direction:column;background:#1c1c1e;overflow:hidden;min-height:0}
+.viewer{flex:1;display:flex;flex-direction:column;background:#1c1c1e;overflow:hidden;min-height:0;max-width:100vw}
 
 /* Toolbar */
 .toolbar{height:52px;background:#2c2c2e;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 12px;gap:4px;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
@@ -88,7 +88,7 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .tb-filename{font-size:12px;color:rgba(255,255,255,.45);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.01em}
 
 /* Canvas area */
-.canvas-area{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:28px 24px;min-height:0;position:relative}
+.canvas-area{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:28px 24px;min-height:0;position:relative;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .canvas-area::-webkit-scrollbar{width:8px;height:8px}
 .canvas-area::-webkit-scrollbar-track{background:transparent}
 .canvas-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
@@ -117,9 +117,19 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 :-webkit-full-screen .viewer{min-height:100vh}
 
 @media(max-width:600px){
-  .tb-filename{display:none}
-  .tb-btn{padding:0 7px;font-size:12px}
-  .canvas-area{padding:16px 8px}
+  .pg{min-height:100dvh}
+  .viewer{height:calc(100dvh - 56px);flex:none;width:100%}
+  .toolbar{height:auto;min-height:100px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'left center' 'right right';align-content:center;gap:6px 8px;padding:6px max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left));overflow:visible}
+  .tb-left{grid-area:left;min-width:0}
+  .tb-center{grid-area:center;justify-content:flex-end}
+  .tb-right{grid-area:right;justify-content:center;border-top:1px solid rgba(255,255,255,.08);padding-top:5px;min-width:0}
+  .tb-filename,.tb-filesize,.tb-sep{display:none}
+  .tb-btn{height:44px;min-width:44px;padding:0 9px;font-size:12px}
+  .page-input{height:44px;width:46px;font-size:16px}
+  .page-total{font-size:11px}
+  .zoom-display{height:44px;min-width:48px;display:flex;align-items:center;justify-content:center}
+  .canvas-area{padding:10px 8px calc(10px + env(safe-area-inset-bottom));touch-action:pan-x pan-y}
+  .page-badge{bottom:calc(12px + env(safe-area-inset-bottom))}
 }
 `
 
@@ -177,6 +187,7 @@ export default function PDFViewerPage() {
   const [isFullscreen,setIsFullscreen]= useState(false)
   const [showBadge,   setShowBadge]   = useState(false)
   const [error,       setError]       = useState('')
+  const [viewerWidth, setViewerWidth] = useState(0)
 
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -184,6 +195,18 @@ export default function PDFViewerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const renderTaskRef = useRef<any>(null)
   const badgeTimerRef = useRef<any>(null)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+
+  // Re-fit the page when a phone rotates or the browser controls resize the viewport.
+  useEffect(() => {
+    if (!pdfDoc || !containerRef.current) return
+    const container = containerRef.current
+    const updateWidth = () => setViewerWidth(container.clientWidth)
+    updateWidth()
+    const observer = new ResizeObserver(updateWidth)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [pdfDoc])
 
   // ── Render a page ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -203,7 +226,8 @@ export default function PDFViewerPage() {
 
         const vp1      = page.getViewport({ scale: 1 })
         const container = containerRef.current
-        const avail    = container ? Math.max(container.clientWidth - 48, 200) : 600
+        const gutter   = container && container.clientWidth <= 600 ? 16 : 48
+        const avail    = container ? Math.max(container.clientWidth - gutter, 200) : 600
         const base     = Math.min(avail / vp1.width, 3)
         const scale    = Math.max(0.1, Math.min(base * zoom, 8))
 
@@ -232,7 +256,7 @@ export default function PDFViewerPage() {
     })()
 
     return () => { aborted.yes = true }
-  }, [pdfDoc, currentPage, zoom])
+  }, [pdfDoc, currentPage, zoom, viewerWidth])
 
   // ── Keyboard navigation ────────────────────────────────────────────────────
   useEffect(() => {
@@ -322,6 +346,23 @@ export default function PDFViewerPage() {
   const zoomOut = () => setZoom(z => Math.max(+(z / 1.25).toFixed(4), 0.1))
   const fitWidth = () => setZoom(1)
 
+  // At fit width, a deliberate horizontal swipe changes pages. Vertical reading
+  // and panning a zoomed page keep their normal browser behavior.
+  const onViewerTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length !== 1) { touchStartRef.current = null; return }
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
+  const onViewerTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const start = touchStartRef.current
+    touchStartRef.current = null
+    if (!start || zoom > 1.05 || e.changedTouches.length !== 1) return
+    const dx = e.changedTouches[0].clientX - start.x
+    const dy = e.changedTouches[0].clientY - start.y
+    if (Math.abs(dx) < 55 || Math.abs(dx) <= Math.abs(dy) * 1.25) return
+    if (dx < 0) goToPageNum(p => Math.min(p + 1, totalPages))
+    else goToPageNum(p => Math.max(p - 1, 1))
+  }
+
   // ── Fullscreen ────────────────────────────────────────────────────────────
   const toggleFullscreen = () => {
     if (!viewerRef.current) return
@@ -400,19 +441,19 @@ export default function PDFViewerPage() {
 
         ) : (
           /* ── Viewer ── */
-          <div className="viewer" ref={viewerRef}>
+          <div className="viewer pdf-mobile-workspace" ref={viewerRef}>
 
             {/* Toolbar */}
             <div className="toolbar">
               {/* Left */}
               <div className="tb-left">
-                <button className="tb-btn" onClick={reset} title="Close PDF">
+                <button className="tb-btn" onClick={reset} title="Close PDF" aria-label="Close PDF">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                   Close
                 </button>
                 <div className="tb-sep"/>
                 <span className="tb-filename" title={file?.name}>{file?.name}</span>
-                <span style={{fontSize:11,color:'rgba(255,255,255,.28)',marginLeft:6}}>{fmt(file?.size??0)}</span>
+                <span className="tb-filesize" style={{fontSize:11,color:'rgba(255,255,255,.28)',marginLeft:6}}>{fmt(file?.size??0)}</span>
               </div>
 
               {/* Center — page nav */}
@@ -423,6 +464,7 @@ export default function PDFViewerPage() {
                     onClick={() => goToPageNum(p => Math.max(p-1, 1))}
                     disabled={currentPage <= 1}
                     title="Previous page (←)"
+                    aria-label="Previous page"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                   </button>
@@ -433,6 +475,8 @@ export default function PDFViewerPage() {
                     onBlur={e => commitPageInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') commitPageInput(pageInput) }}
                     title="Current page"
+                    aria-label="Current page"
+                    inputMode="numeric"
                   />
                   <span className="page-total">of {totalPages}</span>
                   <button
@@ -440,6 +484,7 @@ export default function PDFViewerPage() {
                     onClick={() => goToPageNum(p => Math.min(p+1, totalPages))}
                     disabled={currentPage >= totalPages}
                     title="Next page (→)"
+                    aria-label="Next page"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                   </button>
@@ -448,11 +493,11 @@ export default function PDFViewerPage() {
 
               {/* Right — zoom + actions */}
               <div className="tb-right">
-                <button className="tb-btn" onClick={zoomOut} title="Zoom out (−)" disabled={zoom <= 0.1}>
+                <button className="tb-btn" onClick={zoomOut} title="Zoom out (−)" aria-label="Zoom out" disabled={zoom <= 0.1}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
                 </button>
                 <span className="zoom-display" onClick={fitWidth} title="Click to fit width (0)">{zoomPct}%</span>
-                <button className="tb-btn" onClick={zoomIn} title="Zoom in (+)" disabled={zoom >= 8}>
+                <button className="tb-btn" onClick={zoomIn} title="Zoom in (+)" aria-label="Zoom in" disabled={zoom >= 8}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
                 </button>
                 <div className="tb-sep"/>
@@ -460,6 +505,7 @@ export default function PDFViewerPage() {
                   className="tb-btn"
                   onClick={() => file && triggerDownload(file)}
                   title="Download PDF"
+                  aria-label="Download PDF"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   Download
@@ -468,6 +514,7 @@ export default function PDFViewerPage() {
                   className="tb-btn"
                   onClick={toggleFullscreen}
                   title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                  aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
                 >
                   {isFullscreen ? (
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/></svg>
@@ -479,7 +526,12 @@ export default function PDFViewerPage() {
             </div>
 
             {/* Canvas area */}
-            <div className="canvas-area" ref={containerRef}>
+            <div
+              className="canvas-area"
+              ref={containerRef}
+              onTouchStart={onViewerTouchStart}
+              onTouchEnd={onViewerTouchEnd}
+            >
               {rendering && (
                 <div className="render-overlay">
                   <div className="render-spin"/>

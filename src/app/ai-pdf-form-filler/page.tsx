@@ -250,7 +250,6 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
   .fq-a{padding:0 18px 18px;margin:0}
   .cta-inner{padding:44px 20px;border-radius:20px}
   .cta-sub{font-size:14px;line-height:1.6;margin-bottom:28px}
-  .editor-close{top:max(8px,env(safe-area-inset-top))!important;right:8px!important}
   .foot-in{flex-direction:column;align-items:center;text-align:center}
   .foot-nav{justify-content:center}
   .related-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -287,7 +286,6 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .demo-sub-label{font-size:11px;color:#9ca3af;text-align:center;margin-top:4px}
 .ai-compare{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
 .ai-compare-head,.ai-compare-row{min-width:680px}
-.editor-close{min-height:42px;position:fixed!important;top:max(10px,env(safe-area-inset-top))!important;right:max(14px,env(safe-area-inset-right))!important;bottom:auto!important;box-shadow:0 8px 28px rgba(15,23,42,.24)}
 .editor-loading{flex:1;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 42%,rgba(124,58,237,.08),transparent 38%),#f5f7fc;color:#64748b}
 .editor-loading-card{width:min(420px,100%);padding:38px 30px 30px;text-align:center;background:#fff;border:1px solid rgba(99,102,241,.16);border-radius:22px;box-shadow:0 18px 55px rgba(51,65,85,.1)}
 .editor-loading-icon{width:64px;height:64px;margin:0 auto 18px;display:grid;place-items:center;border-radius:18px;color:#6d5ce7;background:linear-gradient(145deg,#f3f0ff,#ebe9ff);animation:editor-float 1.8s ease-in-out infinite}
@@ -409,10 +407,7 @@ export default function AIPDFFormFillerPage() {
       {/* Fullscreen editor overlay */}
       {editorOpen && (
         <div role="dialog" aria-modal="true" aria-label="AI PDF form filler editor" style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', background: '#f8faff' }}>
-          <PDFEditor />
-          <button className="editor-close" onClick={closeEditor} aria-label="Close editor" style={{ position: 'absolute', top: 10, right: 14, zIndex: 10000, background: 'rgba(30,41,59,.88)', border: '1px solid rgba(255,255,255,.15)', color: '#fff', borderRadius: 8, padding: '4px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
-            ✕ Close
-          </button>
+          <PDFEditor onRequestClose={closeEditor} />
         </div>
       )}
 

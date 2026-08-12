@@ -711,6 +711,40 @@ const data: Record<string, ToolSEOData> = {
     ],
   },
 
+  'scan-to-pdf': {
+    toolSlug: 'scan-to-pdf',
+    whatIs: [
+      'What is Scan to PDF?',
+      'Scan to PDF turns your phone or laptop camera into a document scanner. Instead of a flat photo with a crooked angle and a distracting background, it detects the edges of the paper, corrects the perspective so the page looks flat and rectangular, and applies a scan-style filter — producing a page that looks like it came from a real flatbed scanner.',
+      'You can capture multiple pages in one session, reorder them, and export everything as a single multi-page PDF. Every step — camera capture, edge detection, perspective correction, and PDF creation — runs locally in your browser. Photos are never uploaded to a server.',
+    ],
+    users: [
+      { who: 'Students & job applicants', why: 'Scan physical forms, certificates, or handwritten notes into a clean PDF for submission or storage.' },
+      { who: 'Freelancers & small businesses', why: 'Turn paper receipts and signed contracts into PDFs for expense tracking and recordkeeping on the go.' },
+      { who: 'Remote and field workers', why: 'Capture whiteboards, printed instructions, or paperwork on-site and share a PDF immediately.' },
+      { who: 'Anyone without a scanner', why: 'Digitize mail, letters, or official documents using only a phone camera — no scanner hardware needed.' },
+    ],
+    related: [
+      { slug: 'image-to-pdf', label: 'Convert existing photos to PDF' },
+      { slug: 'pdf-ocr', label: 'Make a scanned PDF searchable' },
+      { slug: 'pdf-compressor', label: 'Compress the PDF after scanning' },
+      { slug: 'pdf-merger', label: 'Combine scans with other PDFs' },
+    ],
+    steps: [
+      { title: 'Open the camera', body: 'Tap "Open Camera" and point it at the document. A guide frame helps you keep the page in view.' },
+      { title: 'Auto-crop & straighten', body: 'Capture the page, then use auto-detect or drag the 4 corner handles to select exactly the document edges. Perspective is corrected automatically.' },
+      { title: 'Save as PDF', body: 'Scan as many pages as you need, reorder them if necessary, then export one multi-page PDF.' },
+    ],
+    faqs: [
+      { q: 'Do I need to install an app?', a: 'No. Scan to PDF runs in your mobile or desktop browser using your device camera — nothing to install.' },
+      { q: 'Does it fix crooked or angled photos?', a: 'Yes. Drag the 4 corner handles onto the document edges (or use auto-detect) and the perspective is mathematically corrected so the page appears flat and rectangular.' },
+      { q: 'Can I scan multiple pages into one PDF?', a: 'Yes. Keep capturing pages in the same session — each one is added to the page list, which you can reorder before saving a single multi-page PDF.' },
+      { q: 'What if my browser can’t access the camera?', a: 'If camera permission is denied or unavailable, use "Take Photo" to open your device’s native camera app, or upload existing photos instead — both feed into the same crop and filter workflow.' },
+      { q: 'Are my photos uploaded anywhere?', a: 'No. Capture, edge detection, perspective correction, and PDF generation all happen on your device. Nothing is sent to a server.' },
+      { q: 'What scan filters are available?', a: 'Original, Enhanced (auto contrast, closest to a real scanner), Black & White, and Grayscale.' },
+    ],
+  },
+
   'image-to-pdf': {
     whatIs: [
       'What is an image to PDF converter?',

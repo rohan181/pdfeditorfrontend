@@ -43,6 +43,7 @@ export interface TextElement extends BaseElement {
   italic: boolean
   underline: boolean
   align: 'left' | 'center' | 'right'
+  lineHeight?: number
   bgColor: string
 }
 

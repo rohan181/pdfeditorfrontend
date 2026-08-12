@@ -62,6 +62,41 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 @keyframes spin{to{transform:rotate(360deg)}}
 `
 
+const EDITOR_CSS = `
+.watermark-editor{width:100%;max-width:100vw;overflow:hidden}
+.watermark-topbar{max-width:100vw}
+.watermark-body{min-width:0}
+.watermark-pages{min-width:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.watermark-page-item{width:100%;min-width:0}
+.watermark-page-frame{max-width:100%}
+.watermark-controls{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+@media(max-width:760px){
+  .watermark-editor{height:100dvh!important}
+  .watermark-topbar{height:auto!important;min-height:56px;padding:6px max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left))!important;gap:6px!important}
+  .watermark-top-sep,.watermark-file-name,.watermark-status{display:none!important}
+  .watermark-topbar .watermark-related-link{display:none!important}
+  .watermark-topbar button,.watermark-topbar a:not(.watermark-related-link){height:44px!important;min-height:44px;display:inline-flex!important;align-items:center;justify-content:center;flex-shrink:0}
+  .watermark-download{padding:0 12px!important}
+  .watermark-new{padding:0 10px!important;white-space:nowrap}
+  .watermark-body{flex-direction:column!important}
+  .watermark-panel{order:-1;width:100%!important;height:clamp(230px,40dvh,330px);max-height:42dvh;min-height:210px;border-left:0!important;border-bottom:1px solid #e8ecf5;flex-shrink:0!important}
+  .watermark-panel-header{padding:8px 12px!important}
+  .watermark-controls{padding:10px 12px calc(10px + env(safe-area-inset-bottom))!important;gap:12px!important}
+  .watermark-controls button{min-height:40px}
+  .watermark-controls input:not([type='range']):not([type='file']){min-height:44px;font-size:16px!important}
+  .watermark-controls input[type='range']{min-height:36px}
+  .watermark-pages{flex:1!important;min-height:0!important;padding:12px 8px!important;gap:14px!important;align-items:center!important}
+  .watermark-page-item{gap:5px!important}
+  .watermark-page-frame{width:min(100%,860px)!important;display:block!important}
+}
+
+@media(max-width:360px){
+  .watermark-brand-name{display:none}
+  .watermark-download{padding:0 10px!important}
+}
+`
+
 // Position preset → CSS left/top percent (watermark center point)
 const PRESET_CSS: Record<string, { left: string; top: string }> = {
   'center':        { left:'50%', top:'50%'  },
@@ -390,39 +425,40 @@ export default function PDFWatermarkPage() {
 
   return (
     <>
-    <div style={{ display:'flex', flexDirection:'column', height:'100vh', background:'#edf0f7', fontFamily:'Manrope,sans-serif' }}>
+    <style dangerouslySetInnerHTML={{ __html: EDITOR_CSS }} />
+    <div className="watermark-editor pdf-mobile-workspace" style={{ display:'flex', flexDirection:'column', height:'100vh', background:'#edf0f7', fontFamily:'Manrope,sans-serif' }}>
 
       {/* Top bar */}
-      <div style={{ height:52, background:'#fff', borderBottom:'1px solid #e2e8f0', display:'flex', alignItems:'center', padding:'0 14px', gap:10, flexShrink:0, zIndex:50, boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
-        <Link href="/" style={{ display:'inline-flex', alignItems:'center', gap:7, textDecoration:'none', flexShrink:0 }}>
+      <div className="watermark-topbar" style={{ height:52, background:'#fff', borderBottom:'1px solid #e2e8f0', display:'flex', alignItems:'center', padding:'0 14px', gap:10, flexShrink:0, zIndex:50, boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}>
+        <Link className="watermark-brand" href="/" style={{ display:'inline-flex', alignItems:'center', gap:7, textDecoration:'none', flexShrink:0 }}>
           <span style={{ width:28, height:28, background:'linear-gradient(135deg,#8b5cf6,#6d28d9)', borderRadius:7, display:'flex', alignItems:'center', justifyContent:'center' }}>
             <span style={{ width:13, height:15, background:'rgba(255,255,255,.95)', clipPath:'polygon(0% 0%,68% 0%,100% 26%,100% 100%,0% 100%)' }} />
           </span>
-          <span style={{ fontSize:15, fontWeight:800, color:'#0f172a', letterSpacing:'-0.03em' }}>Edit<span style={{ color:'#8b5cf6' }}>PDF</span></span>
+          <span className="watermark-brand-name" style={{ fontSize:15, fontWeight:800, color:'#0f172a', letterSpacing:'-0.03em' }}>Edit<span style={{ color:'#8b5cf6' }}>PDF</span></span>
         </Link>
-        <div style={{ width:1, height:38, background:'#e2e8f0' }} />
-        <span style={{ fontSize:11, color:'#64748b', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:180 }}>{fileName}</span>
+        <div className="watermark-top-sep" style={{ width:1, height:38, background:'#e2e8f0' }} />
+        <span className="watermark-file-name" style={{ fontSize:11, color:'#64748b', fontFamily:'monospace', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:180 }}>{fileName}</span>
         {statusMsg && (
-          <span style={{ fontSize:10, padding:'2px 8px', borderRadius:4, whiteSpace:'nowrap', background: watermarked ? 'rgba(34,197,94,0.09)' : processing ? 'rgba(251,191,36,0.09)' : 'rgba(0,0,0,0.04)', border: watermarked ? '1px solid rgba(34,197,94,0.22)' : processing ? '1px solid rgba(251,191,36,0.22)' : '1px solid #e2e8f0', color: watermarked ? '#16a34a' : processing ? '#92400e' : '#64748b' }}>
+          <span className="watermark-status" style={{ fontSize:10, padding:'2px 8px', borderRadius:4, whiteSpace:'nowrap', background: watermarked ? 'rgba(34,197,94,0.09)' : processing ? 'rgba(251,191,36,0.09)' : 'rgba(0,0,0,0.04)', border: watermarked ? '1px solid rgba(34,197,94,0.22)' : processing ? '1px solid rgba(251,191,36,0.22)' : '1px solid #e2e8f0', color: watermarked ? '#16a34a' : processing ? '#92400e' : '#64748b' }}>
             {processing ? '⟳ ' : ''}{statusMsg}
           </span>
         )}
         <div style={{ flex:1 }} />
-        <button disabled={!watermarked} onClick={downloadPDF} style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'6px 14px', borderRadius:7, border:'none', cursor: watermarked ? 'pointer' : 'not-allowed', background: watermarked ? 'linear-gradient(135deg,#22c55e,#16a34a)' : '#e2e8f0', color: watermarked ? '#fff' : '#94a3b8', fontSize:12, fontWeight:700 }}>
+        <button className="watermark-download" disabled={!watermarked} onClick={downloadPDF} aria-label="Download watermarked PDF" style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'6px 14px', borderRadius:7, border:'none', cursor: watermarked ? 'pointer' : 'not-allowed', background: watermarked ? 'linear-gradient(135deg,#22c55e,#16a34a)' : '#e2e8f0', color: watermarked ? '#fff' : '#94a3b8', fontSize:12, fontWeight:700 }}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Download
         </button>
-        <button onClick={resetAll} style={{ padding:'5px 11px', borderRadius:7, border:'1px solid #e2e8f0', background:'transparent', color:'#64748b', fontSize:11.5, fontWeight:600, cursor:'pointer' }}>← New File</button>
-        <Link href="/ai-pdf-form-filler" style={{ padding:'5px 11px', borderRadius:7, border:'1px solid #e2e8f0', background:'transparent', color:'#64748b', fontSize:11.5, fontWeight:600, textDecoration:'none' }}>Form Filler</Link>
-        <Link href="/pdf-editor" style={{ padding:'5px 11px', borderRadius:7, border:'1px solid #e2e8f0', background:'transparent', color:'#64748b', fontSize:11.5, fontWeight:600, textDecoration:'none' }}>PDF Editor</Link>
-        <Link href="/" style={{ padding:'5px 11px', borderRadius:7, border:'1px solid #e2e8f0', background:'transparent', color:'#64748b', fontSize:11.5, fontWeight:600, textDecoration:'none' }}>All Tools</Link>
+        <button className="watermark-new" onClick={resetAll} aria-label="Load a new PDF" style={{ padding:'5px 11px', borderRadius:7, border:'1px solid #e2e8f0', background:'transparent', color:'#64748b', fontSize:11.5, fontWeight:600, cursor:'pointer' }}>← New File</button>
+        <Link className="watermark-related-link" href="/ai-pdf-form-filler" style={{ padding:'5px 11px', borderRadius:7, border:'1px solid #e2e8f0', background:'transparent', color:'#64748b', fontSize:11.5, fontWeight:600, textDecoration:'none' }}>Form Filler</Link>
+        <Link className="watermark-related-link" href="/pdf-editor" style={{ padding:'5px 11px', borderRadius:7, border:'1px solid #e2e8f0', background:'transparent', color:'#64748b', fontSize:11.5, fontWeight:600, textDecoration:'none' }}>PDF Editor</Link>
+        <Link className="watermark-related-link" href="/" style={{ padding:'5px 11px', borderRadius:7, border:'1px solid #e2e8f0', background:'transparent', color:'#64748b', fontSize:11.5, fontWeight:600, textDecoration:'none' }}>All Tools</Link>
       </div>
 
       {/* Body */}
-      <div style={{ flex:1, display:'flex', overflow:'hidden', minHeight:0 }}>
+      <div className="watermark-body" style={{ flex:1, display:'flex', overflow:'hidden', minHeight:0 }}>
 
         {/* PDF scroll area */}
-        <div style={{ flex:1, overflow:'auto', padding:'24px', display:'flex', flexDirection:'column', alignItems:'center', gap:20, background:'#edf0f7', position:'relative' }}>
+        <div className="watermark-pages" style={{ flex:1, overflow:'auto', padding:'24px', display:'flex', flexDirection:'column', alignItems:'center', gap:20, background:'#edf0f7', position:'relative' }}>
           {processing && pageImgs.length === 0 && (
             <div style={{ marginTop:80, display:'flex', flexDirection:'column', alignItems:'center', gap:14 }}>
               <div style={{ width:40, height:40, borderRadius:'50%', border:'3px solid #e2e8f0', borderTopColor:'#6366f1', animation:'spin .8s linear infinite' }} />
@@ -440,8 +476,9 @@ export default function PDFWatermarkPage() {
             const hasContent = wmImageSrc || wmText.trim()
 
             return (
-              <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+              <div className="watermark-page-item" key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
                 <div
+                  className="watermark-page-frame"
                   style={{
                     position:'relative', display:'inline-block',
                     boxShadow:'0 4px 24px rgba(0,0,0,0.14)', lineHeight:0,
@@ -531,10 +568,10 @@ export default function PDFWatermarkPage() {
         </div>
 
         {/* ── Watermark panel — PDFEditor style ── */}
-        <div style={{ width:300, flexShrink:0, background:'#fff', borderLeft:'1px solid #e8ecf5', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+        <div className="watermark-panel" style={{ width:300, flexShrink:0, background:'#fff', borderLeft:'1px solid #e8ecf5', display:'flex', flexDirection:'column', overflow:'hidden' }}>
 
           {/* Header */}
-          <div style={{ padding:'12px 14px', borderBottom:'1px solid #e8ecf5', display:'flex', alignItems:'center', gap:8 }}>
+          <div className="watermark-panel-header" style={{ padding:'12px 14px', borderBottom:'1px solid #e8ecf5', display:'flex', alignItems:'center', gap:8 }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10l2 4 2-4 2 4 2-4 2 4"/>
             </svg>
@@ -543,7 +580,7 @@ export default function PDFWatermarkPage() {
           </div>
 
           {/* Controls */}
-          <div style={{ flex:1, overflow:'auto', padding:14, display:'flex', flexDirection:'column', gap:14 }}>
+          <div className="watermark-controls" style={{ flex:1, overflow:'auto', padding:14, display:'flex', flexDirection:'column', gap:14 }}>
 
             {/* Text / Image tabs */}
             <div style={{ display:'flex', gap:6 }}>

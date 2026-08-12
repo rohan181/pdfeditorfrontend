@@ -23,6 +23,17 @@ const STAMP_COLOR: Record<string, string> = {
   blue: '#1d4ed8', red: '#dc2626', orange: '#b45309', gray: '#64748b',
 }
 
+// Map the on-screen font choices to the closest embeddable standard PDF font
+// family (serif / sans / monospace) so exported text keeps the same general
+// shape and character widths as what was shown while editing.
+function pdfFontFor(fontFamily: string, bold: boolean, italic: boolean) {
+  const serif = fontFamily === 'Georgia' || fontFamily === 'Times New Roman'
+  const mono  = fontFamily === 'Courier New'
+  if (mono)  return bold && italic ? 'Courier-BoldOblique' : bold ? 'Courier-Bold' : italic ? 'Courier-Oblique' : 'Courier'
+  if (serif) return bold && italic ? 'Times-BoldItalic'    : bold ? 'Times-Bold'   : italic ? 'Times-Italic'    : 'Times-Roman'
+  return       bold && italic ? 'Helvetica-BoldOblique' : bold ? 'Helvetica-Bold' : italic ? 'Helvetica-Oblique' : 'Helvetica'
+}
+
 // ── pdfjs loader (singleton) ─────────────────────────────────────────────────
 let _pdfjs: any = null
 async function getPdfjs() {
@@ -179,13 +190,30 @@ function ShapeDisplay({ el }: { el: ShapeElement }) {
   )
 }
 
+// Turns raw freehand points into a smooth curve (quadratic bezier through each
+// segment's midpoint) instead of the jagged straight-line-per-sample look of
+// a plain polyline.
+function smoothPath(points: { x: number; y: number }[]): string {
+  if (points.length < 2) return ''
+  if (points.length === 2) return `M${points[0].x},${points[0].y} L${points[1].x},${points[1].y}`
+  let d = `M${points[0].x},${points[0].y}`
+  for (let i = 1; i < points.length - 1; i++) {
+    const mx = (points[i].x + points[i + 1].x) / 2
+    const my = (points[i].y + points[i + 1].y) / 2
+    d += ` Q${points[i].x},${points[i].y} ${mx},${my}`
+  }
+  const last = points[points.length - 1]
+  d += ` L${last.x},${last.y}`
+  return d
+}
+
 function DrawDisplay({ el, scale }: { el: DrawElement; scale: number }) {
   if (el.points.length < 2) return null
-  const pts = el.points.map(p => `${(p.x - el.x) * scale},${(p.y - el.y) * scale}`).join(' ')
+  const pts = el.points.map(p => ({ x: (p.x - el.x) * scale, y: (p.y - el.y) * scale }))
   return (
     <svg style={{ position:'absolute', inset:0, overflow:'visible', pointerEvents:'none' }}
       width={el.width * scale} height={el.height * scale}>
-      <polyline points={pts} fill="none" stroke={el.color} strokeWidth={el.strokeWidth}
+      <path d={smoothPath(pts)} fill="none" stroke={el.color} strokeWidth={el.strokeWidth * scale}
         strokeLinecap="round" strokeLinejoin="round" opacity={el.opacity ?? 1} />
     </svg>
   )
@@ -271,6 +299,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
   onChange: (t: string) => void; onDblClick: () => void
 }) {
   const fs = el.fontSize * scale
+  const lh = el.lineHeight ?? 1.4
   const base: React.CSSProperties = {
     width: '100%', height: '100%', fontSize: fs, fontFamily: el.fontFamily,
     color: el.color, fontWeight: el.bold ? 700 : 400,
@@ -283,20 +312,20 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
       <textarea autoFocus value={el.text} onChange={e => onChange(e.target.value)}
         onClick={e => e.stopPropagation()}
         placeholder="Type here…"
-        style={{ ...base, textAlign: el.align, padding: '2px 4px', lineHeight: 1.4,
+        style={{ ...base, textAlign: el.align, padding: '2px 4px', lineHeight: lh,
           overflow: 'hidden', wordBreak: 'break-word', border: 'none', outline: 'none', resize: 'none', cursor: 'text' }} />
     )
   if (el.align === 'center')
     return (
       <div onDoubleClick={onDblClick}
         style={{ ...base, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          overflow: 'hidden', cursor: 'move' }}>
+          overflow: 'hidden', cursor: 'move', textAlign: 'center', lineHeight: lh, whiteSpace: 'pre-wrap' }}>
         {el.text || <span style={{ opacity: 0.3, fontStyle: 'italic', fontSize: fs * 0.75 }}>Double-click to type…</span>}
       </div>
     )
   return (
     <div onDoubleClick={onDblClick}
-      style={{ ...base, textAlign: el.align, padding: '1px 3px', lineHeight: 1.4,
+      style={{ ...base, textAlign: el.align, padding: '1px 3px', lineHeight: lh,
         overflow: 'hidden', wordBreak: 'break-word', cursor: 'move',
         whiteSpace: 'pre-wrap', minHeight: '1em' }}>
       {el.text || <span style={{ opacity: 0.3, fontStyle: 'italic' }}>Double-click to type…</span>}
@@ -307,7 +336,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
 // (Date formatting handled in DatePickerPanel)
 
 // ── Main ─────────────────────────────────────────────────────────────────────
-export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }: { hideChatFill?: boolean; hideAutoFill?: boolean } = {}) {
+export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, onRequestClose }: { hideChatFill?: boolean; hideAutoFill?: boolean; onRequestClose?: () => void } = {}) {
   const { isLoaded: isAuthLoaded, isSignedIn } = useUser()
   const { loadOpenCV, detectRectangles, drawBoxesOnCanvas } = useScannedDetection()
   const canvasRef = useRef<HTMLCanvasElement>(null)  // kept for compat; primary: canvasRefsMap
@@ -2237,11 +2266,19 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
   const updateEl = useCallback((id: string, updates: Partial<PDFElement>) => {
     setElements(prev => prev.map(e => {
       if (e.id !== id) return e
-      // For draw elements, translate all points when x/y changes (points are stored as absolute coords)
-      if (e.type === 'draw' && (updates.x !== undefined || updates.y !== undefined)) {
-        const dx = (updates.x ?? e.x) - e.x
-        const dy = (updates.y ?? e.y) - e.y
-        return { ...e, ...updates, points: (e as import('@/types').DrawElement).points.map(p => ({ x: p.x + dx, y: p.y + dy })) } as PDFElement
+      // Draw elements store points in absolute page coords. Moving OR resizing the
+      // bounding box must remap each point proportionally, otherwise the stroke
+      // stays pinned at its old size/position while only the selection box changes.
+      if (e.type === 'draw' && (updates.x !== undefined || updates.y !== undefined || updates.width !== undefined || updates.height !== undefined)) {
+        const de = e as DrawElement
+        const newX = updates.x ?? de.x, newY = updates.y ?? de.y
+        const newW = updates.width ?? de.width, newH = updates.height ?? de.height
+        const oldW = de.width || 1, oldH = de.height || 1
+        const points = de.points.map(p => ({
+          x: newX + ((p.x - de.x) / oldW) * newW,
+          y: newY + ((p.y - de.y) / oldH) * newH,
+        }))
+        return { ...e, ...updates, points } as PDFElement
       }
       return { ...e, ...updates } as PDFElement
     }))
@@ -2253,6 +2290,22 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       return next
     })
     setSelectedId(null); setEditingId(null)
+  }, [pushHistory])
+  const duplicateEl = useCallback((id: string) => {
+    setElements(prev => {
+      const src = prev.find(e => e.id === id)
+      if (!src) return prev
+      const offset = 16
+      const copy: PDFElement = src.type === 'draw'
+        ? { ...src, id: uuidv4(), x: src.x + offset, y: src.y + offset,
+            points: src.points.map(p => ({ x: p.x + offset, y: p.y + offset })) }
+        : { ...src, id: uuidv4(), x: src.x + offset, y: src.y + offset }
+      const next = [...prev, copy]
+      pushHistory(next)
+      setSelectedId(copy.id)
+      setEditingId(null)
+      return next
+    })
   }, [pushHistory])
   const clearPage = () => {
     const slotId = slots[slotIdx]?.id
@@ -2269,10 +2322,11 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
       const mod = e.ctrlKey || e.metaKey
       if (mod && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo() }
       if (mod && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo() }
+      if (mod && e.key === 'd' && selectedId && !editingId) { e.preventDefault(); duplicateEl(selectedId) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selectedId, editingId, deleteEl, undo, redo])
+  }, [selectedId, editingId, deleteEl, duplicateEl, undo, redo])
 
   // ── Scroll sidebar to active page when slotIdx changes or sidebar opens ─────
   const scrollSidebarToSlot = useCallback((idx: number) => {
@@ -2371,7 +2425,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
   // ── Export ────────────────────────────────────────────────────────────────
   const handleExport = async () => {
     if (!slots.length) return
-    const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib')
+    const { PDFDocument, rgb, StandardFonts, LineCapStyle, degrees } = await import('pdf-lib')
     const out = await PDFDocument.create()
     const libDocs = await Promise.all(sources.map(s => PDFDocument.load(s.bytes)))
     // Flatten AcroForm widgets so interactive fields don't conflict with overlaid text elements
@@ -2413,16 +2467,14 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
 
       for (const el of slotElems) {
         if (el.type === 'text') {
-          const fontName =
-            el.bold && el.italic ? StandardFonts.HelveticaBoldOblique :
-            el.bold ? StandardFonts.HelveticaBold :
-            el.italic ? StandardFonts.HelveticaOblique : StandardFonts.Helvetica
+          const fontName = pdfFontFor(el.fontFamily, el.bold, el.italic)
           const font = await out.embedFont(fontName)
           const hex = el.color.replace('#', '')
           const r = parseInt(hex.slice(0, 2), 16) / 255
           const g = parseInt(hex.slice(2, 4), 16) / 255
           const b = parseInt(hex.slice(4, 6), 16) / 255
           const fs = el.fontSize * xR
+          const lh = (el.lineHeight ?? 1.4) * fs
           // Draw background rect if element has a bgColor (e.g. pre-filled field overlay)
           if (el.bgColor) {
             const bh = el.bgColor.replace('#', '')
@@ -2436,13 +2488,23 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
               ),
             })
           }
-          let dy = pH - el.y * yR - fs
-          for (const line of el.text.split('\n')) {
-            if (line.trim()) libPage.drawText(line, {
-              x: el.x * xR + 4, y: dy, size: fs, font, color: rgb(r, g, b),
-              maxWidth: el.width * xR - 8,
-            })
-            dy -= fs * 1.4
+          const boxX = el.x * xR, boxW = el.width * xR
+          const boxTop = pH - el.y * yR
+          const lines = el.text.split('\n')
+          // Matches the on-screen box: align:'center' vertically centers the whole
+          // text block (flexbox), left/right stay top-anchored with ~1px padding.
+          let dy = el.align === 'center'
+            ? boxTop - (el.height * yR - lines.length * lh) / 2 - fs * 0.82
+            : boxTop - fs * 0.85
+          for (const line of lines) {
+            if (line.trim()) {
+              const lineWidth = font.widthOfTextAtSize(line, fs)
+              const x = el.align === 'center' ? boxX + (boxW - lineWidth) / 2
+                      : el.align === 'right'  ? boxX + boxW - lineWidth - 4
+                      : boxX + 4
+              libPage.drawText(line, { x, y: dy, size: fs, font, color: rgb(r, g, b), maxWidth: boxW - 8 })
+            }
+            dy -= lh
           }
         } else if (el.type === 'image' || el.type === 'signature') {
           try {
@@ -2520,6 +2582,55 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
               libPage.drawLine({start:{x:spx+spw,y:spy+sph},end:{x:spx+spw-hs2*Math.cos(ang2-0.45),y:spy+sph-hs2*Math.sin(ang2-0.45)},thickness:ssw,color:rgb(sr,sg,sb)})
               libPage.drawLine({start:{x:spx+spw,y:spy+sph},end:{x:spx+spw-hs2*Math.cos(ang2+0.45),y:spy+sph-hs2*Math.sin(ang2+0.45)},thickness:ssw,color:rgb(sr,sg,sb)})
             }
+          }
+        } else if (el.type === 'draw') {
+          if (el.points.length >= 2) {
+            const dh = el.color.replace('#', '')
+            const dr = parseInt(dh.slice(0, 2), 16) / 255
+            const dg = parseInt(dh.slice(2, 4), 16) / 255
+            const db = parseInt(dh.slice(4, 6), 16) / 255
+            const dsw = Math.max(0.5, el.strokeWidth * Math.min(xR, yR))
+            // Points are absolute page-space coords (SVG Y-down); drawSvgPath
+            // flips Y internally, so placing the origin at (0, pH) reproduces
+            // the same top-down → PDF bottom-up mapping used by every other element.
+            const path = smoothPath(el.points.map(p => ({ x: p.x * xR, y: p.y * yR })))
+            libPage.drawSvgPath(path, {
+              x: 0, y: pH,
+              borderColor: rgb(dr, dg, db), borderWidth: dsw,
+              borderOpacity: el.opacity ?? 1, borderLineCap: LineCapStyle.Round,
+            })
+          }
+        } else if (el.type === 'watermark') {
+          // The on-screen preview centers content in the box with CSS
+          // `rotate(deg)` (visually clockwise). PDF space is Y-up, so a
+          // standard-convention rotation there reads counter-clockwise —
+          // negate the angle to keep the export looking the same as the preview.
+          const rad = -el.rotation * Math.PI / 180
+          const cx = el.x * xR + (el.width * xR) / 2
+          const cy = pH - (el.y * yR + (el.height * yR) / 2)
+          const anchorFor = (halfW: number, halfH: number) => ({
+            x: cx - halfW * Math.cos(rad) + halfH * Math.sin(rad),
+            y: cy - halfW * Math.sin(rad) - halfH * Math.cos(rad),
+          })
+          if (el.imageSrc) {
+            try {
+              const isPng = el.imageSrc.startsWith('data:image/png')
+              const imgBytes = Uint8Array.from(atob(el.imageSrc.split(',')[1]), c => c.charCodeAt(0))
+              const emb = isPng ? await out.embedPng(imgBytes) : await out.embedJpg(imgBytes)
+              const maxW = el.width * xR * 0.8, maxH = el.height * yR * 0.8
+              const fit = Math.min(maxW / emb.width, maxH / emb.height)
+              const iw = emb.width * fit, ih = emb.height * fit
+              const anchor = anchorFor(iw / 2, ih / 2)
+              libPage.drawImage(emb, { x: anchor.x, y: anchor.y, width: iw, height: ih, opacity: el.opacity, rotate: degrees(-el.rotation) })
+            } catch { /* skip */ }
+          } else if (el.text.trim()) {
+            const wFont = await out.embedFont(StandardFonts.HelveticaBold)
+            const wh = el.color.replace('#', '')
+            const wr = parseInt(wh.slice(0, 2), 16) / 255, wg = parseInt(wh.slice(2, 4), 16) / 255, wb = parseInt(wh.slice(4, 6), 16) / 255
+            const wfs = el.fontSize * xR
+            const tw = wFont.widthOfTextAtSize(el.text, wfs)
+            const anchor = anchorFor(tw / 2, wfs * 0.35)
+            libPage.drawText(el.text, { x: anchor.x, y: anchor.y, size: wfs, font: wFont, color: rgb(wr, wg, wb), opacity: el.opacity, rotate: degrees(-el.rotation) })
           }
         }
       }
@@ -2703,6 +2814,22 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               {showPanel ? '✕' : '⚙'}
+            </button>
+          )}
+          {/* Close editor — lives in the nav's own flex row so it can never
+              float on top of (and steal clicks from) Export/Open PDF. */}
+          {onRequestClose && (
+            <button onClick={onRequestClose} title="Close editor" aria-label="Close editor" style={{
+              display: 'flex', alignItems: 'center', gap: 5, padding: isMobile ? 0 : '6px 12px',
+              width: isMobile ? 34 : undefined, height: isMobile ? 34 : undefined,
+              borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.8)',
+              fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s',
+              justifyContent: 'center', flexShrink: 0,
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.13)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.07)')}>
+              ✕{!isMobile && ' Close'}
             </button>
           )}
         </div>
@@ -3372,9 +3499,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
                         {/* Live draw preview */}
                         {toolMode === 'draw' && isActive && drawPreviewPts.length > 1 && (
                           <svg style={{position:'absolute',inset:0,overflow:'visible',pointerEvents:'none'}} width="100%" height="100%">
-                            <polyline
-                              points={drawPreviewPts.map(p=>`${p.x*scale},${p.y*scale}`).join(' ')}
-                              fill="none" stroke={drawColor} strokeWidth={drawStrokeWidth}
+                            <path
+                              d={smoothPath(drawPreviewPts.map(p => ({ x: p.x * scale, y: p.y * scale })))}
+                              fill="none" stroke={drawColor} strokeWidth={drawStrokeWidth * scale}
                               strokeLinecap="round" strokeLinejoin="round" opacity={drawOpacity}/>
                           </svg>
                         )}
@@ -3790,6 +3917,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false }
               pageBoxCount={pageElems.length}
               onUpdate={updateEl}
               onDelete={deleteEl}
+              onDuplicate={duplicateEl}
               onClearPage={clearPage}
               onAddStamp={handleAddStamp}
             />

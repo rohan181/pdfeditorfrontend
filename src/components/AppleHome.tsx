@@ -19,7 +19,7 @@ import {
   WandSparkles, ScanText, Sparkles, BrainCircuit, ClipboardList, Languages,
   FilePen, MessageSquareText,
   ListOrdered, RotateCw, Scissors, Trash2,
-  FileType, FileSpreadsheet, Presentation, Table, MonitorPlay, Code, ImagePlus, Images,
+  FileType, FileSpreadsheet, Presentation, Table, MonitorPlay, Code, ImagePlus, Images, Camera,
   KeyRound, Stamp, EyeOff, PenTool, UnlockKeyhole,
   Minimize2, Merge, Split, FormInput, Wrench, GitCompareArrows, Fingerprint, Paperclip, ImageDown, Link2, Unlink2,
 } from 'lucide-react'
@@ -75,6 +75,7 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   { name:'ODT → PDF',         tag:'LIVE', href:'/odt-to-pdf',         cat:'Convert',  Icon:FileText,        iconBg:'linear-gradient(135deg,#059669,#10b981)', desc:'Convert OpenDocument Text to PDF',      tier:'free' },
   { name:'HTML → PDF',        tag:'LIVE', href:'/html-to-pdf',        cat:'Convert',  Icon:Code,            iconBg:'linear-gradient(135deg,#0891b2,#06b6d4)', desc:'Render HTML pages as PDF',              tier:'free' },
   { name:'Image to PDF',      tag:'LIVE', href:'/image-to-pdf',       cat:'Convert',  Icon:ImagePlus,       iconBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', desc:'Turn photos & images into PDF',         tier:'free' },
+  { name:'Scan to PDF',       tag:'LIVE', href:'/scan-to-pdf',        cat:'Convert',  Icon:Camera,          iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Scan documents with your camera',       tier:'free' },
   { name:'PDF to Images',     tag:'LIVE', href:'/pdf-to-images',      cat:'Convert',  Icon:Images,          iconBg:'linear-gradient(135deg,#db2777,#ec4899)', desc:'Export every page as an image',         tier:'free' },
   // ── Protect ─────────────────────────────────────────────────────────────────
   { name:'PDF Password Lock', tag:'LIVE', href:'/pdf-password-lock',  cat:'Protect',  Icon:KeyRound,        iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Encrypt with a strong password',        tier:'free' },

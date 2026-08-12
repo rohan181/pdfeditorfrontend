@@ -15,7 +15,7 @@
 .resize-handle::after {
   content: '';
   position: absolute;
-  inset: -10px;
+  inset: -6px;
 }
 
 .crop-overlay-mask {

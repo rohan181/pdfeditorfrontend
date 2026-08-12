@@ -13,7 +13,7 @@ import {
   ImagePlus, Images, Stamp, Scissors, EyeOff, Trash2,
   MessageSquareText, MonitorPlay, RotateCw,
   ListOrdered, Table, Code, FormInput, Wrench, GitCompareArrows, Fingerprint, Paperclip, ImageDown, Link2, Unlink2,
-  ChevronDown, X, Menu, ArrowRight,
+  ChevronDown, X, Menu, ArrowRight, Camera,
 } from 'lucide-react'
 
 const SP  = { type: 'spring', stiffness: 400, damping: 30 } as const
@@ -68,6 +68,7 @@ const NAV_CATS: NavCat[] = [
       { name: 'Excel → PDF',   href: '/excel-to-pdf',  tier: 'free', Icon: Table,           bg: '#059669' },
       { name: 'PPT → PDF',     href: '/ppt-to-pdf',    tier: 'free', Icon: Presentation,    bg: '#b45309' },
       { name: 'Image to PDF',  href: '/image-to-pdf',  tier: 'free', Icon: ImagePlus,       bg: '#7c3aed' },
+      { name: 'Scan to PDF',   href: '/scan-to-pdf',   tier: 'free', Icon: Camera,          bg: '#0d9488' },
       { name: 'PDF to Images', href: '/pdf-to-images', tier: 'free', Icon: Images,          bg: '#db2777' },
       { name: 'TXT → PDF',     href: '/txt-to-pdf',    tier: 'free', Icon: FileType,        bg: '#6366f1' },
       { name: 'HTML → PDF',    href: '/html-to-pdf',   tier: 'free', Icon: Code,            bg: '#0891b2' },

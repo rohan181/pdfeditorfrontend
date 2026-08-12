@@ -1006,3 +1006,22 @@ body { overflow-x:clip; }
     border-bottom-color:rgba(255,255,255,.08) !important;
   }
 }
+
+/* Active PDF workspaces opt into stable phone viewport and touch behavior. */
+.pdf-mobile-workspace {
+  width:100%;
+  min-width:0;
+}
+
+@media(max-width:768px){
+  .pdf-mobile-workspace {
+    max-width:100vw;
+    overscroll-behavior:contain;
+  }
+  .pdf-mobile-workspace button,
+  .pdf-mobile-workspace a,
+  .pdf-mobile-workspace [role="button"] {
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
+}

@@ -69,6 +69,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     // ── Convert to PDF ────────────────────────────────────────────────────────
     url('/image-to-pdf',        0.80, 'monthly', '2026-01-01'),
+    url('/scan-to-pdf',         0.80, 'monthly', '2026-08-12'),
     url('/excel-to-pdf',        0.75, 'monthly', '2026-01-01'),
     url('/word-to-pdf',         0.80, 'monthly', '2026-01-01'),
     url('/txt-to-pdf',          0.75, 'monthly', '2026-01-01'),

@@ -217,7 +217,7 @@ export default function HtmlToPdf() {
 
   // ── Styles ─────────────────────────────────────────────────────────────────
   const S = {
-    page:   { height:'100vh', display:'flex', flexDirection:'column' as const, overflow:'hidden', background:'#f5f5f7', fontFamily:'system-ui,sans-serif' },
+    page:   { height:'100vh', display:'flex', flexDirection:'column' as const, overflow:'hidden', background:'#f5f5f7', fontFamily:'system-ui,sans-serif', paddingTop:56, boxSizing:'border-box' as const },
     nav:    { height:52, background:'rgba(255,255,255,.96)', borderBottom:'1px solid rgba(0,0,0,.08)', display:'flex', alignItems:'center', padding:'0 18px', gap:10, flexShrink:0 },
     work:   { flex:1, display:'flex', overflow:'hidden' },
     sb:     { width:288, flexShrink:0, background:'#fff', borderRight:'1px solid #e8e8e8', display:'flex', flexDirection:'column' as const, overflowY:'auto' as const },

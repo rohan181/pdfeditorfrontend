@@ -119,8 +119,6 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar-track{background:#f5f5f7}
 ::-webkit-scrollbar-thumb{background:rgba(37,99,235,.2);border-radius:2px}
 :focus-visible{outline:2px solid var(--p);outline-offset:3px}
-.editor-close{min-height:42px;position:fixed!important;top:max(10px,env(safe-area-inset-top))!important;right:max(14px,env(safe-area-inset-right))!important;bottom:auto!important;box-shadow:0 8px 28px rgba(15,23,42,.24)}
-@media(max-width:600px){.editor-close{top:max(8px,env(safe-area-inset-top))!important;right:8px!important}}
 `
 
 const TOOLS = [
@@ -175,21 +173,7 @@ export default function PDFEditorPage() {
           display: 'flex', flexDirection: 'column',
           background: '#f8faff',
         }}>
-          <PDFEditor hideChatFill hideAutoFill />
-          <button
-            className="editor-close"
-            onClick={closeEditor}
-            aria-label="Close editor"
-            style={{
-              position: 'absolute', top: 10, right: 14, zIndex: 10000,
-              background: 'rgba(30,41,59,0.85)', border: '1px solid rgba(255,255,255,0.15)',
-              color: '#fff', borderRadius: 8, padding: '4px 12px',
-              fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              backdropFilter: 'blur(8px)', letterSpacing: '0.02em',
-            }}
-          >
-            ✕ Close
-          </button>
+          <PDFEditor hideChatFill hideAutoFill onRequestClose={closeEditor} />
         </div>
       )}
 

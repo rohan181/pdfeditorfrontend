@@ -60,7 +60,7 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .loading-sub{font-size:12px;color:rgba(0,0,0,.38)}
 
 /* ── Cropper layout ── */
-.cropper{flex:1;display:flex;flex-direction:column;background:#1c1c1e;overflow:hidden;min-height:0}
+.cropper{flex:1;display:flex;flex-direction:column;background:#1c1c1e;overflow:hidden;min-height:0;max-width:100vw}
 
 /* Toolbar */
 .toolbar{height:52px;background:#2c2c2e;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;padding:0 12px;gap:4px;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
@@ -85,7 +85,7 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .tb-fname{font-size:11px;color:rgba(255,255,255,.4);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* Canvas + overlay area */
-.canvas-area{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:28px 24px;min-height:0;position:relative}
+.canvas-area{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:28px 24px;min-height:0;position:relative;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .canvas-area::-webkit-scrollbar{width:8px;height:8px}
 .canvas-area::-webkit-scrollbar-track{background:transparent}
 .canvas-area::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
@@ -95,9 +95,9 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .pdf-canvas{display:block;border-radius:2px}
 
 /* Crop overlay */
-.crop-overlay{position:absolute;inset:0;overflow:hidden}
+.crop-overlay{position:absolute;inset:0;overflow:hidden;touch-action:none}
 .mask{position:absolute;background:rgba(0,0,0,.52)}
-.crop-box{position:absolute;cursor:move}
+.crop-box{position:absolute;cursor:move;touch-action:none}
 .crop-border{position:absolute;inset:0;border:2px solid rgba(255,255,255,.9);box-shadow:0 0 0 1px rgba(0,0,0,.5),inset 0 0 0 1px rgba(0,0,0,.15);pointer-events:none}
 
 /* Rule-of-thirds grid lines */
@@ -106,7 +106,8 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .grid-v{top:0;bottom:0;width:1px}
 
 /* Resize handles */
-.handle{position:absolute;width:10px;height:10px;background:#fff;border:1.5px solid rgba(0,0,0,.4);border-radius:2px;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.handle{position:absolute;width:10px;height:10px;background:#fff;border:1.5px solid rgba(0,0,0,.4);border-radius:2px;box-shadow:0 1px 4px rgba(0,0,0,.4);z-index:2;touch-action:none}
+.handle::after{content:'';position:absolute;inset:-10px}
 .handle-tl{top:-5px;left:-5px;cursor:nw-resize}
 .handle-t {top:-5px;left:calc(50% - 5px);cursor:n-resize}
 .handle-tr{top:-5px;right:-5px;cursor:ne-resize}
@@ -135,10 +136,25 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .apply-btn:hover:not(.on){color:rgba(255,255,255,.75)}
 
 @media(max-width:600px){
-  .canvas-area{padding:12px 8px}
-  .tb-fname{display:none}
-  .tb-btn{padding:0 7px;font-size:11px}
-  .info-bar{gap:10px;padding:0 10px}
+  .cropper{height:calc(100dvh - 56px);flex:none;width:100%}
+  .toolbar{height:auto;min-height:106px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'left center' 'right right';align-content:center;gap:6px 8px;padding:6px max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left));overflow:visible}
+  .tb-l{grid-area:left;min-width:0}
+  .tb-c{grid-area:center;justify-content:flex-end}
+  .tb-r{grid-area:right;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;border-top:1px solid rgba(255,255,255,.08);padding-top:5px;min-width:0}
+  .tb-r::-webkit-scrollbar{display:none}
+  .tb-fname,.tb-filesize,.tb-sep,.apply-label{display:none}
+  .tb-btn{height:44px;min-width:44px;padding:0 10px;font-size:11px}
+  .tb-r .tb-btn.accent{order:-1;min-width:124px!important;position:sticky;left:0;z-index:3;box-shadow:8px 0 12px #2c2c2e}
+  .page-input{width:44px;height:44px;font-size:16px}
+  .page-total{font-size:11px}
+  .apply-btn{min-height:40px;padding:4px 11px}
+  .canvas-area{padding:10px 8px;align-items:center}
+  .handle{width:16px;height:16px;border-radius:4px}
+  .handle::after{inset:-14px}
+  .handle-tl{top:-8px;left:-8px}.handle-t{top:-8px;left:calc(50% - 8px)}.handle-tr{top:-8px;right:-8px}
+  .handle-r{top:calc(50% - 8px);right:-8px}.handle-br{bottom:-8px;right:-8px}.handle-b{bottom:-8px;left:calc(50% - 8px)}
+  .handle-bl{bottom:-8px;left:-8px}.handle-l{top:calc(50% - 8px);left:-8px}
+  .info-bar{height:auto;min-height:50px;gap:10px;padding:5px max(10px,env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
 }
 `
 
@@ -241,6 +257,7 @@ export default function PDFCropperPage() {
   const [rendering,   setRendering]   = useState(false)
   const [converting,  setConverting]  = useState(false)
   const [error,       setError]       = useState('')
+  const [workspaceSize, setWorkspaceSize] = useState({ w: 0, h: 0 })
 
   const canvasRef     = useRef<HTMLCanvasElement>(null)
   const overlayRef    = useRef<HTMLDivElement>(null)
@@ -249,6 +266,20 @@ export default function PDFCropperPage() {
   const renderTaskRef = useRef<any>(null)
   // Keep doc in a ref so the async render always reads the live object, not a stale closure
   const pdfDocRef     = useRef<any>(null)
+
+  // Keep the fitted page in sync with phone rotation and dynamic browser bars.
+  useEffect(() => {
+    if (!pdfDoc || !containerRef.current) return
+    const container = containerRef.current
+    const updateSize = () => {
+      const next = { w: container.clientWidth, h: container.clientHeight }
+      setWorkspaceSize(prev => prev.w === next.w && prev.h === next.h ? prev : next)
+    }
+    updateSize()
+    const observer = new ResizeObserver(updateSize)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [pdfDoc])
 
   // Drag state (refs to avoid stale closures in global listeners)
   const dragRef = useRef<{
@@ -302,12 +333,16 @@ export default function PDFCropperPage() {
         if (!cancelled) setPdfDims({ w: vp1.width, h: vp1.height })
 
         const container = containerRef.current
+        const isPhone = (container?.clientWidth ?? window.innerWidth) <= 600
+        const gutterX = isPhone ? 16 : 56
+        const gutterY = isPhone ? 20 : 56
+        const minFit  = isPhone ? 220 : 300
         const avail  = container && container.clientWidth  > 0
-          ? Math.max(container.clientWidth  - 56, 300)
-          : Math.max((window.innerWidth  || 800) - 56, 300)
+          ? Math.max(container.clientWidth  - gutterX, minFit)
+          : Math.max((window.innerWidth  || 800) - gutterX, minFit)
         const availH = container && container.clientHeight > 0
-          ? Math.max(container.clientHeight - 56, 300)
-          : Math.max((window.innerHeight  || 700) - 160, 300)
+          ? Math.max(container.clientHeight - gutterY, minFit)
+          : Math.max((window.innerHeight  || 700) - 160, minFit)
 
         const scale = Math.min(avail / vp1.width, availH / vp1.height, 2.5)
         const vp    = page.getViewport({ scale })
@@ -336,7 +371,7 @@ export default function PDFCropperPage() {
 
     return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [renderTrigger, currentPage])   // renderTrigger bumps when a new PDF loads
+  }, [renderTrigger, currentPage, workspaceSize])   // also re-fit after a viewport resize
 
   // ── Drag logic ─────────────────────────────────────────────────────────────
   const normFromEvent = useCallback((clientX: number, clientY: number) => {
@@ -685,24 +720,24 @@ export default function PDFCropperPage() {
 
         ) : (
           /* ── Cropper UI ── */
-          <div className="cropper">
+          <div className="cropper pdf-mobile-workspace">
 
             {/* Toolbar */}
             <div className="toolbar">
               <div className="tb-l">
-                <button className="tb-btn" onClick={reset}>
+                <button className="tb-btn" onClick={reset} aria-label="Close PDF">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                   Close
                 </button>
                 <div className="tb-sep"/>
                 <span className="tb-fname" title={file?.name}>{file?.name}</span>
-                <span style={{fontSize:10,color:'rgba(255,255,255,.25)',marginLeft:4}}>{fmt(file?.size??0)}</span>
+                <span className="tb-filesize" style={{fontSize:10,color:'rgba(255,255,255,.25)',marginLeft:4}}>{fmt(file?.size??0)}</span>
               </div>
 
               <div className="tb-c">
                 {totalPages > 1 && (
                   <div className="page-ctrl">
-                    <button className="tb-btn" onClick={prev} disabled={currentPage<=1}>
+                    <button className="tb-btn" onClick={prev} disabled={currentPage<=1} aria-label="Previous page">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                     <input
@@ -711,9 +746,11 @@ export default function PDFCropperPage() {
                       onChange={e => setPageInput(e.target.value)}
                       onBlur={e => goTo(e.target.value)}
                       onKeyDown={e => e.key==='Enter' && goTo(pageInput)}
+                      aria-label="Current page"
+                      inputMode="numeric"
                     />
                     <span className="page-total">of {totalPages}</span>
-                    <button className="tb-btn" onClick={next} disabled={currentPage>=totalPages}>
+                    <button className="tb-btn" onClick={next} disabled={currentPage>=totalPages} aria-label="Next page">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                   </div>
@@ -726,6 +763,7 @@ export default function PDFCropperPage() {
                   onClick={() => autoTrim()}
                   disabled={!pdfDoc}
                   title="Auto-detect content bounds and trim white margins"
+                  aria-label="Auto trim white margins"
                   style={{gap:4}}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 2v4m0 0a2 2 0 100 4 2 2 0 000-4zm0 4h10M14 2v4m0 0a2 2 0 100 4 2 2 0 000-4zm0 4v12m-8 4l16-16"/></svg>
@@ -735,12 +773,13 @@ export default function PDFCropperPage() {
                   className="tb-btn danger"
                   onClick={resetCrop}
                   title="Reset crop to default"
+                  aria-label="Reset crop area"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
                   Reset
                 </button>
                 <div className="tb-sep"/>
-                <span style={{fontSize:10,color:'rgba(255,255,255,.35)',letterSpacing:'.04em',whiteSpace:'nowrap'}}>APPLY TO</span>
+                <span className="apply-label" style={{fontSize:10,color:'rgba(255,255,255,.35)',letterSpacing:'.04em',whiteSpace:'nowrap'}}>APPLY TO</span>
                 <div className="apply-wrap">
                   <button className={`apply-btn${applyToAll?' on':''}`} onClick={() => toggleApplyToAll(true)}>All pages</button>
                   <button className={`apply-btn${!applyToAll?' on':''}`} onClick={() => toggleApplyToAll(false)}>This page</button>
@@ -751,6 +790,7 @@ export default function PDFCropperPage() {
                   onClick={download}
                   disabled={converting}
                   style={{minWidth:120}}
+                  aria-label="Download cropped PDF"
                 >
                   {converting ? <>{spin} Cropping…</> : <>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

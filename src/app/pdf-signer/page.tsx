@@ -80,7 +80,7 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 /* Canvas area */
 .canvas-area{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:20px;gap:16px;background:#e8e8ea;min-height:0;position:relative}
 .page-wrap{position:relative;display:inline-block;box-shadow:0 4px 32px rgba(0,0,0,.18);border-radius:2px;line-height:0;flex-shrink:0}
-.page-wrap canvas{display:block}
+.page-wrap canvas{display:block;max-width:100%;height:auto}
 .page-lbl{font-size:10px;font-weight:600;color:rgba(0,0,0,.38);text-align:center;margin-top:6px}
 
 /* Saved sigs bar in canvas */

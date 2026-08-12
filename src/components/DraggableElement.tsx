@@ -172,11 +172,15 @@ export default function DraggableElement({
 
       {isSelected && (
         <button
+          title="Delete"
           style={{
-            position: 'absolute', top: -14, right: -14,
+            // Sits above the top edge, clear of the "ne"/"nw" corner resize
+            // handles (which used to render directly underneath it).
+            position: 'absolute', top: -34, right: -6,
             width: 24, height: 24, background: '#ba1a1a',
-            border: 'none', borderRadius: '50%', cursor: 'pointer',
-            color: '#fff', fontSize: 16, lineHeight: 1,
+            border: '2px solid #fff', borderRadius: '50%', cursor: 'pointer',
+            color: '#fff', fontSize: 15, lineHeight: 1,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60,
           }}
           onMouseDown={e => e.stopPropagation()}

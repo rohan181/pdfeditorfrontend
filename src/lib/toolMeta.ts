@@ -26,6 +26,7 @@ const toolMeta: ToolMeta[] = [
   { slug: 'remove-pdf-links', name: 'Remove PDF Links', desc: 'Disable clickable links while preserving visible page content' },
   { slug: 'export-pdf-comments', name: 'Export PDF Comments', desc: 'Download comments, highlights, markup, authors, and replies' },
   { slug: 'image-to-pdf',       name: 'Image to PDF',         desc: 'Convert JPG, PNG, and other images into a PDF' },
+  { slug: 'scan-to-pdf',        name: 'Scan to PDF',          desc: 'Use your camera to scan documents into a PDF' },
   { slug: 'word-to-pdf',        name: 'Word to PDF',          desc: 'Convert Word documents to PDF with layout preserved' },
   { slug: 'pdf-to-word',        name: 'PDF to Word',          desc: 'Convert PDF into an editable Word document' },
   { slug: 'pdf-to-excel',       name: 'PDF to Excel',         desc: 'Extract tables from PDF into a spreadsheet' },

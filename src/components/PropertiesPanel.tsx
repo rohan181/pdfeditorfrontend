@@ -19,13 +19,14 @@ interface Props {
   highlightPresets?: string[]
   onUpdate: (id: string, updates: Partial<PDFElement>) => void
   onDelete: (id: string) => void
+  onDuplicate: (id: string) => void
   onClearPage: () => void
   onAddStamp: (label: string, color: string) => void
 }
 
 export default function PropertiesPanel({
   selected, currentPage, totalPages, pageBoxCount,
-  onUpdate, onDelete, onClearPage, onAddStamp,
+  onUpdate, onDelete, onDuplicate, onClearPage, onAddStamp,
 }: Props) {
   const txt  = selected?.type === 'text'       ? (selected as TextElement)       : null
   const hl   = selected?.type === 'highlight'  ? (selected as HighlightElement)  : null
@@ -84,6 +85,15 @@ export default function PropertiesPanel({
                   <Btn onClick={() => onUpdate(txt.id, { fontSize: Math.max(6, txt.fontSize - 1) } as Partial<PDFElement>)}>−</Btn>
                   <span style={{ fontSize: 12.5, fontWeight: 700, minWidth: 26, textAlign: 'center' }}>{txt.fontSize}</span>
                   <Btn onClick={() => onUpdate(txt.id, { fontSize: Math.min(120, txt.fontSize + 1) } as Partial<PDFElement>)}>+</Btn>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0' }}>
+                <span style={{ fontSize: 11.5, color: '#475569' }}>Line spacing</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Btn onClick={() => onUpdate(txt.id, { lineHeight: Math.max(1, +((txt.lineHeight ?? 1.4) - 0.1).toFixed(1)) } as Partial<PDFElement>)}>−</Btn>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, minWidth: 26, textAlign: 'center' }}>{(txt.lineHeight ?? 1.4).toFixed(1)}</span>
+                  <Btn onClick={() => onUpdate(txt.id, { lineHeight: Math.min(3, +((txt.lineHeight ?? 1.4) + 0.1).toFixed(1)) } as Partial<PDFElement>)}>+</Btn>
                 </div>
               </div>
 
@@ -329,7 +339,7 @@ export default function PropertiesPanel({
         )}
 
         {/* ── GENERAL OPACITY (for any selected element without dedicated section) ── */}
-        {selected && !hl && !stmp && !drw && !wm && selected.type !== 'image' && selected.type !== 'signature' && selected.opacity !== undefined && (
+        {selected && !hl && !stmp && !drw && !wm && selected.type !== 'image' && selected.type !== 'signature' && (
           <Card title="Opacity">
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
               <span style={{ fontSize:11, color:'#64748b' }}>Opacity</span>
@@ -367,9 +377,14 @@ export default function PropertiesPanel({
             <div>Elements: <b>{pageBoxCount}</b></div>
           </div>
           {selected && (
-            <button onClick={() => onDelete(selected.id)} style={{ ...dangerBtn, marginTop: 8 }}>
-              Delete Element
-            </button>
+            <>
+              <button onClick={() => onDuplicate(selected.id)} style={{ ...ghostBtn, marginTop: 8 }}>
+                ⧉ Duplicate Element
+              </button>
+              <button onClick={() => onDelete(selected.id)} style={{ ...dangerBtn, marginTop: 5 }}>
+                Delete Element
+              </button>
+            </>
           )}
           {pageBoxCount > 0 && (
             <button onClick={onClearPage} style={{ ...ghostBtn, marginTop: 5 }}>

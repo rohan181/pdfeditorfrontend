@@ -48,7 +48,8 @@ body{background:#fff;color:#1d1d1f;font-family:system-ui,sans-serif}
 @keyframes fadeup{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
-.pg{height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#f5f5f7}
+.pg{height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#f5f5f7;padding-top:56px}
+@media(max-width:900px){.pg{height:100dvh}}
 
 /* Nav */
 

@@ -279,6 +279,20 @@ export default function PDFAnnotate() {
     const f = e.dataTransfer.files[0]; if (f) loadFile(f)
   }
 
+  // On small screens, fit the page to the available width instead of the fixed 1.3x default.
+  useEffect(() => {
+    if (!pdfDoc || !mainRef.current) return
+    const container = mainRef.current
+    ;(async () => {
+      const pg = await pdfDoc.getPage(1)
+      const natW = pg.getViewport({ scale: 1 }).width
+      const avail = container.clientWidth - (container.clientWidth <= 600 ? 24 : 56)
+      if (avail > 0 && avail < natW * 1.3) {
+        setScale(Math.max(0.4, +(avail / natW).toFixed(2)))
+      }
+    })()
+  }, [pdfDoc])
+
   const addAnnotation = useCallback((a: Annotation) => {
     setAnnotations(prev => [...prev, a])
   }, [setAnnotations])

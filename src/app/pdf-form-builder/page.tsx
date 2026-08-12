@@ -15,7 +15,8 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 
 .upload-pg{min-height:100vh;display:flex;flex-direction:column;background:#fff}
 .wrap{max-width:820px;margin:0 auto;padding:0 28px;width:100%}
-.editor-pg{height:100vh;overflow:hidden;display:flex;flex-direction:column;background:#fff}
+.editor-pg{height:100vh;overflow:hidden;display:flex;flex-direction:column;background:#fff;padding-top:56px}
+@media(max-width:900px){.editor-pg{height:100dvh}}
 
 /* Nav */
 
