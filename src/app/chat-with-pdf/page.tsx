@@ -386,7 +386,7 @@ export default function ChatWithPDFPage() {
 
   return (
     <>
-      <style>{CSS}</style>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <div className="chatpdf-page">
         <SiteNav />
         <header className="chatpdf-hero">

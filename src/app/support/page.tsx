@@ -8,7 +8,7 @@ const MONO = 'var(--font-mono,monospace)'
 const FAQS = [
   {
     q: 'Is EditPDF AI free to use?',
-    a: 'All 35+ PDF tools (edit, merge, split, compress, watermark, sign, etc.) are completely free with no account required. AI-powered features (Summarizer, Form Filler, Translator, Mind Map, Quiz Creator, OCR) are free up to 5 uses per day. Pro gives you unlimited AI uses.',
+    a: 'All 50+ PDF tools (edit, merge, split, compress, watermark, sign, etc.) are completely free with no account required. AI-powered features (Summarizer, Form Filler, Translator, Mind Map, Quiz Creator, OCR) are free up to 5 uses per day. Pro gives you unlimited AI uses.',
   },
   {
     q: 'Do my files get uploaded to your servers?',

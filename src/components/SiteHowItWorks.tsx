@@ -16,7 +16,7 @@ export default function SiteHowItWorks() {
       n: '02', color: '#7c3aed', bg: 'rgba(124,58,237,.08)',
       Icon: Sparkles,
       title: 'Choose a PDF or AI tool',
-      desc: 'Pick from 35+ tools — edit text, compress, merge, OCR scan, translate, summarise, or auto-fill a form with AI.',
+      desc: 'Pick from 50+ tools — edit text, compress, merge, OCR scan, translate, summarise, or auto-fill a form with AI.',
     },
     {
       n: '03', color: RED, bg: 'rgba(226,75,74,.08)',

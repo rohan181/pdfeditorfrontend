@@ -82,7 +82,7 @@ export default function OGImage() {
 
         {/* Feature pills */}
         <div style={{ display: 'flex', gap: 14 }}>
-          {['AI Form Fill', 'Sign PDF', 'OCR', 'Translate', 'Summarise', '35+ Tools'].map(label => (
+          {['AI Form Fill', 'Sign PDF', 'OCR', 'Translate', 'Summarise', '50+ Tools'].map(label => (
             <div
               key={label}
               style={{

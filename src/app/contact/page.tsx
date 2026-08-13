@@ -27,10 +27,10 @@ export default function ContactPage() {
             Contact
           </span>
           <h1 style={{ fontFamily: FI, fontSize: 'clamp(32px,5vw,48px)', fontWeight: 800, color: '#1d1d1f', letterSpacing: '-0.04em', margin: '10px 0 16px', lineHeight: 1.05 }}>
-            Get in touch
+            Get in touch with EditPDF AI
           </h1>
           <p style={{ fontFamily: FI, fontSize: 16, color: '#6b7280', lineHeight: 1.65, maxWidth: 480, margin: 0 }}>
-            We read every message and respond within <strong style={{ color: '#1d1d1f' }}>24–48 hours</strong>. Choose the right topic to help us reply faster.
+            The EditPDF AI team reads every message and responds within <strong style={{ color: '#1d1d1f' }}>24–48 hours</strong>. Choose the right topic to help us reply faster.
           </p>
         </div>
 

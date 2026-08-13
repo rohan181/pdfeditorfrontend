@@ -60,6 +60,7 @@ function PageView({ pdfDoc, pageNum, scale, tool, color, annotations, selectedId
   useEffect(() => {
     if (!pdfDoc) return
     let cancelled = false
+    let renderTask: any = null
     ;(async () => {
       const pg = await pdfDoc.getPage(pageNum)
       if (cancelled) return
@@ -69,9 +70,18 @@ function PageView({ pdfDoc, pageNum, scale, tool, color, annotations, selectedId
       canvasRef.current.width  = vp.width
       canvasRef.current.height = vp.height
       setCw(vp.width); setCh(vp.height); setPageH(vp1.height)
-      await pg.render({ canvasContext: canvasRef.current.getContext('2d')!, viewport: vp }).promise
+      renderTask = pg.render({ canvasContext: canvasRef.current.getContext('2d')!, viewport: vp })
+      try {
+        await renderTask.promise
+      } catch (e: any) {
+        if (e?.name !== 'RenderingCancelledException') throw e
+      }
     })()
-    return () => { cancelled = true }
+    // Cancelling the in-flight pdf.js render (not just flipping a flag) is what
+    // actually stops it from touching the canvas — otherwise a fast-following
+    // scale change (e.g. the fit-to-width effect below) races the still-running
+    // render and pdf.js throws "same canvas during multiple render() operations".
+    return () => { cancelled = true; renderTask?.cancel() }
   }, [pdfDoc, pageNum, scale])
 
   const norm = (e: React.PointerEvent<SVGSVGElement>): Pt => {

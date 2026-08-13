@@ -4,12 +4,16 @@ import { CheckCircle2 } from 'lucide-react'
 const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
 
-const FREE_ITEMS = ['35+ PDF tools — all free','No account required','Edit, merge, split, compress','Sign & watermark PDFs','5 AI uses per day']
+const FREE_ITEMS = ['Core PDF tools — always free','No account for core tools','Edit, merge, split, compress','Sign & watermark PDFs','5 AI uses per day (free account)']
 const PRO_ITEMS  = ['Everything in Free','Unlimited AI uses per day','PDF → Word / Excel / PPT','Priority processing','AI form autofill & chat fill']
 
+// "All PDF tools" / "No account needed" used to be marked ✓ for both tiers,
+// which directly contradicted the PDF→Office row two rows down (Pro-only)
+// and the fact that Pro itself obviously requires an account to bill. These
+// now say exactly what's true for each tier instead of a blanket claim.
 const COMPARE = [
-  { label: 'All PDF tools',                  free: true,    pro: true          },
-  { label: 'No account needed',              free: true,    pro: true          },
+  { label: 'Core PDF tools',                 free: true,    pro: true          },
+  { label: 'Account required',               free: 'AI only', pro: true        },
   { label: 'AI form fill / summarise / OCR', free: '5/day', pro: '∞ Unlimited' },
   { label: 'PDF → Word / Excel / PPT',       free: false,   pro: true          },
   { label: 'Priority processing',            free: false,   pro: true          },

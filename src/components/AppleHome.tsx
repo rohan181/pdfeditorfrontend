@@ -236,7 +236,7 @@ function BrowserUI() {
         </div>
         {/* Right panel — tools list */}
         <div style={{background:'#F5F5F7',borderLeft:'1px solid rgba(0,0,0,.06)',padding:'11px 9px',display:'flex',flexDirection:'column',gap:6}}>
-          <div style={{...MONO,fontSize:8,fontWeight:700,color:'rgba(0,0,0,.4)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:2}}>35+ Tools</div>
+          <div style={{...MONO,fontSize:8,fontWeight:700,color:'rgba(0,0,0,.4)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:2}}>50+ Tools</div>
           {tasks.map(({label,color,d})=>(
             <div key={label} style={{display:'flex',alignItems:'center',gap:6,padding:'6px 7px',background:'#fff',borderRadius:7,border:'1px solid rgba(0,0,0,.06)',animation:`fin .35s ${d} both`,opacity:0}}>
               <div style={{width:6,height:6,borderRadius:'50%',background:color,flexShrink:0}}/>
@@ -598,7 +598,7 @@ function Nav() {
                   <Link prefetch={false} role="menuitem" href="#tools" onClick={()=>closeMenuNow()}
                     style={{...FI,display:'flex',alignItems:'center',gap:5,
                       fontSize:12,fontWeight:600,color:'#6b7280',textDecoration:'none'}}>
-                    See all 35+ tools <ArrowRight size={11} strokeWidth={2.5}/>
+                    See all 50+ tools <ArrowRight size={11} strokeWidth={2.5}/>
                   </Link>
                 </div>
               </div>
@@ -694,7 +694,7 @@ function Nav() {
                     <Link prefetch={false} href="/#tools" onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
                       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,
                         height:48,...FI,fontSize:13,fontWeight:700,color:'#2563eb'}}>
-                        See all 35+ tools <ArrowRight size={13} strokeWidth={2.5}/>
+                        See all 50+ tools <ArrowRight size={13} strokeWidth={2.5}/>
                       </div>
                     </Link>
                   </div>
@@ -775,27 +775,35 @@ function Hero() {
 
       <div className="constellation-shell">
         <div className="constellation-intro">
-          <motion.div className="constellation-copy" initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.62,ease:E,delay:.05}}>
+          {/* Above-the-fold hero text is the LCP element — it must paint in the
+              first frame of server HTML, not sit at opacity:0 waiting for JS to
+              hydrate and run a Framer Motion entrance animation. A lightweight
+              CSS @keyframes fade (defined inline in globals.css, no JS needed)
+              keeps the same visual entrance without gating first paint on hydration. */}
+          <div className="constellation-copy">
             <div className="constellation-kicker"><Sparkles size={12}/> One file. Every possibility.</div>
-            <h1 className="home-hero-title constellation-title">
+            {/* The brand name belongs in the actual H1 — Google was reading the
+                page's identity from the flashy tagline below, which never once
+                said "EditPDF AI", and started treating searches for the brand
+                as the generic phrase "edit PDF AI" instead. The tagline keeps
+                its full visual treatment, just demoted to a <p> below the H1. */}
+            <h1 className="constellation-brand-h1">EditPDF AI — Free, Private Online PDF Tools</h1>
+            <p className="home-hero-title constellation-title constellation-tagline">
               <span className="constellation-title-plain">One PDF.</span>{' '}
               <span className="constellation-title-gradient">35 ways forward.</span>
-            </h1>
-            <p>Start with one document and choose what happens next—edit, sign, scan, translate, compress or protect it, all in your browser.</p>
-          </motion.div>
+            </p>
+            <p className="constellation-desc">Start with one document and choose what happens next—edit, sign, scan, translate, compress or protect it, all in your browser.</p>
+          </div>
 
-          <motion.div className="constellation-actions" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.5,ease:E,delay:.4}}>
+          <div className="constellation-actions hero-fade-in hero-fade-in-delay-1">
             <Link href="/pdf-editor" className="constellation-primary" data-editor-cta><Upload size={16}/> Open a PDF <ArrowRight size={15}/></Link>
             <a href="#tools" className="constellation-secondary">Browse all tools <ArrowUpRight size={14}/></a>
-            <div className="constellation-proof"><Shield size={13}/> Browser private <i/> No account needed <i/> AI: 5 free uses/day</div>
-          </motion.div>
+            <div className="constellation-proof"><Shield size={13}/> Browser private <i/> Core tools need no account <i/> AI: 5 free uses/day with account</div>
+          </div>
         </div>
 
-        <motion.div
-          className="constellation-stage"
-          initial={{opacity:0,scale:.96}}
-          animate={{opacity:1,scale:1}}
-          transition={{duration:.78,ease:[0.22,1,0.36,1],delay:.16}}
+        <div
+          className="constellation-stage hero-fade-in-scale hero-fade-in-delay-2"
           aria-label="A central PDF surrounded by eight available tools"
         >
           <div className="constellation-orbit orbit-one" aria-hidden="true" />
@@ -816,24 +824,22 @@ function Hero() {
 
           <nav className="constellation-tools" aria-label="PDF tool constellation">
             {orbitTools.map(({code,label,detail,href,Icon,pos},index)=>(
-              <motion.div key={label} className={`constellation-node ${pos}`}
-                initial={{opacity:0,scale:.9}}
-                animate={{opacity:1,scale:1}}
-                transition={{duration:.4,ease:E,delay:.32+index*.045}}>
+              <div key={label} className={`constellation-node ${pos} hero-fade-in-scale`}
+                style={{animationDelay:`${.32+index*.045}s`}}>
                 <Link href={href}>
                   <small>{code}</small>
                   <span><Icon size={15} strokeWidth={1.8}/></span>
                   <div><strong>{label}</strong><em>{detail}</em></div>
                   <ArrowUpRight size={11}/>
                 </Link>
-              </motion.div>
+              </div>
             ))}
           </nav>
 
           <div className="constellation-pulse pulse-one" aria-hidden="true" />
           <div className="constellation-pulse pulse-two" aria-hidden="true" />
           <div className="constellation-pulse pulse-three" aria-hidden="true" />
-        </motion.div>
+        </div>
       </div>
 
       <div className="constellation-footer-line"><span>INPUT · PDF</span><i/><strong>CHOOSE YOUR NEXT MOVE</strong><i/><span>OUTPUT · ANYTHING</span></div>

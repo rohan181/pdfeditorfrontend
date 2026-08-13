@@ -1,12 +1,18 @@
 'use client'
-import type { PDFElement, TextElement, HighlightElement, MarkElement, AnnotationElement, ShapeElement, StampElement, DrawElement, WatermarkElement } from '@/types'
+import type { PDFElement, TextElement, HighlightElement, MarkElement, AnnotationElement, ShapeElement, StampElement, DrawElement, WatermarkElement, TableElement } from '@/types'
 
 const PRESET_COLORS = [
   '#1b1c1c', '#1d4ed8', '#dc2626', '#b45309',
   '#166534', '#7c3aed', '#0e7490', '#64748b',
 ]
 const HIGHLIGHT_PRESETS = ['#fef08a', '#86efac', '#f9a8d4', '#93c5fd', '#fdba74', '#fca5a5']
-const FONTS = ['Inter', 'Georgia', 'Courier New', 'Arial', 'Times New Roman']
+const FONT_GROUPS: { label: string; fonts: string[] }[] = [
+  { label: 'Sans-serif',    fonts: ['Inter', 'Arial', 'Lato', 'Poppins'] },
+  { label: 'Serif',         fonts: ['Georgia', 'Times New Roman', 'Arvo', 'Crimson Text'] },
+  { label: 'Monospace',     fonts: ['Courier New', 'IBM Plex Mono', 'Space Mono'] },
+  { label: 'Display',       fonts: ['Bebas Neue', 'Anton', 'Archivo Black'] },
+  { label: 'Handwriting',   fonts: ['Pacifico'] },
+]
 const STAMP_COLORS: Record<string, string> = {
   blue: '#1d4ed8', red: '#dc2626', orange: '#b45309', gray: '#64748b',
 }
@@ -36,6 +42,7 @@ export default function PropertiesPanel({
   const stmp = selected?.type === 'stamp'      ? (selected as StampElement)      : null
   const drw  = selected?.type === 'draw'       ? (selected as DrawElement)       : null
   const wm   = selected?.type === 'watermark'  ? (selected as WatermarkElement)  : null
+  const tbl  = selected?.type === 'table'      ? (selected as TableElement)      : null
 
   const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <div style={{
@@ -76,7 +83,11 @@ export default function PropertiesPanel({
                 onChange={e => onUpdate(txt.id, { fontFamily: e.target.value } as Partial<PDFElement>)}
                 style={selectStyle}
               >
-                {FONTS.map(f => <option key={f} value={f}>{f}</option>)}
+                {FONT_GROUPS.map(g => (
+                  <optgroup key={g.label} label={g.label}>
+                    {g.fonts.map(f => <option key={f} value={f} style={{ fontFamily: `'${f}', sans-serif` }}>{f}</option>)}
+                  </optgroup>
+                ))}
               </select>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0' }}>
@@ -313,6 +324,73 @@ export default function PropertiesPanel({
             <input type="range" min={10} max={100} step={5} value={Math.round(drw.opacity*100)}
               onChange={e=>onUpdate(drw.id,{opacity:parseInt(e.target.value)/100} as Partial<PDFElement>)}
               style={{ width:'100%', accentColor:'#4f6ef7' }}/>
+          </Card>
+        )}
+
+        {/* ── TABLE ─────────────────────────────── */}
+        {tbl && (
+          <Card title="Table">
+            <p style={{ margin:'0 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Rows &amp; Columns</p>
+            <div style={{ display:'flex', gap:6, marginBottom:10 }}>
+              <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', border:'1.5px solid #e2e8f0', borderRadius:8, padding:'4px 8px' }}>
+                <span style={{ fontSize:11, color:'#475569' }}>Rows</span>
+                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                  <Btn onClick={() => {
+                    if (tbl.rows <= 1) return
+                    const rowHeights = tbl.rowHeights.slice(0, -1)
+                    onUpdate(tbl.id, { rows: tbl.rows - 1, cells: tbl.cells.slice(0, -1), rowHeights, height: rowHeights.reduce((a,b)=>a+b,0) } as Partial<PDFElement>)
+                  }}>−</Btn>
+                  <span style={{ fontSize:12.5, fontWeight:700, minWidth:16, textAlign:'center' }}>{tbl.rows}</span>
+                  <Btn onClick={() => {
+                    const newRowH = tbl.rowHeights.length ? tbl.rowHeights[tbl.rowHeights.length-1] : 30
+                    const rowHeights = [...tbl.rowHeights, newRowH]
+                    onUpdate(tbl.id, { rows: tbl.rows + 1, cells: [...tbl.cells, Array.from({length:tbl.cols},()=>'')], rowHeights, height: rowHeights.reduce((a,b)=>a+b,0) } as Partial<PDFElement>)
+                  }}>+</Btn>
+                </div>
+              </div>
+              <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', border:'1.5px solid #e2e8f0', borderRadius:8, padding:'4px 8px' }}>
+                <span style={{ fontSize:11, color:'#475569' }}>Cols</span>
+                <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                  <Btn onClick={() => {
+                    if (tbl.cols <= 1) return
+                    const colWidths = tbl.colWidths.slice(0, -1)
+                    onUpdate(tbl.id, { cols: tbl.cols - 1, cells: tbl.cells.map(row => row.slice(0, -1)), colWidths, width: colWidths.reduce((a,b)=>a+b,0) } as Partial<PDFElement>)
+                  }}>−</Btn>
+                  <span style={{ fontSize:12.5, fontWeight:700, minWidth:16, textAlign:'center' }}>{tbl.cols}</span>
+                  <Btn onClick={() => {
+                    const newColW = tbl.colWidths.length ? tbl.colWidths[tbl.colWidths.length-1] : 80
+                    const colWidths = [...tbl.colWidths, newColW]
+                    onUpdate(tbl.id, { cols: tbl.cols + 1, cells: tbl.cells.map(row => [...row, '']), colWidths, width: colWidths.reduce((a,b)=>a+b,0) } as Partial<PDFElement>)
+                  }}>+</Btn>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0' }}>
+              <span style={{ fontSize: 11.5, color: '#475569' }}>Font size</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Btn onClick={() => onUpdate(tbl.id, { fontSize: Math.max(6, tbl.fontSize - 1) } as Partial<PDFElement>)}>−</Btn>
+                <span style={{ fontSize: 12.5, fontWeight: 700, minWidth: 26, textAlign: 'center' }}>{tbl.fontSize}</span>
+                <Btn onClick={() => onUpdate(tbl.id, { fontSize: Math.min(48, tbl.fontSize + 1) } as Partial<PDFElement>)}>+</Btn>
+              </div>
+            </div>
+
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', margin:'8px 0' }}>
+              <span style={{ fontSize: 11.5, color: '#475569' }}>Header row</span>
+              <Toggle active={tbl.headerRow} onClick={() => onUpdate(tbl.id, { headerRow: !tbl.headerRow } as Partial<PDFElement>)} style={{ fontSize: 10, padding: '2px 10px' }}>
+                {tbl.headerRow ? 'On' : 'Off'}
+              </Toggle>
+            </div>
+
+            <p style={{ margin:'10px 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Border</p>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8 }}>
+              <input type="color" value={tbl.borderColor} onChange={e=>onUpdate(tbl.id,{borderColor:e.target.value} as Partial<PDFElement>)} style={{ width:28,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1 }}/>
+              <span style={{ fontSize:9.5,color:'#94a3b8',fontFamily:'monospace' }}>{tbl.borderColor}</span>
+            </div>
+            <div style={{ display:'flex', gap:4 }}>
+              {[0.5,1,2].map(w=><button key={w} onClick={()=>onUpdate(tbl.id,{borderWidth:w} as Partial<PDFElement>)} style={{ flex:1,padding:'4px 0',borderRadius:6,fontSize:11,fontWeight:700,border:`1.5px solid ${tbl.borderWidth===w?'#4f6ef7':'#e2e8f0'}`,background:tbl.borderWidth===w?'#4f6ef7':'#f8faff',color:tbl.borderWidth===w?'#fff':'#475569',cursor:'pointer' }}>{w}px</button>)}
+            </div>
+            <p style={{ margin:'10px 0 0', fontSize:10, color:'#94a3b8' }}>Double-click a cell to edit its text.</p>
           </Card>
         )}
 

@@ -94,6 +94,7 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-compressor', label: 'Compress your merged PDF' },
       { slug: 'pdf-page-manager', label: 'Reorder pages before merging' },
       { slug: 'extract-pages', label: 'Extract pages to merge selectively' },
+      { slug: 'scan-to-pdf', label: 'Scan paper documents to add to the merge' },
     ],
     steps: [
       { title: 'Add your PDFs', body: 'Upload two or more PDFs by dragging them onto the page or clicking to browse. You can add files from multiple folders.' },
@@ -113,7 +114,7 @@ const data: Record<string, ToolSEOData> = {
     whatIs: [
       'What is a PDF compressor?',
       'A PDF compressor reduces the file size of a PDF document by re-encoding embedded images at lower quality and removing redundant data. A 25 MB scan of a brochure can often be brought down to 2–3 MB with no visible difference on screen — making it suitable for email, web upload, or cloud storage.',
-      'PDF compression is especially useful when a service imposes a file-size limit (many email providers cap attachments at 10–25 MB). EditPDF AI\'s compressor runs directly in your browser using WebAssembly, so your document is never uploaded to any external server.',
+      'PDF compression is especially useful when a service imposes a file-size limit (many email providers cap attachments at 10–25 MB). Getting real size reductions requires re-encoding the embedded images, so EditPDF AI\'s compressor uploads your file over HTTPS to run Ghostscript on our server — the temporary copy is deleted immediately after your download starts.',
     ],
     users: [
       { who: 'Office & admin professionals', why: 'Compress scanned contracts, reports, and brochures so they fit inside email attachment limits before sending.' },
@@ -126,18 +127,19 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-to-images', label: 'Convert PDF pages to images' },
       { slug: 'image-to-pdf', label: 'Convert images to a PDF' },
       { slug: 'pdf-editor', label: 'Edit your PDF before compressing' },
+      { slug: 'scan-to-pdf', label: 'Scan a document, then compress the result' },
     ],
     steps: [
-      { title: 'Upload your PDF', body: 'Drag your PDF onto the page or click to select it. The file stays local — it never leaves your device.' },
+      { title: 'Upload your PDF', body: 'Drag your PDF onto the page or click to select it. It\'s uploaded securely over HTTPS for compression.' },
       { title: 'Select compression level', body: 'Choose Light (minimal quality loss), Balanced, or Maximum (smallest file, reduced image quality). A preview shows the estimated saving.' },
-      { title: 'Download the compressed file', body: 'Click Compress. Your reduced PDF downloads in seconds. Compare the before and after file sizes right on screen.' },
+      { title: 'Download the compressed file', body: 'Click Compress. Your reduced PDF downloads in seconds, and the temporary copy on our server is deleted right after.' },
     ],
     faqs: [
       { q: 'How much can I reduce a PDF file size?', a: 'It depends on the content. PDFs with lots of high-resolution images can be reduced by 50–90%. Text-only PDFs typically shrink by 10–30%.' },
       { q: 'Does compression affect text quality?', a: 'No. Text is vector data and is not affected by image compression. Only embedded raster images are re-encoded at a lower quality.' },
       { q: 'Can I compress a PDF that is already compressed?', a: 'Yes, but gains will be smaller. If the images were already compressed at creation time, our tool will apply further compression — though the saving may only be a few percent.' },
       { q: 'Is the compression lossless or lossy?', a: 'Our default modes use lossy image compression to achieve the largest file size reduction. For presentations or archival documents where image quality must be perfect, choose Light compression.' },
-      { q: 'Does my file get uploaded to your servers?', a: 'No. Compression runs entirely in your browser using WebAssembly. Your PDF is never sent to any server.' },
+      { q: 'Does my file get uploaded to your servers?', a: 'Yes. Compression needs server-side image re-encoding (Ghostscript) to get real size reductions, so your file is uploaded over HTTPS, processed in a temporary location, and deleted immediately after your download — it is never stored long-term.' },
     ],
   },
 
@@ -209,7 +211,7 @@ const data: Record<string, ToolSEOData> = {
     whatIs: [
       'What is a PDF password lock?',
       'A PDF password lock encrypts a PDF file so that anyone who tries to open it must enter the correct password first. Without the password, the content is completely unreadable — even if someone obtains a copy of the file. EditPDF AI uses AES-256 encryption, the strongest level available in the PDF specification, equivalent to the standard used by banks and government agencies.',
-      'Beyond an open password, you can also set a permissions password that restricts what a recipient can do with the document — preventing printing, copying text, or making edits — even after they have opened it. All encryption runs in your browser, so your document and password are never sent to any server.',
+      'Beyond an open password, you can also set a permissions password that restricts what a recipient can do with the document — preventing printing, copying text, or making edits — even after they have opened it. Encryption runs on our server using qpdf, over an HTTPS connection; your file and the password are used only to produce the locked PDF and are deleted immediately afterward.',
     ],
     users: [
       { who: 'HR & payroll teams', why: 'Password-protect payslips, salary letters, and personal employee records before emailing them to individuals.' },
@@ -224,16 +226,16 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-signer', label: 'Digitally sign your PDF' },
     ],
     steps: [
-      { title: 'Upload your PDF', body: 'Select the PDF you want to protect. It is processed entirely in your browser.' },
+      { title: 'Upload your PDF', body: 'Select the PDF you want to protect. It is uploaded securely over HTTPS to be encrypted.' },
       { title: 'Set a password', body: 'Enter an open password (required to view) and optionally a permissions password (controls printing and editing rights).' },
-      { title: 'Download the protected file', body: 'Click Protect PDF. The encrypted file downloads instantly — open it in any PDF viewer and the password will be required.' },
+      { title: 'Download the protected file', body: 'Click Protect PDF. The encrypted file downloads instantly, and the temporary copy on our server is deleted right after — open it in any PDF viewer and the password will be required.' },
     ],
     faqs: [
       { q: 'What encryption does the PDF password use?', a: 'We apply AES-256 encryption, the same standard used by banks and government agencies. It is the strongest encryption available in the PDF specification.' },
       { q: 'Can I set different passwords for viewing and editing?', a: 'Yes. The "open" password is required to open the file. The "permissions" password controls whether the viewer can print or copy text, even after opening.' },
       { q: 'Can I remove the password from a PDF I own?', a: 'If you know the password, yes — open the protected PDF in our tool and use the Remove Password option.' },
       { q: 'Does password protection prevent copying text?', a: 'You can restrict copying by setting a permissions password. Without the permissions password, the viewer cannot copy text from the PDF.' },
-      { q: 'Is my PDF sent to a server?', a: 'No. Encryption runs in your browser using WebAssembly. Your document and password are never transmitted over the internet.' },
+      { q: 'Is my PDF sent to a server?', a: 'Yes. Encryption runs on our server using qpdf over an HTTPS connection. Your file and password are used only to create the locked PDF and are deleted immediately afterward — never stored long-term.' },
     ],
   },
 
@@ -762,6 +764,7 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-merger', label: 'Merge image PDFs into one' },
       { slug: 'pdf-compressor', label: 'Compress the PDF after converting' },
       { slug: 'pdf-editor', label: 'Edit your new PDF' },
+      { slug: 'scan-to-pdf', label: 'Scan paper documents with your camera instead' },
     ],
     steps: [
       { title: 'Upload your images', body: 'Drag one or more JPG, PNG, WEBP, GIF, or BMP images onto the page. You can mix image formats in one PDF.' },
@@ -837,7 +840,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Can I convert a scanned PDF to Word?', a: 'For scanned PDFs (image-only), use our PDF OCR tool first to extract the text, then convert to Word.' },
       { q: 'What Word format does the output use?', a: 'The output is a .docx file compatible with Microsoft Word 2007 and later, Google Docs, LibreOffice, and all modern word processors.' },
       { q: 'Are images in the PDF included in the Word document?', a: 'Yes. Images are extracted and embedded in the .docx file at their original resolution.' },
-      { q: 'Is the PDF sent to a server for conversion?', a: 'This conversion uses our secure cloud processing to achieve the best layout accuracy. Files are deleted immediately after download.' },
+      { q: 'Is the PDF sent to a server for conversion?', a: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text (not the PDF) is sent to the AI to rebuild the document as Word.' },
     ],
   },
 
@@ -869,7 +872,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Can it convert multiple tables from one PDF?', a: 'Yes. All tables detected on all pages are extracted into separate sheets or sequential rows in the output spreadsheet.' },
       { q: 'What Excel format is the output?', a: 'The output is a .xlsx file compatible with Microsoft Excel 2007 and later, Google Sheets, and LibreOffice Calc.' },
       { q: 'What if my PDF is a scanned image?', a: 'Use our PDF OCR tool first to convert the scan to searchable text, then convert to Excel.' },
-      { q: 'Is my file kept private?', a: 'Files are processed securely and deleted immediately after your download. They are never stored or shared.' },
+      { q: 'Is my file kept private?', a: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text (not the PDF) is sent to the AI to build the spreadsheet.' },
     ],
   },
 
@@ -933,7 +936,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'How many pages can I convert?', a: 'There is no hard limit. PDFs with dozens of pages convert into the equivalent number of slides.' },
       { q: 'Can I edit the text in PowerPoint after conversion?', a: 'Because each slide is a rendered image of the PDF page, text is not editable. For editable text, use our PDF to Word converter and paste content into slides manually.' },
       { q: 'What PowerPoint format is the output?', a: 'The output is a .pptx file compatible with PowerPoint 2007+, Google Slides, and LibreOffice Impress.' },
-      { q: 'Is my PDF processed on a server?', a: 'Files are processed securely and deleted immediately after your download.' },
+      { q: 'Is my PDF processed on a server?', a: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text (not the PDF) is sent to the AI to rebuild the document as Word.' },
     ],
   },
 
@@ -997,7 +1000,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Will speaker notes be included?', a: 'By default, slides only are included. Notes are not rendered in the standard conversion.' },
       { q: 'Can I convert .ppt (older PowerPoint format) files?', a: 'Yes. Both .pptx (PowerPoint 2007+) and the older .ppt format are supported.' },
       { q: 'Are embedded images and charts preserved?', a: 'Yes. All images, charts, SmartArt, and text boxes are rendered in the PDF at their original quality.' },
-      { q: 'Is my file sent to a server?', a: 'Conversion runs on our secure servers for accurate rendering and files are deleted immediately after download.' },
+      { q: 'Is my file sent to a server?', a: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text (not the PDF) is sent to the AI to rebuild the slides.' },
     ],
   },
 
@@ -1029,7 +1032,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Can I convert a webpage from a URL?', a: 'Yes. Paste any public URL and the page is loaded and converted including its external stylesheets and images.' },
       { q: 'What page size is used?', a: 'You can choose A4 or US Letter. Margins are configurable so content is not cut off at the edges.' },
       { q: 'Are embedded images included?', a: 'Yes. Images referenced by absolute URLs or embedded as base64 are included in the PDF.' },
-      { q: 'Is the URL or HTML file kept private?', a: 'Conversion is processed securely and all data is deleted immediately after the PDF is delivered.' },
+      { q: 'Is the URL or HTML file kept private?', a: 'Yes. Conversion runs entirely in your browser — nothing is uploaded to a server.' },
     ],
   },
 
@@ -1093,7 +1096,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Are tables and images preserved?', a: 'Yes. Tables, embedded images, headers, footers, and text formatting all transfer to the PDF output.' },
       { q: 'Can I convert .ods (OpenDocument Spreadsheet) or .odp (Presentation) files?', a: 'Those formats require a different conversion. Use Excel to PDF for spreadsheets and PPT to PDF for presentations.' },
       { q: 'Will custom fonts in the ODT appear correctly?', a: 'Standard fonts are embedded. Custom fonts that are not installed in our conversion environment may be substituted with a close match.' },
-      { q: 'Is my ODT file processed securely?', a: 'Yes. Files are processed on secure servers and deleted immediately after conversion.' },
+      { q: 'Is my ODT file processed securely?', a: 'Yes. Conversion runs entirely in your browser — your ODT file is never uploaded to a server.' },
     ],
   },
 
@@ -1125,7 +1128,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Is text formatting preserved?', a: 'Yes. Bold, italic, underline, font sizes, paragraph styles, and basic table structures are all carried over to the PDF.' },
       { q: 'Can I convert large RTF files?', a: 'Yes. There is no page or file size limit for RTF conversion.' },
       { q: 'Are images in the RTF file included in the PDF?', a: 'Yes. Images embedded in the RTF file are extracted and placed in the PDF at their original positions.' },
-      { q: 'Is my file kept private during conversion?', a: 'Yes. Files are processed securely and deleted immediately after your PDF is ready.' },
+      { q: 'Is my file kept private during conversion?', a: 'Yes. Conversion runs entirely in your browser — your RTF file is never uploaded to a server.' },
     ],
   },
 
@@ -1142,6 +1145,7 @@ const data: Record<string, ToolSEOData> = {
       { who: 'Accounts & data entry teams', why: 'Convert scanned invoices and receipts into machine-readable text for automatic extraction into accounting or ERP systems.' },
     ],
     related: [
+      { slug: 'scan-to-pdf', label: 'Scan a paper document first with your camera' },
       { slug: 'pdf-summarizer', label: 'Summarise the extracted text' },
       { slug: 'pdf-to-word', label: 'Convert the PDF to editable Word' },
       { slug: 'pdf-translator', label: 'Translate the PDF to another language' },
@@ -1253,7 +1257,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Can AI detect what to redact automatically?', a: 'Yes. The AI scanner can identify patterns like names, email addresses, phone numbers, dates, and financial figures. You review and approve the suggestions before applying.' },
       { q: 'Does redaction work on scanned PDFs?', a: 'For scanned PDFs (image-only), the redaction removes the image pixels in the selected area. Run OCR first if you need text-based detection on a scanned document.' },
       { q: 'Can I redact images as well as text?', a: 'Yes. Draw a redaction box over any area — text or image — and it will be permanently blacked out in the output.' },
-      { q: 'Is the unredacted document sent to any server?', a: 'The original PDF is processed securely. If AI detection is used, text is sent to our AI backend. All data is deleted immediately after processing.' },
+      { q: 'Is the unredacted document sent to any server?', a: 'No. Redaction runs entirely in your browser — the original PDF is never uploaded to a server.' },
     ],
   },
 
@@ -1411,7 +1415,7 @@ const data: Record<string, ToolSEOData> = {
     faqs: [
       { q: 'What types of questions can be generated?', a: 'Multiple-choice questions with four options, true/false questions, and short-answer questions are all supported.' },
       { q: 'How many questions can be generated?', a: 'Free users can generate up to 10 questions per session. Pro users can generate up to 50 questions per document.' },
-      { q: 'Are the questions accurate to the source material?', a: 'Questions are grounded in the document content. The AI does not invent facts — all answers are traceable to the source PDF.' },
+      { q: 'Are the questions accurate to the source material?', a: 'Questions are generated from the text of your document, and each one is editable before use. As with any generative AI, review answers for accuracy — especially for exams or graded material — before relying on them.' },
       { q: 'Can I edit the questions before using them?', a: 'Yes. All generated questions and answers are editable before you download or take the quiz.' },
       { q: 'Is my document sent to a server?', a: 'The text is sent to our AI backend for question generation and deleted immediately after the quiz is created.' },
     ],

@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 export const metadata: Metadata = {
   title: { absolute: 'About EditPDF AI – Our Story and Privacy Approach' },
-  description: 'EditPDF AI is an independent PDF tool suite built in Australia. Learn who we are, how your files are handled, and why we keep 35+ tools permanently free.',
+  description: 'EditPDF AI is an independent PDF tool suite built in Australia. Learn who we are, how your files are handled, and why we keep 50+ tools permanently free.',
   alternates: { canonical: 'https://www.editpdfai.com/about' },
   robots: { index: true, follow: true },
   openGraph: {
@@ -27,7 +27,7 @@ const VALUES = [
   {
     icon: '🔓',
     title: 'Free by default',
-    body: 'We believe powerful PDF tools should not cost money. All 35+ core tools are permanently free — no trial period, no hidden limits, no credit card.',
+    body: 'We believe powerful PDF tools should not cost money. All 50+ core tools are permanently free — no trial period, no hidden limits, no credit card.',
   },
   {
     icon: '🔒',
@@ -47,7 +47,7 @@ const VALUES = [
 ]
 
 const STATS = [
-  { value: '35+',  label: 'Free PDF tools' },
+  { value: '50+',  label: 'Free PDF tools' },
   { value: '100%', label: 'Browser-based, no install' },
   { value: '$0',   label: 'Cost for core tools' },
   { value: '$1',   label: 'Pro plan per month' },
@@ -87,7 +87,7 @@ const orgSchema = {
     contactType: 'customer support',
     availableLanguage: 'English',
   },
-  description: 'Independent PDF tool suite with 35+ browser-based tools and AI features. Built in Australia.',
+  description: 'Independent PDF tool suite with 50+ browser-based tools and AI features. Built in Australia.',
 }
 
 export default function AboutPage() {

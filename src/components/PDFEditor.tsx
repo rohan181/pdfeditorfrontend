@@ -15,7 +15,7 @@ import { useScannedDetection } from '@/hooks/useScannedDetection'
 import type {
   PDFElement, PDFSource, PageSlot, ToolMode,
   TextElement, ImageElement, SignatureElement, StampElement, HighlightElement,
-  MarkElement, AnnotationElement, ShapeElement, DrawElement, WatermarkElement,
+  MarkElement, AnnotationElement, ShapeElement, DrawElement, WatermarkElement, TableElement,
 } from '@/types'
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -32,6 +32,139 @@ function pdfFontFor(fontFamily: string, bold: boolean, italic: boolean) {
   if (mono)  return bold && italic ? 'Courier-BoldOblique' : bold ? 'Courier-Bold' : italic ? 'Courier-Oblique' : 'Courier'
   if (serif) return bold && italic ? 'Times-BoldItalic'    : bold ? 'Times-Bold'   : italic ? 'Times-Italic'    : 'Times-Roman'
   return       bold && italic ? 'Helvetica-BoldOblique' : bold ? 'Helvetica-Bold' : italic ? 'Helvetica-Oblique' : 'Helvetica'
+}
+
+// The on-screen "Inter" choice was never actually loaded as a web font
+// anywhere in this app, so the browser silently substituted whatever
+// generic sans-serif the OS happens to have (San Francisco on macOS, Segoe
+// UI on Windows, ...) — a different, wider/narrower face than the Helvetica
+// pdf-lib embeds on export, which is exactly what made the two drift apart.
+// Render with an explicit, predictable stack that lines up with pdfFontFor.
+// Wrap a paragraph to fit maxW using the SAME font/size that will actually be
+// drawn, so each resulting line can be measured and aligned individually.
+// (pdf-lib's own `maxWidth` auto-wrap only left-aligns from the given x — it
+// can't be centered/right-aligned per wrapped line, which is what made long
+// or centered text drift between the editor and the export.)
+function wrapTextToWidth(text: string, font: any, fs: number, maxW: number): string[] {
+  if (!text) return ['']
+  const words = text.split(' ')
+  const lines: string[] = []
+  let cur = ''
+  for (const word of words) {
+    const test = cur ? `${cur} ${word}` : word
+    if (cur && font.widthOfTextAtSize(test, fs) > maxW) {
+      lines.push(cur)
+      cur = word
+    } else {
+      cur = test
+    }
+  }
+  lines.push(cur)
+  return lines
+}
+
+function screenFontStack(fontFamily: string): string {
+  if (CUSTOM_FONTS[fontFamily]) return `'${fontFamily}', sans-serif`
+  switch (fontFamily) {
+    case 'Georgia':          return 'Georgia, serif'
+    case 'Times New Roman':  return "'Times New Roman', Times, serif"
+    case 'Courier New':      return "'Courier New', Courier, monospace"
+    case 'Arial':            return 'Arial, Helvetica, sans-serif'
+    default:                 return "'Helvetica Neue', Helvetica, Arial, sans-serif" // 'Inter' + anything else
+  }
+}
+
+// Fonts embedded from self-hosted .ttf files (see the matching @font-face
+// rules in globals.css) instead of pdf-lib's 14 built-in standard fonts.
+// Because the on-screen CSS and the PDF export both load the exact same font
+// file, text set in one of these families lines up between editor and export
+// with none of the width guesswork the 5 system-font fallbacks need (vertical
+// positioning is handled separately — see measureLineBaselineOffset below).
+const CUSTOM_FONTS: Record<string, { regular: string; bold: string }> = {
+  'Lato':          { regular: '/fonts/lato-regular.ttf',         bold: '/fonts/lato-bold.ttf' },
+  'Poppins':       { regular: '/fonts/poppins-regular.ttf',      bold: '/fonts/poppins-bold.ttf' },
+  'Arvo':          { regular: '/fonts/arvo-regular.ttf',         bold: '/fonts/arvo-bold.ttf' },
+  'Crimson Text':  { regular: '/fonts/crimsontext-regular.ttf',  bold: '/fonts/crimsontext-bold.ttf' },
+  'IBM Plex Mono': { regular: '/fonts/ibmplexmono-regular.ttf',  bold: '/fonts/ibmplexmono-bold.ttf' },
+  'Space Mono':    { regular: '/fonts/spacemono-regular.ttf',    bold: '/fonts/spacemono-bold.ttf' },
+  'Bebas Neue':    { regular: '/fonts/bebasneue-regular.ttf',    bold: '/fonts/bebasneue-regular.ttf' },
+  'Anton':         { regular: '/fonts/anton-regular.ttf',        bold: '/fonts/anton-regular.ttf' },
+  'Archivo Black': { regular: '/fonts/archivoblack-regular.ttf', bold: '/fonts/archivoblack-regular.ttf' },
+  'Pacifico':      { regular: '/fonts/pacifico-regular.ttf',     bold: '/fonts/pacifico-regular.ttf' },
+}
+
+const fontBytesCache = new Map<string, Promise<ArrayBuffer>>()
+function fetchFontBytes(url: string): Promise<ArrayBuffer> {
+  let pending = fontBytesCache.get(url)
+  if (!pending) {
+    pending = fetch(url).then(r => r.arrayBuffer())
+    fontBytesCache.set(url, pending)
+  }
+  return pending
+}
+
+const fontkitRegisteredDocs = new WeakSet<object>()
+// Embeds whichever font a text element needs — a pdf-lib standard font for
+// the 5 system-font choices, or one of the self-hosted .ttf files above —
+// and returns the embedded PDFFont ready for drawText/widthOfTextAtSize.
+async function embedTextFont(doc: any, fontFamily: string, bold: boolean, italic: boolean) {
+  const custom = CUSTOM_FONTS[fontFamily]
+  if (custom) {
+    if (!fontkitRegisteredDocs.has(doc)) {
+      const fontkit = (await import('@pdf-lib/fontkit')).default
+      doc.registerFontkit(fontkit)
+      fontkitRegisteredDocs.add(doc)
+    }
+    const bytes = await fetchFontBytes(bold ? custom.bold : custom.regular)
+    return doc.embedFont(bytes, { subset: true })
+  }
+  return doc.embedFont(pdfFontFor(fontFamily, bold, italic))
+}
+
+// How far a text box's first line's BASELINE sits below its top edge, in the
+// SAME px units as `fontSizePx` — measured directly from a real, hidden
+// on-screen render of the exact CSS TextDisplay uses (line-height, weight,
+// style, font-family fallback stack), rather than modelled from font-metric
+// tables. Font-metric-table approaches (pdf-lib's heightAtSize, Canvas
+// fontBoundingBoxAscent/Descent) were both tried here and both left a
+// several-point gap from the real rendered position — browsers don't split
+// line-height into ascent/half-leading using a formula that lines up cleanly
+// with any single metric source, and that gap grows with font size. Actually
+// rendering the text and measuring it sidesteps needing to reverse-engineer
+// that algorithm: whatever the browser does internally, this reads off the
+// real result directly, so it can't drift from what's on screen.
+// A single "M" is used as the probe character (flat baseline, no ascender
+// overshoot, no descender) so the Range's bottom edge IS the baseline exactly
+// — the actual text's content/length doesn't affect a single line's vertical
+// position, only its horizontal wrapping (handled separately, elsewhere).
+let _measureEl: HTMLDivElement | null = null
+const lineBaselineOffsetCache = new Map<string, number>()
+function measureLineBaselineOffset(fontFamily: string, fontSizePx: number, lineHeightMult: number | 'normal', bold: boolean, italic: boolean): number {
+  const key = `${fontFamily}|${fontSizePx}|${lineHeightMult}|${bold}|${italic}`
+  const cached = lineBaselineOffsetCache.get(key)
+  if (cached != null) return cached
+  if (typeof document === 'undefined') return fontSizePx * 0.85 // SSR/non-browser guard, never hit in practice (export is client-only)
+
+  if (!_measureEl) {
+    _measureEl = document.createElement('div')
+    _measureEl.style.cssText = 'position:fixed;left:-99999px;top:0;visibility:hidden;pointer-events:none;white-space:pre-wrap;margin:0;box-sizing:border-box;'
+    document.body.appendChild(_measureEl)
+  }
+  _measureEl.style.fontSize = `${fontSizePx}px`
+  _measureEl.style.fontFamily = screenFontStack(fontFamily)
+  _measureEl.style.fontWeight = bold ? '700' : '400'
+  _measureEl.style.fontStyle = italic ? 'italic' : 'normal'
+  _measureEl.style.lineHeight = String(lineHeightMult)
+  _measureEl.textContent = 'M'
+
+  const range = document.createRange()
+  range.selectNodeContents(_measureEl.firstChild!)
+  const textRect = range.getBoundingClientRect()
+  const boxRect = _measureEl.getBoundingClientRect()
+  const offset = textRect.bottom - boxRect.top
+
+  lineBaselineOffsetCache.set(key, offset)
+  return offset
 }
 
 // ── pdfjs loader (singleton) ─────────────────────────────────────────────────
@@ -301,7 +434,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
   const fs = el.fontSize * scale
   const lh = el.lineHeight ?? 1.4
   const base: React.CSSProperties = {
-    width: '100%', height: '100%', fontSize: fs, fontFamily: el.fontFamily,
+    width: '100%', height: '100%', fontSize: fs, fontFamily: screenFontStack(el.fontFamily),
     color: el.color, fontWeight: el.bold ? 700 : 400,
     fontStyle: el.italic ? 'italic' : 'normal',
     textDecoration: el.underline ? 'underline' : 'none',
@@ -330,6 +463,73 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
         whiteSpace: 'pre-wrap', minHeight: '1em' }}>
       {el.text || <span style={{ opacity: 0.3, fontStyle: 'italic' }}>Double-click to type…</span>}
     </div>
+  )
+}
+
+// Cell editing is local to the table (double-click a cell, type, blur/Enter to
+// commit) rather than going through the app's single-element editingId, since
+// a table's "editing" is per-cell, not per-element. Keystrokes inside the cell
+// <input> stop propagation so global shortcuts (Delete/Backspace especially)
+// don't delete the whole table while the user is just editing a cell's text.
+function TableDisplay({ el, scale, onUpdate }: {
+  el: TableElement; scale: number
+  onUpdate: (updates: Partial<TableElement>) => void
+}) {
+  const [editingCell, setEditingCell] = useState<[number, number] | null>(null)
+  const setCellText = (r: number, c: number, value: string) => {
+    const cells = el.cells.map(row => [...row])
+    cells[r][c] = value
+    onUpdate({ cells })
+  }
+  const fs = el.fontSize * scale
+  return (
+    <table style={{
+      width: '100%', height: '100%', borderCollapse: 'collapse', tableLayout: 'fixed',
+      cursor: editingCell ? 'text' : 'move', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    }}>
+      <colgroup>
+        {el.colWidths.map((w, i) => <col key={i} style={{ width: w * scale }} />)}
+      </colgroup>
+      <tbody>
+        {el.cells.map((row, r) => (
+          <tr key={r} style={{ height: el.rowHeights[r] * scale }}>
+            {row.map((val, c) => {
+              const isHeader = el.headerRow && r === 0
+              const isEditing = editingCell?.[0] === r && editingCell?.[1] === c
+              return (
+                <td key={c}
+                  onDoubleClick={e => { e.stopPropagation(); setEditingCell([r, c]) }}
+                  style={{
+                    border: `${Math.max(0.5, el.borderWidth * scale)}px solid ${el.borderColor}`,
+                    padding: '2px 4px', fontSize: fs, fontWeight: isHeader ? 700 : 400,
+                    background: isHeader ? '#f1f5f9' : '#fff',
+                    overflow: 'hidden', verticalAlign: 'middle', color: '#1b1c1c',
+                  }}>
+                  {isEditing ? (
+                    <input
+                      autoFocus value={val}
+                      onChange={e => setCellText(r, c, e.target.value)}
+                      onClick={e => e.stopPropagation()}
+                      onMouseDown={e => e.stopPropagation()}
+                      onBlur={() => setEditingCell(null)}
+                      onKeyDown={e => {
+                        e.stopPropagation()
+                        if (e.key === 'Enter' || e.key === 'Escape') e.currentTarget.blur()
+                      }}
+                      style={{
+                        width: '100%', border: 'none', outline: 'none', background: 'transparent',
+                        fontSize: fs, fontWeight: isHeader ? 700 : 400, fontFamily: 'inherit', color: 'inherit',
+                      }} />
+                  ) : (
+                    <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{val}</span>
+                  )}
+                </td>
+              )
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 
@@ -2023,6 +2223,19 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
       }
       setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
       setSelectedId(el.id); setToolMode('select')
+    } else if (toolMode === 'table') {
+      const rows = 3, cols = 3, w = 300, h = 120
+      const el: TableElement = {
+        id: uuidv4(), type: 'table', x, y, width: w, height: h,
+        rows, cols,
+        cells: Array.from({ length: rows }, () => Array.from({ length: cols }, () => '')),
+        colWidths: Array.from({ length: cols }, () => w / cols),
+        rowHeights: Array.from({ length: rows }, () => h / rows),
+        fontSize: 11, headerRow: true, borderColor: '#94a3b8', borderWidth: 1,
+        pageSlotId: slotId,
+      }
+      setElements(prev => { const next = [...prev, el]; pushHistory(next); return next })
+      setSelectedId(el.id); setToolMode('select')
     } else {
       setSelectedId(null); setEditingId(null)
     }
@@ -2280,6 +2493,17 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
         }))
         return { ...e, ...updates, points } as PDFElement
       }
+      // Same idea for tables: colWidths/rowHeights are absolute (sum to
+      // width/height), so a resize must scale them proportionally or the
+      // grid lines stop lining up with the box the user just dragged to.
+      if (e.type === 'table' && (updates.width !== undefined || updates.height !== undefined)) {
+        const te = e as TableElement
+        const newW = updates.width ?? te.width, newH = updates.height ?? te.height
+        const wRatio = newW / (te.width || 1), hRatio = newH / (te.height || 1)
+        const colWidths = te.colWidths.map(w => w * wRatio)
+        const rowHeights = te.rowHeights.map(h => h * hRatio)
+        return { ...e, ...updates, colWidths, rowHeights } as PDFElement
+      }
       return { ...e, ...updates } as PDFElement
     }))
   }, [])
@@ -2313,20 +2537,52 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
     setSelectedId(null); setEditingId(null)
   }
 
+  // Cmd/Ctrl+C / Cmd/Ctrl+V clipboard, kept separate from duplicateEl (Cmd/Ctrl+D)
+  // so copy-then-paste-repeatedly stacks each paste from the ORIGINAL copy point
+  // (like every other editor), rather than compounding off the previous paste.
+  const clipboard = useRef<PDFElement | null>(null)
+  const pasteCount = useRef(0)
+  const copySelected = useCallback(() => {
+    const src = elements.find(e => e.id === selectedId)
+    if (!src) return
+    clipboard.current = src
+    pasteCount.current = 0
+  }, [elements, selectedId])
+  const pasteClipboard = useCallback(() => {
+    const src = clipboard.current
+    if (!src) return
+    const slotId = slots[slotIdx]?.id
+    if (!slotId) return
+    pasteCount.current += 1
+    const offset = 16 * pasteCount.current
+    const copy: PDFElement = src.type === 'draw'
+      ? { ...src, id: uuidv4(), x: src.x + offset, y: src.y + offset, pageSlotId: slotId,
+          points: src.points.map(p => ({ x: p.x + offset, y: p.y + offset })) }
+      : { ...src, id: uuidv4(), x: src.x + offset, y: src.y + offset, pageSlotId: slotId }
+    setElements(prev => { const next = [...prev, copy]; pushHistory(next); return next })
+    setSelectedId(copy.id); setEditingId(null)
+  }, [slots, slotIdx, pushHistory])
+
   // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Let native copy/paste behave normally inside real text fields elsewhere
+      // in the editor (rename inputs, etc.) instead of hijacking them for elements.
+      const activeTag = (document.activeElement as HTMLElement | null)?.tagName
+      const inTextField = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || (document.activeElement as HTMLElement | null)?.isContentEditable
       if (e.key === 'Escape') { setEditingId(null); setSelectedId(null); setShowDateMenu(false) }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId && !editingId)
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId && !editingId && !inTextField)
         deleteEl(selectedId)
       const mod = e.ctrlKey || e.metaKey
       if (mod && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo() }
       if (mod && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo() }
-      if (mod && e.key === 'd' && selectedId && !editingId) { e.preventDefault(); duplicateEl(selectedId) }
+      if (mod && e.key === 'd' && selectedId && !editingId && !inTextField) { e.preventDefault(); duplicateEl(selectedId) }
+      if (mod && e.key === 'c' && selectedId && !editingId && !inTextField) { e.preventDefault(); copySelected() }
+      if (mod && e.key === 'v' && clipboard.current && !editingId && !inTextField) { e.preventDefault(); pasteClipboard() }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selectedId, editingId, deleteEl, duplicateEl, undo, redo])
+  }, [selectedId, editingId, deleteEl, duplicateEl, copySelected, pasteClipboard, undo, redo])
 
   // ── Scroll sidebar to active page when slotIdx changes or sidebar opens ─────
   const scrollSidebarToSlot = useCallback((idx: number) => {
@@ -2467,8 +2723,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
 
       for (const el of slotElems) {
         if (el.type === 'text') {
-          const fontName = pdfFontFor(el.fontFamily, el.bold, el.italic)
-          const font = await out.embedFont(fontName)
+          const font = await embedTextFont(out, el.fontFamily, el.bold, el.italic)
           const hex = el.color.replace('#', '')
           const r = parseInt(hex.slice(0, 2), 16) / 255
           const g = parseInt(hex.slice(2, 4), 16) / 255
@@ -2490,21 +2745,85 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
           }
           const boxX = el.x * xR, boxW = el.width * xR
           const boxTop = pH - el.y * yR
-          const lines = el.text.split('\n')
-          // Matches the on-screen box: align:'center' vertically centers the whole
-          // text block (flexbox), left/right stay top-anchored with ~1px padding.
+          const lines = el.text.split('\n').flatMap(paragraph => wrapTextToWidth(paragraph, font, fs, boxW - 8))
+          // Matches the on-screen box by measuring it directly (see
+          // measureLineBaselineOffset) rather than modelling CSS line-height
+          // math from font-metric tables, which — even using the embedded
+          // font's own real ascent/descent — didn't reliably land on the
+          // browser's actual rendered baseline position.
+          const firstLineOffset = measureLineBaselineOffset(el.fontFamily, el.fontSize, el.lineHeight ?? 1.4, el.bold, el.italic) * yR
           let dy = el.align === 'center'
-            ? boxTop - (el.height * yR - lines.length * lh) / 2 - fs * 0.82
-            : boxTop - fs * 0.85
+            ? boxTop - (el.height * yR - lines.length * lh) / 2 - firstLineOffset
+            : boxTop - firstLineOffset - 1 * yR
           for (const line of lines) {
             if (line.trim()) {
               const lineWidth = font.widthOfTextAtSize(line, fs)
               const x = el.align === 'center' ? boxX + (boxW - lineWidth) / 2
                       : el.align === 'right'  ? boxX + boxW - lineWidth - 4
                       : boxX + 4
-              libPage.drawText(line, { x, y: dy, size: fs, font, color: rgb(r, g, b), maxWidth: boxW - 8 })
+              libPage.drawText(line, { x, y: dy, size: fs, font, color: rgb(r, g, b) })
             }
             dy -= lh
+          }
+        } else if (el.type === 'table') {
+          const font = await embedTextFont(out, 'Inter', false, false)
+          const boldFont = await embedTextFont(out, 'Inter', true, false)
+          const bh = el.borderColor.replace('#', '')
+          const br = parseInt(bh.slice(0, 2), 16) / 255
+          const bg = parseInt(bh.slice(2, 4), 16) / 255
+          const bb = parseInt(bh.slice(4, 6), 16) / 255
+          const tX = el.x * xR, tTop = pH - el.y * yR
+          const colW = el.colWidths.map(w => w * xR)
+          const rowH = el.rowHeights.map(h => h * yR)
+          const fs = el.fontSize * xR
+          // Header row shading, drawn before the grid lines so borders sit on top
+          if (el.headerRow && rowH.length) {
+            libPage.drawRectangle({
+              x: tX, y: tTop - rowH[0], width: colW.reduce((a, b) => a + b, 0), height: rowH[0],
+              color: rgb(0.945, 0.961, 0.976),
+            })
+          }
+          // Grid lines: horizontal per row boundary, vertical per column boundary
+          let rowY = tTop
+          for (let r = 0; r <= el.rows; r++) {
+            libPage.drawLine({
+              start: { x: tX, y: rowY }, end: { x: tX + colW.reduce((a, b) => a + b, 0), y: rowY },
+              thickness: el.borderWidth * xR, color: rgb(br, bg, bb),
+            })
+            if (r < el.rows) rowY -= rowH[r]
+          }
+          let colX = tX
+          for (let c = 0; c <= el.cols; c++) {
+            libPage.drawLine({
+              start: { x: colX, y: tTop }, end: { x: colX, y: tTop - rowH.reduce((a, b) => a + b, 0) },
+              thickness: el.borderWidth * xR, color: rgb(br, bg, bb),
+            })
+            if (c < el.cols) colX += colW[c]
+          }
+          // Cell text, top-anchored within each cell like the on-screen <td>
+          // (which uses browser-default 'normal' line-height, not an explicit
+          // multiplier — matched here so the measurement reflects the same box).
+          const baseOffset     = measureLineBaselineOffset('Inter', el.fontSize, 'normal', false, false) * yR
+          const boldBaseOffset = measureLineBaselineOffset('Inter', el.fontSize, 'normal', true, false) * yR
+          rowY = tTop
+          for (let r = 0; r < el.rows; r++) {
+            let cx = tX
+            const isHeader = el.headerRow && r === 0
+            const cellFont = isHeader ? boldFont : font
+            const cellOffset = isHeader ? boldBaseOffset : baseOffset
+            for (let c = 0; c < el.cols; c++) {
+              const text = el.cells[r]?.[c] ?? ''
+              if (text.trim()) {
+                const lines = wrapTextToWidth(text, cellFont, fs, colW[c] - 8)
+                let cy = rowY - cellOffset - 2
+                for (const line of lines) {
+                  if (line.trim() && cy > rowY - rowH[r]) libPage.drawText(line, { x: cx + 4, y: cy, size: fs, font: cellFont, color: rgb(0.106, 0.11, 0.11) })
+                  cy -= fs * 1.25
+                }
+              }
+              cx += colW[c]
+            }
+            rowY -= rowH[r]
           }
         } else if (el.type === 'image' || el.type === 'signature') {
           try {
@@ -2561,8 +2880,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
           const ax=el.x*xR, ay=pH-(el.y+el.height)*yR, aw=el.width*xR, ah=el.height*yR
           libPage.drawRectangle({x:ax,y:ay,width:aw,height:ah,color:rgb(1,0.976,0.765),borderColor:rgb(0.8,0.75,0.2),borderWidth:0.8})
           const afs = Math.min(9*xR, 10)
-          const alines = el.text.split('\n'); let ady = ay+ah-afs*1.8
-          for (const ln of alines) { if (ady<ay) break; if(ln.trim()) libPage.drawText(ln,{x:ax+4,y:ady,size:afs,font:af,color:rgb(0.1,0.1,0.1),maxWidth:aw-8}); ady-=afs*1.4 }
+          const alines = el.text.split('\n').flatMap(p => wrapTextToWidth(p, af, afs, aw-8))
+          let ady = ay+ah-afs*1.8
+          for (const ln of alines) { if (ady<ay) break; if(ln.trim()) libPage.drawText(ln,{x:ax+4,y:ady,size:afs,font:af,color:rgb(0.1,0.1,0.1)}); ady-=afs*1.4 }
         } else if (el.type === 'shape') {
           const sh=el.strokeColor.replace('#','')
           const sr=parseInt(sh.slice(0,2),16)/255, sg=parseInt(sh.slice(2,4),16)/255, sb=parseInt(sh.slice(4,6),16)/255
@@ -2948,6 +3268,11 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                 <button title="Shapes" style={{...tbStyle(toolMode==='shape'),position:'relative'}} onClick={()=>{setToolMode('shape');setShowShapeMenu(v=>!v);setShowMarkMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='shape')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='shape')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
                   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="17" r="4"/><line x1="3" y1="21" x2="9" y2="15"/></svg>
                   <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Shape</span>
+                </button>
+                {/* Table */}
+                <button title="Table" style={tbStyle(toolMode==='table')} onClick={()=>{setToolMode('table');setShowMarkMenu(false);setShowShapeMenu(false);setShowStampMenu(false);setShowDrawMenu(false);setShowWmPanel(false)}} onMouseEnter={e=>{if(toolMode!=='table')(e.currentTarget as HTMLButtonElement).style.background='#f1f5f9'}} onMouseLeave={e=>{if(toolMode!=='table')(e.currentTarget as HTMLButtonElement).style.background='transparent'}}>
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+                  <span style={{fontSize:8,fontWeight:700,color:'inherit',lineHeight:1}}>Table</span>
                 </button>
                 <div style={tbVDiv}/>
                 {/* Image */}
@@ -3493,6 +3818,10 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                               {el.type === 'shape'      && <ShapeDisplay el={el} />}
                               {el.type === 'draw'       && <DrawDisplay el={el} scale={scale} />}
                               {el.type === 'watermark'  && <WatermarkDisplay el={el} scale={scale} />}
+                              {el.type === 'table'      && (
+                                <TableDisplay el={el} scale={scale}
+                                  onUpdate={updates => updateEl(el.id, updates as Partial<PDFElement>)} />
+                              )}
                             </DraggableElement>
                           </div>
                         ))}
@@ -3973,6 +4302,8 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M20 20H7L3 16l10-10 7 7-3.5 3.5"/><path d="M6.5 17.5l4-4"/></svg> },
             { mode:'shape' as ToolMode, label:'Shape', isSign:false,
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="8" rx="1.5"/><circle cx="17" cy="17" r="4"/></svg> },
+            { mode:'table' as ToolMode, label:'Table', isSign:false,
+              icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="1.5"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg> },
             { mode:'image' as ToolMode, label:'Image', isSign:false,
               icon:<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> },
             { mode:'signature' as ToolMode, label:'Sign', isSign:true,

@@ -1,7 +1,7 @@
 export type ToolMode =
   | 'select' | 'text' | 'image' | 'signature' | 'stamp'
   | 'highlight' | 'pan' | 'mark' | 'annotation' | 'shape'
-  | 'crop' | 'draw' | 'watermark' | 'eraser'
+  | 'crop' | 'draw' | 'watermark' | 'eraser' | 'table'
 
 export interface PDFSource {
   id: string
@@ -109,6 +109,19 @@ export interface WatermarkElement extends BaseElement {
   imageSrc?: string  // optional image watermark (overrides text)
 }
 
+export interface TableElement extends BaseElement {
+  type: 'table'
+  rows: number
+  cols: number
+  cells: string[][]      // [row][col]
+  colWidths: number[]    // sums to `width`, one entry per column
+  rowHeights: number[]   // sums to `height`, one entry per row
+  fontSize: number
+  headerRow: boolean
+  borderColor: string
+  borderWidth: number
+}
+
 export type PDFElement =
   | TextElement
   | ImageElement
@@ -120,3 +133,4 @@ export type PDFElement =
   | ShapeElement
   | DrawElement
   | WatermarkElement
+  | TableElement

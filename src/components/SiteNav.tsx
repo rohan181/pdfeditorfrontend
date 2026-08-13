@@ -130,6 +130,18 @@ const TAP: React.CSSProperties = {
 export default function SiteNav() {
   const { isSignedIn, isLoaded } = useUser()
 
+  // subscription tier badge ("Free"/"Pro" shown in the corner near the account controls)
+  const [subTier, setSubTier] = useState<'free' | 'pro' | null>(null)
+  useEffect(() => {
+    if (!isSignedIn) { setSubTier(null); return }
+    let cancelled = false
+    fetch('/api/subscription/status')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (!cancelled && data?.tier) setSubTier(data.tier) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [isSignedIn])
+
   // desktop dropdown
   const [toolsOpen, setToolsOpen] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -212,6 +224,19 @@ export default function SiteNav() {
                     padding: '6px 14px', borderRadius: 99, border: '1.5px solid rgba(0,0,0,.16)', background: '#fff' }}>
                   Dashboard
                 </Link>
+                {subTier && (
+                  <Link prefetch={false} href={subTier === 'pro' ? '/manage-subscription' : '/pricing'}
+                    className="sn-desk-only" style={{ textDecoration: 'none' }}
+                    title={subTier === 'pro' ? 'Pro plan — unlimited AI uses' : 'Free plan — 5 AI uses per day'}>
+                    <span style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 4,
+                      fontSize: 10.5, fontWeight: 800, letterSpacing: '.04em', padding: '4px 9px', borderRadius: 99,
+                      ...(subTier === 'pro'
+                        ? { color: '#7c3aed', background: 'rgba(124,58,237,.1)', border: '1px solid rgba(124,58,237,.24)' }
+                        : { color: '#4b5563', background: 'rgba(0,0,0,.045)', border: '1px solid rgba(0,0,0,.1)' }) }}>
+                      {subTier === 'pro' ? 'PRO' : 'FREE'}
+                    </span>
+                  </Link>
+                )}
                 <UserButton />
               </>
             ) : isLoaded ? (
@@ -307,7 +332,7 @@ export default function SiteNav() {
                 <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'flex-end' }}>
                   <Link prefetch={false} href="/#tools" onClick={() => setToolsOpen(false)}
                     style={{ ...FI, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: '#6b7280', textDecoration: 'none' }}>
-                    See all 35+ tools <ArrowRight size={11} strokeWidth={2.5} />
+                    See all 50+ tools <ArrowRight size={11} strokeWidth={2.5} />
                   </Link>
                 </div>
               </div>
@@ -399,10 +424,19 @@ export default function SiteNav() {
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
                   {isSignedIn ? (
                     <Link prefetch={false} href="/dashboard" onClick={closeMob}
-                      style={{ ...FI, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      style={{ ...FI, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                         fontSize: 15, fontWeight: 700, color: '#1d1d1f', textDecoration: 'none',
                         padding: '13px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff' }}>
                       Dashboard
+                      {subTier && (
+                        <span style={{ ...FI, display: 'inline-flex', alignItems: 'center',
+                          fontSize: 10.5, fontWeight: 800, letterSpacing: '.04em', padding: '3px 9px', borderRadius: 99,
+                          ...(subTier === 'pro'
+                            ? { color: '#7c3aed', background: 'rgba(124,58,237,.1)', border: '1px solid rgba(124,58,237,.24)' }
+                            : { color: '#4b5563', background: 'rgba(0,0,0,.045)', border: '1px solid rgba(0,0,0,.1)' }) }}>
+                          {subTier === 'pro' ? 'PRO' : 'FREE'}
+                        </span>
+                      )}
                     </Link>
                   ) : (
                     <SignInButton mode="modal">

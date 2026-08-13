@@ -8,7 +8,7 @@ import SiteFooter from '@/components/SiteFooter'
 
 const FREE_FEATURES = [
   '5 AI uses per day',
-  'All 35+ PDF tools (unlimited)',
+  'All 50+ PDF tools (unlimited)',
   'PDF edit, merge, split, compress',
   'E-signature & annotations',
   'PDF password protection',
@@ -22,7 +22,7 @@ const PRO_FEATURES = [
   'PDF Mind Map generator',
   'AI OCR & scan detection',
   'AI quiz creator',
-  'All 35+ PDF tools (unlimited)',
+  'All 50+ PDF tools (unlimited)',
   'Priority processing',
 ]
 

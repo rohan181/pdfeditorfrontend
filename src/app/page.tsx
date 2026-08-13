@@ -12,15 +12,21 @@ import SiteFooter from '@/components/SiteFooter'
 import MobileEditorShortcut from '@/components/MobileEditorShortcut'
 
 export const metadata: Metadata = {
-  title: { absolute: 'Free PDF Tools Online — Edit, Sign & Convert' },
-  description: 'Use 35+ free online PDF tools to edit, sign, fill, merge, compress and convert PDFs. Core tools need no account; AI tools include five free daily uses.',
-  keywords: 'PDF editor, PDF converter, free online PDF tools, edit PDF online for free without signup, edit and sign PDF online free, merge PDF files online, compress PDF without losing quality, convert PDF to Word online, fill PDF forms online, AI PDF tools, EditPDF AI',
-  alternates: { canonical: 'https://www.editpdfai.com' },
+  title: { absolute: 'EditPDF AI: Free Online PDF Editor & 50+ PDF Tools' },
+  description: 'EditPDF AI provides 50+ free online PDF tools to edit, fill, sign, merge, compress and convert PDFs. Core tools need no account and files stay private.',
+  keywords: 'EditPDF AI, EditPDFAI, PDF editor, PDF converter, free online PDF tools, edit PDF online for free without signup, edit and sign PDF online free, merge PDF files online, compress PDF without losing quality, convert PDF to Word online, fill PDF forms online, AI PDF tools',
+  applicationName: 'EditPDF AI',
+  // No `alternates.canonical` here on purpose — Next.js's metadata resolver
+  // hardcodes root-path URLs down to a bare origin (drops the trailing
+  // slash) regardless of what string is passed in, and flipping the site-wide
+  // `trailingSlash` config to work around it would change every other page's
+  // URLs too. The canonical tag below is rendered manually instead, just for
+  // this one page, so it can be the exact required https://www.editpdfai.com/.
   openGraph: {
-    title: 'Free Online PDF Tools — Edit, Sign, Fill & Convert',
-    description: 'Use 35+ online PDF tools to edit, sign, fill, merge, compress and convert PDFs. Core tools are free with no account.',
+    title: 'EditPDF AI: Free Online PDF Editor & 50+ PDF Tools',
+    description: 'EditPDF AI provides 50+ free online PDF tools to edit, fill, sign, merge, compress and convert PDFs. Core tools need no account and files stay private.',
     type: 'website',
-    url: 'https://www.editpdfai.com',
+    url: 'https://www.editpdfai.com/',
     siteName: 'EditPDF AI',
     images: [{
       url: '/social/home-constellation.png',
@@ -31,8 +37,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Free Online PDF Tools — Edit, Sign, Fill & Convert',
-    description: 'Use 35+ PDF tools for editing, signing, filling, OCR, compression, conversion and AI workflows.',
+    title: 'EditPDF AI: Free Online PDF Editor & 50+ PDF Tools',
+    description: 'EditPDF AI provides 50+ free online PDF tools to edit, fill, sign, merge, compress and convert PDFs. Core tools need no account and files stay private.',
     images: ['/social/home-constellation.png'],
   },
 }
@@ -43,7 +49,7 @@ const jsonLd = [
     '@type': 'WebApplication',
     '@id': 'https://www.editpdfai.com/#webapp',
     name: 'EditPDF AI',
-    url: 'https://www.editpdfai.com',
+    url: 'https://www.editpdfai.com/',
     applicationCategory: 'UtilitiesApplication',
     operatingSystem: 'Any',
     browserRequirements: 'Requires a modern web browser with JavaScript enabled.',
@@ -60,15 +66,15 @@ const jsonLd = [
       { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD', url: 'https://www.editpdfai.com/pdf-editor' },
       { '@type': 'Offer', name: 'Pro', price: '1', priceCurrency: 'USD', url: 'https://www.editpdfai.com/pricing' },
     ],
-    description: 'Use 35+ online PDF tools to edit, sign, fill, merge, compress and convert documents. Core tools are free with no account.',
+    description: 'Use 50+ online PDF tools to edit, sign, fill, merge, compress and convert documents. Core tools need no account.',
   },
   {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     '@id': 'https://www.editpdfai.com/#organization',
     name: 'EditPDF AI',
-    alternateName: 'EditPDF',
-    url: 'https://www.editpdfai.com',
+    alternateName: ['EditPDFAI', 'EditPDF'],
+    url: 'https://www.editpdfai.com/',
     logo: {
       '@type': 'ImageObject',
       url: 'https://www.editpdfai.com/logo-square.svg',
@@ -92,7 +98,7 @@ const jsonLd = [
     '@type': 'WebSite',
     '@id': 'https://www.editpdfai.com/#website',
     name: 'EditPDF AI',
-    url: 'https://www.editpdfai.com',
+    url: 'https://www.editpdfai.com/',
     inLanguage: 'en',
     publisher: { '@id': 'https://www.editpdfai.com/#organization' },
     hasPart: [
@@ -119,6 +125,10 @@ const jsonLd = [
 export default function HomePage() {
   return (
     <>
+      {/* Rendered directly rather than via `alternates.canonical` — see the
+          comment on the metadata export above for why. Next.js hoists any
+          <link>/<meta> rendered in a Server Component's tree into <head>. */}
+      <link rel="canonical" href="https://www.editpdfai.com/" />
       {jsonLd.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       ))}

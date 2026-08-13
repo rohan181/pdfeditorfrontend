@@ -317,7 +317,7 @@ export default function PDFCompressorPage() {
             </div>
             <div className="info-card">
               <h3>🔒 Private</h3>
-              <p>Files are processed in memory and deleted immediately — never stored on disk.</p>
+              <p>Uploaded over HTTPS, compressed, and the temporary copy is deleted immediately — never stored long-term.</p>
             </div>
             <div className="info-card">
               <h3>📂 Universal</h3>

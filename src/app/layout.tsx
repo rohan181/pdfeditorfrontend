@@ -20,7 +20,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: { default: 'EditPDF AI — Edit smarter. Finish faster.', template: '%s' },
-  description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — edit, sign, OCR, translate, summarise and fill forms. Free, no account needed.',
+  description: 'Edit smarter. Finish faster. 50+ PDF and AI tools — edit, sign, OCR, translate, summarise and fill forms. Core tools need no account.',
   keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, PDF annotator, PDF OCR, PDF compressor, editpdfai',
   authors: [{ name: 'EditPDF AI', url: 'https://www.editpdfai.com' }],
   creator: 'EditPDF AI',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     url: 'https://www.editpdfai.com',
     siteName: 'EditPDF AI',
     title: 'EditPDF AI — Edit smarter. Finish faster.',
-    description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — free, no account needed.',
+    description: 'Edit smarter. Finish faster. 50+ PDF and AI tools. Core tools need no account.',
     locale: 'en_US',
     images: [
       {
@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     site: '@editpdfai',
     creator: '@editpdfai',
     title: 'EditPDF AI — Edit smarter. Finish faster.',
-    description: 'Edit smarter. Finish faster. AI-powered PDF editor with 35+ tools — free, no account needed.',
+    description: 'Edit smarter. Finish faster. 50+ PDF and AI tools. Core tools need no account.',
     images: ['/opengraph-image'],
   },
   formatDetection: {

@@ -17,6 +17,9 @@ function url(
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     // ── Home ──────────────────────────────────────────────────────────────────
+    // Root path uses a trailing slash to match the homepage's canonical tag
+    // (alternates.canonical: 'https://www.editpdfai.com/') — keep these two in
+    // sync or the sitemap and canonical disagree on the "real" homepage URL.
     url('/',                    1.0, 'weekly',   '2026-07-23'),
 
     // ── Flagship tools ────────────────────────────────────────────────────────

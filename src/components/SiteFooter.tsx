@@ -114,7 +114,7 @@ export default function SiteFooter() {
             </Link>
 
             <p style={{ ...FI, fontSize: 13, color: '#6b7280', lineHeight: 1.7, maxWidth: 220, margin: '0 0 16px' }}>
-              35+ AI-powered PDF tools. Edit, convert, protect and sign — free to use, no signup required.
+              50+ browser-based PDF and AI tools. Edit, convert, protect and sign. Core tools need no account.
             </p>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', background: 'rgba(22,163,74,.06)', border: '1px solid rgba(22,163,74,.16)', borderRadius: 10, marginBottom: 20, maxWidth: 240 }}>
@@ -163,7 +163,7 @@ export default function SiteFooter() {
         <div style={{ borderTop: '1px solid #e5e5ea', padding: '16px 0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <span style={{ ...MONO, fontSize: 10, color: '#64748B', letterSpacing: '0.04em' }}>
-              35+ TOOLS · FREE · AI-POWERED
+              50+ TOOLS · FREE · AI FEATURES
             </span>
             <div style={{ display: 'flex', gap: 12 }}>
               {[['Privacy', '/privacy'], ['Terms', '/terms'], ['Contact', '/contact']].map(([l, h]) => (
