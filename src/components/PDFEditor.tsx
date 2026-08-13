@@ -133,12 +133,13 @@ async function embedTextFont(doc: any, fontFamily: string, bold: boolean, italic
 // rendering the text and measuring it sidesteps needing to reverse-engineer
 // that algorithm: whatever the browser does internally, this reads off the
 // real result directly, so it can't drift from what's on screen.
-// A single "M" is used as the probe character (flat baseline, no ascender
-// overshoot, no descender) so the Range's bottom edge IS the baseline exactly
-// — the actual text's content/length doesn't affect a single line's vertical
-// position, only its horizontal wrapping (handled separately, elsewhere).
+// A zero-height inline-block is used as a baseline marker. A Range around an
+// "M" only returns the glyph/line box; its bottom is not the CSS baseline and
+// was placing exported text several points too low.
 let _measureEl: HTMLDivElement | null = null
+let _baselineMarker: HTMLSpanElement | null = null
 const lineBaselineOffsetCache = new Map<string, number>()
+const lineTopOffsetCache = new Map<string, number>()
 function measureLineBaselineOffset(fontFamily: string, fontSizePx: number, lineHeightMult: number | 'normal', bold: boolean, italic: boolean): number {
   const key = `${fontFamily}|${fontSizePx}|${lineHeightMult}|${bold}|${italic}`
   const cached = lineBaselineOffsetCache.get(key)
@@ -148,6 +149,9 @@ function measureLineBaselineOffset(fontFamily: string, fontSizePx: number, lineH
   if (!_measureEl) {
     _measureEl = document.createElement('div')
     _measureEl.style.cssText = 'position:fixed;left:-99999px;top:0;visibility:hidden;pointer-events:none;white-space:pre-wrap;margin:0;box-sizing:border-box;'
+    _baselineMarker = document.createElement('span')
+    _baselineMarker.style.cssText = 'display:inline-block;width:0;height:0;padding:0;margin:0;vertical-align:baseline;'
+    _measureEl.append(document.createTextNode('M'), _baselineMarker)
     document.body.appendChild(_measureEl)
   }
   _measureEl.style.fontSize = `${fontSizePx}px`
@@ -155,15 +159,30 @@ function measureLineBaselineOffset(fontFamily: string, fontSizePx: number, lineH
   _measureEl.style.fontWeight = bold ? '700' : '400'
   _measureEl.style.fontStyle = italic ? 'italic' : 'normal'
   _measureEl.style.lineHeight = String(lineHeightMult)
-  _measureEl.textContent = 'M'
-
-  const range = document.createRange()
-  range.selectNodeContents(_measureEl.firstChild!)
-  const textRect = range.getBoundingClientRect()
   const boxRect = _measureEl.getBoundingClientRect()
-  const offset = textRect.bottom - boxRect.top
+  const offset = _baselineMarker!.getBoundingClientRect().top - boxRect.top
 
   lineBaselineOffsetCache.set(key, offset)
+  return offset
+}
+
+// Distance from the CSS line box's top to the browser text rectangle's top.
+// Export combines this with the embedded PDF font's own ascent. That aligns
+// the visible top of the two different renderers even for system fonts where
+// the browser face (for example Helvetica Neue) is not the exact face behind
+// PDF's built-in Helvetica metrics.
+function measureLineTopOffset(fontFamily: string, fontSizePx: number, lineHeightMult: number | 'normal', bold: boolean, italic: boolean): number {
+  const key = `${fontFamily}|${fontSizePx}|${lineHeightMult}|${bold}|${italic}`
+  const cached = lineTopOffsetCache.get(key)
+  if (cached != null) return cached
+  if (typeof document === 'undefined') return 0
+
+  // Initializes and styles the shared probe before the Range measurement.
+  measureLineBaselineOffset(fontFamily, fontSizePx, lineHeightMult, bold, italic)
+  const range = document.createRange()
+  range.selectNodeContents(_measureEl!.firstChild!)
+  const offset = range.getBoundingClientRect().top - _measureEl!.getBoundingClientRect().top
+  lineTopOffsetCache.set(key, offset)
   return offset
 }
 
@@ -445,7 +464,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
       <textarea autoFocus value={el.text} onChange={e => onChange(e.target.value)}
         onClick={e => e.stopPropagation()}
         placeholder="Type here…"
-        style={{ ...base, textAlign: el.align, padding: '2px 4px', lineHeight: lh,
+        style={{ ...base, textAlign: el.align, padding: `${1 * scale}px ${3 * scale}px`, lineHeight: lh,
           overflow: 'hidden', wordBreak: 'break-word', border: 'none', outline: 'none', resize: 'none', cursor: 'text' }} />
     )
   if (el.align === 'center')
@@ -458,7 +477,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
     )
   return (
     <div onDoubleClick={onDblClick}
-      style={{ ...base, textAlign: el.align, padding: '1px 3px', lineHeight: lh,
+      style={{ ...base, textAlign: el.align, padding: `${1 * scale}px ${3 * scale}px`, lineHeight: lh,
         overflow: 'hidden', wordBreak: 'break-word', cursor: 'move',
         whiteSpace: 'pre-wrap', minHeight: '1em' }}>
       {el.text || <span style={{ opacity: 0.3, fontStyle: 'italic' }}>Double-click to type…</span>}
@@ -944,7 +963,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
             const pdfW   = Math.max(16, x2 - x1)
             const fs     = Math.max(8, Math.min(14, Math.round(fieldH * 0.72)))
             const elemH  = Math.max(fieldH, fs + 4)
-            const pdfY   = Math.max(0, vp.height - (y1 + y2) / 2 - fs * 0.75)
+            const pdfY   = Math.max(0, vp.height - (y1 + y2) / 2 - measureLineBaselineOffset('Inter', fs, 1.4, false, false) * 0.9)
 
             if (ann.fieldType === 'Btn') {
               // Checkbox: checked when fieldValue is non-empty and not 'Off'
@@ -2024,12 +2043,16 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
       const textRef = field.fieldSource === 'textLayer'
         ? y1 + 2
         : (y1 + y2) / 2
-      // With CSS lineHeight:1.4 + padding:1px, baseline from element top = (1px + fontSize_px)/scale
-      // = 0.67 + fontSize pt. So: pdfY + 0.67 + fontSize = (pageH - ty) - gap
-      // → pdfY = pageH - textRef - fontSize - (gap+0.67). Using gap=2.3pt → constant = 3.
+      // baselineOffset = real, DOM-measured distance from a top-anchored box's
+      // top edge to its first line's baseline (see measureLineBaselineOffset).
+      // This used to be a hardcoded "fontSize + 0.67" approximation of the old
+      // flat-constant export model; now that export measures the on-screen
+      // baseline directly instead of modelling it, this needs to match that
+      // same measurement or autofilled fields drift from where they're aimed.
+      const baselineOffset = measureLineBaselineOffset('Inter', fontSize, 1.4, false, false)
       const pdfY = field.fieldSource === 'textLayer'
-        ? Math.max(0, field.pageHeight - textRef - fontSize - 3)   // baseline ~2.3pt above underline
-        : Math.max(0, field.pageHeight - textRef - fontSize * 0.75) // centred in field
+        ? Math.max(0, field.pageHeight - textRef - baselineOffset - 2.3)   // baseline ~2.3pt above underline
+        : Math.max(0, field.pageHeight - textRef - baselineOffset * 0.9)  // centred in field
       console.log(`[AutoFill] placing "${name}" src=${field.fieldSource} rect=[${[x1,y1,x2,y2].map(v=>Math.round(v)).join(',')}] pdfY=${Math.round(pdfY)} fs=${fontSize} fields=${latestFields.length}`)
 
       const elemH = Math.max(pdfH, fontSize + 4)
@@ -2745,22 +2768,37 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
           }
           const boxX = el.x * xR, boxW = el.width * xR
           const boxTop = pH - el.y * yR
-          const lines = el.text.split('\n').flatMap(paragraph => wrapTextToWidth(paragraph, font, fs, boxW - 8))
-          // Matches the on-screen box by measuring it directly (see
-          // measureLineBaselineOffset) rather than modelling CSS line-height
-          // math from font-metric tables, which — even using the embedded
-          // font's own real ascent/descent — didn't reliably land on the
-          // browser's actual rendered baseline position.
-          const firstLineOffset = measureLineBaselineOffset(el.fontFamily, el.fontSize, el.lineHeight ?? 1.4, el.bold, el.italic) * yR
+          // Non-centered text has 1pt/3pt logical padding in TextDisplay;
+          // those values are scaled for the preview and converted through the
+          // page ratios here. Centered text uses the full flex box with no
+          // padding, matching its separate on-screen branch.
+          const padX = el.align === 'center' ? 0 : 3 * xR
+          const padTop = el.align === 'center' ? 0 : 1 * yR
+          const textWidth = Math.max(1, boxW - padX * 2)
+          const lines = el.text.split('\n').flatMap(paragraph => wrapTextToWidth(paragraph, font, fs, textWidth))
+          // Match the top of the browser's visible text rectangle, then add
+          // the embedded PDF font's own ascent to obtain the drawText baseline.
+          // Baseline-only matching still leaves visible drift when the screen
+          // and PDF system-font faces have different ascent metrics.
+          const screenLineTop = measureLineTopOffset(el.fontFamily, el.fontSize, el.lineHeight ?? 1.4, el.bold, el.italic) * yR
+          const firstLineOffset = screenLineTop + font.heightAtSize(fs, { descender: false })
           let dy = el.align === 'center'
             ? boxTop - (el.height * yR - lines.length * lh) / 2 - firstLineOffset
-            : boxTop - firstLineOffset - 1 * yR
+            : boxTop - firstLineOffset - padTop
+          // The on-screen box clips overflow (CSS `overflow: hidden`) — lines
+          // that don't fit the element's height just aren't visible while
+          // editing. Without the same bound here, text that was invisibly
+          // truncated on screen (e.g. a 3-line paragraph typed into a
+          // single-line-tall box) would suddenly reappear in the export,
+          // reading as the text having moved or duplicated itself.
+          const boxBottom = boxTop - el.height * yR
           for (const line of lines) {
+            if (dy < boxBottom) break
             if (line.trim()) {
               const lineWidth = font.widthOfTextAtSize(line, fs)
               const x = el.align === 'center' ? boxX + (boxW - lineWidth) / 2
-                      : el.align === 'right'  ? boxX + boxW - lineWidth - 4
-                      : boxX + 4
+                      : el.align === 'right'  ? boxX + boxW - lineWidth - padX
+                      : boxX + padX
               libPage.drawText(line, { x, y: dy, size: fs, font, color: rgb(r, g, b) })
             }
             dy -= lh

@@ -149,7 +149,14 @@ export default function DraggableElement({
         width:  boxW,
         height: boxH,
         cursor: editMode ? 'text' : 'move',
-        border: isSelected ? '2px solid #00488d' : '2px solid transparent',
+        // A real border changes the containing block for the absolutely
+        // positioned content below, shifting every element by two screen
+        // pixels. That made the editor preview disagree with the element's
+        // page coordinates (and therefore with PDF export), with an error
+        // that changed as the user zoomed. An outline provides the same
+        // selection affordance without participating in layout.
+        border: 'none',
+        outline: isSelected ? '2px solid #00488d' : 'none',
         borderRadius: 2,
         boxSizing: 'border-box',
         userSelect: editMode ? 'auto' : 'none',
