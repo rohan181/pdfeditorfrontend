@@ -7,7 +7,7 @@ const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Men
 const CARDS = [
   { Icon: Globe,      title: 'Browser-based processing', desc: 'PDF editing, compression, signing and page tools all run directly in your browser. Your file never leaves your device.' },
   { Icon: Server,     title: 'No PDF storage',           desc: 'We do not store your documents on our servers. When you close the tab, your PDF is gone — permanently.' },
-  { Icon: Shield,     title: 'Raw PDFs never sent to AI', desc: 'AI features extract only the text context needed. Your raw PDF binary is never transmitted to any AI model.' },
+  { Icon: Shield,     title: 'Raw PDFs never sent to AI', desc: 'AI features send only the text — or, for OCR and visual form detection, a rendered page image. Your raw PDF binary is never transmitted to any AI model.' },
 ]
 
 export default function SitePrivacyNote() {
@@ -15,7 +15,7 @@ export default function SitePrivacyNote() {
     <section className="home-responsive-section" style={{background:'#0F172A',padding:'80px 28px',borderTop:'1px solid #1E293B'}}>
       <div style={{maxWidth:1200,margin:'0 auto'}}>
         <div style={{marginBottom:40,textAlign:'center'}}>
-          <div style={{...MONO,fontSize:10,color:'#475569',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
+          <div style={{...MONO,fontSize:10,color:'#94a3b8',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>
             Privacy &amp; Security
           </div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,40px)',fontWeight:800,color:'#F8FAFC',letterSpacing:'-0.05em',lineHeight:.97,margin:'0 0 12px'}}>

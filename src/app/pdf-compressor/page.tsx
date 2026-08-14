@@ -101,6 +101,7 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .info-card p{font-size:12px;color:rgba(0,0,0,.45);line-height:1.6}
 
 .error-box{padding:11px 14px;background:#fff5f5;border:1px solid rgba(226,75,74,.25);border-radius:9px;font-size:13px;color:#E24B4A;margin-top:10px}
+.note{margin:4px 0 20px;padding:11px 14px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 9px 9px 0;font-size:11.5px;line-height:1.6;color:#854d0e}
 `
 
 const LEVELS = [
@@ -118,12 +119,78 @@ function fmt(bytes: number) {
 
 type Result = { blob: Blob; name: string; origSize: number; newSize: number }
 
+// Rendered DPI + JPEG quality per level — mirrors Ghostscript's /prepress,
+// /printer, /ebook, /screen presets closely enough for a client-side stand-in.
+const COMPRESS_SETTINGS: Record<string, { dpi: number; quality: number }> = {
+  low:     { dpi: 300, quality: 0.92 },
+  medium:  { dpi: 200, quality: 0.82 },
+  high:    { dpi: 150, quality: 0.70 },
+  maximum: { dpi: 96,  quality: 0.50 },
+}
+
+function canvasToJpegBytes(canvas: HTMLCanvasElement, quality: number): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (!blob) { reject(new Error('Could not encode a compressed page image.')); return }
+      blob.arrayBuffer().then(buf => resolve(new Uint8Array(buf)), reject)
+    }, 'image/jpeg', quality)
+  })
+}
+
+// Rebuilds the PDF by rendering each page to a canvas and re-embedding it as
+// a JPEG at a lower DPI/quality — runs entirely in the browser, no server
+// round-trip. Text and vector content become part of the page image, so the
+// output is no longer selectable or searchable (users are warned in the UI).
+async function compressPdf(
+  file: File,
+  level: string,
+  onProgress: (pct: number, label: string) => void,
+): Promise<Uint8Array> {
+  const { dpi, quality } = COMPRESS_SETTINGS[level] ?? COMPRESS_SETTINGS.medium
+  const scale = dpi / 72
+
+  const pdfjsLib = await import('pdfjs-dist')
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+  const { PDFDocument } = await import('pdf-lib')
+
+  const sourceBuffer = await file.arrayBuffer()
+  const sourceDoc = await pdfjsLib.getDocument({ data: sourceBuffer }).promise
+  const outDoc = await PDFDocument.create()
+
+  for (let i = 1; i <= sourceDoc.numPages; i++) {
+    onProgress(Math.round(((i - 1) / sourceDoc.numPages) * 90) + 5, `Compressing page ${i} of ${sourceDoc.numPages}…`)
+
+    const page = await sourceDoc.getPage(i)
+    const renderViewport = page.getViewport({ scale })
+    const pageViewport = page.getViewport({ scale: 1 }) // 1.0 scale = PDF points, for output page size
+
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(renderViewport.width))
+    canvas.height = Math.max(1, Math.round(renderViewport.height))
+    const ctx = canvas.getContext('2d')!
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    await page.render({ canvasContext: ctx, viewport: renderViewport }).promise
+
+    const jpegBytes = await canvasToJpegBytes(canvas, quality)
+    const embeddedImage = await outDoc.embedJpg(jpegBytes)
+
+    const outPage = outDoc.addPage([pageViewport.width, pageViewport.height])
+    outPage.drawImage(embeddedImage, { x: 0, y: 0, width: pageViewport.width, height: pageViewport.height })
+  }
+
+  onProgress(97, 'Finalizing…')
+  return outDoc.save()
+}
+
 export default function PDFCompressorPage() {
   const [file, setFile]       = useState<File | null>(null)
   const [level, setLevel]     = useState('medium')
   const [dragging, setDragging] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [progressLabel, setProgressLabel] = useState('')
   const [result, setResult]   = useState<Result | null>(null)
   const [error, setError]     = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
@@ -141,36 +208,29 @@ export default function PDFCompressorPage() {
 
   const onCompress = async () => {
     if (!file) return
-    setError(''); setProcessing(true); setProgress(10); setResult(null)
+    setError(''); setProcessing(true); setProgress(5); setProgressLabel('Reading PDF…'); setResult(null)
 
     try {
-      // Simulate progress while waiting
-      const iv = setInterval(() => setProgress(p => Math.min(p + 8, 85)), 400)
+      const origSize = file.size
+      const compressed = await compressPdf(file, level, (pct, label) => {
+        setProgress(pct); setProgressLabel(label)
+      })
 
-      const form = new FormData()
-      form.append('file', file)
-      form.append('level', level)
-      form.append('filename', file.name)
+      // If the rebuilt version somehow came out larger (e.g. a small,
+      // already-tight vector-only PDF), just ship the original bytes back.
+      const finalBytes = compressed.byteLength < origSize
+        ? compressed
+        : new Uint8Array(await file.arrayBuffer())
 
-      const res = await fetch('/api/compress-pdf', { method: 'POST', body: form })
-      clearInterval(iv)
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error ?? `Server error ${res.status}`)
-      }
-
-      setProgress(95)
-      const origSize = parseInt(res.headers.get('x-original-size') ?? '0', 10) || file.size
-      const newSize  = parseInt(res.headers.get('x-compressed-size') ?? '0', 10)
-
-      const blob = await res.blob()
-      const cd   = res.headers.get('content-disposition') ?? ''
-      const m    = cd.match(/filename="([^"]+)"/)
-      const name = m ? m[1] : file.name.replace(/\.pdf$/i, '_compressed.pdf')
+      const blobPart = finalBytes.buffer.slice(
+        finalBytes.byteOffset,
+        finalBytes.byteOffset + finalBytes.byteLength,
+      ) as ArrayBuffer
+      const blob = new Blob([blobPart], { type: 'application/pdf' })
+      const name = file.name.replace(/\.pdf$/i, '') + '_compressed.pdf'
 
       setProgress(100)
-      setResult({ blob, name, origSize, newSize: newSize || blob.size })
+      setResult({ blob, name, origSize, newSize: finalBytes.byteLength })
     } catch (e: any) {
       setError('Compression failed: ' + (e?.message ?? 'Unknown error'))
     } finally {
@@ -285,6 +345,8 @@ export default function PDFCompressorPage() {
                       ))}
                     </div>
 
+                    <div className="note">Compression rebuilds each page from a flattened image — the output PDF is no longer searchable or has selectable text. Use a lower compression level to keep quality closer to the original.</div>
+
                     {error && <div className="error-box">{error}</div>}
 
                     <button
@@ -300,7 +362,7 @@ export default function PDFCompressorPage() {
                         <div className="prog-bar">
                           <div className="prog-fill" style={{ width: `${progress}%` }} />
                         </div>
-                        <div className="prog-label">Compressing with Ghostscript…</div>
+                        <div className="prog-label">{progressLabel || 'Compressing…'}</div>
                       </div>
                     )}
                   </>
@@ -317,7 +379,7 @@ export default function PDFCompressorPage() {
             </div>
             <div className="info-card">
               <h3>🔒 Private</h3>
-              <p>Uploaded over HTTPS, compressed, and the temporary copy is deleted immediately — never stored long-term.</p>
+              <p>Compression runs entirely in your browser — your PDF is never uploaded to a server.</p>
             </div>
             <div className="info-card">
               <h3>📂 Universal</h3>

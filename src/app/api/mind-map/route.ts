@@ -69,7 +69,7 @@ Center: "center" | Branches: "b{docIdx}-{num}" e.g. b0-1 | Leaves: "b{docIdx}-{b
 
     const client = new Anthropic({ apiKey })
     const msg = await client.messages.create({
-      model:      'claude-opus-4-8',
+      model:      'claude-opus-5',
       max_tokens: 8192,
       messages:   [{ role: 'user', content: prompt }],
     })

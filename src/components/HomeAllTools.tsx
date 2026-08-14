@@ -186,7 +186,7 @@ export default function HomeAllTools() {
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)', fontSize:'clamp(28px,3.5vw,46px)', fontWeight:800, color:'#1d1d1f', letterSpacing:'-0.05em', lineHeight:.96, margin:0}}>
             Edit, Convert and Organize PDFs
           </h2>
-          <p style={{...FI,margin:'16px 0 0',maxWidth:760,color:'#64748B',fontSize:15,lineHeight:1.7}}>
+          <p style={{...FI,margin:'16px 0 0',maxWidth:760,color:'#5b6472',fontSize:15,lineHeight:1.7}}>
             Choose from browser-based tools for editing, signing, converting, securing and understanding PDF documents.
           </p>
         </motion.div>

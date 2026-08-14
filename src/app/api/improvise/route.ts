@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       : `- Keep values concise and appropriate — 1-2 sentences for description fields, shorter for name/date/address fields`
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-5',
       max_tokens: wordLimit ? Math.max(1024, wordLimit * fields.length * 8) : 1024,
       system: `You are a professional content writer helping improve PDF form field values.
 For each field given, enhance the current value to be more complete, professional, or descriptive while keeping the core information intact.

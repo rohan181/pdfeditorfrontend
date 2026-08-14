@@ -419,6 +419,7 @@ function Nav() {
 
   return (
     <>
+      <style>{`.home-tools-trigger:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }`}</style>
       {/* Fixed header */}
       <motion.header style={{position:'fixed',inset:'0 0 auto',zIndex:300,height:56,
         background:navBg,backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',
@@ -447,12 +448,13 @@ function Nav() {
                 aria-expanded={toolsOpen}
                 aria-controls="desktop-tools-menu"
                 aria-haspopup="true"
+                className="home-tools-trigger"
                 style={{
                   display:'flex',alignItems:'center',gap:4,
                   padding:'5px 11px',background:toolsOpen?'rgba(0,0,0,.05)':'transparent',
-                  border:'none',borderRadius:8,cursor:'pointer',outline:'none',
+                  border:'none',borderRadius:8,cursor:'pointer',
                   fontSize:13,fontWeight:toolsOpen?600:500,
-                  color:toolsOpen?'#1d1d1f':'rgba(0,0,0,.55)',
+                  color:toolsOpen?'#1d1d1f':'rgba(0,0,0,.62)',
                   ...FI,transition:'all .12s',flexShrink:0,
                 }}>
                 Tools
@@ -469,7 +471,7 @@ function Nav() {
                 <span className="nav-link"
                   style={{...FI,display:'inline-flex',alignItems:'center',gap:4,
                     padding:'5px 11px',fontSize:13,fontWeight:500,borderRadius:8,
-                    color:'rgba(0,0,0,.52)'}}>
+                    color:'rgba(0,0,0,.62)'}}>
                   {label}
                 </span>
               </Link>

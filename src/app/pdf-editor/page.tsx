@@ -177,10 +177,12 @@ export default function PDFEditorPage() {
         </div>
       )}
 
+      {!editorOpen && <>
       {/* Nav */}
       <SiteNav />
 
       {/* ── HERO ────────────────────────────────────────────────── */}
+      <main id="main-content">
       <header className="hero" aria-labelledby="hero-h1">
         <div className="wrap">
           <div className="hero-badge" aria-hidden="true">
@@ -289,6 +291,8 @@ export default function PDFEditorPage() {
         </div>
       </section>
 
+      </main>
+
       {/* Footer */}
       <ToolSEOSection
         {...toolSeoData['pdf-editor']}
@@ -297,6 +301,7 @@ export default function PDFEditorPage() {
         includeSchema={false}
       />
       <SiteFooter />
+      </>}
     </div>
   )
 }

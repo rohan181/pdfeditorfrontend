@@ -56,7 +56,7 @@ Convert this to structured HTML. Output only the HTML content.`
 
     const client = new Anthropic({ apiKey })
     const stream = await client.messages.stream({
-      model:      'claude-opus-4-8',
+      model:      'claude-opus-5',
       max_tokens: 8192,
       system,
       messages: [{ role: 'user', content: user }],

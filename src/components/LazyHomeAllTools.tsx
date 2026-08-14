@@ -103,20 +103,20 @@ function ToolsPlaceholder() {
       style={{ minHeight: 900, padding: '88px 28px', background: '#f8f8fa', borderTop: '1px solid #f0f0f0' }}
     >
       <div style={{ maxWidth: 1240, margin: '0 auto' }}>
-        <p style={{ margin: '0 0 12px', color: '#64748B', fontSize: 12, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+        <p style={{ margin: '0 0 12px', color: '#5b6472', fontSize: 12, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
           All tools
         </p>
         <h2 style={{ margin: '0 0 16px', color: '#1d1d1f', fontSize: 'clamp(28px,3.5vw,46px)', lineHeight: .96, letterSpacing: '-.05em' }}>
           Edit, Convert and Organize PDFs
         </h2>
-        <p style={{margin:'0 0 40px',maxWidth:760,color:'#64748B',fontSize:15,lineHeight:1.7}}>
+        <p style={{margin:'0 0 40px',maxWidth:760,color:'#5b6472',fontSize:15,lineHeight:1.7}}>
           Choose from browser-based tools for editing, signing, converting, securing and understanding PDF documents.
         </p>
         <nav className="tools-fallback-grid" aria-label="PDF tool categories" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(330px,1fr))', gap: 18 }}>
           {groups.map(group => (
             <section key={group.title} style={{padding:22,background:'#fff',border:'1px solid #E2E8F0',borderRadius:16}}>
               <h3 style={{margin:'0 0 8px',color:'#0F172A',fontSize:18}}>{group.title}</h3>
-              <p style={{margin:'0 0 16px',color:'#64748B',fontSize:13,lineHeight:1.6}}>{group.description}</p>
+              <p style={{margin:'0 0 16px',color:'#5b6472',fontSize:13,lineHeight:1.6}}>{group.description}</p>
               <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
                 {tools.filter(([, href]) => (group.paths as readonly string[]).includes(href)).map(([label, href]) => (
                   <Link key={href} href={href} style={{padding:'7px 10px',color:'#2563EB',background:'#EFF6FF',borderRadius:8,textDecoration:'none',fontSize:12,fontWeight:600}}>

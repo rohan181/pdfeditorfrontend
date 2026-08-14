@@ -1090,3 +1090,22 @@ body { overflow-x:clip; }
     -webkit-tap-highlight-color:transparent;
   }
 }
+
+/* ── Skip to content link ─────────────────────────────────────────────── */
+.skip-to-content {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 9999;
+  background: #1d1d1f;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top .15s ease;
+}
+.skip-to-content:focus-visible {
+  top: 12px;
+}

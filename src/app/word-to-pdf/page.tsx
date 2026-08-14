@@ -424,7 +424,7 @@ export default function WordToPDFPage() {
         {/* Nav */}
         <SiteNav />
 
-        <div className="wrap">
+        <main id="main-content" className="wrap">
 
           {/* Hero */}
           <div className="hero">
@@ -581,7 +581,7 @@ export default function WordToPDFPage() {
             </div>
           </div>
 
-        </div>
+        </main>
       </div>
 
       <input

@@ -120,6 +120,42 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .error-box{padding:11px 14px;background:#fff5f5;border:1px solid rgba(226,75,74,.25);border-radius:9px;font-size:13px;color:#E24B4A;margin-top:10px}
 `
 
+type WorkerResponse =
+  | { type: 'progress'; value: number; label: string }
+  | { type: 'success'; buffer: ArrayBuffer }
+  | { type: 'error'; message: string }
+
+function runLockWorker(
+  buffer: ArrayBuffer,
+  password: string,
+  onProgress: (value: number, label: string) => void,
+): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL('../../workers/qpdf-lock.worker.ts', import.meta.url),
+    )
+
+    worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
+      const message = event.data
+      if (message.type === 'progress') {
+        onProgress(message.value, message.label)
+        return
+      }
+
+      worker.terminate()
+      if (message.type === 'success') resolve(message.buffer)
+      else reject(new Error(message.message))
+    }
+
+    worker.onerror = () => {
+      worker.terminate()
+      reject(new Error('The local PDF engine failed to start. Please reload and try again.'))
+    }
+
+    worker.postMessage({ buffer, password }, [buffer])
+  })
+}
+
 function getStrength(pwd: string): { score: number; label: string } {
   let score = 0
   if (pwd.length >= 8) score++
@@ -172,27 +208,14 @@ export default function PDFPasswordLockPage() {
     if (password.length < 4) { setError('Password must be at least 4 characters.'); return }
     setError(''); setProcessing(true)
     try {
-      const form = new FormData()
-      form.append('file', file)
-      form.append('password', password)
-      form.append('filename', file.name)
+      const sourceBuffer = await file.arrayBuffer()
+      const output = await runLockWorker(sourceBuffer, password, () => {})
 
-      const res = await fetch('/api/lock-pdf', { method: 'POST', body: form })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error ?? `Server error ${res.status}`)
-      }
-
-      // Read Content-Disposition for the server-generated filename
-      const cd = res.headers.get('content-disposition') ?? ''
-      const match = cd.match(/filename="([^"]+)"/)
-      const name = match ? match[1] : lockedName
-
-      const blob = await res.blob()
+      const blob = new Blob([output], { type: 'application/pdf' })
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
       a.href     = url
-      a.download = name
+      a.download = lockedName
       a.click()
       setTimeout(() => URL.revokeObjectURL(url), 5000)
 

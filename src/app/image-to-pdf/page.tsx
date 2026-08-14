@@ -2,7 +2,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import BrandImage from 'next/image'
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -295,6 +294,7 @@ export default function ImageToPDFPage() {
     setError('')
     setConverting(true)
     try {
+      const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib')
       const pdfDoc = await PDFDocument.create()
       const font   = pageNums ? await pdfDoc.embedFont(StandardFonts.Helvetica) : null
       for (let i = 0; i < images.length; i++) {

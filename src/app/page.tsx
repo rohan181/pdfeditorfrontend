@@ -132,15 +132,17 @@ export default function HomePage() {
       {jsonLd.map((schema, i) => (
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />
       ))}
-      <AppleHome />
-      <SitePopularTools />
-      <LazyHomeScroll />
-      <LazyHomeAllTools />
-      <SiteUseCases />
-      <SitePrivacyNote />
-      <SitePricingPreview />
-      <SiteFAQ />
-      <SiteCTA />
+      <main id="main-content">
+        <AppleHome />
+        <SitePopularTools />
+        <LazyHomeScroll />
+        <LazyHomeAllTools />
+        <SiteUseCases />
+        <SitePrivacyNote />
+        <SitePricingPreview />
+        <SiteFAQ />
+        <SiteCTA />
+      </main>
       <SiteFooter />
       <MobileEditorShortcut />
     </>

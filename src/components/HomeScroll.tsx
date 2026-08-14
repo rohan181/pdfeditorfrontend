@@ -44,12 +44,12 @@ function ScreenDrop() {
             <Upload size={24} color="#818cf8" strokeWidth={1.5}/>
           </div>
           <div style={{...FI,fontSize:17,fontWeight:600,color:'#1d1d1f',marginBottom:7,letterSpacing:'-0.02em'}}>Drop your PDF here</div>
-          <div style={{...FI,fontSize:13,color:'#6E6E73',marginBottom:24,lineHeight:1.6}}>or click to browse · up to 100 MB · stays in your browser</div>
+          <div style={{...FI,fontSize:13,color:'#5b6472',marginBottom:24,lineHeight:1.6}}>or click to browse · up to 100 MB · stays in your browser</div>
           <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'11px 26px',background:'#2563EB',borderRadius:99,fontSize:13,fontWeight:600,color:'#fff',cursor:'default'}}>
             <Upload size={13} strokeWidth={2}/> Choose PDF File
           </div>
         </div>
-        <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.1em',textTransform:'uppercase'}}>PDF · Up to 100 MB · Runs in your browser</div>
+        <div style={{...MONO,fontSize:10,color:'#5b6472',letterSpacing:'0.1em',textTransform:'uppercase'}}>PDF · Up to 100 MB · Runs in your browser</div>
       </div>
     </div>
   )
@@ -125,7 +125,7 @@ function ScreenEditSign() {
               boxShadow:i===2?'0 0 0 2px rgba(99,102,241,.1)':'none'}}/>
         ))}
         <div style={{marginTop:12,padding:'9px 12px',border:'1px dashed #e4e4e7',borderRadius:8,background:'#fafafa'}}>
-          <div style={{fontSize:10,color:'#64748B',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>Signature</div>
+          <div style={{fontSize:10,color:'#5b6472',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6}}>Signature</div>
           <svg width="140" height="24" viewBox="0 0 140 24" fill="none">
             <path d="M6 16 C16 4 24 20 34 12 C44 4 56 18 68 9 C79 2 90 16 100 9 C109 3 120 15 130 11"
               stroke={RED} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="400"
@@ -224,7 +224,7 @@ export default function HomeScroll() {
     <>
       <div id="how-it-works-detail" className="sec-pad" style={{maxWidth:1200,margin:'0 auto'}}>
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.55,ease:E}}>
-          <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>See it in action</div>
+          <div style={{...MONO,fontSize:10,color:'#5b6472',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>See it in action</div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,4vw,56px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>
             Everything in your browser
           </h2>
@@ -261,11 +261,14 @@ export default function HomeScroll() {
             <div style={{position:'relative',zIndex:1}}>
             <div className="scr-dots" role="tablist" aria-label="Walkthrough steps" style={{display:'flex',gap:7,marginBottom:40}}>
               {GSTEPS.map((s,i)=>(
-                <motion.button key={i} type="button" onClick={()=>goToStep(i)}
+                <button key={i} type="button" onClick={()=>goToStep(i)}
                   role="tab" aria-selected={i===step} aria-label={`Step ${s.n}: ${s.label}`}
-                  animate={{width:i===step?28:7,background:i===step?s.color:'rgba(0,0,0,.12)'}}
-                  style={{height:7,borderRadius:99,border:0,padding:0,cursor:'pointer'}}
-                  transition={{duration:.38,ease:E}}/>
+                  style={{display:'flex',alignItems:'center',justifyContent:'center',minWidth:24,minHeight:24,padding:0,border:0,background:'transparent',cursor:'pointer'}}>
+                  <motion.span
+                    animate={{width:i===step?28:7,background:i===step?s.color:'rgba(0,0,0,.12)'}}
+                    style={{height:7,borderRadius:99,display:'block'}}
+                    transition={{duration:.38,ease:E}}/>
+                </button>
               ))}
             </div>
 
@@ -279,7 +282,7 @@ export default function HomeScroll() {
                 <h2 style={{...FI,fontSize:'clamp(28px,5.5vw,72px)',fontWeight:700,color:'#1d1d1f',letterSpacing:'-0.055em',lineHeight:.96,margin:'0 0 12px'}}>
                   {cur.headline}
                 </h2>
-                <p style={{...FI,fontSize:15,color:'#6E6E73',lineHeight:1.65,maxWidth:260,margin:'0 0 20px',letterSpacing:'-0.005em'}}>
+                <p style={{...FI,fontSize:15,color:'#5b6472',lineHeight:1.65,maxWidth:260,margin:'0 0 20px',letterSpacing:'-0.005em'}}>
                   {cur.body}
                 </p>
                 <div className="scr-cta">
@@ -303,7 +306,7 @@ export default function HomeScroll() {
                 style={{width:34,height:34,borderRadius:'50%',border:'1px solid #D1D5DB',background:'#fff',display:'grid',placeItems:'center',cursor:step===GSTEPS.length-1?'default':'pointer',opacity:step===GSTEPS.length-1 ? .4 : 1}}>
                 <ChevronRight size={15}/>
               </button>
-              <a href="#tools" style={{...FI,fontSize:12,color:'#64748B',marginLeft:4,textDecoration:'none'}}>Skip walkthrough</a>
+              <a href="#tools" style={{...FI,fontSize:12,color:'#5b6472',marginLeft:4,textDecoration:'none'}}>Skip walkthrough</a>
             </div>
             </div>
           </div>
@@ -327,7 +330,7 @@ export default function HomeScroll() {
                 <div className="scr-url" style={{flex:1,display:'flex',justifyContent:'center'}}>
                   <div style={{display:'flex',alignItems:'center',gap:5,background:'rgba(0,0,0,.05)',borderRadius:5,padding:'2px 10px',minWidth:180}}>
                     <Lock size={7} color="rgba(0,0,0,.35)" strokeWidth={2}/>
-                    <span style={{...MONO,fontSize:9,color:'rgba(0,0,0,.38)'}}>editpdfai.com/ai-pdf-form-filler</span>
+                    <span style={{...MONO,fontSize:9,color:'rgba(0,0,0,.6)'}}>editpdfai.com/ai-pdf-form-filler</span>
                   </div>
                 </div>
                 <motion.div animate={{background:cur.color}} transition={{duration:.4}}

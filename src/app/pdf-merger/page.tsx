@@ -1,7 +1,6 @@
 'use client'
 import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { PDFDocument } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -217,6 +216,7 @@ export default function PDFMergerPage() {
     if (files.length < 2) return
     setProcessing(true); setProgress(5); setError('')
     try {
+      const { PDFDocument } = await import('pdf-lib')
       const out = await PDFDocument.create()
       let done  = 0
 

@@ -27,28 +27,44 @@ export async function getUserSubscription(userId: string): Promise<SubscriptionT
 }
 
 // Returns true if allowed, false if daily limit exceeded.
+// Atomic: the first request of the day wins the insert. Every later request
+// compare-and-swaps its increment (UPDATE ... WHERE count = <value just read>),
+// so concurrent requests can't all read the same pre-increment count and
+// slip past the limit together — a losing request just retries the read.
 export async function checkAndIncrementUsage(
   userId: string,
   freeLimit = 5,
 ): Promise<boolean> {
   const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
 
-  // Read current count
-  const { data } = await supabaseAdmin
+  const { error: insertError } = await supabaseAdmin
     .from('ai_usage')
-    .select('count')
-    .eq('user_id', userId)
-    .eq('date', today)
-    .maybeSingle()
+    .insert({ user_id: userId, date: today, count: 1 })
 
-  const current = data?.count ?? 0
-  if (current >= freeLimit) return false
+  if (!insertError) return true
+  if (insertError.code !== '23505') throw insertError // not a unique-conflict — real failure
 
-  // Upsert incremented count
-  await supabaseAdmin.from('ai_usage').upsert(
-    { user_id: userId, date: today, count: current + 1 },
-    { onConflict: 'user_id,date' },
-  )
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const { data: row } = await supabaseAdmin
+      .from('ai_usage')
+      .select('count')
+      .eq('user_id', userId)
+      .eq('date', today)
+      .single()
 
-  return true
+    const current = row?.count ?? 0
+    if (current >= freeLimit) return false
+
+    const { data: updated } = await supabaseAdmin
+      .from('ai_usage')
+      .update({ count: current + 1 })
+      .eq('user_id', userId)
+      .eq('date', today)
+      .eq('count', current) // compare-and-swap: fails silently if another request already incremented
+      .select('count')
+
+    if (updated && updated.length > 0) return true
+  }
+
+  return false // lost the race five times in a row — fail closed
 }

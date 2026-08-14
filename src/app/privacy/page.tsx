@@ -57,7 +57,7 @@ export default function PrivacyPage() {
           <p style={{ fontFamily: FI, fontWeight: 700, fontSize: 14, color: '#15803d', margin: '0 0 10px' }}>🔒 The short version</p>
           <ul style={{ fontFamily: FI, fontSize: 14, color: '#374151', lineHeight: 1.65, margin: 0, paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 5 }}>
             <li>Your PDF files are processed <strong>entirely in your browser</strong> — they are never uploaded to our servers.</li>
-            <li>AI features send <strong>only the required text context</strong> (not the raw file) for processing.</li>
+            <li>AI features send <strong>only the required text — or, for OCR and visual form detection, a rendered image of the relevant page</strong> — never the raw PDF file.</li>
             <li>We do not store your files, documents, or PDF content.</li>
             <li>Payment is handled by <strong>Stripe</strong> — we never see or store your card details.</li>
           </ul>
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
 
         <Section title="2. How your files are processed">
           <P>All core PDF tools (merge, split, compress, rotate, watermark, edit, sign, etc.) run <strong>entirely in your browser</strong> using client-side JavaScript libraries. Your files never leave your device for these operations.</P>
-          <P>When you use an AI-powered feature (Summarizer, Form Filler, Translator, Mind Map, Quiz Creator, OCR), the relevant <strong>text content</strong> extracted from your PDF is sent to our AI provider (Anthropic / Claude) for processing. The raw PDF binary file is never transmitted.</P>
+          <P>When you use an AI-powered feature (Summarizer, Form Filler, Translator, Mind Map, Quiz Creator), the relevant <strong>text content</strong> extracted from your PDF is sent to our AI provider (Anthropic / Claude) for processing. OCR and the PDF Editor&apos;s AI-assisted form-field detection instead send a <strong>rendered image</strong> of the relevant page(s), since that is what those features need to read. In every case, the raw PDF binary file itself is never transmitted.</P>
           <P>We do not store, log, or retain any document content sent for AI processing beyond the time required to return a response to you.</P>
         </Section>
 
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="7. Security">
-          <P>We use HTTPS for all data in transit. Our database is hosted on Supabase with row-level security. We do not store raw PDFs or document content, which significantly limits exposure in any security event.</P>
+          <P>We use HTTPS for all data in transit. Access to your account data is enforced server-side on every request — no client ever talks to our database directly. We do not store raw PDFs or document content, which significantly limits exposure in any security event.</P>
         </Section>
 
         <Section title="8. Children">

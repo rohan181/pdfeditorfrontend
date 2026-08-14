@@ -1,7 +1,6 @@
 'use client'
 import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { PDFDocument } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -252,6 +251,7 @@ export default function PDFSplitterPage() {
     setProcessing(true); setProgress(5); setError(''); setResults([])
 
     try {
+      const { PDFDocument } = await import('pdf-lib')
       const bytes  = await file.arrayBuffer()
       const srcDoc = await PDFDocument.load(bytes)
       const base   = file.name.replace(/\.pdf$/i, '')

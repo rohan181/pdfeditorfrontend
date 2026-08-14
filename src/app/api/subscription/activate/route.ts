@@ -18,6 +18,9 @@ export async function POST(req: Request) {
 
     // Get the SetupIntent to find the payment method and customer
     const setupIntent = await stripe.setupIntents.retrieve(setupIntentId)
+    if (setupIntent.metadata?.userId !== userId) {
+      return Response.json({ error: 'This SetupIntent does not belong to you' }, { status: 403 })
+    }
     if (!setupIntent.payment_method) {
       return Response.json({ error: 'No payment method on SetupIntent' }, { status: 400 })
     }

@@ -61,7 +61,11 @@ function findClassicXref(bytes: Uint8Array): number {
 function findXrefStream(bytes: Uint8Array): number {
   const tailStart = Math.max(0, bytes.length - 8 * 1024 * 1024)
   const tail = new TextDecoder('latin1').decode(bytes.subarray(tailStart))
-  const pattern = /(?:^|[\r\n])(\d+)\s+(\d+)\s+obj\b[\s\S]{0,2048}?\/Type\s*\/XRef\b/g
+  // The scan between "N G obj" and "/Type /XRef" must not cross into a later,
+  // unrelated object — otherwise this can match an earlier object's header
+  // with a DIFFERENT object's /Type /XRef that happens to follow within the
+  // window, computing the wrong offset and corrupting a healthy file.
+  const pattern = /(?:^|[\r\n])(\d+)\s+(\d+)\s+obj\b(?:(?!endobj)[\s\S]){0,2048}?\/Type\s*\/XRef\b/g
   let match: RegExpExecArray | null
   let offset = -1
 

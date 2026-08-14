@@ -1162,6 +1162,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'How accurate is the OCR?', a: 'For clear, high-resolution scans, accuracy is typically 95–99%. Accuracy drops for low-quality scans, unusual fonts, or handwritten text.' },
       { q: 'Does it work on handwritten text?', a: 'The OCR is optimised for printed text. Handwriting recognition is supported but accuracy varies depending on legibility.' },
       { q: 'Is my scanned document sent to a server?', a: 'OCR uses our AI backend for processing. Files are sent securely over HTTPS and deleted immediately after the result is returned.' },
+      { q: 'Do I need to create an account to use OCR?', a: 'Yes — OCR is an AI-powered feature, so a free account is required. Signing in takes a few seconds, needs no credit card, and includes 5 free OCR scans per day. Pro removes the daily limit.' },
     ],
   },
 
@@ -1194,6 +1195,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Can it summarise legal or technical documents?', a: 'Yes. The AI handles technical vocabulary in legal, medical, financial, and scientific documents. For very specialised jargon, the summary uses the original terminology.' },
       { q: 'Does it work on scanned PDFs?', a: 'Scanned PDFs must contain a text layer (created by OCR) for summarisation to work. Use our PDF OCR tool first if the PDF is image-only.' },
       { q: 'Is my document content sent to an AI server?', a: 'The text content of your document is sent to our AI for processing. Raw file bytes are never transmitted — only the extracted text.' },
+      { q: 'Do I need to create an account to summarize a PDF?', a: 'Yes — a free account is required to use the summarizer. Signing in takes a few seconds and needs no credit card, and gives you 5 free AI summaries per day. Core PDF tools like merge, split, and compress need no account at all; only AI-powered features require sign-in to keep the free tier fair.' },
     ],
   },
 
@@ -1226,6 +1228,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'How is the translation quality?', a: 'Translation is powered by advanced large language models that understand context, so the quality is significantly better than word-for-word machine translation.' },
       { q: 'Can it translate technical or legal documents?', a: 'Yes. The AI handles domain-specific terminology in legal, medical, and technical documents, keeping specialised terms accurate where possible.' },
       { q: 'Is my document sent to a server for translation?', a: 'The text content is sent securely to our AI backend for translation. Raw file bytes stay on your device. Extracted text is deleted after the translated PDF is generated.' },
+      { q: 'Do I need to create an account to translate a PDF?', a: 'Yes — a free account is required for AI translation. Sign-in takes a few seconds and needs no credit card, and includes 5 free translations per day. Pro removes the daily limit.' },
     ],
   },
 
@@ -1386,6 +1389,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Can I edit the mind map after it is generated?', a: 'Yes. You can rename nodes, add new branches, delete branches, and reorder the map to match your own understanding.' },
       { q: 'Can I export the mind map?', a: 'Yes. Export as a PNG image for presentations, or as a JSON file to import into other mind mapping tools.' },
       { q: 'Does my document get sent to a server?', a: 'The text content is sent to our AI backend for analysis. Raw file bytes are never transmitted. Text is deleted after the mind map is generated.' },
+      { q: 'Do I need to create an account to generate a mind map?', a: 'Yes — mind map generation is an AI feature, so a free account is required. Sign-in takes a few seconds and needs no credit card. Free users get 5 free AI generations per day; Pro removes the daily limit and page-length cap.' },
     ],
   },
 
@@ -1418,6 +1422,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Are the questions accurate to the source material?', a: 'Questions are generated from the text of your document, and each one is editable before use. As with any generative AI, review answers for accuracy — especially for exams or graded material — before relying on them.' },
       { q: 'Can I edit the questions before using them?', a: 'Yes. All generated questions and answers are editable before you download or take the quiz.' },
       { q: 'Is my document sent to a server?', a: 'The text is sent to our AI backend for question generation and deleted immediately after the quiz is created.' },
+      { q: 'Do I need to create an account to generate a quiz?', a: 'Yes — quiz generation is an AI feature, so a free account is required. Sign-in takes a few seconds and needs no credit card. Free users get 5 free AI generations per day, up to 10 questions per session; Pro removes the daily limit and allows up to 50 questions per document.' },
     ],
   },
 

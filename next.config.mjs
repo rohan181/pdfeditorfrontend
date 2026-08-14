@@ -7,6 +7,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   compress: true,
+  poweredByHeader: false,
 
   async redirects() {
     return [
@@ -15,6 +16,26 @@ const nextConfig = {
         has: [{ type: 'host', value: 'editpdfai.com' }],
         destination: 'https://www.editpdfai.com/:path*',
         permanent: true,
+      },
+    ]
+  },
+
+  // Content-Security-Policy is intentionally not set here: this app loads
+  // scripts from Clerk, Stripe, PostHog, Google Analytics, Cloudflare Web
+  // Analytics, and cdnjs (pdf.js worker, html2canvas, jsPDF), so a CSP needs
+  // to be built and tested against the real production domain before it ships
+  // — an incorrect one silently breaks checkout/sign-in/PDF conversion instead
+  // of failing loudly. See the QA report for the recommended next step.
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=(), interest-cohort=()' },
+        ],
       },
     ]
   },

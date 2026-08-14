@@ -97,6 +97,11 @@ function GuideContent({ guide }: { guide: Guide }) {
     datePublished:    guide.datePublished,
     dateModified:     guide.dateModified,
     url:              `https://www.editpdfai.com/guides/${guide.slug}`,
+    author: {
+      '@type': 'Organization',
+      name:    'EditPDF AI',
+      url:     'https://www.editpdfai.com/about',
+    },
     publisher: {
       '@type': 'Organization',
       name:    'EditPDF AI',
@@ -154,6 +159,10 @@ function GuideContent({ guide }: { guide: Guide }) {
           <span style={{ width: 3, height: 3, borderRadius: 9, background: '#d1d5db' }} />
           <span style={{ fontSize: 11.5, color: '#9ca3af', fontWeight: 500 }}>
             Updated {new Date(guide.dateModified).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </span>
+          <span style={{ width: 3, height: 3, borderRadius: 9, background: '#d1d5db' }} />
+          <span style={{ fontSize: 11.5, color: '#9ca3af', fontWeight: 500 }}>
+            By the EditPDF AI team
           </span>
         </div>
 

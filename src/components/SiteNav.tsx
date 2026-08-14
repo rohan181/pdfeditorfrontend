@@ -196,8 +196,8 @@ export default function SiteNav() {
             {/* Tools dropdown trigger */}
             <div onMouseEnter={openMenu} onMouseLeave={closeMenu} style={{ position: 'relative' }}
               className="sn-desk-only">
-              <button onClick={() => setToolsOpen(v => !v)}
-                style={{ ...FI, ...TAP, display: 'flex', alignItems: 'center', gap: 4, padding: '6px 11px', background: toolsOpen ? 'rgba(0,0,0,.05)' : 'transparent', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: toolsOpen ? 600 : 500, color: toolsOpen ? '#1d1d1f' : 'rgba(0,0,0,.55)', outline: 'none' }}>
+              <button onClick={() => setToolsOpen(v => !v)} className="sn-tools-trigger"
+                style={{ ...FI, ...TAP, display: 'flex', alignItems: 'center', gap: 4, padding: '6px 11px', background: toolsOpen ? 'rgba(0,0,0,.05)' : 'transparent', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: toolsOpen ? 600 : 500, color: toolsOpen ? '#1d1d1f' : 'rgba(0,0,0,.62)' }}>
                 Tools
                 <motion.span style={{ display: 'flex', opacity: .55 }} animate={{ rotate: toolsOpen ? 180 : 0 }} transition={{ duration: .14 }}>
                   <ChevronDown size={12} strokeWidth={2.5} />
@@ -208,7 +208,7 @@ export default function SiteNav() {
             {NAV_LINKS.map(({ label, href }) => (
               <Link prefetch={false} key={label} href={href} className="sn-desk-only" style={{ textDecoration: 'none' }}>
                 <motion.span whileHover={{ color: '#1d1d1f' }}
-                  style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 11px', fontSize: 13, fontWeight: 500, borderRadius: 8, color: 'rgba(0,0,0,.52)' }}>
+                  style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 11px', fontSize: 13, fontWeight: 500, borderRadius: 8, color: 'rgba(0,0,0,.62)' }}>
                   {label}
                 </motion.span>
               </Link>
@@ -471,6 +471,7 @@ export default function SiteNav() {
           .sn-desk-only { display: none  !important; }
           .sn-mob-only  { display: flex  !important; }
         }
+        .sn-tools-trigger:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
       `}</style>
     </>
   )

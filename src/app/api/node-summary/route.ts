@@ -38,7 +38,7 @@ Write a SHORT, CLEAR summary of "${nodeLabel}" in 2–4 sentences. Focus only on
 
     const client = new Anthropic({ apiKey })
     const msg = await client.messages.create({
-      model:      'claude-opus-4-8',
+      model:      'claude-opus-5',
       max_tokens: 300,
       messages:   [{ role: 'user', content: prompt }],
     })

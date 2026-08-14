@@ -31,7 +31,7 @@ function Ul({ items }: { items: string[] }) {
 }
 
 export default function TermsPage() {
-  const updated = 'July 1, 2025'
+  const updated = 'July 3, 2026'
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>

@@ -2,7 +2,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import BrandImage from 'next/image'
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import toolSeoData from '@/lib/toolSeoData'
@@ -328,6 +327,7 @@ export default function ScanToPDFPage() {
     if (!pages.length) return
     setError(''); setConverting(true)
     try {
+      const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib')
       const pdfDoc = await PDFDocument.create()
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
       for (let i = 0; i < pages.length; i++) {

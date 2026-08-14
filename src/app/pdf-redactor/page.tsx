@@ -1,7 +1,6 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
-import { PDFDocument, rgb, BlendMode } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -561,6 +560,7 @@ export default function PDFRedactorPage() {
     if (!file || totalRects === 0) return
     setApplying(true); setProgress(5); setError('')
     try {
+      const { PDFDocument, rgb, BlendMode } = await import('pdf-lib')
       const bytes  = await file.arrayBuffer()
       const pdfDoc = await PDFDocument.load(bytes)
       const pdfPgs = pdfDoc.getPages()

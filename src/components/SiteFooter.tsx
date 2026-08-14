@@ -6,16 +6,16 @@ const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
 
 const CATS = [
-  { id: 'AI',       color: '#7c3aed', Icon: Sparkles },
-  { id: 'Edit',     color: '#2563eb', Icon: FilePen  },
-  { id: 'Pages',    color: '#f97316', Icon: Layers   },
-  { id: 'Convert',  color: '#16a34a', Icon: FileType },
-  { id: 'Protect',  color: '#dc2626', Icon: KeyRound },
-  { id: 'Organize', color: '#d97706', Icon: Merge    },
+  { id: 'AI',       color: '#6d28d9', Icon: Sparkles },
+  { id: 'Edit',     color: '#1d4ed8', Icon: FilePen  },
+  { id: 'Pages',    color: '#9a3412', Icon: Layers   },
+  { id: 'Convert',  color: '#166534', Icon: FileType },
+  { id: 'Protect',  color: '#b91c1c', Icon: KeyRound },
+  { id: 'Organize', color: '#92400e', Icon: Merge    },
 ]
 
 const toolCols = [
-  { title: 'AI Tools',  color: '#7c3aed', links: [
+  { title: 'AI Tools',  color: '#6d28d9', links: [
     ['AI PDF Form Filler',  '/ai-pdf-form-filler'],
     ['Chat with PDF',   '/chat-with-pdf'],
     ['PDF OCR Scanner', '/pdf-ocr'],
@@ -24,7 +24,7 @@ const toolCols = [
     ['Quiz Creator',    '/quiz-creator'],
     ['PDF Translator',  '/pdf-translator'],
   ]},
-  { title: 'Edit & Pages', color: '#2563eb', links: [
+  { title: 'Edit & Pages', color: '#1d4ed8', links: [
     ['PDF Editor',      '/pdf-editor'],
     ['PDF Viewer',      '/pdf-viewer'],
     ['PDF E-Signer',    '/pdf-signer'],
@@ -37,7 +37,7 @@ const toolCols = [
     ['Add Page Numbers','/add-page-numbers'],
     ['PDF Page Labels', '/pdf-page-labels'],
   ]},
-  { title: 'Convert',   color: '#16a34a', links: [
+  { title: 'Convert',   color: '#166534', links: [
     ['PDF to Word',     '/pdf-to-word'],
     ['PDF to Excel',    '/pdf-to-excel'],
     ['PDF to PowerPoint','/pdf-to-ppt'],
@@ -51,7 +51,7 @@ const toolCols = [
     ['ODT to PDF',      '/odt-to-pdf'],
     ['HTML to PDF',     '/html-to-pdf'],
   ]},
-  { title: 'Protect & Organize', color: '#dc2626', links: [
+  { title: 'Protect & Organize', color: '#b91c1c', links: [
     ['PDF Password Lock','/pdf-password-lock'],
     ['Unlock PDF',       '/pdf-unlock'],
     ['PDF Watermark',   '/pdf-watermark'],
@@ -73,7 +73,7 @@ const toolCols = [
     ['Remove PDF Links', '/remove-pdf-links'],
     ['Export PDF Comments', '/export-pdf-comments'],
   ]},
-  { title: 'Guides',    color: '#0891b2', links: [
+  { title: 'Guides',    color: '#155e75', links: [
     ['Edit PDF Without Adobe',   '/guides/how-to-edit-a-pdf-without-adobe'],
     ['Reduce PDF File Size',     '/guides/how-to-reduce-pdf-file-size'],
     ['Fill a PDF Form with AI',  '/guides/how-to-fill-out-a-pdf-form-automatically'],
@@ -98,9 +98,9 @@ export default function SiteFooter() {
         .sf-footer-grid { display:grid; grid-template-columns:1.45fr repeat(6,minmax(0,1fr)); gap:24px; align-items:start; margin-bottom:48px; }
         @media(max-width:900px){ .sf-footer-grid{ grid-template-columns:1fr 1fr !important; gap:32px !important; } }
         @media(max-width:600px){ .sf-footer-grid{ grid-template-columns:1fr !important; gap:24px !important; } }
-        .sf-link { display:block; font-size:13px; color:#6b7280; text-decoration:none; font-weight:500; margin-bottom:10px; letter-spacing:-0.01em; transition:color .12s, transform .12s; }
+        .sf-link { display:block; font-size:13px; color:#5b6472; text-decoration:none; font-weight:500; margin-bottom:10px; letter-spacing:-0.01em; transition:color .12s, transform .12s; }
         .sf-link:hover { color:#1d1d1f; transform:translateX(3px); }
-        .sf-bot-link { font-size:11px; color:#64748B; text-decoration:none; font-weight:500; transition:color .12s; }
+        .sf-bot-link { font-size:11px; color:#5b6472; text-decoration:none; font-weight:500; transition:color .12s; }
         .sf-bot-link:hover { color:#374151; }
       `}</style>
 
@@ -113,14 +113,14 @@ export default function SiteFooter() {
               <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} />
             </Link>
 
-            <p style={{ ...FI, fontSize: 13, color: '#6b7280', lineHeight: 1.7, maxWidth: 220, margin: '0 0 16px' }}>
+            <p style={{ ...FI, fontSize: 13, color: '#5b6472', lineHeight: 1.7, maxWidth: 220, margin: '0 0 16px' }}>
               50+ browser-based PDF and AI tools. Edit, convert, protect and sign. Core tools need no account.
             </p>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', background: 'rgba(22,163,74,.06)', border: '1px solid rgba(22,163,74,.16)', borderRadius: 10, marginBottom: 20, maxWidth: 240 }}>
               <Lock size={13} color="#16a34a" strokeWidth={2.2} style={{ flexShrink: 0, marginTop: 1 }} />
               <p style={{ ...FI, fontSize: 11.5, color: '#374151', lineHeight: 1.55, margin: 0 }}>
-                <strong style={{ color: '#15803d' }}>Your files stay private.</strong> PDFs are processed in your browser. AI features use text context only — no raw file is uploaded.
+                <strong style={{ color: '#166534' }}>Your files stay private.</strong> PDFs are processed in your browser. AI features use text context only — no raw file is uploaded.
               </p>
             </div>
 
@@ -136,12 +136,12 @@ export default function SiteFooter() {
               target="_blank"
               rel="noopener noreferrer"
               style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 18, color: '#0F172A', fontSize: 12.5, fontWeight: 700, textDecoration: 'none' }}
-              aria-label="Write a review for EditPDF AI on Trustpilot"
+              aria-label="Write a review on Trustpilot for EditPDF AI"
             >
               <span aria-hidden="true" style={{ color: '#00B67A', fontSize: 17, lineHeight: 1 }}>★</span>
               Write a review on Trustpilot
             </a>
-            <p style={{ ...MONO, fontSize: 10, color: '#64748B', letterSpacing: '0.04em' }}>
+            <p style={{ ...MONO, fontSize: 10, color: '#5b6472', letterSpacing: '0.04em' }}>
               © {new Date().getFullYear()} EditPDF AI. All rights reserved.
             </p>
           </div>
@@ -162,7 +162,7 @@ export default function SiteFooter() {
         {/* Bottom bar */}
         <div style={{ borderTop: '1px solid #e5e5ea', padding: '16px 0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <span style={{ ...MONO, fontSize: 10, color: '#64748B', letterSpacing: '0.04em' }}>
+            <span style={{ ...MONO, fontSize: 10, color: '#5b6472', letterSpacing: '0.04em' }}>
               50+ TOOLS · FREE · AI FEATURES
             </span>
             <div style={{ display: 'flex', gap: 12 }}>

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { PDFDocument, degrees } from 'pdf-lib'
+import type { PDFDocument } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -282,6 +282,7 @@ export default function PDFPageManagerPage() {
     if (pages.length === 0) return
     setProcessing(true); setProgress(5); setError('')
     try {
+      const { PDFDocument, degrees } = await import('pdf-lib')
       // Load each source PDF once
       const srcDocs = new Map<string, Awaited<ReturnType<typeof PDFDocument.load>>>()
       for (const src of sources) {

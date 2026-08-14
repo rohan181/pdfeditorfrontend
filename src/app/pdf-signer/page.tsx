@@ -224,6 +224,7 @@ export default function PDFSignerPage() {
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null)
   const [loading,  setLoading]  = useState(false)
   const [applying, setApplying] = useState(false)
+  const [exportError, setExportError] = useState('')
   const [curPage,  setCurPage]  = useState(0)
 
   // Modal
@@ -272,7 +273,10 @@ export default function PDFSignerPage() {
       const buf   = await file.arrayBuffer()
       const bytes = new Uint8Array(buf)
       setPdfBytes(bytes)
-      const pdf   = await pdfjsLib.getDocument({ data: bytes }).promise
+      // pdf.js transfers ownership of the underlying ArrayBuffer to its worker,
+      // which would detach `bytes` (and the `pdfBytes` state above) — pass a
+      // copy so the original stays intact for exportPDF() to reuse later.
+      const pdf   = await pdfjsLib.getDocument({ data: bytes.slice() }).promise
       pdfDocRef.current = pdf
       const n     = pdf.numPages
       const arr: string[] = []
@@ -528,6 +532,7 @@ export default function PDFSignerPage() {
   const exportPDF = async () => {
     if (!pdfBytes) return
     setApplying(true)
+    setExportError('')
     try {
       const { PDFDocument, rgb, degrees, StandardFonts } = await import('pdf-lib')
       const pdfDoc = await PDFDocument.load(pdfBytes)
@@ -539,7 +544,11 @@ export default function PDFSignerPage() {
         const b64 = ps.dataUrl.split(',')[1], bin = atob(b64)
         const arr = new Uint8Array(bin.length)
         for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
-        const img = await pdfDoc.embedPng(arr)
+        // Signatures can come from freehand drawing/typed text (always PNG) or an
+        // uploaded image, which may be a JPEG — embed with the format that
+        // actually matches the bytes instead of assuming PNG.
+        const isJpeg = ps.dataUrl.startsWith('data:image/jpeg') || ps.dataUrl.startsWith('data:image/jpg')
+        const img = isJpeg ? await pdfDoc.embedJpg(arr) : await pdfDoc.embedPng(arr)
         pg.drawImage(img, {
           x: ps.x * pw, y: ph - ps.y * ph - ps.h * ph,
           width: ps.w * pw, height: ps.h * ph,
@@ -559,6 +568,9 @@ export default function PDFSignerPage() {
       const a    = document.createElement('a'); a.href = url
       a.download = (pdfFile?.name ?? 'doc').replace(/\.pdf$/i,'') + '-signed.pdf'; a.click()
       URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('[pdf-signer] export failed:', err)
+      setExportError('Could not download the signed PDF. Please try again — if this keeps happening, try a different signature type.')
     } finally { setApplying(false) }
   }
 
@@ -658,6 +670,12 @@ export default function PDFSignerPage() {
             {applying ? 'Saving…' : '↓ Download'}
           </button>
         </nav>
+
+        {exportError && (
+          <div style={{ padding: '8px 20px', background: '#fff5f5', borderBottom: '1px solid rgba(226,75,74,.25)', color: '#b3261e', fontSize: 12.5, textAlign: 'center' }}>
+            {exportError}
+          </div>
+        )}
 
         {loading ? (
           <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:12 }}>

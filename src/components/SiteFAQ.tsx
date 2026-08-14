@@ -14,7 +14,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: 'Are my PDF files uploaded to a server?',
-    a: 'Core tools process your PDF entirely in your browser — nothing is uploaded. For AI features, only the extracted text context is sent, never the raw PDF file.',
+    a: 'Core tools process your PDF entirely in your browser — nothing is uploaded. For AI features, we send only what’s needed — text for most tools, or a page image for OCR and visual form detection — never the raw PDF file.',
   },
   {
     q: 'What is the maximum file size?',

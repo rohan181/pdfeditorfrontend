@@ -23,7 +23,6 @@ const isProtectedApi = createRouteMatcher([
   '/api/pdf-to-word(.*)',
   '/api/pdf-to-ppt(.*)',
   '/api/quiz-gen(.*)',
-  '/api/test-ai(.*)',
 ])
 
 export default clerkMiddleware(async (auth, req) => {

@@ -332,7 +332,18 @@ const FAQS = [
   { q: 'How do I fill a PDF form online without Adobe Acrobat?', a: 'Upload your PDF to EditPDF AI, use the AI form filler to auto-detect and fill all fields, add a signature if needed, then download. No Adobe Acrobat subscription or desktop software required — everything runs free in your browser.' },
   { q: "What's the difference between a fillable and a non-fillable PDF?", a: 'A fillable PDF (AcroForm) has interactive fields you can click and type into. A non-fillable or flat PDF is an image or static layout with no interactive fields. Our AI handles both: AcroForms are filled natively, and flat PDFs are filled using text overlays positioned by AI over the detected form areas.' },
   { q: 'Can it fill a scanned PDF form?', a: 'Yes. For scanned paper forms that have been saved as image-based PDFs, the built-in OCR engine first extracts the layout and field positions. AI then fills the detected fields using text overlays. The result is a completed PDF that looks identical to a manually filled paper form.' },
+  { q: 'Can I use it to fill out a visa or immigration application form?', a: 'Yes. Visa and immigration forms are usually standard PDFs (fillable or scanned), which the AI handles the same way as any other form: paste your personal details once, and it matches them to the correct fields across the whole document. Always double-check every field against your official documents before submitting — the tool speeds up filling, but you are responsible for the accuracy of what you submit to an immigration authority.' },
 ]
+
+const FAQ_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQS.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+}
 
 const TICKS = ['AI Form Filling','OCR Support','Digital Signature','Instant Export']
 
@@ -403,6 +414,7 @@ export default function AIPDFFormFillerPage() {
   return (
     <div className="pg">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
 
       {/* Fullscreen editor overlay */}
       {editorOpen && (

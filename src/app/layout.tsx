@@ -80,6 +80,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <link rel="dns-prefetch" href="https://api.anthropic.com" />
         </head>
         <body style={{ fontFamily: 'var(--font-dm), system-ui, sans-serif' }}>
+          <a href="#main-content" className="skip-to-content">Skip to content</a>
           <UpgradeGateProvider />
           {children}
           <PdfResultDock />

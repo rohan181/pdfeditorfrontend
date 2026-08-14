@@ -27,9 +27,9 @@ const popular: { label: string; href: string; Icon: any; tier: ToolTier; kind: T
 ]
 
 const TIER_BADGE: Record<ToolTier, { label: string; bg: string; color: string }> = {
-  free: { label:'Free',       bg:'rgba(16,185,129,.1)',   color:'#059669' },
-  ai:   { label:'5 free/day', bg:'rgba(124,58,237,.1)',   color:'#7C3AED' },
-  pro:  { label:'Pro',        bg:'rgba(37,99,235,.1)',    color:'#2563EB' },
+  free: { label:'Free',       bg:'rgba(16,185,129,.1)',   color:'#047857' },
+  ai:   { label:'5 free/day', bg:'rgba(124,58,237,.1)',   color:'#6d28d9' },
+  pro:  { label:'Pro',        bg:'rgba(37,99,235,.1)',    color:'#1d4ed8' },
 }
 
 export default function SitePopularTools() {

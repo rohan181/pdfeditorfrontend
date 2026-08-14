@@ -1,7 +1,6 @@
 'use client'
 import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
@@ -262,6 +261,7 @@ export default function PDFWatermarkPage() {
     setProcessing(true)
     setStatusMsg('Applying watermark…')
     try {
+      const { PDFDocument, rgb, degrees, StandardFonts } = await import('pdf-lib')
       const doc  = await PDFDocument.load(cur.slice(0))
       const font = await doc.embedFont(StandardFonts.HelveticaBold)
       const pdfPages = doc.getPages()

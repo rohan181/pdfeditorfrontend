@@ -1,7 +1,6 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
-import { PDFDocument, StandardFonts, rgb, PDFName, PDFString } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -243,10 +242,6 @@ const FIELD_DEFS = [
 let _id = 0
 const uid = () => `f-${Date.now()}-${++_id}`
 const fmt = (b: number) => b < 1048576 ? `${(b/1024).toFixed(1)} KB` : `${(b/1048576).toFixed(2)} MB`
-const hexToRgb = (hex: string) => {
-  const h = hex.replace('#','')
-  return rgb(parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255)
-}
 
 // Adjust one fraction in an array while keeping the rest proportional, each ≥ MIN
 const normalizeFractions = (arr: number[], idx: number, newVal: number): number[] => {
@@ -794,6 +789,11 @@ export default function PDFFormBuilderPage() {
   const onDownload = async () => {
     setApplying(true); setError('')
     try {
+      const { PDFDocument, StandardFonts, rgb, PDFName, PDFString } = await import('pdf-lib')
+      const hexToRgb = (hex: string) => {
+        const h = hex.replace('#','')
+        return rgb(parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255)
+      }
       let pdfDoc: any
 
       if (mode === 'blank') {

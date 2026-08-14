@@ -192,6 +192,22 @@ export default function ExtractPages() {
   }
 
   // ── Extract & download ─────────────────────────────────────────────────────
+  // Collapses consecutive page numbers into ranges (e.g. 1,2,3,5,7,8 -> "p1-3_5_7-8")
+  // so extracting most/all of a large PDF doesn't produce a 200+ character filename.
+  const formatPageSuffix = (pageNums: number[]): string => {
+    const parts: string[] = []
+    let rangeStart = pageNums[0]
+    let prev = pageNums[0]
+    for (let i = 1; i <= pageNums.length; i++) {
+      const n = pageNums[i]
+      if (n === prev + 1) { prev = n; continue }
+      parts.push(rangeStart === prev ? `${rangeStart}` : `${rangeStart}-${prev}`)
+      if (n !== undefined) { rangeStart = n; prev = n }
+    }
+    const suffix = `p${parts.join('_')}`
+    return suffix.length <= 40 ? suffix : `${pageNums.length}-pages`
+  }
+
   const extractPages = async () => {
     if (!file || selected.size === 0) return
     setSaving(true); setError(''); setDone(false)
@@ -213,7 +229,7 @@ export default function ExtractPages() {
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
       a.href     = url
-      a.download = file.name.replace(/\.pdf$/i, `_p${pageNums.join('-')}.pdf`)
+      a.download = file.name.replace(/\.pdf$/i, `_${formatPageSuffix(pageNums)}.pdf`)
       a.click()
       URL.revokeObjectURL(url)
       setDone(true)

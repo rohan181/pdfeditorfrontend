@@ -52,7 +52,7 @@ Translate the above document into ${targetLang}. Output only the translated text
 
     const client = new Anthropic({ apiKey })
     const stream = await client.messages.stream({
-      model:      'claude-sonnet-4-6',
+      model:      'claude-sonnet-5',
       max_tokens: 8192,
       system:     systemPrompt,
       messages:   [{ role: 'user', content: userMsg }],
