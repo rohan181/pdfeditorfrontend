@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Redact PDF Online Free — Permanently Remove Sensitive Text',
-  description: 'Redact sensitive information from PDF files online for free. Permanently black out names, addresses, SSNs and confidential data. Secure, no server upload.',
-  keywords: 'redact PDF, PDF redaction, remove sensitive text PDF, black out PDF text, PDF redactor, redact PDF online free, GDPR redaction',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-redactor' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'Redact PDF Online Free — Permanently Remove Sensitive Text',
-    description: 'Permanently black out sensitive text and data from any PDF. Free, secure, no server upload.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-redactor',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-redactor.png', width: 1200, height: 630, alt: 'Redact PDF Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Redact PDF Online Free',
-    description: 'Permanently remove sensitive information from any PDF. Secure, no server upload.',
-    images: ['/social/pdf-redactor.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-redactor'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-redactor#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF Redactor',
   url: 'https://www.editpdfai.com/pdf-redactor',
   applicationCategory: 'UtilitiesApplication',

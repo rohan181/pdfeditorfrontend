@@ -166,6 +166,37 @@ const uid = () => `r-${++_uid}`
 
 function clamp(v: number, min: number, max: number) { return Math.max(min, Math.min(max, v)) }
 
+type SplitWorkerResponse =
+  | { type: 'progress'; value: number }
+  | { type: 'success'; outputs: { label: string; buffer: ArrayBuffer; pageCount: number }[] }
+  | { type: 'error'; message: string }
+
+function runSplitWorker(
+  buffer: ArrayBuffer,
+  groups: { label: string; indices: number[] }[],
+  onProgress: (value: number) => void,
+): Promise<{ label: string; buffer: ArrayBuffer; pageCount: number }[]> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../../workers/pdf-split.worker.ts', import.meta.url))
+
+    worker.onmessage = (event: MessageEvent<SplitWorkerResponse>) => {
+      const message = event.data
+      if (message.type === 'progress') { onProgress(message.value); return }
+
+      worker.terminate()
+      if (message.type === 'success') resolve(message.outputs)
+      else reject(new Error(message.message))
+    }
+
+    worker.onerror = () => {
+      worker.terminate()
+      reject(new Error('The local PDF engine failed to start. Please reload and try again.'))
+    }
+
+    worker.postMessage({ buffer, groups }, [buffer])
+  })
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function PDFSplitterPage() {
   const [file, setFile]         = useState<File | null>(null)
@@ -251,10 +282,8 @@ export default function PDFSplitterPage() {
     setProcessing(true); setProgress(5); setError(''); setResults([])
 
     try {
-      const { PDFDocument } = await import('pdf-lib')
-      const bytes  = await file.arrayBuffer()
-      const srcDoc = await PDFDocument.load(bytes)
-      const base   = file.name.replace(/\.pdf$/i, '')
+      const bytes = await file.arrayBuffer()
+      const base  = file.name.replace(/\.pdf$/i, '')
 
       // Build list of page-groups to extract (0-based indices)
       let groups: { label: string; indices: number[] }[] = []
@@ -279,20 +308,15 @@ export default function PDFSplitterPage() {
         groups = [{ label: `selected_${sorted.length}pages`, indices: sorted.map(p => p - 1) }]
       }
 
-      const out: SplitResult[] = []
-      for (let g = 0; g < groups.length; g++) {
-        const { label, indices } = groups[g]
-        const outDoc = await PDFDocument.create()
-        const copied = await outDoc.copyPages(srcDoc, indices)
-        copied.forEach(p => outDoc.addPage(p))
-        const outBytes = await outDoc.save()
-        const blob     = new Blob([outBytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' })
-        const pgRange  = indices.length === 1
+      const outputs = await runSplitWorker(bytes, groups, setProgress)
+      const out: SplitResult[] = outputs.map((o, g) => {
+        const indices = groups[g].indices
+        const blob    = new Blob([o.buffer], { type: 'application/pdf' })
+        const pgRange = indices.length === 1
           ? `Page ${indices[0] + 1}`
           : `Pages ${indices[0] + 1}–${indices[indices.length - 1] + 1}`
-        out.push({ name: `${base}_${label}.pdf`, blob, pages: pgRange })
-        setProgress(5 + Math.round(((g + 1) / groups.length) * 90))
-      }
+        return { name: `${base}_${o.label}.pdf`, blob, pages: pgRange }
+      })
 
       setProgress(100)
       setResults(out)

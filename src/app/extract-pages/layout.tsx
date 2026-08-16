@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Extract PDF Pages Online Free — Save Specific Pages as PDF',
-  description: 'Extract specific pages from a PDF online for free. Save selected pages as a new PDF document. Works instantly in your browser — no install, no signup.',
-  keywords: 'extract PDF pages, extract pages from PDF, save PDF pages, PDF page extractor, extract specific pages PDF online free',
-  alternates: { canonical: 'https://www.editpdfai.com/extract-pages' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'Extract PDF Pages Online Free — Save Specific Pages as PDF',
-    description: 'Extract and save specific pages from any PDF as a new document. Free, instant, no signup.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/extract-pages',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/extract-pages.png', width: 1200, height: 630, alt: 'Extract PDF Pages Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Extract PDF Pages Online Free',
-    description: 'Save specific pages from any PDF as a new document. Free, instant, no signup.',
-    images: ['/social/extract-pages.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['extract-pages'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/extract-pages#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'Extract PDF Pages',
   url: 'https://www.editpdfai.com/extract-pages',
   applicationCategory: 'UtilitiesApplication',

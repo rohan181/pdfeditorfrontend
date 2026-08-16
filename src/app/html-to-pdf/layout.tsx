@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'HTML to PDF Converter Online Free — Webpage to PDF',
-  description: 'Convert HTML files or web pages to PDF online for free. Paste HTML code or a URL and download a perfectly rendered PDF. Supports CSS styling. No signup.',
-  keywords: 'HTML to PDF, convert HTML to PDF online free, webpage to PDF, website to PDF, HTML file to PDF, URL to PDF',
-  alternates: { canonical: 'https://www.editpdfai.com/html-to-pdf' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'HTML to PDF Converter Online Free — Webpage to PDF',
-    description: 'Convert HTML code or web pages to PDF instantly. Supports CSS styling. Free, no signup.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/html-to-pdf',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/html-to-pdf.png', width: 1200, height: 630, alt: 'HTML to PDF Converter Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'HTML to PDF Converter Online Free',
-    description: 'Convert HTML or web pages to PDF instantly. Supports CSS. Free, no signup.',
-    images: ['/social/html-to-pdf.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['html-to-pdf'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/html-to-pdf#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'HTML to PDF Converter',
   url: 'https://www.editpdfai.com/html-to-pdf',
   applicationCategory: 'UtilitiesApplication',

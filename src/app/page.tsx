@@ -14,7 +14,6 @@ import MobileEditorShortcut from '@/components/MobileEditorShortcut'
 export const metadata: Metadata = {
   title: { absolute: 'EditPDF AI: Free Online PDF Editor & 50+ PDF Tools' },
   description: 'EditPDF AI provides 50+ free online PDF tools to edit, fill, sign, merge, compress and convert PDFs. Core tools need no account and files stay private.',
-  keywords: 'EditPDF AI, EditPDFAI, PDF editor, PDF converter, free online PDF tools, edit PDF online for free without signup, edit and sign PDF online free, merge PDF files online, compress PDF without losing quality, convert PDF to Word online, fill PDF forms online, AI PDF tools',
   applicationName: 'EditPDF AI',
   // No `alternates.canonical` here on purpose — Next.js's metadata resolver
   // hardcodes root-path URLs down to a bare origin (drops the trailing

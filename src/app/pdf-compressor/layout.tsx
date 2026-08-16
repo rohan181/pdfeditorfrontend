@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Compress PDF Online Free — Reduce PDF File Size',
-  description: 'Compress PDF files online for free. Reduce PDF size without losing quality. Shrink large PDFs for email, upload, or sharing in seconds.',
-  keywords: 'compress PDF, reduce PDF size, shrink PDF, PDF compressor, compress PDF online free, reduce PDF file size',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-compressor' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'Compress PDF Online Free — Reduce PDF File Size',
-    description: 'Reduce PDF file size without losing quality. Free, instant, no signup required.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-compressor',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-compressor.png', width: 1200, height: 630, alt: 'Compress PDF Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Compress PDF Online Free',
-    description: 'Shrink any PDF file instantly without losing quality.',
-    images: ['/social/pdf-compressor.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-compressor'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-compressor#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF Compressor',
   url: 'https://www.editpdfai.com/pdf-compressor',
   applicationCategory: 'UtilitiesApplication',

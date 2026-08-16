@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'AI PDF Summarizer Online Free — Summarize Any PDF Instantly',
-  description: 'Summarize any PDF document with AI in seconds. Get concise key points, chapter summaries and action items from long reports, research papers and contracts.',
-  keywords: 'AI PDF summarizer, summarize PDF online, PDF summary AI, PDF to summary, summarize document online, AI document summarizer',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-summarizer' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'AI PDF Summarizer Online Free — Summarize Any PDF Instantly',
-    description: 'Get AI-powered summaries of any PDF in seconds. Key points, chapter breakdowns and action items.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-summarizer',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-summarizer.png', width: 1200, height: 630, alt: 'AI PDF Summarizer Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'AI PDF Summarizer Online Free',
-    description: 'Summarize any PDF with AI in seconds. Key points, summaries and action items.',
-    images: ['/social/pdf-summarizer.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-summarizer'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-summarizer#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'AI PDF Summarizer',
   url: 'https://www.editpdfai.com/pdf-summarizer',
   applicationCategory: 'UtilitiesApplication',

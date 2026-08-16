@@ -108,9 +108,9 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 
 /* Canvas */
 .canvas-area{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:24px;gap:20px;background:#e8e8ea;min-height:0}
-.canvas-wrap{position:relative;display:inline-block;box-shadow:0 4px 32px rgba(0,0,0,.16);border-radius:2px;line-height:0;flex-shrink:0;touch-action:none}
+.canvas-wrap{position:relative;display:inline-block;max-width:100%;box-shadow:0 4px 32px rgba(0,0,0,.16);border-radius:2px;line-height:0;touch-action:none}
 .canvas-wrap.mode-select{cursor:default}
-.canvas-wrap canvas{display:block;max-width:100%}
+.canvas-wrap canvas{display:block;max-width:100%;height:auto}
 
 /* Field overlays */
 .field-overlay{position:absolute;border-radius:3px;cursor:move;overflow:visible;transition:box-shadow .1s}

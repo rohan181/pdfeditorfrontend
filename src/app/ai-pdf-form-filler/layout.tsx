@@ -1,105 +1,11 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'AI PDF Form Filler — Autofill PDF Forms Online',
-  description:
-    'Autofill W-9s, applications and scanned PDF forms with AI. Review, sign and download online. A free account includes five daily AI uses.',
-  keywords:
-    'AI PDF form filler, fill PDF forms online, autofill PDF forms, automatic PDF form filler, PDF form autofill, AI form filling, fill W-9 online, fillable PDF editor, scanned PDF form filler',
-  alternates: { canonical: 'https://www.editpdfai.com/ai-pdf-form-filler' },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-      'max-video-preview': -1,
-    },
-  },
-  openGraph: {
-    title: 'AI PDF Form Filler — Autofill Forms Online',
-    description:
-      'Use AI to autofill PDF forms online, review every field, add a signature and download. A free account includes five AI uses daily.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/ai-pdf-form-filler',
-    siteName: 'EditPDF AI',
-    images: [
-      {
-        url: '/social/ai-pdf-form-filler.png',
-        width: 1200,
-        height: 630,
-        alt: 'AI PDF Form Filler — Autofill Any PDF Form Free',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'AI PDF Form Filler — Autofill Forms Online',
-    description:
-      'Autofill PDF forms with AI, review every field, sign and download. A free account includes five AI uses daily.',
-    images: ['/social/ai-pdf-form-filler.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['ai-pdf-form-filler'])
 
-// FAQ questions & answers must EXACTLY match the visible FAQS array in page.tsx
-const jsonLdFaq = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'What is an AI PDF form filler?',
-      acceptedAnswer: { '@type': 'Answer', text: 'An AI PDF form filler detects input fields in a PDF and fills them automatically based on context you provide. You describe your details once and AI populates the entire form instantly — no clicking each field manually.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Is it free to use?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Free to start — includes 5 AI uses per day. Core PDF tools (edit, sign, merge, compress) are always free with no limits. Upgrade to Pro for unlimited AI uses.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Do I need to create an account?',
-      acceptedAnswer: { '@type': 'Answer', text: 'A free account is required to use AI features. Sign in to get 5 free AI uses per day — no credit card needed. Upgrade to Pro for unlimited use. Your PDF is always processed in your browser and never stored.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'What types of PDFs are supported?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Both interactive PDF forms (AcroForms) and flat or scanned PDFs are supported. For scanned documents, the built-in OCR engine detects field positions automatically.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Is my document data secure?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Your files are processed entirely in your browser and are never stored on our servers. AI features send only the relevant text context — never the raw file — and no data is retained.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Can I add a digital signature?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Yes. Draw a freehand signature, type your name, or upload a signature image. Place it anywhere with drag-and-drop precision.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Can it fill a W-9, 1099, or tax form automatically?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Yes. W-9, 1099, and other IRS tax forms are standard PDFs that the AI handles well. Paste your name, EIN/SSN, address, and tax classification once and the AI fills every matching field. Download the completed form and sign.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'How do I fill a PDF form online without Adobe Acrobat?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Upload your PDF to EditPDF AI, use the AI form filler to auto-detect and fill all fields, add a signature if needed, then download. No Adobe Acrobat subscription or desktop software required — everything runs free in your browser.' },
-    },
-    {
-      '@type': 'Question',
-      name: "What's the difference between a fillable and a non-fillable PDF?",
-      acceptedAnswer: { '@type': 'Answer', text: 'A fillable PDF (AcroForm) has interactive fields you can click and type into. A non-fillable or flat PDF is an image or static layout with no interactive fields. Our AI handles both: AcroForms are filled natively, and flat PDFs are filled using text overlays positioned by AI over the detected form areas.' },
-    },
-    {
-      '@type': 'Question',
-      name: 'Can it fill a scanned PDF form?',
-      acceptedAnswer: { '@type': 'Answer', text: 'Yes. For scanned paper forms that have been saved as image-based PDFs, the built-in OCR engine first extracts the layout and field positions. AI then fills the detected fields using text overlays. The result is a completed PDF that looks identical to a manually filled paper form.' },
-    },
-  ],
-}
+// FAQPage schema for this page is generated inline in page.tsx (from the
+// same `FAQS` array that renders the visible FAQ section — single source of
+// truth, can't drift out of sync). Not re-declared here.
 
 const jsonLdApp = {
   '@context': 'https://schema.org',
@@ -203,7 +109,6 @@ export default function EditorLayout({ children }: { children: React.ReactNode }
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdApp) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdHowTo) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebPage) }} />

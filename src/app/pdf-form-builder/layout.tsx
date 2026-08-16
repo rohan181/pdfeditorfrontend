@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'PDF Form Builder Online Free — Create Fillable PDF Forms',
-  description: 'Create fillable PDF forms online for free. Add text fields, checkboxes, dropdowns and signatures without installing specialist design software.',
-  keywords: 'PDF form builder, create fillable PDF, make PDF form online, PDF form creator, fillable PDF builder, online form creator PDF',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-form-builder' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'PDF Form Builder Online Free — Create Fillable PDF Forms',
-    description: 'Create professional fillable PDF forms with text fields, checkboxes, signatures and more. Free online.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-form-builder',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-form-builder.png', width: 1200, height: 630, alt: 'PDF Form Builder Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'PDF Form Builder Online Free',
-    description: 'Create professional fillable PDF forms with drag-and-drop. Free, no signup needed.',
-    images: ['/social/pdf-form-builder.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-form-builder'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-form-builder#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF Form Builder',
   url: 'https://www.editpdfai.com/pdf-form-builder',
   applicationCategory: 'UtilitiesApplication',

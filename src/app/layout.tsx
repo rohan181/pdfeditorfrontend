@@ -21,12 +21,17 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: { default: 'EditPDF AI — Edit smarter. Finish faster.', template: '%s' },
   description: 'Edit smarter. Finish faster. 50+ PDF and AI tools — edit, sign, OCR, translate, summarise and fill forms. Core tools need no account.',
-  keywords: 'AI PDF editor, edit PDF online, fill PDF forms, sign PDF, PDF form filler, AI document editor, PDF annotator, PDF OCR, PDF compressor, editpdfai',
   authors: [{ name: 'EditPDF AI', url: 'https://www.editpdfai.com' }],
   creator: 'EditPDF AI',
   publisher: 'EditPDF AI',
   category: 'technology',
   metadataBase: new URL('https://www.editpdfai.com'),
+  // No `alternates.canonical` here — every route below root now sets its own
+  // canonical explicitly via `buildToolMetadata()` (src/lib/seo/metadata.ts),
+  // and the homepage (src/app/page.tsx) hand-renders its own canonical <link>
+  // to work around Next's root-path trailing-slash normalization (see the
+  // comment there). Setting one here would cascade into a second, incorrect
+  // canonical on the homepage — confirmed by tests/qa/seo-metadata.spec.ts.
   robots: {
     index: true,
     follow: true,

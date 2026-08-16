@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Delete PDF Pages Online Free — Remove Pages from PDF',
-  description: 'Delete pages from a PDF online for free. Remove individual pages or a page range, then download the cleaned PDF instantly. No signup required.',
-  keywords: 'delete PDF pages, remove pages from PDF, delete page PDF online free, remove PDF page, PDF page remover',
-  alternates: { canonical: 'https://www.editpdfai.com/delete-pages' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'Delete PDF Pages Online Free — Remove Pages from PDF',
-    description: 'Remove unwanted pages from any PDF instantly. Free, no signup, works in your browser.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/delete-pages',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/delete-pages.png', width: 1200, height: 630, alt: 'Delete PDF Pages Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Delete PDF Pages Online Free',
-    description: 'Remove unwanted pages from any PDF instantly. Free, no signup.',
-    images: ['/social/delete-pages.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['delete-pages'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/delete-pages#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'Delete PDF Pages',
   url: 'https://www.editpdfai.com/delete-pages',
   applicationCategory: 'UtilitiesApplication',

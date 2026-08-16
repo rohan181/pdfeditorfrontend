@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'AI Mind Map Generator from PDF — Visualise Any Document',
-  description: 'Generate an interactive mind map from any PDF with AI. Visualise reports, research papers, books and notes as a structured knowledge graph.',
-  keywords: 'AI mind map generator, PDF to mind map, mind map from PDF, AI mind map, visual mind map generator, PDF visualiser',
-  alternates: { canonical: 'https://www.editpdfai.com/mind-map' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'AI Mind Map Generator from PDF — Visualise Any Document',
-    description: 'Turn any PDF into an interactive visual mind map with AI. Free online, no signup needed.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/mind-map',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/mind-map.png', width: 1200, height: 630, alt: 'AI Mind Map Generator from PDF' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'AI Mind Map Generator from PDF',
-    description: 'Turn any PDF into a visual mind map with AI. Free online, no signup.',
-    images: ['/social/mind-map.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['mind-map'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/mind-map#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'AI Mind Map Generator',
   url: 'https://www.editpdfai.com/mind-map',
   applicationCategory: 'UtilitiesApplication',

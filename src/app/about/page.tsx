@@ -1,27 +1,9 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: { absolute: 'About EditPDF AI – Our Story and Privacy Approach' },
-  description: 'EditPDF AI is an independent PDF tool suite built in Australia. Learn who we are, how your files are handled, and why we keep 50+ tools permanently free.',
-  alternates: { canonical: 'https://www.editpdfai.com/about' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'About EditPDF AI – Our Story and Privacy Approach',
-    description: 'Learn how EditPDF AI builds free, private browser-based PDF tools for everyone.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/about',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'About EditPDF AI' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'About EditPDF AI',
-    description: 'Free, private browser-based PDF tools built for everyone.',
-    images: ['/opengraph-image'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['about'])
 
 const VALUES = [
   {
@@ -72,29 +54,13 @@ const DATA_FACTS = [
   },
 ]
 
-const orgSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  '@id': 'https://www.editpdfai.com/#organization',
-  name: 'EditPDF AI',
-  url: 'https://www.editpdfai.com',
-  logo: 'https://www.editpdfai.com/logo-square.svg',
-  foundingDate: '2026',
-  areaServed: 'Worldwide',
-  contactPoint: {
-    '@type': 'ContactPoint',
-    email: 'support@editpdfai.com',
-    contactType: 'customer support',
-    availableLanguage: 'English',
-  },
-  description: 'Independent PDF tool suite with 50+ browser-based tools and AI features. Built in Australia.',
-}
+// Organization JSON-LD for the whole site is rendered once by <SiteJsonLd />
+// in the root layout (src/app/layout.tsx) — no page-level Organization block
+// here, to avoid two Organization entities describing the same site.
 
 export default function AboutPage() {
   return (
     <div style={{ fontFamily: 'var(--font-inter,system-ui,sans-serif)', color: '#1d1d1f', background: '#fff', minHeight: '100vh' }}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }} />
-
       {/* ── Nav ── */}
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
@@ -147,13 +113,13 @@ export default function AboutPage() {
       <section style={{ maxWidth: 720, margin: '0 auto', padding: '72px 24px 0' }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 16 }}>Who we are</div>
         <h2 style={{ fontSize: 'clamp(22px,3vw,32px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 24px', lineHeight: 1.2 }}>
-          A small independent team, building in Australia
+          A small, independent team
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16, marginBottom: 32 }}>
           {[
-            { label: 'Founded',   value: 'Early 2026' },
-            { label: 'Based in',  value: 'Australia' },
             { label: 'Team size', value: 'Small, independent' },
+            { label: 'Core tools', value: 'Always free' },
+            { label: 'Pro plan',  value: 'From $1/month' },
             { label: 'Contact',   value: 'support@editpdfai.com' },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: '#f5f5f7', borderRadius: 12, padding: '16px 18px', border: '1.5px solid #e5e7eb' }}>

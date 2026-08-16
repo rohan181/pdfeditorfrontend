@@ -1051,9 +1051,13 @@ body { overflow-x:clip; }
   .responsive-tool-sidebar {
     width:100% !important;
     max-width:none !important;
-    max-height:none !important;
+    /* Long tool palettes (e.g. the annotator's 9-tool grid + color swatches +
+       a growing annotation list) must not push the canvas below the fold —
+       cap the sidebar and let it scroll internally instead. */
+    max-height:44dvh !important;
     flex:none !important;
-    overflow:visible !important;
+    overflow-y:auto !important;
+    overflow-x:visible !important;
     border-right:0 !important;
     border-left:0 !important;
     border-bottom:1px solid #e8e8e8 !important;

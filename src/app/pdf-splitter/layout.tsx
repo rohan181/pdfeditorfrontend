@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Split PDF Online Free — Separate PDF Files by Range',
-  description: 'Split a PDF into multiple files online for free. Separate every page or divide one PDF into custom page ranges directly in your browser.',
-  keywords: 'split PDF, split PDF online free, PDF splitter, divide PDF into multiple files, separate PDF pages by range',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-splitter' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'Split PDF Online Free — Separate Files by Range',
-    description: 'Split a PDF into separate files by custom page range or divide every page. Free, no signup needed.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-splitter',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-splitter.png', width: 1200, height: 630, alt: 'Split PDF Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Split PDF Online Free',
-    description: 'Split any PDF into multiple files by page range. Free, instant and no signup.',
-    images: ['/social/pdf-splitter.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-splitter'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-splitter#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF Splitter',
   url: 'https://www.editpdfai.com/pdf-splitter',
   applicationCategory: 'UtilitiesApplication',

@@ -48,6 +48,43 @@ function canvasFromImage(img: HTMLImageElement): HTMLCanvasElement {
   return cv
 }
 
+type ImageEmbedPage = {
+  pageW: number; pageH: number
+  bytes: ArrayBuffer; isJpeg: boolean
+  imgX: number; imgY: number; imgW: number; imgH: number
+  label: { text: string; y: number; size: number; gray: number } | null
+}
+
+type ImageEmbedWorkerResponse =
+  | { type: 'progress'; value: number }
+  | { type: 'success'; buffer: ArrayBuffer }
+  | { type: 'error'; message: string }
+
+function runImageEmbedWorker(
+  pages: ImageEmbedPage[],
+  onProgress: (value: number) => void,
+): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../../workers/pdf-image-embed.worker.ts', import.meta.url))
+
+    worker.onmessage = (event: MessageEvent<ImageEmbedWorkerResponse>) => {
+      const message = event.data
+      if (message.type === 'progress') { onProgress(message.value); return }
+
+      worker.terminate()
+      if (message.type === 'success') resolve(message.buffer)
+      else reject(new Error(message.message))
+    }
+
+    worker.onerror = () => {
+      worker.terminate()
+      reject(new Error('The local PDF engine failed to start. Please reload and try again.'))
+    }
+
+    worker.postMessage({ pages }, pages.map(p => p.bytes))
+  })
+}
+
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -327,29 +364,29 @@ export default function ScanToPDFPage() {
     if (!pages.length) return
     setError(''); setConverting(true)
     try {
-      const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib')
-      const pdfDoc = await PDFDocument.create()
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
+      const workerPages: ImageEmbedPage[] = []
       for (let i = 0; i < pages.length; i++) {
         const item = pages[i]
-        setProgress(`Adding page ${i + 1} of ${pages.length}…`)
+        setProgress(`Preparing page ${i + 1} of ${pages.length}…`)
         const [pw, ph] = getPageDims(item)
-        const page = pdfDoc.addPage([pw, ph])
         const b64 = item.dataUrl.split(',')[1]
         const bin = atob(b64)
         const bytes = new Uint8Array(bin.length)
         for (let j = 0; j < bin.length; j++) bytes[j] = bin.charCodeAt(j)
         const isJpeg = item.dataUrl.startsWith('data:image/jpeg')
-        const pdfImg = isJpeg ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes)
         const scale = Math.min(pw / item.w, ph / item.h)
         const iw = item.w * scale, ih = item.h * scale
-        page.drawImage(pdfImg, { x: (pw - iw) / 2, y: (ph - ih) / 2, width: iw, height: ih })
-        const lbl = String(i + 1), sz = 8, tw = font.widthOfTextAtSize(lbl, sz)
-        page.drawText(lbl, { x: (pw - tw) / 2, y: 10, size: sz, font, color: rgb(.6, .6, .6) })
+        workerPages.push({
+          pageW: pw, pageH: ph,
+          bytes: bytes.buffer as ArrayBuffer, isJpeg,
+          imgX: (pw - iw) / 2, imgY: (ph - ih) / 2, imgW: iw, imgH: ih,
+          label: { text: String(i + 1), y: 10, size: 8, gray: 0.6 },
+        })
       }
-      setProgress('Saving PDF…')
-      const out = await pdfDoc.save()
-      const blob = new Blob([out.buffer as ArrayBuffer], { type: 'application/pdf' })
+      setProgress('Building PDF…')
+      const out = await runImageEmbedWorker(workerPages, pct =>
+        setProgress(`Building PDF… ${pct}%`))
+      const blob = new Blob([out], { type: 'application/pdf' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a'); a.href = url; a.download = `scan-to-pdf-${Date.now()}.pdf`; a.click()
       URL.revokeObjectURL(url)

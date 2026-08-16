@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'RTF to PDF Converter Online Free — Rich Text to PDF',
-  description: 'Convert RTF (Rich Text Format) files to PDF online for free. Preserves bold, italic, fonts and formatting. Fast, secure and no signup required.',
-  keywords: 'RTF to PDF, rich text to PDF, convert RTF to PDF online free, RTF file to PDF, .rtf to PDF converter',
-  alternates: { canonical: 'https://www.editpdfai.com/rtf-to-pdf' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'RTF to PDF Converter Online Free — Rich Text to PDF',
-    description: 'Convert RTF files to PDF instantly. Preserves fonts and formatting. Free, no signup.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/rtf-to-pdf',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/rtf-to-pdf.png', width: 1200, height: 630, alt: 'RTF to PDF Converter Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'RTF to PDF Converter Online Free',
-    description: 'Convert RTF to PDF instantly. Preserves formatting. Free, no signup.',
-    images: ['/social/rtf-to-pdf.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['rtf-to-pdf'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/rtf-to-pdf#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'RTF to PDF Converter',
   url: 'https://www.editpdfai.com/rtf-to-pdf',
   applicationCategory: 'UtilitiesApplication',

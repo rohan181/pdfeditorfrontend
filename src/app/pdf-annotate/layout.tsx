@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Annotate PDF Online — Highlight, Comment & Draw',
-  description: 'Annotate PDFs online for free. Highlight text, add comments, draw shapes, insert sticky notes and add freehand markup directly in your browser.',
-  keywords: 'annotate PDF, highlight PDF online, PDF annotation, PDF markup, comment on PDF, PDF highlighter, PDF sticky notes online',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-annotate' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'Annotate PDF Online Free — Highlight, Comment & Mark Up PDFs',
-    description: 'Highlight, comment and draw on any PDF online for free. No signup, works in your browser.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-annotate',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-annotate.png', width: 1200, height: 630, alt: 'Annotate PDF Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Annotate PDF Online Free',
-    description: 'Highlight, comment and mark up any PDF instantly. Free, no signup needed.',
-    images: ['/social/pdf-annotate.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-annotate'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-annotate#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF Annotate',
   url: 'https://www.editpdfai.com/pdf-annotate',
   applicationCategory: 'UtilitiesApplication',

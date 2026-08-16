@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'PDF OCR Online Free — Extract Text from Scanned PDF',
-  description: 'Convert scanned PDFs and images to searchable, editable text with AI OCR. Supports 100+ languages. Fast, accurate and free online — no install required.',
-  keywords: 'PDF OCR, OCR PDF online free, extract text from PDF, scanned PDF to text, OCR PDF, PDF text extraction, convert scanned PDF',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-ocr' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'PDF OCR Online Free — Extract Text from Scanned PDF',
-    description: 'Convert scanned PDFs to searchable text with AI OCR. Supports 100+ languages. Free, no install.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-ocr',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-ocr.png', width: 1200, height: 630, alt: 'PDF OCR — Extract Text from Scanned PDF' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'PDF OCR Online Free',
-    description: 'Convert scanned PDFs to searchable editable text with AI OCR. Free, no install.',
-    images: ['/social/pdf-ocr.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-ocr'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-ocr#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF OCR',
   url: 'https://www.editpdfai.com/pdf-ocr',
   applicationCategory: 'UtilitiesApplication',

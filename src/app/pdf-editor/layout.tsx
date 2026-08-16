@@ -1,39 +1,7 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Edit PDF Online Free — PDF Editor, No Signup',
-  description:
-    'Edit PDF files online free: add text, images, highlights, signatures and stamps, then organize pages and download. Private browser processing, no signup.',
-  keywords:
-    'PDF editor, free online PDF editor, how to edit a PDF online for free, edit PDF without Adobe Acrobat, add text to PDF online free, sign and annotate PDF online, edit scanned PDF online, PDF editor without signup',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-editor' },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-      'max-video-preview': -1,
-    },
-  },
-  openGraph: {
-    title: 'Edit PDF Online Free — Add Text, Annotate & Sign',
-    description:
-      'Add text, images, shapes, signatures and stamps to any PDF. Reorder and rotate pages. Free, no signup.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-editor',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-editor.png', width: 1200, height: 630, alt: 'PDF Editor — Edit PDFs Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Edit PDF Online Free — No Signup',
-    description: 'Add text, images, shapes, signatures and stamps to any PDF. Free, no signup required.',
-    images: ['/social/pdf-editor.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-editor'])
 
 const jsonLdApp = {
   '@context': 'https://schema.org',

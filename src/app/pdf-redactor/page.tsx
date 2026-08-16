@@ -132,10 +132,10 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 
 /* canvas area */
 .canvas-area{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:20px;background:#e8e8ea;min-height:0;position:relative}
-.canvas-wrap{position:relative;display:inline-block;box-shadow:0 4px 28px rgba(0,0,0,.18);border-radius:2px;line-height:0;flex-shrink:0}
+.canvas-wrap{position:relative;display:inline-block;max-width:100%;box-shadow:0 4px 28px rgba(0,0,0,.18);border-radius:2px;line-height:0}
 .canvas-wrap.mode-draw{cursor:crosshair}
 .canvas-wrap.mode-dropper{cursor:none}
-.canvas-wrap canvas{display:block;border-radius:2px;max-width:100%}
+.canvas-wrap canvas{display:block;border-radius:2px;max-width:100%;height:auto}
 
 .redact-box{position:absolute;border:2px solid transparent;cursor:default;transition:border-color .12s}
 .redact-box:hover{border-color:rgba(226,75,74,.8)}
@@ -391,6 +391,37 @@ type MagState = { screenX: number; screenY: number; hex: string } | null
 
 const PRESET_COLORS = ['#1d1d1f','#E24B4A','#1e40af','#15803d','#7c3aed','#b45309']
 
+type RedactWorkerResponse =
+  | { type: 'progress'; value: number }
+  | { type: 'success'; buffer: ArrayBuffer }
+  | { type: 'error'; message: string }
+
+function runRedactWorker(
+  buffer: ArrayBuffer,
+  pages: { rects: Rect[] }[],
+  onProgress: (value: number) => void,
+): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../../workers/pdf-redactor.worker.ts', import.meta.url))
+
+    worker.onmessage = (event: MessageEvent<RedactWorkerResponse>) => {
+      const message = event.data
+      if (message.type === 'progress') { onProgress(message.value); return }
+
+      worker.terminate()
+      if (message.type === 'success') resolve(message.buffer)
+      else reject(new Error(message.message))
+    }
+
+    worker.onerror = () => {
+      worker.terminate()
+      reject(new Error('The local PDF engine failed to start. Please reload and try again.'))
+    }
+
+    worker.postMessage({ buffer, pages }, [buffer])
+  })
+}
+
 let _id = 0
 const uid = () => `r-${++_id}`
 
@@ -560,28 +591,9 @@ export default function PDFRedactorPage() {
     if (!file || totalRects === 0) return
     setApplying(true); setProgress(5); setError('')
     try {
-      const { PDFDocument, rgb, BlendMode } = await import('pdf-lib')
-      const bytes  = await file.arrayBuffer()
-      const pdfDoc = await PDFDocument.load(bytes)
-      const pdfPgs = pdfDoc.getPages()
-      for (let i = 0; i < pages.length; i++) {
-        if (!pages[i].rects.length) continue
-        const pg = pdfPgs[i]
-        const { width, height } = pg.getSize()
-        for (const r of pages[i].rects) {
-          const [rc,gc,bc] = hexToRgbArr(r.color)
-          pg.drawRectangle({
-            x: r.x * width, y: height - (r.y + r.h) * height,
-            width: r.w * width, height: r.h * height,
-            color: rgb(rc/255, gc/255, bc/255),
-            opacity: 1, blendMode: BlendMode.Normal,
-          })
-        }
-        setProgress(5 + Math.round(((i+1)/pages.length)*88))
-      }
-      setProgress(97)
-      const out  = await pdfDoc.save()
-      const url  = URL.createObjectURL(new Blob([out as Uint8Array<ArrayBuffer>], { type:'application/pdf' }))
+      const bytes = await file.arrayBuffer()
+      const out   = await runRedactWorker(bytes, pages.map(p => ({ rects: p.rects })), setProgress)
+      const url   = URL.createObjectURL(new Blob([out], { type:'application/pdf' }))
       const a    = document.createElement('a')
       a.href = url; a.download = file.name.replace(/\.pdf$/i,'') + '_redacted.pdf'; a.click()
       setTimeout(() => URL.revokeObjectURL(url), 5000)

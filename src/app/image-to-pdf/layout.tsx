@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Image to PDF Converter Online Free — JPG, PNG to PDF',
-  description: 'Convert JPG, PNG and WebP images to PDF online for free. Combine multiple images and adjust page size, orientation and margins. No signup required.',
-  keywords: 'image to PDF, JPG to PDF, PNG to PDF, convert image to PDF online free, photo to PDF, picture to PDF converter',
-  alternates: { canonical: 'https://www.editpdfai.com/image-to-pdf' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'Image to PDF Converter Online Free — JPG, PNG to PDF',
-    description: 'Convert JPG, PNG and other images to PDF online for free. Combine multiple images into one PDF.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/image-to-pdf',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/image-to-pdf.png', width: 1200, height: 630, alt: 'Image to PDF Converter Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Image to PDF Converter Online Free',
-    description: 'Convert JPG, PNG and other images to PDF instantly. Free, no signup needed.',
-    images: ['/social/image-to-pdf.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['image-to-pdf'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/image-to-pdf#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'Image to PDF Converter',
   url: 'https://www.editpdfai.com/image-to-pdf',
   applicationCategory: 'UtilitiesApplication',

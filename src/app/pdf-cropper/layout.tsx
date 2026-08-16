@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Crop PDF Pages Online Free — Trim PDF Margins',
-  description: 'Crop PDF pages online for free. Trim margins, remove whitespace or select a specific area on one page or the entire document. No installation needed.',
-  keywords: 'crop PDF, trim PDF margins, crop PDF pages online, PDF cropper, remove white border PDF, crop PDF free',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-cropper' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'Crop PDF Pages Online Free — Trim PDF Margins',
-    description: 'Trim margins and crop any PDF page online. Free, no signup, works instantly in your browser.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-cropper',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-cropper.png', width: 1200, height: 630, alt: 'Crop PDF Pages Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Crop PDF Pages Online Free',
-    description: 'Trim margins and crop any PDF page instantly. Free, no signup needed.',
-    images: ['/social/pdf-cropper.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-cropper'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-cropper#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF Cropper',
   url: 'https://www.editpdfai.com/pdf-cropper',
   applicationCategory: 'UtilitiesApplication',

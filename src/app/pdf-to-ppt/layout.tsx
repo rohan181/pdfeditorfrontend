@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'PDF to PowerPoint Converter Online Free — PDF to PPTX',
-  description: 'Convert PDFs into editable PowerPoint presentations online. Turn each PDF page into a PPTX slide while preserving text, images and layout.',
-  keywords: 'PDF to PowerPoint, PDF to PPTX, convert PDF to PPT online free, PDF to presentation, PDF to slides converter',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-to-ppt' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'PDF to PowerPoint Converter Online Free — PDF to PPTX',
-    description: 'Convert PDF to editable PowerPoint PPTX slides. Preserves text and images. Free, no signup.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-to-ppt',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-to-ppt.png', width: 1200, height: 630, alt: 'PDF to PowerPoint Converter Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'PDF to PowerPoint Converter Online Free',
-    description: 'Convert PDF to editable PowerPoint slides instantly. Free, no signup.',
-    images: ['/social/pdf-to-ppt.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-to-ppt'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-to-ppt#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF to PowerPoint Converter',
   url: 'https://www.editpdfai.com/pdf-to-ppt',
   applicationCategory: 'UtilitiesApplication',

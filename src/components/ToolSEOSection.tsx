@@ -2,6 +2,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { toolMetaMap } from '@/lib/toolMeta'
+import { ORGANIZATION_ID } from '@/lib/seo/site'
 
 export interface ToolSEOStep    { title: string; body: string }
 export interface ToolSEOFAQ     { q: string; a: string }
@@ -73,6 +74,22 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
     applicationCategory: 'UtilityApplication',
     operatingSystem: 'Web',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    provider: { '@id': ORGANIZATION_ID },
+  } : null
+
+  // Lets answer engines (Google AI Overviews, ChatGPT, Perplexity) cite the
+  // exact steps directly instead of only indexing the FAQ text.
+  const howToSchema = steps.length > 0 ? {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: toolMeta ? `How to use ${toolMeta.name}` : 'How it works',
+    ...(toolSlug ? { url: `${BASE}/${toolSlug}` } : {}),
+    step: steps.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.title,
+      text: s.body,
+    })),
   } : null
 
   return (
@@ -83,6 +100,9 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
       )}
       {includeSchema && softwareSchema && (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }} />
+      )}
+      {includeSchema && showSteps && howToSchema && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />
       )}
 
       {/* ── What is + Who uses ── */}

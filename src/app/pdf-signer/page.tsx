@@ -39,6 +39,32 @@ const STROKE_SIZES = [
 
 const uid = () => Math.random().toString(36).slice(2, 10)
 
+type SignWorkerResponse =
+  | { type: 'success'; buffer: ArrayBuffer }
+  | { type: 'error'; message: string }
+
+function runSignWorker(
+  buffer: ArrayBuffer,
+  placed: PlacedSig[],
+): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../../workers/pdf-signer.worker.ts', import.meta.url))
+
+    worker.onmessage = (event: MessageEvent<SignWorkerResponse>) => {
+      worker.terminate()
+      if (event.data.type === 'success') resolve(event.data.buffer)
+      else reject(new Error(event.data.message))
+    }
+
+    worker.onerror = () => {
+      worker.terminate()
+      reject(new Error('The local PDF engine failed to start. Please reload and try again.'))
+    }
+
+    worker.postMessage({ buffer, placed }, [buffer])
+  })
+}
+
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&family=Sacramento&family=Satisfy&family=Great+Vibes&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -534,36 +560,8 @@ export default function PDFSignerPage() {
     setApplying(true)
     setExportError('')
     try {
-      const { PDFDocument, rgb, degrees, StandardFonts } = await import('pdf-lib')
-      const pdfDoc = await PDFDocument.load(pdfBytes)
-      const pages  = pdfDoc.getPages()
-      for (const ps of placed) {
-        if (ps.page >= pages.length) continue
-        const pg = pages[ps.page]
-        const { width: pw, height: ph } = pg.getSize()
-        const b64 = ps.dataUrl.split(',')[1], bin = atob(b64)
-        const arr = new Uint8Array(bin.length)
-        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
-        // Signatures can come from freehand drawing/typed text (always PNG) or an
-        // uploaded image, which may be a JPEG — embed with the format that
-        // actually matches the bytes instead of assuming PNG.
-        const isJpeg = ps.dataUrl.startsWith('data:image/jpeg') || ps.dataUrl.startsWith('data:image/jpg')
-        const img = isJpeg ? await pdfDoc.embedJpg(arr) : await pdfDoc.embedPng(arr)
-        pg.drawImage(img, {
-          x: ps.x * pw, y: ph - ps.y * ph - ps.h * ph,
-          width: ps.w * pw, height: ps.h * ph,
-          rotate: degrees(-ps.rotation), opacity: 1,
-        })
-        if (ps.dateStamp && ps.dateText) {
-          const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-          pg.drawText(ps.dateText, { x: ps.x * pw, y: ph - ps.y * ph - ps.h * ph - 12, size: 7, font, color: rgb(.35,.35,.35) })
-        }
-      }
-      pdfDoc.setCreator('EditPDF AI E-Signer')
-      pdfDoc.setModificationDate(new Date())
-      pdfDoc.setKeywords(['digitally-signed', `signed-at:${new Date().toISOString()}`])
-      const out  = await pdfDoc.save()
-      const blob = new Blob([out.buffer as ArrayBuffer], { type:'application/pdf' })
+      const out  = await runSignWorker(pdfBytes.slice(0).buffer as ArrayBuffer, placed)
+      const blob = new Blob([out], { type:'application/pdf' })
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a'); a.href = url
       a.download = (pdfFile?.name ?? 'doc').replace(/\.pdf$/i,'') + '-signed.pdf'; a.click()

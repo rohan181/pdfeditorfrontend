@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'PDF to Excel Converter Online Free — PDF to XLSX',
-  description: 'Convert PDF tables into editable Excel XLSX spreadsheets online. Extract accurate rows and columns with AI-powered conversion. No signup required.',
-  keywords: 'PDF to Excel, PDF to XLSX, convert PDF to Excel online free, PDF table to Excel, PDF to spreadsheet converter',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-to-excel' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'PDF to Excel Converter Online Free — PDF to XLSX',
-    description: 'Convert PDF tables to editable Excel XLSX instantly. AI-powered accuracy. Free, no signup.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-to-excel',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-to-excel.png', width: 1200, height: 630, alt: 'PDF to Excel Converter Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'PDF to Excel Converter Online Free',
-    description: 'Convert PDF tables to editable Excel spreadsheets instantly. AI-powered. Free, no signup.',
-    images: ['/social/pdf-to-excel.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-to-excel'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-to-excel#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF to Excel Converter',
   url: 'https://www.editpdfai.com/pdf-to-excel',
   applicationCategory: 'UtilitiesApplication',

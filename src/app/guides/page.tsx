@@ -1,29 +1,11 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import guides from '@/lib/guidesData'
 import SiteFooter from '@/components/SiteFooter'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: { absolute: 'PDF Guides & How-To Articles | EditPDF AI' },
-  description: 'Practical PDF guides: how to edit, compress, sign, merge, redact, and make PDFs searchable — with step-by-step instructions and free tool links.',
-  alternates: { canonical: 'https://www.editpdfai.com/guides' },
-  openGraph: {
-    title: 'PDF Guides & How-To Articles | EditPDF AI',
-    description: 'Practical guides: edit, compress, sign, merge, redact and more — free tools included.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/guides',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'PDF Guides by EditPDF AI' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'PDF Guides & How-To Articles | EditPDF AI',
-    description: 'Practical PDF guides with clear steps and direct links to free tools.',
-    images: ['/opengraph-image'],
-  },
-  robots: { index: true, follow: true },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['guides'])
 
 const guidesSchema = {
   '@context': 'https://schema.org',

@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Sign PDF Online Free — eSign Documents Instantly',
-  description: 'Sign PDFs online for free. Draw, type or upload your signature, place it anywhere in the document and download it instantly. No account required.',
-  keywords: 'sign PDF online, eSign PDF, electronic signature PDF, PDF signer, digital signature PDF, sign PDF free',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-signer' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'Sign PDF Online Free — eSign Documents Instantly',
-    description: 'Draw, type or upload a signature and sign any PDF for free. No account needed.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-signer',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-signer.png', width: 1200, height: 630, alt: 'Sign PDF Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Sign PDF Online Free',
-    description: 'Draw, type or upload your signature and sign any PDF instantly. Free, no account needed.',
-    images: ['/social/pdf-signer.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-signer'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-signer#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF Signer',
   url: 'https://www.editpdfai.com/pdf-signer',
   applicationCategory: 'UtilitiesApplication',

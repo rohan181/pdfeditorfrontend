@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'PDF to Word Converter Online Free — PDF to DOCX',
-  description: 'Convert PDFs into editable Word DOCX documents online. Preserve text, tables and layout with fast AI-powered conversion. No signup required.',
-  keywords: 'PDF to Word, PDF to DOCX, convert PDF to Word online free, PDF to DOC, PDF to editable Word, PDF converter',
-  alternates: { canonical: 'https://www.editpdfai.com/pdf-to-word' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'PDF to Word Converter Online Free — PDF to DOCX',
-    description: 'Convert any PDF to an editable Word DOCX file. Preserves text, tables and layout. Free, no signup.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pdf-to-word',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/pdf-to-word.png', width: 1200, height: 630, alt: 'PDF to Word Converter Online Free' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'PDF to Word Converter Online Free',
-    description: 'Convert PDF to editable Word DOCX instantly. Preserves layout. Free, no signup.',
-    images: ['/social/pdf-to-word.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pdf-to-word'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/pdf-to-word#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'PDF to Word Converter',
   url: 'https://www.editpdfai.com/pdf-to-word',
   applicationCategory: 'UtilitiesApplication',

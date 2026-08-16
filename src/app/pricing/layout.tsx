@@ -1,26 +1,7 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: { absolute: 'Pricing & Plans | EditPDF AI' },
-  description: 'Compare EditPDF AI Free and Pro plans. Get unlimited AI form filling, OCR, translation, mind maps and quiz creation. Cancel Pro anytime.',
-  keywords: 'EditPDF AI pricing, PDF editor plans, AI PDF editor price, EditPDF AI Pro, PDF tool subscription',
-  alternates: { canonical: 'https://www.editpdfai.com/pricing' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'Pricing & Plans | EditPDF AI',
-    description: 'Compare free and Pro plans. Unlimited AI tools, OCR, translation and more with Pro. Cancel anytime.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/pricing',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'EditPDF AI Pricing' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Pricing & Plans | EditPDF AI',
-    description: 'Compare free and Pro plans. Unlimited AI tools with Pro. Cancel anytime.',
-    images: ['/opengraph-image'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['pricing'])
 
 const pricingSchema = [
   {

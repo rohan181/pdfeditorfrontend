@@ -107,29 +107,55 @@ const PRESET_CSS: Record<string, { left: string; top: string }> = {
   'bottom-right':  { left:'88%', top:'88%'  },
 }
 
-// Position preset → pdf-lib x/y (bottom-left origin)
-function getPdfXY(
-  pos: string, pW: number, pH: number, tW: number, tH: number,
-  cx: number, cy: number,
-): [number, number] {
-  const pad = 40
-  switch (pos) {
-    case 'top-left':      return [pad,            pH - tH - pad]
-    case 'top-center':    return [(pW - tW) / 2,  pH - tH - pad]
-    case 'top-right':     return [pW - tW - pad,  pH - tH - pad]
-    case 'bottom-left':   return [pad,            pad]
-    case 'bottom-center': return [(pW - tW) / 2,  pad]
-    case 'bottom-right':  return [pW - tW - pad,  pad]
-    case 'custom':        return [pW * cx - tW / 2, pH * cy - tH / 2]
-    default:              return [(pW - tW) / 2,  (pH - tH) / 2]
-  }
-}
-
 function hexToRgb(hex: string): [number, number, number] {
   const r = parseInt(hex.slice(1, 3), 16) / 255
   const g = parseInt(hex.slice(3, 5), 16) / 255
   const b = parseInt(hex.slice(5, 7), 16) / 255
   return [r, g, b]
+}
+
+type WatermarkWorkerRequest = {
+  buffer: ArrayBuffer
+  text: string
+  color: [number, number, number]
+  opacity: number
+  fontSize: number
+  rotation: number
+  position: string
+  customX: number
+  customY: number
+  image: { buffer: ArrayBuffer; isPng: boolean } | null
+}
+
+type WatermarkWorkerResponse =
+  | { type: 'progress'; value: number }
+  | { type: 'success'; buffer: ArrayBuffer }
+  | { type: 'error'; message: string }
+
+function runWatermarkWorker(
+  request: WatermarkWorkerRequest,
+  onProgress: (value: number) => void,
+): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../../workers/pdf-watermark.worker.ts', import.meta.url))
+    const transferables = request.image ? [request.buffer, request.image.buffer] : [request.buffer]
+
+    worker.onmessage = (event: MessageEvent<WatermarkWorkerResponse>) => {
+      const message = event.data
+      if (message.type === 'progress') { onProgress(message.value); return }
+
+      worker.terminate()
+      if (message.type === 'success') resolve(message.buffer)
+      else reject(new Error(message.message))
+    }
+
+    worker.onerror = () => {
+      worker.terminate()
+      reject(new Error('The local PDF engine failed to start. Please reload and try again.'))
+    }
+
+    worker.postMessage(request, transferables)
+  })
 }
 
 // 3×3 position grid button component
@@ -261,52 +287,27 @@ export default function PDFWatermarkPage() {
     setProcessing(true)
     setStatusMsg('Applying watermark…')
     try {
-      const { PDFDocument, rgb, degrees, StandardFonts } = await import('pdf-lib')
-      const doc  = await PDFDocument.load(cur.slice(0))
-      const font = await doc.embedFont(StandardFonts.HelveticaBold)
-      const pdfPages = doc.getPages()
-      const [cr, cg, cb] = hexToRgb(wmColor)
-
-      let embImg: Awaited<ReturnType<typeof doc.embedPng>> | null = null
+      let image: { buffer: ArrayBuffer; isPng: boolean } | null = null
       if (wmImageSrc) {
         const base64 = wmImageSrc.split(',')[1]
         const arr = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
-        embImg = arr[0] === 0x89 ? await doc.embedPng(arr.buffer) : await doc.embedJpg(arr.buffer)
+        image = { buffer: arr.buffer as ArrayBuffer, isPng: arr[0] === 0x89 }
       }
 
-      for (const page of pdfPages) {
-        const { width: pW, height: pH } = page.getSize()
+      const buffer = await runWatermarkWorker({
+        buffer: cur.slice(0).buffer as ArrayBuffer,
+        text: wmText,
+        color: hexToRgb(wmColor),
+        opacity: wmOpacity,
+        fontSize: wmFontSize,
+        rotation: wmRotation,
+        position: wmPosition,
+        customX: wmCustomX,
+        customY: wmCustomY,
+        image,
+      }, () => {})
 
-        if (embImg) {
-          const iW = embImg.width * 0.4
-          const iH = embImg.height * 0.4
-          if (wmPosition === 'tile') {
-            const cols = Math.ceil(pW / (iW + 80)) + 1
-            const rows = Math.ceil(pH / (iH + 80)) + 1
-            for (let r = 0; r < rows; r++)
-              for (let c = 0; c < cols; c++)
-                page.drawImage(embImg, { x: c*(iW+80)-40, y: r*(iH+80)-40, width: iW, height: iH, opacity: wmOpacity, rotate: degrees(wmRotation) })
-          } else {
-            const [x, y] = getPdfXY(wmPosition, pW, pH, iW, iH, wmCustomX, wmCustomY)
-            page.drawImage(embImg, { x, y, width: iW, height: iH, opacity: wmOpacity, rotate: degrees(wmRotation) })
-          }
-        } else if (wmText.trim()) {
-          const tW = font.widthOfTextAtSize(wmText, wmFontSize)
-          const tH = wmFontSize
-          if (wmPosition === 'tile') {
-            const cols = Math.ceil(pW / (tW + 80)) + 1
-            const rows = Math.ceil(pH / (tH + 80)) + 1
-            for (let r = 0; r < rows; r++)
-              for (let c = 0; c < cols; c++)
-                page.drawText(wmText, { x: c*(tW+80)-40, y: r*(tH+80)-40, size: wmFontSize, font, color: rgb(cr,cg,cb), opacity: wmOpacity, rotate: degrees(wmRotation) })
-          } else {
-            const [x, y] = getPdfXY(wmPosition, pW, pH, tW, tH, wmCustomX, wmCustomY)
-            page.drawText(wmText, { x, y, size: wmFontSize, font, color: rgb(cr,cg,cb), opacity: wmOpacity, rotate: degrees(wmRotation) })
-          }
-        }
-      }
-
-      const result = await doc.save()
+      const result = new Uint8Array(buffer)
       pdfBytesRef.current = result.slice(0)
       setWatermarked(true)
       const newDoc = await (await getPdfjs()).getDocument({ data: result }).promise

@@ -21,6 +21,32 @@ interface Annotation {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2)
 
+type AnnotateWorkerResponse =
+  | { type: 'success'; buffer: ArrayBuffer }
+  | { type: 'error'; message: string }
+
+function runAnnotateWorker(
+  buffer: ArrayBuffer,
+  annotations: Annotation[],
+): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../../workers/pdf-annotate.worker.ts', import.meta.url))
+
+    worker.onmessage = (event: MessageEvent<AnnotateWorkerResponse>) => {
+      worker.terminate()
+      if (event.data.type === 'success') resolve(event.data.buffer)
+      else reject(new Error(event.data.message))
+    }
+
+    worker.onerror = () => {
+      worker.terminate()
+      reject(new Error('The local PDF engine failed to start. Please reload and try again.'))
+    }
+
+    worker.postMessage({ buffer, annotations }, [buffer])
+  })
+}
+
 const TOOL_DEF: { id: Tool; label: string; icon: string; tip: string }[] = [
   { id:'select',        icon:'↖',  label:'Select',        tip:'Click to select & move annotations' },
   { id:'highlight',     icon:'■',  label:'Highlight',     tip:'Drag to highlight text area' },
@@ -336,79 +362,10 @@ export default function PDFAnnotate() {
     if (!file || !pdfDoc) return
     setSaving(true); setError('')
     try {
-      const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib')
-      const bytes  = await file.arrayBuffer()
-      const pdfOut = await PDFDocument.load(bytes)
-      const font   = await pdfOut.embedFont(StandardFonts.Helvetica)
-      const pages  = pdfOut.getPages()
-
-      for (const ann of annotations) {
-        const pg = pages[ann.page - 1]
-        if (!pg) continue
-        const { width: pw, height: ph } = pg.getSize()
-
-        const pdfX = ann.x * pw
-        const pdfY = (1 - ann.y - ann.h) * ph
-        const pdfW = ann.w * pw
-        const pdfH = ann.h * ph
-
-        const hex = ann.color.replace('#', '')
-        const cr  = parseInt(hex.slice(0,2), 16) / 255
-        const cg  = parseInt(hex.slice(2,4), 16) / 255
-        const cb  = parseInt(hex.slice(4,6), 16) / 255
-        const col = rgb(cr, cg, cb)
-
-        switch (ann.type) {
-          case 'highlight':
-            pg.drawRectangle({ x: pdfX, y: pdfY, width: pdfW, height: pdfH, color: col, opacity: HI_ALPHA })
-            break
-          case 'underline':
-            pg.drawLine({ start: { x: pdfX, y: pdfY }, end: { x: pdfX + pdfW, y: pdfY }, thickness: 1.5, color: col })
-            break
-          case 'strikethrough':
-            pg.drawLine({ start: { x: pdfX, y: pdfY + pdfH / 2 }, end: { x: pdfX + pdfW, y: pdfY + pdfH / 2 }, thickness: 1.5, color: col })
-            break
-          case 'rect':
-            pg.drawRectangle({ x: pdfX, y: pdfY, width: pdfW, height: pdfH, borderColor: col, borderWidth: 2 })
-            break
-          case 'comment':
-            pg.drawRectangle({ x: pdfX, y: pdfY + pdfH, width: 20, height: 20, color: col, opacity: 0.9 })
-            if (ann.text) {
-              const boxW = Math.min(Math.max(100, ann.text.length * 5.5), 200)
-              pg.drawRectangle({ x: pdfX + 24, y: pdfY + pdfH - 20, width: boxW, height: 34, color: rgb(1,1,.93), borderColor: col, borderWidth: 1, opacity: 0.95 })
-              pg.drawText(ann.text.slice(0, 40), { x: pdfX + 28, y: pdfY + pdfH - 10, size: 9, font, color: rgb(0,0,0) })
-            }
-            break
-          case 'text':
-            if (ann.text)
-              pg.drawText(ann.text, { x: pdfX, y: (1 - ann.y) * ph, size: 12, font, color: col })
-            break
-          case 'arrow': {
-            const pts = ann.points
-            if (pts?.length >= 2) {
-              const ax = pts[0].x*pw, ay = (1-pts[0].y)*ph
-              const bx = pts[1].x*pw, by = (1-pts[1].y)*ph
-              const angle = Math.atan2(by-ay, bx-ax)
-              const L = 10
-              pg.drawLine({ start:{x:ax,y:ay}, end:{x:bx,y:by}, thickness: 2, color: col })
-              pg.drawLine({ start:{x:bx,y:by}, end:{x:bx-L*Math.cos(angle+2.5), y:by-L*Math.sin(angle+2.5)}, thickness:2, color:col })
-              pg.drawLine({ start:{x:bx,y:by}, end:{x:bx-L*Math.cos(angle-2.5), y:by-L*Math.sin(angle-2.5)}, thickness:2, color:col })
-            }
-            break
-          }
-          case 'pen': {
-            const pts = ann.points
-            if (pts) for (let i = 0; i < pts.length - 1; i++) {
-              pg.drawLine({ start: {x:pts[i].x*pw, y:(1-pts[i].y)*ph}, end: {x:pts[i+1].x*pw, y:(1-pts[i+1].y)*ph}, thickness: 1.5, color: col })
-            }
-            break
-          }
-        }
-      }
-
-      const out  = await pdfOut.save()
-      const blob = new Blob([out as Uint8Array<ArrayBuffer>], { type: 'application/pdf' })
-      const url  = URL.createObjectURL(blob)
+      const bytes = await file.arrayBuffer()
+      const out   = await runAnnotateWorker(bytes, annotations)
+      const blob  = new Blob([out], { type: 'application/pdf' })
+      const url   = URL.createObjectURL(blob)
       const a    = document.createElement('a')
       a.href = url; a.download = file.name.replace(/\.pdf$/i, '_annotated.pdf'); a.click()
       URL.revokeObjectURL(url)

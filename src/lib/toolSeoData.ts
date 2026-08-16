@@ -1,4 +1,4 @@
-import type { ToolSEOStep, ToolSEOFAQ, ToolSEOUser } from '@/components/ToolSEOSection'
+import type { ToolSEOStep, ToolSEOFAQ, ToolSEOUser, ToolSEOFormats } from '@/components/ToolSEOSection'
 
 interface ToolSEOData {
   steps:    ToolSEOStep[]
@@ -6,6 +6,8 @@ interface ToolSEOData {
   whatIs?:  string[]
   users?:   ToolSEOUser[]
   related?: { slug: string; label: string }[]
+  formats?: ToolSEOFormats
+  privacy?: string
   toolSlug?: string
 }
 
@@ -30,6 +32,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-compare', label: 'Compare two document versions' },
       { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
     ],
+    formats: { input: ['PDF'], limit: 'Up to 50 MB and 1,000 pages' },
+    privacy: 'Your PDF is parsed locally in your browser. Only the relevant page text, your question, and recent chat context are sent to the AI service — the original file is never uploaded.',
     steps: [
       { title: 'Choose a searchable PDF', body: 'Select a PDF up to 50 MB and 1,000 pages. Text is extracted page by page inside your browser.' },
       { title: 'Ask a document question', body: 'Ask about the main points, a specific clause, names, figures, dates, obligations, risks, or anything else present in the document.' },
@@ -63,6 +67,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'delete-pages', label: 'Delete unwanted pages from a PDF' },
       { slug: 'pdf-page-manager', label: 'Reorder and organise PDF pages' },
     ],
+    formats: { input: ['PDF'], limit: 'No server-side limit — runs in your browser; most PDFs up to 500 MB work fine' },
+    privacy: 'Processed entirely in your browser using pdf-lib — your PDF is never uploaded to a server.',
     steps: [
       { title: 'Upload your PDF', body: 'Drag and drop your PDF onto the page or click to browse. Files stay in your browser — nothing is uploaded to any server.' },
       { title: 'Choose split mode', body: 'Split by every page, set custom page ranges (e.g. 1-3, 5, 7-10), or extract only the pages you need.' },
@@ -96,6 +102,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'extract-pages', label: 'Extract pages to merge selectively' },
       { slug: 'scan-to-pdf', label: 'Scan paper documents to add to the merge' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser; files 100 MB+ each may be slower' },
+    privacy: 'Merging runs entirely in your browser — your files are combined locally and never uploaded to a server.',
     steps: [
       { title: 'Add your PDFs', body: 'Upload two or more PDFs by dragging them onto the page or clicking to browse. You can add files from multiple folders.' },
       { title: 'Arrange the order', body: 'Drag and drop the file cards to reorder them exactly as you want them to appear in the final merged PDF.' },
@@ -114,7 +122,7 @@ const data: Record<string, ToolSEOData> = {
     whatIs: [
       'What is a PDF compressor?',
       'A PDF compressor reduces the file size of a PDF document by re-encoding embedded images at lower quality and removing redundant data. A 25 MB scan of a brochure can often be brought down to 2–3 MB with no visible difference on screen — making it suitable for email, web upload, or cloud storage.',
-      'PDF compression is especially useful when a service imposes a file-size limit (many email providers cap attachments at 10–25 MB). Getting real size reductions requires re-encoding the embedded images, so EditPDF AI\'s compressor uploads your file over HTTPS to run Ghostscript on our server — the temporary copy is deleted immediately after your download starts.',
+      'PDF compression is especially useful when a service imposes a file-size limit (many email providers cap attachments at 10–25 MB). EditPDF AI\'s compressor renders and re-encodes each page entirely inside your browser — your file is never uploaded anywhere.',
     ],
     users: [
       { who: 'Office & admin professionals', why: 'Compress scanned contracts, reports, and brochures so they fit inside email attachment limits before sending.' },
@@ -128,18 +136,21 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'image-to-pdf', label: 'Convert images to a PDF' },
       { slug: 'pdf-editor', label: 'Edit your PDF before compressing' },
       { slug: 'scan-to-pdf', label: 'Scan a document, then compress the result' },
+      { slug: 'pdf-repair', label: 'Repair a damaged PDF first' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Compression runs entirely in your browser using a Web Worker — pages are re-rendered and re-encoded locally, and your file is never uploaded anywhere.',
     steps: [
-      { title: 'Upload your PDF', body: 'Drag your PDF onto the page or click to select it. It\'s uploaded securely over HTTPS for compression.' },
+      { title: 'Upload your PDF', body: 'Drag your PDF onto the page or click to select it. It stays on your device — nothing is uploaded.' },
       { title: 'Select compression level', body: 'Choose Light (minimal quality loss), Balanced, or Maximum (smallest file, reduced image quality). A preview shows the estimated saving.' },
-      { title: 'Download the compressed file', body: 'Click Compress. Your reduced PDF downloads in seconds, and the temporary copy on our server is deleted right after.' },
+      { title: 'Download the compressed file', body: 'Click Compress. Your browser re-encodes each page and the reduced PDF downloads in seconds.' },
     ],
     faqs: [
       { q: 'How much can I reduce a PDF file size?', a: 'It depends on the content. PDFs with lots of high-resolution images can be reduced by 50–90%. Text-only PDFs typically shrink by 10–30%.' },
       { q: 'Does compression affect text quality?', a: 'No. Text is vector data and is not affected by image compression. Only embedded raster images are re-encoded at a lower quality.' },
       { q: 'Can I compress a PDF that is already compressed?', a: 'Yes, but gains will be smaller. If the images were already compressed at creation time, our tool will apply further compression — though the saving may only be a few percent.' },
       { q: 'Is the compression lossless or lossy?', a: 'Our default modes use lossy image compression to achieve the largest file size reduction. For presentations or archival documents where image quality must be perfect, choose Light compression.' },
-      { q: 'Does my file get uploaded to your servers?', a: 'Yes. Compression needs server-side image re-encoding (Ghostscript) to get real size reductions, so your file is uploaded over HTTPS, processed in a temporary location, and deleted immediately after your download — it is never stored long-term.' },
+      { q: 'Does my file get uploaded to your servers?', a: 'No. Compression runs entirely in your browser using a Web Worker — pages are re-rendered and re-encoded locally, and the file is never uploaded anywhere.' },
     ],
   },
 
@@ -161,6 +172,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'ai-pdf-form-filler', label: 'Auto-fill a PDF form with AI' },
       { slug: 'pdf-annotate', label: 'Annotate a PDF with comments' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Signing runs entirely in your browser — your document and signature image never leave your device.',
     steps: [
       { title: 'Upload your PDF', body: 'Open the PDF you need to sign. It loads directly in your browser — no account or install required.' },
       { title: 'Draw or type your signature', body: 'Switch to the Signature tool and draw your signature with a mouse or finger, type it in a handwritten font, or upload an image of your signature.' },
@@ -193,6 +206,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-editor', label: 'Edit the PDF before watermarking' },
       { slug: 'pdf-annotate', label: 'Add stamps and annotations' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Watermarking runs entirely in your browser — your PDF is never uploaded to a server.',
     steps: [
       { title: 'Upload your PDF', body: 'Drop your PDF onto the page or click to select it. All processing happens in your browser.' },
       { title: 'Configure the watermark', body: 'Type your watermark text, choose the font size, colour, opacity, and rotation. Or upload an image watermark (logo, stamp).' },
@@ -225,6 +240,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-redactor', label: 'Redact text before locking' },
       { slug: 'pdf-signer', label: 'Digitally sign your PDF' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed size limit stated — processed on our server over HTTPS' },
+    privacy: 'Encryption runs on our server using qpdf over an HTTPS connection. Your file and password are used only to create the locked PDF and are deleted immediately afterward.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF you want to protect. It is uploaded securely over HTTPS to be encrypted.' },
       { title: 'Set a password', body: 'Enter an open password (required to view) and optionally a permissions password (controls printing and editing rights).' },
@@ -257,7 +274,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-editor', label: 'Edit the unlocked PDF' },
       { slug: 'pdf-merger', label: 'Merge the unlocked PDF' },
       { slug: 'pdf-compressor', label: 'Compress the unlocked PDF' },
+      { slug: 'pdf-repair', label: 'Repair a corrupted PDF' },
     ],
+    formats: { input: ['PDF'], limit: 'Up to 100 MB' },
+    privacy: 'QPDF runs through WebAssembly in a browser worker. Your PDF bytes and password stay on your device and are never uploaded.',
     steps: [
       { title: 'Choose your protected PDF', body: 'Select a password-protected PDF up to 100 MB. The file is read locally and is never uploaded.' },
       { title: 'Enter the current password', body: 'Provide the user or owner password that already opens the document, then confirm you are authorized to modify it.' },
@@ -291,6 +311,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-compressor', label: 'Compress the repaired copy' },
       { slug: 'pdf-editor', label: 'Edit the repaired PDF' },
     ],
+    formats: { input: ['PDF'], limit: 'Up to 100 MB' },
+    privacy: 'The repair engine runs through WebAssembly in a browser worker — your PDF bytes stay on your device and are never uploaded.',
     steps: [
       { title: 'Choose the damaged PDF', body: 'Select a PDF up to 100 MB. The original file is read locally and is never uploaded or modified.' },
       { title: 'Rebuild recoverable structure', body: 'The tool corrects common cross-reference pointer errors, then QPDF rewrites readable object data into a clean PDF copy.' },
@@ -324,6 +346,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-compressor', label: 'Compress the flattened PDF' },
       { slug: 'pdf-viewer', label: 'Review the final PDF' },
     ],
+    formats: { input: ['PDF'], limit: 'Up to 100 MB' },
+    privacy: 'Inspection, form flattening, visual rendering, and PDF generation all happen inside your browser — your file is never uploaded to a server.',
     steps: [
       { title: 'Choose your PDF', body: 'Select a PDF up to 100 MB. The tool checks its page count, form fields, and digital-signature status locally.' },
       { title: 'Choose a flattening method', body: 'Use Form Fields Only to preserve document quality and selectable content, or Full Visual Flatten to bake visible annotations and forms into page images.' },
@@ -357,6 +381,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-viewer', label: 'Review either PDF' },
       { slug: 'pdf-editor', label: 'Correct the revised PDF' },
     ],
+    formats: { input: ['PDF'], output: ['CSV'], limit: 'Up to 100 MB and 150 pages per file' },
+    privacy: 'PDF rendering, text extraction, pixel comparison, and report generation all happen locally in your browser — neither PDF is uploaded to a server.',
     steps: [
       { title: 'Choose both PDF versions', body: 'Select the original and revised PDFs, each up to 100 MB and 150 pages. Both files stay in your browser.' },
       { title: 'Choose comparison sensitivity', body: 'Balanced works for most revisions. Strict finds subtle color changes, while Relaxed ignores mild rendering and compression noise.' },
@@ -390,6 +416,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'extract-pdf-attachments', label: 'Review embedded attachments' },
       { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
     ],
+    formats: { input: ['PDF'], limit: 'Up to 100 MB' },
+    privacy: 'Inspection, metadata removal, rewriting, and verification all run locally inside your browser — your PDF is never uploaded.',
     steps: [
       { title: 'Choose and inspect your PDF', body: 'Select a PDF up to 100 MB. The tool checks common document properties, XMP, page metadata, document IDs, and annotation identity fields locally.' },
       { title: 'Choose annotation cleanup', body: 'Keep the default option to clear hidden author, timestamp, and annotation-ID fields while preserving visible comments and form fields.' },
@@ -424,6 +452,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
       { slug: 'pdf-viewer', label: 'Open and review the PDF' },
     ],
+    formats: { input: ['PDF'], limit: 'Up to 100 MB — up to 500 attachments, 200 MB per file, 300 MB total extracted data' },
+    privacy: 'PDF inspection, stream decoding, and ZIP creation all run locally inside your browser — the PDF and its attachments are never uploaded.',
     steps: [
       { title: 'Choose your PDF', body: 'Select a PDF up to 100 MB. The document is read locally and remains unchanged.' },
       { title: 'Review detected attachments', body: 'The tool scans document attachments, associated files, and file annotations, then shows each filename, size, declared type, and source.' },
@@ -458,6 +488,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-ocr', label: 'Extract text from scanned pages' },
       { slug: 'pdf-viewer', label: 'Review the source PDF' },
     ],
+    formats: { input: ['PDF'], output: ['PNG', 'ZIP'], limit: 'Up to 100 MB and 300 pages — up to 500 unique images per PDF' },
+    privacy: 'PDF parsing, image decoding, hashing, preview generation, and ZIP creation all happen locally inside your browser — nothing is uploaded.',
     steps: [
       { title: 'Choose your PDF', body: 'Select a PDF up to 100 MB and 300 pages. The file stays in your browser.' },
       { title: 'Scan embedded bitmaps', body: 'The tool finds page Image XObjects and inline images, decodes supported transparency, and deduplicates identical pixel content.' },
@@ -491,7 +523,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'ai-pdf-form-filler', label: 'Fill a PDF form with AI' },
       { slug: 'pdf-to-excel', label: 'Convert PDF tables to Excel' },
       { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+      { slug: 'export-pdf-comments', label: 'Export comments and annotations too' },
     ],
+    formats: { input: ['PDF'], output: ['CSV', 'JSON'], limit: 'Up to 100 MB and 500 pages' },
+    privacy: 'PDF parsing, field inspection, and export generation all happen locally in your browser. Analytics receive only counts and size buckets — never filenames, field names, or values.',
     steps: [
       { title: 'Choose your fillable PDF', body: 'Select one PDF up to 100 MB and 500 pages. Parsing happens locally, and the source document is not modified.' },
       { title: 'Review detected fields', body: 'Check field names, types, current values, page locations, flags, and options. Any XFA limitation, unreadable value, signature field, or orphan widget is reported.' },
@@ -526,6 +561,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-page-manager', label: 'Reorganize PDF pages' },
       { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
     ],
+    formats: { input: ['PDF'], output: ['CSV', 'JSON'], limit: 'Up to 100 MB and 2,000 pages' },
+    privacy: 'Outline parsing, destination resolution, and export generation happen locally in your browser. The source PDF is read-only and never uploaded.',
     steps: [
       { title: 'Choose your PDF', body: 'Select one PDF up to 100 MB and 2,000 pages. The document stays on your device and is not rewritten.' },
       { title: 'Review the outline tree', body: 'Inspect bookmark titles, hierarchy paths, resolved page numbers, view modes, child counts, named destinations, and external action classifications.' },
@@ -560,6 +597,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'extract-pages', label: 'Extract selected PDF pages' },
       { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
     ],
+    formats: { input: ['PDF'], limit: 'Up to 100 MB and 2,000 pages' },
+    privacy: 'Parsing, editing, outline reconstruction, and PDF generation happen locally in your browser — the source file is never uploaded.',
     steps: [
       { title: 'Choose your PDF', body: 'Select a PDF up to 100 MB and 2,000 pages. Existing bookmarks and supported destinations are loaded locally into an editable tree.' },
       { title: 'Edit the outline', body: 'Rename and retarget page bookmarks, add root or child entries, move siblings up or down, change open state, or delete unwanted branches.' },
@@ -594,6 +633,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-bookmarks-manager', label: 'Edit document bookmarks' },
       { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
     ],
+    formats: { input: ['PDF'], limit: 'Up to 100 MB and 2,000 pages' },
+    privacy: 'Page-label parsing, previews, number-tree reconstruction, and PDF generation happen locally in your browser — the file is never uploaded.',
     steps: [
       { title: 'Choose your PDF', body: 'Select one PDF up to 100 MB and 2,000 pages. Existing custom page-label ranges are read locally from the PDF number tree.' },
       { title: 'Define label ranges', body: 'Choose where each range begins, select decimal, Roman, letter, or prefix-only style, then set an optional prefix and starting value.' },
@@ -627,7 +668,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-bookmarks-manager', label: 'Edit PDF bookmarks' },
       { slug: 'pdf-page-manager', label: 'Reorganize linked pages' },
       { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
+      { slug: 'remove-pdf-links', label: 'Disable all clickable links' },
     ],
+    formats: { input: ['PDF'], output: ['CSV', 'JSON'], limit: 'Up to 100 MB and 2,000 pages' },
+    privacy: 'Link parsing, destination resolution, and export generation happen locally in your browser — the source PDF stays read-only and is never uploaded.',
     steps: [
       { title: 'Choose your PDF', body: 'Select one PDF up to 100 MB and 2,000 pages. The document is parsed locally and never modified.' },
       { title: 'Review and filter links', body: 'Inspect page numbers, target classifications, local destinations, view modes, rectangle coordinates, descriptions, and safety warnings.' },
@@ -662,6 +706,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'remove-pdf-metadata', label: 'Remove hidden PDF metadata' },
       { slug: 'pdf-unlock', label: 'Unlock an authorized PDF first' },
     ],
+    formats: { input: ['PDF'], limit: 'Up to 100 MB and 2,000 pages' },
+    privacy: 'Inspection, annotation removal, PDF generation, and verification happen locally in your browser — the original file is never uploaded.',
     steps: [
       { title: 'Choose your PDF', body: 'Select one PDF up to 100 MB and 2,000 pages. Link annotations are classified locally without opening their targets.' },
       { title: 'Review the removal summary', body: 'Check how many links and pages are affected, including external targets, internal jumps, and JavaScript link actions.' },
@@ -697,6 +743,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'remove-pdf-metadata', label: 'Clear annotation identity metadata' },
       { slug: 'extract-pdf-links', label: 'Audit link annotations separately' },
     ],
+    formats: { input: ['PDF'], output: ['CSV', 'JSON'], limit: 'Up to 100 MB and 2,000 pages' },
+    privacy: 'Annotation parsing, reply resolution, filtering, and export generation happen locally in your browser — the PDF is never uploaded.',
     steps: [
       { title: 'Choose your PDF', body: 'Select one PDF up to 100 MB and 2,000 pages. The document stays read-only and is parsed locally.' },
       { title: 'Review and filter annotations', body: 'Inspect annotation totals, pages, authors, replies, types, comment text, subjects, dates, and page rectangles.' },
@@ -732,6 +780,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-compressor', label: 'Compress the PDF after scanning' },
       { slug: 'pdf-merger', label: 'Combine scans with other PDFs' },
     ],
+    formats: { input: ['JPG', 'PNG'], output: ['PDF'], limit: 'No fixed limit — capture and processing run on your device' },
+    privacy: 'Camera capture, edge detection, perspective correction, and PDF generation all happen on your device — photos are never sent to a server.',
     steps: [
       { title: 'Open the camera', body: 'Tap "Open Camera" and point it at the document. A guide frame helps you keep the page in view.' },
       { title: 'Auto-crop & straighten', body: 'Capture the page, then use auto-detect or drag the 4 corner handles to select exactly the document edges. Perspective is corrected automatically.' },
@@ -765,7 +815,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-compressor', label: 'Compress the PDF after converting' },
       { slug: 'pdf-editor', label: 'Edit your new PDF' },
       { slug: 'scan-to-pdf', label: 'Scan paper documents with your camera instead' },
+      { slug: 'extract-pdf-images', label: 'Extract images back out of a PDF' },
     ],
+    formats: { input: ['JPG', 'PNG', 'WEBP', 'GIF', 'BMP'], output: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'The entire conversion runs in your browser — your images are never uploaded to any server.',
     steps: [
       { title: 'Upload your images', body: 'Drag one or more JPG, PNG, WEBP, GIF, or BMP images onto the page. You can mix image formats in one PDF.' },
       { title: 'Arrange and adjust', body: 'Reorder images by dragging, crop or rotate individual images, and choose the output page size (A4, Letter, or fit to image).' },
@@ -783,7 +836,7 @@ const data: Record<string, ToolSEOData> = {
   'word-to-pdf': {
     whatIs: [
       'What is a Word to PDF converter?',
-      'A Word to PDF converter takes a Microsoft Word document (.docx or .doc) and produces a PDF file that looks identical to the original — preserving fonts, tables, images, columns, headers, footers, and page breaks. Unlike a Word file, the resulting PDF displays the same on every device and cannot be accidentally edited by the recipient.',
+      'A Word to PDF converter takes a Microsoft Word document (.docx) and produces a PDF file that looks identical to the original — preserving fonts, tables, images, columns, headers, footers, and page breaks. Unlike a Word file, the resulting PDF displays the same on every device and cannot be accidentally edited by the recipient.',
       'Converting to PDF before sharing is the professional standard for CVs, reports, proposals, and any document where appearance must be locked. EditPDF AI converts your Word document in the browser so the file is never sent to an external server — important for confidential contracts and employment paperwork.',
     ],
     users: [
@@ -797,15 +850,18 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'excel-to-pdf', label: 'Convert Excel spreadsheets to PDF' },
       { slug: 'ppt-to-pdf', label: 'Convert PowerPoint slides to PDF' },
       { slug: 'pdf-compressor', label: 'Compress the converted PDF' },
+      { slug: 'html-to-pdf', label: 'Convert a webpage to PDF' },
     ],
+    formats: { input: ['DOCX'], output: ['PDF'], limit: 'No page limit — documents of any length are supported' },
+    privacy: 'Conversion runs entirely in your browser — your Word file never leaves your device.',
     steps: [
-      { title: 'Upload your Word document', body: 'Select your .docx or .doc file. The conversion runs in your browser with no file uploads.' },
+      { title: 'Upload your Word document', body: 'Select your .docx file. The conversion runs in your browser with no file uploads.' },
       { title: 'Convert', body: 'Click Convert to PDF. Your document is processed instantly, preserving fonts, tables, images, and layout.' },
       { title: 'Download the PDF', body: 'Your converted PDF downloads immediately. Open it in any PDF viewer — it looks exactly like the original Word document.' },
     ],
     faqs: [
       { q: 'Does the layout stay the same after conversion?', a: 'Yes. Fonts, tables, images, headers, footers, and page breaks are all preserved in the output PDF.' },
-      { q: 'Can I convert .doc (old Word format) files too?', a: 'Yes. Both .docx (Word 2007+) and the older .doc format are supported.' },
+      { q: 'Can I convert .doc (old Word format) files too?', a: 'Not directly — only .docx (Word 2007 and later) is supported. Open the .doc file in Word (or a free alternative like LibreOffice) and use "Save As" to convert it to .docx first, then upload that file here.' },
       { q: 'Will custom fonts be embedded in the PDF?', a: 'Standard system fonts are always embedded. If your document uses a custom font that is not installed, it may be substituted with a similar font.' },
       { q: 'Is there a page limit?', a: 'No. There is no page limit for the conversion — documents of any length are supported.' },
       { q: 'Is my Word document sent to a server?', a: 'No. The conversion runs entirely in your browser. Your file never leaves your device.' },
@@ -830,6 +886,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-ocr', label: 'Extract text from scanned PDFs' },
       { slug: 'pdf-annotate', label: 'Annotate the PDF without converting' },
     ],
+    formats: { input: ['PDF'], output: ['DOCX'], limit: 'No fixed limit stated' },
+    privacy: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text — not the PDF — is sent to the AI to rebuild the document as Word.',
     steps: [
       { title: 'Upload your PDF', body: 'Drag your PDF onto the page or click to select it. Processing happens in your browser.' },
       { title: 'Convert to Word', body: 'Click Convert to Word. The tool extracts text, tables, and images and re-creates the layout in a .docx file.' },
@@ -862,6 +920,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-ocr', label: 'Extract text from scanned tables' },
       { slug: 'pdf-summarizer', label: 'Summarise a PDF document' },
     ],
+    formats: { input: ['PDF'], output: ['XLSX'], limit: 'No fixed limit stated' },
+    privacy: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text — not the PDF — is sent to the AI to build the spreadsheet.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF containing the table or spreadsheet data you want to extract.' },
       { title: 'Convert to Excel', body: 'Click Convert. The tool detects tables and structured data in the PDF and maps them to rows and columns in a .xlsx spreadsheet.' },
@@ -893,7 +953,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-cropper', label: 'Crop PDF pages before converting' },
       { slug: 'pdf-compressor', label: 'Compress the PDF first' },
       { slug: 'pdf-to-ppt', label: 'Convert PDF to PowerPoint' },
+      { slug: 'extract-pdf-images', label: 'Extract only the embedded images' },
     ],
+    formats: { input: ['PDF'], output: ['JPG', 'PNG', 'WEBP'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Rendering uses PDF.js entirely in your browser — no document data leaves your device.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF you want to convert to images. Every page will become a separate image file.' },
       { title: 'Choose image format and quality', body: 'Pick JPG, PNG, or WEBP output. Set the resolution (DPI) — 150 DPI for screens, 300 DPI for printing.' },
@@ -926,6 +989,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-to-word', label: 'Convert PDF to Word' },
       { slug: 'pdf-summarizer', label: 'Summarise the PDF content' },
     ],
+    formats: { input: ['PDF'], output: ['PPTX'], limit: 'No hard limit — PDFs with dozens of pages convert without issue' },
+    privacy: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text — not the PDF — is sent to the AI to rebuild the slides.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF you want to convert. Each page will become a slide in the PowerPoint file.' },
       { title: 'Convert to PowerPoint', body: 'Click Convert. Each PDF page is rendered as a high-quality image and placed on a PowerPoint slide.' },
@@ -944,7 +1009,7 @@ const data: Record<string, ToolSEOData> = {
     whatIs: [
       'What is an Excel to PDF converter?',
       'An Excel to PDF converter takes an .xlsx or .xls spreadsheet and renders it as a fixed-layout PDF document. Every worksheet becomes a set of pages in the PDF, with cell colours, borders, charts, merged cells, and number formatting all faithfully reproduced — so the reader sees exactly what you designed, regardless of what software they have installed.',
-      'Sharing spreadsheets as PDFs is the professional standard for financial reports, budgets, project schedules, and invoices: recipients can read and print but cannot accidentally modify the data. EditPDF AI converts your Excel file on secure servers and deletes it immediately after conversion.',
+      'Sharing spreadsheets as PDFs is the professional standard for financial reports, budgets, project schedules, and invoices: recipients can read and print but cannot accidentally modify the data. EditPDF AI converts your Excel file entirely in your browser — the file is never uploaded to a server.',
     ],
     users: [
       { who: 'Finance & accounting teams', why: 'Convert budget spreadsheets, P&L statements, and management accounts into PDFs for board packs and audit submissions.' },
@@ -958,6 +1023,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'ppt-to-pdf', label: 'Convert PowerPoint to PDF' },
       { slug: 'pdf-compressor', label: 'Compress the converted PDF' },
     ],
+    formats: { input: ['XLSX', 'XLS', 'CSV'], output: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Conversion runs entirely in your browser — your spreadsheet is never uploaded to a server.',
     steps: [
       { title: 'Upload your Excel file', body: 'Select your .xlsx or .xls spreadsheet. The conversion preserves cell formatting, borders, and formulas as static values.' },
       { title: 'Convert', body: 'Click Convert to PDF. All sheets are converted into a multi-page PDF that matches the Excel print layout.' },
@@ -968,7 +1035,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Are all sheets in the workbook converted?', a: 'Yes. Each worksheet becomes a separate section or set of pages in the output PDF.' },
       { q: 'Can I convert .xls (older Excel format) files?', a: 'Yes. Both .xlsx (Excel 2007+) and the older .xls format are supported.' },
       { q: 'Are charts and graphs included?', a: 'Yes. Charts embedded in the spreadsheet are rendered in the PDF at their original size and position.' },
-      { q: 'Is my spreadsheet sent to a server?', a: 'The conversion runs securely on our servers to ensure accurate layout rendering. Files are deleted immediately after download.' },
+      { q: 'Is my spreadsheet sent to a server?', a: 'No. The conversion runs entirely in your browser. Your spreadsheet is never uploaded to a server.' },
     ],
   },
 
@@ -990,6 +1057,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'excel-to-pdf', label: 'Convert spreadsheets to PDF' },
       { slug: 'pdf-to-images', label: 'Export PDF slides as images' },
     ],
+    formats: { input: ['PPTX', 'PPT'], output: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Conversion runs entirely in your browser — your presentation is never uploaded to a server.',
     steps: [
       { title: 'Upload your presentation', body: 'Select your .pptx or .ppt file. Slides, images, and text are all carried over to the PDF.' },
       { title: 'Convert', body: 'Click Convert to PDF. Each slide becomes a page in the PDF, preserving layouts, fonts, and graphics.' },
@@ -1000,7 +1069,7 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Will speaker notes be included?', a: 'By default, slides only are included. Notes are not rendered in the standard conversion.' },
       { q: 'Can I convert .ppt (older PowerPoint format) files?', a: 'Yes. Both .pptx (PowerPoint 2007+) and the older .ppt format are supported.' },
       { q: 'Are embedded images and charts preserved?', a: 'Yes. All images, charts, SmartArt, and text boxes are rendered in the PDF at their original quality.' },
-      { q: 'Is my file sent to a server?', a: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text (not the PDF) is sent to the AI to rebuild the slides.' },
+      { q: 'Is my file sent to a server?', a: 'No. The conversion runs entirely in your browser. Your presentation file is never uploaded to a server.' },
     ],
   },
 
@@ -1022,6 +1091,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-editor', label: 'Edit the generated PDF' },
       { slug: 'pdf-annotate', label: 'Annotate the PDF with notes' },
     ],
+    formats: { input: ['HTML'], output: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Conversion runs entirely in your browser — nothing is uploaded to a server.',
     steps: [
       { title: 'Paste a URL or upload HTML', body: 'Enter a webpage URL or upload a local .html file. CSS stylesheets linked in the file are applied automatically.' },
       { title: 'Configure the output', body: 'Set the page size (A4, Letter), margins, and whether to include backgrounds and images.' },
@@ -1053,7 +1124,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'odt-to-pdf', label: 'Convert OpenDocument files to PDF' },
       { slug: 'rtf-to-pdf', label: 'Convert RTF documents to PDF' },
       { slug: 'pdf-editor', label: 'Edit the generated PDF' },
+      { slug: 'html-to-pdf', label: 'Convert HTML or a webpage to PDF' },
     ],
+    formats: { input: ['TXT'], output: ['PDF'], limit: 'No fixed limit — runs in your browser; long files are paginated automatically' },
+    privacy: 'The entire conversion runs locally in your browser — your text file is never uploaded.',
     steps: [
       { title: 'Upload your text file', body: 'Select a plain .txt file. The text content is read and laid out for PDF output.' },
       { title: 'Set font and layout', body: 'Choose the font, font size, line spacing, and margins. Preview updates instantly.' },
@@ -1086,6 +1160,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'txt-to-pdf', label: 'Convert plain text to PDF' },
       { slug: 'pdf-compressor', label: 'Compress the converted PDF' },
     ],
+    formats: { input: ['ODT'], output: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Conversion runs entirely in your browser — your ODT file is never uploaded to a server.',
     steps: [
       { title: 'Upload your ODT file', body: 'Select your .odt file created in LibreOffice Writer or any OpenDocument compatible application.' },
       { title: 'Convert to PDF', body: 'Click Convert. Fonts, styles, tables, and images from the ODT file are reproduced in the PDF.' },
@@ -1118,6 +1194,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-editor', label: 'Edit the generated PDF' },
       { slug: 'pdf-compressor', label: 'Compress the converted PDF' },
     ],
+    formats: { input: ['RTF'], output: ['PDF'], limit: 'No page or file size limit' },
+    privacy: 'Conversion runs entirely in your browser — your RTF file is never uploaded to a server.',
     steps: [
       { title: 'Upload your RTF file', body: 'Select your .rtf (Rich Text Format) document. RTF files are compatible with virtually all word processors.' },
       { title: 'Convert to PDF', body: 'Click Convert. Text formatting, fonts, and embedded images are reproduced in the PDF.' },
@@ -1136,7 +1214,7 @@ const data: Record<string, ToolSEOData> = {
     whatIs: [
       'What is PDF OCR?',
       'PDF OCR (Optical Character Recognition) is the process of analysing a scanned PDF or photo of a document and extracting the text it contains. A scanned document is essentially just an image — the text is not selectable, searchable, or copyable. OCR reads that image, identifies the characters, and produces a searchable text layer that makes the document fully functional.',
-      'OCR is the essential first step for any workflow involving scanned documents: making old paper records searchable, preparing scanned forms for data extraction, or converting printed text into a format that can be edited in Word. EditPDF AI\'s OCR supports over 100 languages and works on PDFs, JPGs, and other image formats.',
+      'OCR is the essential first step for any workflow involving scanned documents: making old paper records searchable, preparing scanned forms for data extraction, or converting printed text into a format that can be edited in Word. EditPDF AI\'s OCR supports over 100 languages and accepts PDF files.',
     ],
     users: [
       { who: 'Students & academics', why: 'Make scanned textbook chapters, journal articles, and reading materials searchable so you can Ctrl+F for specific terms and quotes.' },
@@ -1151,8 +1229,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-translator', label: 'Translate the PDF to another language' },
       { slug: 'pdf-redactor', label: 'Redact sensitive information' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed file-size limit stated — free accounts get 5 OCR scans per day, Pro is unlimited' },
+    privacy: 'OCR uses our AI backend for processing. Files are sent securely over HTTPS and deleted immediately after the result is returned.',
     steps: [
-      { title: 'Upload a scanned PDF or image', body: 'Select a scanned PDF, a photo of a document, or any image containing text. JPG, PNG, and PDF formats are all accepted.' },
+      { title: 'Upload a scanned PDF', body: 'Select a PDF containing scanned pages or photographed document images — the file itself must be a PDF.' },
       { title: 'Run OCR', body: 'Click Scan. Our AI-powered OCR engine reads the text from the scan, supporting 100+ languages.' },
       { title: 'Copy or download', body: 'Copy the extracted text to your clipboard, or download a searchable PDF where the original image is preserved and the text is embedded and selectable.' },
     ],
@@ -1183,7 +1263,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-translator', label: 'Translate the PDF to another language' },
       { slug: 'mind-map', label: 'Turn the document into a mind map' },
       { slug: 'quiz-creator', label: 'Generate a quiz from your PDF' },
+      { slug: 'chat-with-pdf', label: 'Ask questions about the document instead' },
     ],
+    formats: { input: ['PDF'], limit: 'Free accounts have a page limit; Pro accounts support unlimited document length' },
+    privacy: 'The text content of your document is sent to our AI for processing. Raw file bytes are never transmitted — only the extracted text.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF you want summarised. Reports, research papers, contracts, and books all work.' },
       { title: 'Generate summary', body: 'Click Summarise. Our AI reads the full document and produces a concise summary that captures the key points.' },
@@ -1216,7 +1299,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-summarizer', label: 'Summarise the translated document' },
       { slug: 'pdf-annotate', label: 'Add translation notes to the PDF' },
       { slug: 'pdf-to-word', label: 'Convert the PDF to Word for editing' },
+      { slug: 'chat-with-pdf', label: 'Ask questions about the document instead' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit stated — free accounts get 5 translations per day, Pro is unlimited' },
+    privacy: 'The text content is sent securely to our AI backend for translation. Raw file bytes stay on your device, and the extracted text is deleted after the translated PDF is generated.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF you want translated. The document\'s text content is extracted for translation.' },
       { title: 'Choose target language', body: 'Select from 77 supported languages. The AI preserves the original document structure while translating the text.' },
@@ -1249,7 +1335,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-watermark', label: 'Add a confidential watermark' },
       { slug: 'pdf-editor', label: 'Edit the PDF before redacting' },
       { slug: 'pdf-ocr', label: 'Extract text before redacting' },
+      { slug: 'remove-pdf-links', label: 'Disable links without redacting text' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Redaction — including the AI-assisted pattern detection — runs entirely in your browser. The unredacted document is never uploaded to a server.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF containing sensitive information you want to permanently remove.' },
       { title: 'Select text to redact', body: 'Highlight text on the page or use the AI-assisted detection to find names, dates, phone numbers, and other sensitive patterns automatically.' },
@@ -1281,7 +1370,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-signer', label: 'Add a digital signature' },
       { slug: 'pdf-redactor', label: 'Redact sensitive sections' },
       { slug: 'pdf-form-builder', label: 'Build an interactive PDF form' },
+      { slug: 'export-pdf-comments', label: 'Export your annotations as CSV or JSON' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'All annotation happens in your browser — your PDF never leaves your device.',
     steps: [
       { title: 'Upload your PDF', body: 'Open the PDF you want to annotate. It loads directly in the browser-based editor.' },
       { title: 'Add annotations', body: 'Highlight text, add sticky notes, draw freehand, insert text boxes, or use shapes. All tools are in the toolbar.' },
@@ -1313,7 +1405,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-annotate', label: 'Annotate the form with comments' },
       { slug: 'pdf-signer', label: 'Add a digital signature to the form' },
       { slug: 'pdf-editor', label: 'Edit the form layout' },
+      { slug: 'export-pdf-form-data', label: 'Export submitted form data' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed page or field-count limit — free to use' },
+    privacy: 'Form building runs in your browser. The output is a standard fillable PDF — no account or server upload required.',
     steps: [
       { title: 'Start with a blank page or PDF', body: 'Open a blank form or upload an existing PDF as the base. The form builder works on top of your chosen background.' },
       { title: 'Add form fields', body: 'Drag and drop text inputs, checkboxes, radio buttons, dropdowns, signatures, and date fields anywhere on the page.' },
@@ -1345,7 +1440,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-signer',      label: 'Add a signature to a filled form' },
       { slug: 'pdf-ocr',         label: 'Extract text from a scanned PDF' },
       { slug: 'pdf-form-builder', label: 'Build your own fillable PDF form' },
+      { slug: 'export-pdf-form-data', label: 'Export the filled field data' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit stated' },
+    privacy: 'Interactive form fields are filled locally in your browser. For flat or scanned forms, field positions are detected via our AI backend; your data is used only to fill the form during the session and is never stored, logged, or reused.',
     steps: [
       { title: 'Upload a PDF form', body: 'Open any fillable PDF form or a form-style document. The AI scans for all fields — named fields, blank lines, tables, and checkboxes.' },
       { title: 'Provide your information', body: 'Paste your CV, upload an ID card photo, or just type your information in the chat. The AI maps your data to the right fields automatically.' },
@@ -1378,6 +1476,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-annotate', label: 'Annotate the source PDF' },
       { slug: 'pdf-ocr', label: 'Extract text from a scanned PDF' },
     ],
+    formats: { input: ['PDF'], output: ['PNG', 'JSON'], limit: 'Free accounts have a page limit; Pro supports unlimited document length' },
+    privacy: 'The text content is sent to our AI backend for analysis. Raw file bytes are never transmitted, and the text is deleted after the mind map is generated.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the document you want to turn into a mind map — a report, textbook chapter, meeting notes, or research paper.' },
       { title: 'Generate the map', body: 'Click Generate. The AI reads the document, identifies the main topics and sub-topics, and builds an interactive mind map.' },
@@ -1411,6 +1511,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-annotate', label: 'Highlight key points first' },
       { slug: 'pdf-ocr', label: 'Extract text from a printed paper' },
     ],
+    formats: { input: ['PDF'], output: ['PDF', 'CSV'], limit: 'Free accounts: up to 10 questions per session; Pro: up to 50 per document' },
+    privacy: 'The text is sent to our AI backend for question generation and deleted immediately after the quiz is created.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the study material, textbook chapter, or notes you want to create a quiz from.' },
       { title: 'Generate questions', body: 'Choose the number of questions and the difficulty level. The AI reads the content and generates multiple-choice or short-answer questions.' },
@@ -1444,6 +1546,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-signer', label: 'Sign your PDF digitally' },
       { slug: 'pdf-merger', label: 'Merge multiple PDFs into one' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'All editing runs in your browser using WebAssembly and PDF.js — your file never leaves your device.',
     steps: [
       { title: 'Open your PDF', body: 'Upload any PDF — a contract, invoice, report, or form. It loads in the full-featured browser editor instantly.' },
       { title: 'Edit text, images, and pages', body: 'Click text to edit it in place, add or replace images, insert new pages, add shapes and annotations, and fill in form fields.' },
@@ -1476,6 +1580,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-ocr', label: 'Extract text from the PDF' },
       { slug: 'pdf-summarizer', label: 'Summarise the PDF content' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'The PDF is rendered entirely in your browser using PDF.js — your file is never uploaded.',
     steps: [
       { title: 'Open a PDF', body: 'Drag a PDF onto the viewer or click to browse. It loads instantly in your browser — no download or install required.' },
       { title: 'Navigate and search', body: 'Use the page thumbnail panel to jump between pages, or press Ctrl+F to search for text. Zoom in and out with the controls or pinch-to-zoom on mobile.' },
@@ -1508,6 +1614,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-editor', label: 'Edit the cropped PDF' },
       { slug: 'pdf-compressor', label: 'Compress the PDF after cropping' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Cropping runs entirely in your browser — your file never leaves your device.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF with pages you want to crop. You can apply the same crop to all pages or set a different crop for each page.' },
       { title: 'Set the crop area', body: 'Drag the handles on the crop overlay to define the area to keep. The live preview shows exactly how the cropped page will look.' },
@@ -1540,6 +1648,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'delete-pages', label: 'Delete unwanted pages' },
       { slug: 'extract-pages', label: 'Extract specific pages' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Rotation runs entirely in your browser using pdf-lib — your file never leaves your device.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF with pages in the wrong orientation. Multiple pages can be rotated in one session.' },
       { title: 'Select pages and rotation', body: 'Choose which pages to rotate — all pages, individual pages, or every other page. Set rotation to 90°, 180°, or 270°.' },
@@ -1572,6 +1682,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-page-manager', label: 'Reorder the remaining PDF pages' },
       { slug: 'pdf-merger', label: 'Merge the extracted pages' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Extraction runs entirely in your browser — your file never leaves your device.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF you want to extract pages from.' },
       { title: 'Choose pages to extract', body: 'Click individual page thumbnails or enter page numbers (e.g. 2, 4, 7-10). Selected pages are highlighted.' },
@@ -1604,6 +1716,8 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-page-manager', label: 'Reorder the remaining pages' },
       { slug: 'rotate-pdf', label: 'Rotate pages after deleting' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Page deletion runs entirely in your browser — your PDF is never uploaded.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF with pages you want to remove.' },
       { title: 'Select pages to delete', body: 'Click the page thumbnails you want to remove. Selected pages are highlighted in red.' },
@@ -1635,7 +1749,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-editor', label: 'Edit the PDF before adding numbers' },
       { slug: 'pdf-merger', label: 'Merge PDFs then add page numbers' },
       { slug: 'pdf-annotate', label: 'Add headers and annotations' },
+      { slug: 'pdf-page-labels', label: 'Use viewer navigation labels instead' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Page numbers are added entirely in your browser — your file never leaves your device.',
     steps: [
       { title: 'Upload your PDF', body: 'Select the PDF you want to add page numbers to.' },
       { title: 'Configure numbering', body: 'Choose the position (header or footer, left/centre/right), the starting number, font, and size. A live preview shows the result.' },
@@ -1667,7 +1784,10 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-merger', label: 'Merge PDFs before organising pages' },
       { slug: 'rotate-pdf', label: 'Rotate individual pages' },
       { slug: 'extract-pages', label: 'Extract selected pages' },
+      { slug: 'pdf-page-labels', label: 'Set custom viewer page labels' },
     ],
+    formats: { input: ['PDF'], limit: 'No fixed limit — works with PDFs of any length, capped only by device memory' },
+    privacy: 'All processing runs in your browser — your PDF never leaves your device.',
     steps: [
       { title: 'Upload your PDF', body: 'Open the PDF you want to reorganise. All pages appear as thumbnails in the page manager.' },
       { title: 'Reorder, rotate, or delete pages', body: 'Drag page thumbnails to reorder them. Click the rotate button on any thumbnail to rotate that page. Click delete to remove a page.' },

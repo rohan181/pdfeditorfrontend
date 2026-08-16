@@ -1,7 +1,6 @@
 'use client'
 import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import type { PDFDocument } from 'pdf-lib'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
@@ -149,6 +148,37 @@ function fmt(bytes: number) {
 let _id = 0
 const nextId = () => `id-${++_id}`
 
+type PageManagerWorkerResponse =
+  | { type: 'progress'; value: number }
+  | { type: 'success'; buffer: ArrayBuffer }
+  | { type: 'error'; message: string }
+
+function runPageManagerWorker(
+  sources: { id: string; buffer: ArrayBuffer }[],
+  pages: { sourceId: string; originalIndex: number; rotation: 0 | 90 | 180 | 270 }[],
+  onProgress: (value: number) => void,
+): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../../workers/pdf-page-manager.worker.ts', import.meta.url))
+
+    worker.onmessage = (event: MessageEvent<PageManagerWorkerResponse>) => {
+      const message = event.data
+      if (message.type === 'progress') { onProgress(message.value); return }
+
+      worker.terminate()
+      if (message.type === 'success') resolve(message.buffer)
+      else reject(new Error(message.message))
+    }
+
+    worker.onerror = () => {
+      worker.terminate()
+      reject(new Error('The local PDF engine failed to start. Please reload and try again.'))
+    }
+
+    worker.postMessage({ sources, pages }, sources.map(s => s.buffer))
+  })
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function PDFPageManagerPage() {
   const [sources, setSources]   = useState<SourceFile[]>([])
@@ -282,27 +312,11 @@ export default function PDFPageManagerPage() {
     if (pages.length === 0) return
     setProcessing(true); setProgress(5); setError('')
     try {
-      const { PDFDocument, degrees } = await import('pdf-lib')
-      // Load each source PDF once
-      const srcDocs = new Map<string, Awaited<ReturnType<typeof PDFDocument.load>>>()
-      for (const src of sources) {
-        srcDocs.set(src.id, await PDFDocument.load(src.bytes.slice(0)))
-      }
+      const workerSources = sources.map(s => ({ id: s.id, buffer: s.bytes.slice(0) }))
+      const workerPages   = pages.map(p => ({ sourceId: p.sourceId, originalIndex: p.originalIndex, rotation: p.rotation }))
 
-      const outDoc = await PDFDocument.create()
-      for (let i = 0; i < pages.length; i++) {
-        const p   = pages[i]
-        const src = srcDocs.get(p.sourceId)
-        if (!src) continue
-        const [copied] = await outDoc.copyPages(src, [p.originalIndex])
-        if (p.rotation !== 0) copied.setRotation(degrees(p.rotation))
-        outDoc.addPage(copied)
-        setProgress(5 + Math.round((i / pages.length) * 88))
-      }
-
-      setProgress(97)
-      const bytes    = await outDoc.save()
-      const blob     = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' })
+      const buffer = await runPageManagerWorker(workerSources, workerPages, setProgress)
+      const blob     = new Blob([buffer], { type: 'application/pdf' })
       const url      = URL.createObjectURL(blob)
       const a        = document.createElement('a')
       const baseName = sources.length === 1

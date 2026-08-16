@@ -152,6 +152,36 @@ async function countPages(file: File): Promise<number> {
   return doc.numPages
 }
 
+type MergeWorkerResponse =
+  | { type: 'progress'; value: number }
+  | { type: 'success'; buffer: ArrayBuffer; pageCount: number }
+  | { type: 'error'; message: string }
+
+function runMergeWorker(
+  buffers: ArrayBuffer[],
+  onProgress: (value: number) => void,
+): Promise<{ buffer: ArrayBuffer; pageCount: number }> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../../workers/pdf-merge.worker.ts', import.meta.url))
+
+    worker.onmessage = (event: MessageEvent<MergeWorkerResponse>) => {
+      const message = event.data
+      if (message.type === 'progress') { onProgress(message.value); return }
+
+      worker.terminate()
+      if (message.type === 'success') resolve({ buffer: message.buffer, pageCount: message.pageCount })
+      else reject(new Error(message.message))
+    }
+
+    worker.onerror = () => {
+      worker.terminate()
+      reject(new Error('The local PDF engine failed to start. Please reload and try again.'))
+    }
+
+    worker.postMessage({ buffers }, buffers)
+  })
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function PDFMergerPage() {
   const [files, setFiles]       = useState<PdfFile[]>([])
@@ -216,26 +246,13 @@ export default function PDFMergerPage() {
     if (files.length < 2) return
     setProcessing(true); setProgress(5); setError('')
     try {
-      const { PDFDocument } = await import('pdf-lib')
-      const out = await PDFDocument.create()
-      let done  = 0
+      const buffers = await Promise.all(files.map(entry => entry.file.arrayBuffer()))
+      const { buffer, pageCount } = await runMergeWorker(buffers, setProgress)
 
-      for (const entry of files) {
-        const bytes  = await entry.file.arrayBuffer()
-        const srcDoc = await PDFDocument.load(bytes)
-        const indices = srcDoc.getPageIndices()
-        const copied  = await out.copyPages(srcDoc, indices)
-        copied.forEach(p => out.addPage(p))
-        done++
-        setProgress(5 + Math.round((done / files.length) * 88))
-      }
-
-      setProgress(97)
-      const bytes = await out.save()
-      const blob  = new Blob([bytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' })
+      const blob  = new Blob([buffer], { type: 'application/pdf' })
       const name  = (outputName.trim() || 'merged') + '.pdf'
       setProgress(100)
-      setResult({ blob, name, totalPages: out.getPageCount() })
+      setResult({ blob, name, totalPages: pageCount })
     } catch (e: any) {
       setError('Merge failed: ' + (e?.message ?? 'unknown error'))
     } finally {

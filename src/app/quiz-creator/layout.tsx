@@ -1,30 +1,13 @@
-import type { Metadata } from 'next'
+import { buildToolMetadata } from '@/lib/seo/metadata'
+import { TOOL_METADATA } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'AI Quiz Creator from PDF — Generate Quizzes Instantly',
-  description: 'Create quizzes and flashcards from PDFs with AI. Generate multiple-choice, true-or-false and open-ended questions from your study materials.',
-  keywords: 'AI quiz creator, quiz from PDF, generate quiz from PDF, PDF to quiz, AI quiz generator, flashcard generator from PDF',
-  alternates: { canonical: 'https://www.editpdfai.com/quiz-creator' },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: 'AI Quiz Creator from PDF — Generate Quizzes Instantly',
-    description: 'Generate quizzes and flashcards from any PDF with AI. Perfect for studying and revision. Free online.',
-    type: 'website',
-    url: 'https://www.editpdfai.com/quiz-creator',
-    siteName: 'EditPDF AI',
-    images: [{ url: '/social/quiz-creator.png', width: 1200, height: 630, alt: 'AI Quiz Creator from PDF' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'AI Quiz Creator from PDF',
-    description: 'Generate quizzes and flashcards from any PDF with AI. Free online, no signup.',
-    images: ['/social/quiz-creator.png'],
-  },
-}
+export const metadata = buildToolMetadata(TOOL_METADATA['quiz-creator'])
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
+  '@id': 'https://www.editpdfai.com/quiz-creator#webapp',
+  provider: { '@id': 'https://www.editpdfai.com/#organization' },
   name: 'AI Quiz Creator',
   url: 'https://www.editpdfai.com/quiz-creator',
   applicationCategory: 'EducationalApplication',
