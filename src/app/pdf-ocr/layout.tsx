@@ -1,5 +1,6 @@
 import { buildToolMetadata } from '@/lib/seo/metadata'
 import { TOOL_METADATA } from '@/lib/seo/routes'
+import { ORGANIZATION_ID } from '@/lib/seo/site'
 
 export const metadata = buildToolMetadata(TOOL_METADATA['pdf-ocr'])
 
@@ -7,7 +8,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   '@id': 'https://www.editpdfai.com/pdf-ocr#webapp',
-  provider: { '@id': 'https://www.editpdfai.com/#organization' },
+  provider: { '@id': ORGANIZATION_ID },
   name: 'PDF OCR',
   url: 'https://www.editpdfai.com/pdf-ocr',
   applicationCategory: 'UtilitiesApplication',

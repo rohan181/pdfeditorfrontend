@@ -5,6 +5,7 @@ import Image from 'next/image'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── palette (one colour per PDF) ────────────────────────────────────────────
@@ -794,6 +795,15 @@ export default function MindMapPage() {
 
       <input ref={fileRef} type="file" multiple accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { if (e.target.files) addPDFs(Array.from(e.target.files)); e.target.value = '' }}/>
+      <ToolQuickFacts
+        definition="An AI PDF mind map generator reads a document and automatically constructs a visual mind map showing its main topics, subtopics, and the relationships between ideas — instead of manually diagramming a complex report or textbook chapter, you upload the PDF and get a structured map in seconds."
+        price="Free — 5 AI generations/day; Pro removes the daily limit and page cap"
+        account="Free account required (AI feature)"
+        processing="Extracted text sent to AI backend; raw file bytes never transmitted"
+        formats="PDF in, PNG/JSON out"
+        fileLimit="Free: page limit applies · Pro: unlimited length"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['mind-map']} />
     </>
   )

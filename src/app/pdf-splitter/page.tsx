@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
@@ -599,6 +600,15 @@ export default function PDFSplitterPage() {
           </div>
         </div>
       </div>
+      <ToolQuickFacts
+        definition="A PDF splitter divides one PDF file into multiple separate PDF files. Instead of sharing or printing an entire 50-page report when a colleague only needs pages 12–18, you split out exactly the pages you need and send those alone."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="PDF"
+        fileLimit="No server-side limit — most PDFs up to 500 MB work fine"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-splitter']} />
     </>
   )

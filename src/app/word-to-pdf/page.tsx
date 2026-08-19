@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -588,6 +589,15 @@ export default function WordToPDFPage() {
         ref={fileRef} type="file" accept=".docx"
         style={{display:'none'}}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
+      />
+      <ToolQuickFacts
+        definition="A Word to PDF converter takes a Microsoft Word document (.docx) and produces a PDF that looks identical to the original — preserving fonts, tables, images, columns, headers, footers, and page breaks. The resulting PDF displays the same on every device and can't be accidentally edited."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="DOCX in, PDF out"
+        fileLimit="No page limit — documents of any length are supported"
+        browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['word-to-pdf']} />
     </>

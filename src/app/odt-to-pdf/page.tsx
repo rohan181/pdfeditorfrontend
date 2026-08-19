@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -686,6 +687,15 @@ export default function ODTToPDFPage() {
         ref={fileRef} type="file" accept=".odt"
         style={{display:'none'}}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
+      />
+      <ToolQuickFacts
+        definition="An ODT to PDF converter takes an OpenDocument Text (.odt) file — the default format of LibreOffice Writer and other open-source word processors — and converts it into a universally compatible PDF, preserving fonts, styles, tables, images, headers, and footers exactly."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="ODT in, PDF out"
+        fileLimit="No fixed limit — capped only by device memory"
+        browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['odt-to-pdf']} />
     </>

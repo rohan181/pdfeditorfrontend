@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import Image from 'next/image'
 import SiteFooter from '@/components/SiteFooter'
+import { TOOL_COUNT } from '@/lib/toolMeta'
 
 const FREE_FEATURES = [
   '5 AI uses per day',
-  'All 50+ PDF tools (unlimited)',
+  `All ${TOOL_COUNT}+ PDF tools (unlimited)`,
   'PDF edit, merge, split, compress',
   'E-signature & annotations',
   'PDF password protection',
@@ -22,7 +23,7 @@ const PRO_FEATURES = [
   'PDF Mind Map generator',
   'AI OCR & scan detection',
   'AI quiz creator',
-  'All 50+ PDF tools (unlimited)',
+  `All ${TOOL_COUNT}+ PDF tools (unlimited)`,
   'Priority processing',
 ]
 
@@ -48,6 +49,7 @@ const COMPARISON_GROUPS = [
       ['AI OCR scanner',          '5/day', '∞ Unlimited'],
       ['PDF mind map',            '5/day', '∞ Unlimited'],
       ['AI quiz creator',         '5/day', '∞ Unlimited'],
+      ['PDF → Word / Excel / PPT','5/day', '∞ Unlimited'],
     ],
   },
   {
@@ -55,7 +57,6 @@ const COMPARISON_GROUPS = [
     note: '',
     rows: [
       ['AI uses per day',         '5',     'Unlimited'  ],
-      ['PDF → Word / Excel / PPT',false,   true         ],
       ['Priority processing',     false,   true         ],
     ],
   },

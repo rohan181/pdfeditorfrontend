@@ -1,4 +1,5 @@
 import { Upload, Sparkles, PenTool, Download, ChevronRight, ChevronDown } from 'lucide-react'
+import { TOOL_COUNT } from '@/lib/toolMeta'
 
 const FI = { fontFamily:'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily:'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
@@ -16,7 +17,7 @@ export default function SiteHowItWorks() {
       n: '02', color: '#7c3aed', bg: 'rgba(124,58,237,.08)',
       Icon: Sparkles,
       title: 'Choose a PDF or AI tool',
-      desc: 'Pick from 50+ tools — edit text, compress, merge, OCR scan, translate, summarise, or auto-fill a form with AI.',
+      desc: `Pick from ${TOOL_COUNT}+ tools — edit text, compress, merge, OCR scan, translate, summarise, or auto-fill a form with AI.`,
     },
     {
       n: '03', color: RED, bg: 'rgba(226,75,74,.08)',

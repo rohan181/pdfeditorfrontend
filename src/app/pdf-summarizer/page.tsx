@@ -5,6 +5,7 @@ import Image from 'next/image'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 type LengthOpt = 'brief' | 'standard' | 'detailed'
@@ -325,6 +326,15 @@ export default function PDFSummarizerPage() {
           <input ref={fileInputRef} type="file" accept="application/pdf" style={{display:'none'}}
             onChange={e=>{const f=e.target.files?.[0];if(f)loadFile(f);e.target.value=''}} />
         </div>
+        <ToolQuickFacts
+          definition="An AI PDF summarizer reads a document and produces a concise summary — key points, section breakdowns, and important figures — in seconds, instead of you reading the whole file. It works on reports, research papers, and contracts, and keeps domain-specific terminology accurate for legal, medical, and technical documents."
+          price="Free — 5 AI summaries/day; Pro removes the page-length cap"
+          account="Free account required (AI feature)"
+          processing="Extracted text sent to AI; raw file bytes never transmitted"
+          formats="PDF"
+          fileLimit="Free: page limit applies · Pro: unlimited length"
+          browserSupport="Chrome, Firefox, Safari, Edge"
+        />
         <ToolSEOSection {...toolSeoData['pdf-summarizer']} />
       </>
     )

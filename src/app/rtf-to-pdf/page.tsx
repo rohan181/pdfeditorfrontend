@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -573,6 +574,15 @@ export default function RTFToPDFPage() {
         ref={fileRef} type="file" accept=".rtf"
         style={{display:'none'}}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
+      />
+      <ToolQuickFacts
+        definition="An RTF to PDF converter takes a Rich Text Format (.rtf) document and produces a PDF file that can be opened by anyone, anywhere, without a word processor. RTF preserves basic formatting like bold, italic, fonts, and simple tables — converting it to PDF locks in that appearance permanently."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="RTF in, PDF out"
+        fileLimit="No page or file size limit"
+        browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['rtf-to-pdf']} />
     </>

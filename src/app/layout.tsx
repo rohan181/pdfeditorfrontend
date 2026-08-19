@@ -5,6 +5,8 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import UpgradeGateProvider from '@/components/UpgradeGateProvider'
 import PdfResultDock from '@/components/PdfResultDock'
 import Analytics from '@/components/Analytics'
+import SiteJsonLd from '@/components/SiteJsonLd'
+import { TOOL_COUNT } from '@/lib/toolMeta'
 import './globals.css'
 
 // Two font families only — Jakarta for headings (LCP-critical), DM Sans for body/UI
@@ -20,7 +22,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: { default: 'EditPDF AI — Edit smarter. Finish faster.', template: '%s' },
-  description: 'Edit smarter. Finish faster. 50+ PDF and AI tools — edit, sign, OCR, translate, summarise and fill forms. Core tools need no account.',
+  description: `Edit smarter. Finish faster. ${TOOL_COUNT}+ PDF and AI tools — edit, sign, OCR, translate, summarise and fill forms. Core tools need no account.`,
   authors: [{ name: 'EditPDF AI', url: 'https://www.editpdfai.com' }],
   creator: 'EditPDF AI',
   publisher: 'EditPDF AI',
@@ -48,7 +50,7 @@ export const metadata: Metadata = {
     url: 'https://www.editpdfai.com',
     siteName: 'EditPDF AI',
     title: 'EditPDF AI — Edit smarter. Finish faster.',
-    description: 'Edit smarter. Finish faster. 50+ PDF and AI tools. Core tools need no account.',
+    description: `Edit smarter. Finish faster. ${TOOL_COUNT}+ PDF and AI tools. Core tools need no account.`,
     locale: 'en_US',
     images: [
       {
@@ -64,7 +66,7 @@ export const metadata: Metadata = {
     site: '@editpdfai',
     creator: '@editpdfai',
     title: 'EditPDF AI — Edit smarter. Finish faster.',
-    description: 'Edit smarter. Finish faster. 50+ PDF and AI tools. Core tools need no account.',
+    description: `Edit smarter. Finish faster. ${TOOL_COUNT}+ PDF and AI tools. Core tools need no account.`,
     images: ['/opengraph-image'],
   },
   formatDetection: {
@@ -83,6 +85,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <link rel="preconnect" href="https://clerk.editpdfai.com" />
           <link rel="dns-prefetch" href="https://js.stripe.com" />
           <link rel="dns-prefetch" href="https://api.anthropic.com" />
+          <SiteJsonLd />
         </head>
         <body style={{ fontFamily: 'var(--font-dm), system-ui, sans-serif' }}>
           <a href="#main-content" className="skip-to-content">Skip to content</a>

@@ -31,7 +31,7 @@ function Ul({ items }: { items: string[] }) {
 }
 
 export default function TermsPage() {
-  const updated = 'July 3, 2026'
+  const updated = 'August 16, 2026'
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>
@@ -61,8 +61,7 @@ export default function TermsPage() {
           <P>EditPDF AI provides browser-based PDF editing, conversion, and AI-powered document tools. The Service includes:</P>
           <Ul items={[
             'Free PDF tools: edit, merge, split, compress, rotate, watermark, sign, and more — available to all users without an account',
-            'AI-powered features (Summarizer, Form Filler, Translator, Mind Map, Quiz Creator, OCR): 5 free uses per day for registered users; unlimited for Pro subscribers',
-            'Conversion tools (PDF → Word, Excel, PowerPoint): available on the Pro plan',
+            'AI-powered features (Summarizer, Form Filler, Translator, Mind Map, Quiz Creator, OCR, PDF → Word/Excel/PowerPoint conversion): 5 free uses per day for registered users; unlimited for Pro subscribers',
           ]} />
         </Section>
 

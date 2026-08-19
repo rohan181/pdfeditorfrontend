@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -518,6 +519,15 @@ export default function TxtToPDFPage() {
         accept=".txt,.text,.md,.markdown,.csv,.log,.json,.xml,.yaml,.yml,.ini,.cfg,.sh,.py,.js,.ts,.sql,.toml"
         style={{display:'none'}}
         onChange={e => { if (e.target.files?.[0]) readFile(e.target.files[0]); e.target.value='' }}
+      />
+      <ToolQuickFacts
+        definition="A TXT to PDF converter takes a plain-text (.txt) file and lays out its content as a formatted PDF with your chosen font, size, line spacing, and margins. Plain text files have no visual formatting, so the converter applies a clean, professional layout for printing or archiving."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="TXT in, PDF out"
+        fileLimit="No fixed limit — long files are paginated automatically"
+        browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['txt-to-pdf']} />
     </>

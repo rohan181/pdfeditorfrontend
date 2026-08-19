@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
@@ -485,6 +486,15 @@ export default function PDFMergerPage() {
           </div>
         </div>
       </div>
+      <ToolQuickFacts
+        definition="A PDF merger combines two or more separate PDF files into a single, unified document. Instead of sending several attachments, you merge them into one file that opens in the correct order — easier to read, share, and file. Merging runs in your browser, so files never leave your device."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — files never uploaded"
+        formats="PDF"
+        fileLimit="No fixed limit — files 100 MB+ each may be slower"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-merger']} />
     </>
   )

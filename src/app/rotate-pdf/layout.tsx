@@ -1,5 +1,6 @@
 import { buildToolMetadata } from '@/lib/seo/metadata'
 import { TOOL_METADATA } from '@/lib/seo/routes'
+import { ORGANIZATION_ID } from '@/lib/seo/site'
 
 export const metadata = buildToolMetadata(TOOL_METADATA['rotate-pdf'])
 
@@ -7,7 +8,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
   '@id': 'https://www.editpdfai.com/rotate-pdf#webapp',
-  provider: { '@id': 'https://www.editpdfai.com/#organization' },
+  provider: { '@id': ORGANIZATION_ID },
   name: 'Rotate PDF',
   url: 'https://www.editpdfai.com/rotate-pdf',
   applicationCategory: 'UtilitiesApplication',

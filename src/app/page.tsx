@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { ORGANIZATION_ID } from '@/lib/seo/site'
+import { TOOL_COUNT } from '@/lib/toolMeta'
 import AppleHome from '@/components/AppleHome'
 import SitePopularTools from '@/components/SitePopularTools'
 import SiteUseCases from '@/components/SiteUseCases'
@@ -12,8 +14,8 @@ import SiteFooter from '@/components/SiteFooter'
 import MobileEditorShortcut from '@/components/MobileEditorShortcut'
 
 export const metadata: Metadata = {
-  title: { absolute: 'EditPDF AI: Free Online PDF Editor & 50+ PDF Tools' },
-  description: 'EditPDF AI provides 50+ free online PDF tools to edit, fill, sign, merge, compress and convert PDFs. Core tools need no account and files stay private.',
+  title: { absolute: `EditPDF AI: Free Online PDF Editor & ${TOOL_COUNT}+ PDF Tools` },
+  description: `EditPDF AI provides ${TOOL_COUNT}+ free online PDF tools to edit, fill, sign, merge, compress and convert PDFs. Core tools need no account and files stay private.`,
   applicationName: 'EditPDF AI',
   // No `alternates.canonical` here on purpose — Next.js's metadata resolver
   // hardcodes root-path URLs down to a bare origin (drops the trailing
@@ -22,8 +24,8 @@ export const metadata: Metadata = {
   // URLs too. The canonical tag below is rendered manually instead, just for
   // this one page, so it can be the exact required https://www.editpdfai.com/.
   openGraph: {
-    title: 'EditPDF AI: Free Online PDF Editor & 50+ PDF Tools',
-    description: 'EditPDF AI provides 50+ free online PDF tools to edit, fill, sign, merge, compress and convert PDFs. Core tools need no account and files stay private.',
+    title: `EditPDF AI: Free Online PDF Editor & ${TOOL_COUNT}+ PDF Tools`,
+    description: `EditPDF AI provides ${TOOL_COUNT}+ free online PDF tools to edit, fill, sign, merge, compress and convert PDFs. Core tools need no account and files stay private.`,
     type: 'website',
     url: 'https://www.editpdfai.com/',
     siteName: 'EditPDF AI',
@@ -36,8 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'EditPDF AI: Free Online PDF Editor & 50+ PDF Tools',
-    description: 'EditPDF AI provides 50+ free online PDF tools to edit, fill, sign, merge, compress and convert PDFs. Core tools need no account and files stay private.',
+    title: `EditPDF AI: Free Online PDF Editor & ${TOOL_COUNT}+ PDF Tools`,
+    description: `EditPDF AI provides ${TOOL_COUNT}+ free online PDF tools to edit, fill, sign, merge, compress and convert PDFs. Core tools need no account and files stay private.`,
     images: ['/social/home-constellation.png'],
   },
 }
@@ -53,7 +55,7 @@ const jsonLd = [
     operatingSystem: 'Any',
     browserRequirements: 'Requires a modern web browser with JavaScript enabled.',
     isAccessibleForFree: true,
-    provider: { '@id': 'https://www.editpdfai.com/#organization' },
+    provider: { '@id': ORGANIZATION_ID },
     featureList: [
       'Edit and annotate PDF files',
       'Fill and sign PDF forms',
@@ -65,50 +67,11 @@ const jsonLd = [
       { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD', url: 'https://www.editpdfai.com/pdf-editor' },
       { '@type': 'Offer', name: 'Pro', price: '1', priceCurrency: 'USD', url: 'https://www.editpdfai.com/pricing' },
     ],
-    description: 'Use 50+ online PDF tools to edit, sign, fill, merge, compress and convert documents. Core tools need no account.',
+    description: `Use ${TOOL_COUNT}+ online PDF tools to edit, sign, fill, merge, compress and convert documents. Core tools need no account.`,
   },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    '@id': 'https://www.editpdfai.com/#organization',
-    name: 'EditPDF AI',
-    alternateName: ['EditPDFAI', 'EditPDF'],
-    url: 'https://www.editpdfai.com/',
-    logo: {
-      '@type': 'ImageObject',
-      url: 'https://www.editpdfai.com/logo-square.svg',
-      contentUrl: 'https://www.editpdfai.com/logo-square.svg',
-      width: 512,
-      height: 512,
-    },
-    sameAs: [
-      'https://twitter.com/editpdfai',
-      'https://www.linkedin.com/company/editpdfai/',
-      'https://www.trustpilot.com/review/editpdfai.com',
-    ],
-    contactPoint: {
-      '@type': 'ContactPoint',
-      email: 'support@editpdfai.com',
-      contactType: 'customer support',
-    },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    '@id': 'https://www.editpdfai.com/#website',
-    name: 'EditPDF AI',
-    url: 'https://www.editpdfai.com/',
-    inLanguage: 'en',
-    publisher: { '@id': 'https://www.editpdfai.com/#organization' },
-    hasPart: [
-      { '@id': 'https://www.editpdfai.com/pdf-editor', '@type': 'WebPage', name: 'PDF Editor' },
-      { '@id': 'https://www.editpdfai.com/pdf-compressor', '@type': 'WebPage', name: 'PDF Compressor' },
-      { '@id': 'https://www.editpdfai.com/pdf-merger', '@type': 'WebPage', name: 'PDF Merger' },
-      { '@id': 'https://www.editpdfai.com/pdf-signer', '@type': 'WebPage', name: 'PDF Signer' },
-      { '@id': 'https://www.editpdfai.com/pdf-ocr', '@type': 'WebPage', name: 'PDF OCR Scanner' },
-      { '@id': 'https://www.editpdfai.com/ai-pdf-form-filler', '@type': 'WebPage', name: 'AI PDF Form Filler' },
-    ],
-  },
+  // Organization + WebSite are rendered site-wide by <SiteJsonLd /> in the
+  // root layout (src/app/layout.tsx) — not repeated here, to avoid two
+  // Organization/WebSite entities describing the same site on this page.
   {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',

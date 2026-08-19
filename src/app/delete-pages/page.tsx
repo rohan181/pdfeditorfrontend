@@ -3,6 +3,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import SiteFooter from '@/components/SiteFooter'
 
@@ -535,6 +536,15 @@ export default function DeletePages() {
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }}/>
     </div>
+    <ToolQuickFacts
+      definition="A PDF page deleter removes unwanted pages from a PDF and saves the remaining pages as a new file. Blank pages, duplicate pages, cover pages that shouldn't be shared, or confidential sections can all be removed in seconds without re-creating the document from scratch."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF"
+      fileLimit="No fixed limit — capped only by device memory"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     <ToolSEOSection {...toolSeoData['delete-pages']} />
     <SiteFooter />
     </>

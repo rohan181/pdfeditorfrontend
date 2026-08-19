@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import SiteFooter from '@/components/SiteFooter'
 
@@ -625,6 +626,15 @@ export default function PDFAnnotate() {
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display:'none' }}
         onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }}/>
     </div>
+    <ToolQuickFacts
+      definition="A PDF annotator lets you add notes, highlights, drawings, stamps, and text comments directly onto a PDF without altering the original content. Annotations are saved as a standard layer in the file, so they appear in any PDF viewer without requiring the annotator software installed."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF"
+      fileLimit="No fixed limit — capped only by device memory"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     <ToolSEOSection {...toolSeoData['pdf-annotate']} />
     <SiteFooter />
     </>

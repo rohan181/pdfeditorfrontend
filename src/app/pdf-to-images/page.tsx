@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 const CSS = `
@@ -448,6 +449,15 @@ export default function PDFToImagesPage() {
           </div>
         </div>
       </div>
+      <ToolQuickFacts
+        definition="A PDF to image converter renders each page of a PDF as a separate image file — JPG, PNG, or WEBP. This is the standard way to use PDF content on the web, in presentations, or in design software that doesn't support PDFs natively."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="PDF in, JPG/PNG/WEBP out"
+        fileLimit="No fixed limit — capped only by device memory"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-to-images']} />
     </>
   )

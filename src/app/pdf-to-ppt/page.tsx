@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -546,6 +547,15 @@ export default function PDFToPPTPage() {
 
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
+      <ToolQuickFacts
+        definition="A PDF to PowerPoint converter transforms each page of a PDF into a slide in a .pptx file. The visual layout of every page is preserved as a high-quality image on its corresponding slide, giving you a presentation that opens directly in PowerPoint, Google Slides, or Keynote."
+        price="Free — 5 AI conversions/day; Pro removes the daily limit"
+        account="Free account required (AI feature)"
+        processing="Text extracted locally; only that text is sent to AI to rebuild the slides"
+        formats="PDF in, PPTX out"
+        fileLimit="No hard limit — PDFs with dozens of pages convert without issue"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-to-ppt']} />
     </>
   )

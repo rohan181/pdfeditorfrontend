@@ -1,4 +1,5 @@
 import type { ToolMetadataInput } from './metadata'
+import { TOOL_COUNT } from '@/lib/toolMeta'
 
 // Centralized per-route metadata. Each `layout.tsx` imports its own entry and
 // passes it to `buildToolMetadata()` — the JSON-LD blocks stay in each page's
@@ -10,7 +11,7 @@ export const TOOL_METADATA: Record<string, ToolMetadataInput> = {
   'about': {
     path: '/about',
     title: 'About EditPDF AI – Our Story and Privacy Approach',
-    description: 'EditPDF AI is an independent PDF tool suite. Learn who we are, how your files are handled, and why we keep 50+ tools permanently free.',
+    description: `EditPDF AI is an independent PDF tool suite. Learn who we are, how your files are handled, and why we keep ${TOOL_COUNT}+ tools permanently free.`,
     ogDescription: 'Learn how EditPDF AI builds free, private browser-based PDF tools for everyone.',
     twitterTitle: 'About EditPDF AI',
     twitterDescription: 'Free, private browser-based PDF tools built for everyone.',

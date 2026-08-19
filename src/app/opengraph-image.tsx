@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { TOOL_COUNT } from '@/lib/toolMeta'
 
 export const runtime = 'edge'
 export const alt = 'EditPDF AI — Edit smarter. Finish faster.'
@@ -82,7 +83,7 @@ export default function OGImage() {
 
         {/* Feature pills */}
         <div style={{ display: 'flex', gap: 14 }}>
-          {['AI Form Fill', 'Sign PDF', 'OCR', 'Translate', 'Summarise', '50+ Tools'].map(label => (
+          {['AI Form Fill', 'Sign PDF', 'OCR', 'Translate', 'Summarise', `${TOOL_COUNT}+ Tools`].map(label => (
             <div
               key={label}
               style={{

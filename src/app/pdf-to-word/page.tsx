@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -443,6 +444,15 @@ export default function PDFToWordPage() {
 
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
+      <ToolQuickFacts
+        definition="A PDF to Word converter extracts the text, tables, and images from a PDF and re-creates the content as an editable .docx file you can open in Microsoft Word, Google Docs, or LibreOffice — letting you make substantive edits to a document that was previously locked in PDF format."
+        price="Free — 5 AI conversions/day; Pro removes the daily limit"
+        account="Free account required (AI feature)"
+        processing="Text extracted locally; only that text is sent to AI to rebuild the document"
+        formats="PDF in, DOCX out"
+        fileLimit="No fixed limit stated"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-to-word']} />
     </>
   )

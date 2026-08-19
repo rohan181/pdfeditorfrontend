@@ -5,6 +5,7 @@ import Image from 'next/image'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 type PageStatus = 'idle' | 'processing' | 'done' | 'error' | 'native'
@@ -752,6 +753,15 @@ export default function PDFOCRPage() {
           <input ref={fileInputRef} type="file" accept="application/pdf" style={{display:'none'}}
             onChange={e=>{const f=e.target.files?.[0];if(f)loadFile(f);e.target.value=''}} />
         </div>
+        <ToolQuickFacts
+          definition="PDF OCR (Optical Character Recognition) analyses a scanned PDF — which is really just an image, with no selectable or searchable text — and reads the characters in it to produce a fully searchable, selectable text layer. It supports over 100 languages and works on both scanned documents and photos."
+          price="Free — 5 OCR scans/day; Pro is unlimited"
+          account="Free account required (AI feature)"
+          processing="File sent securely over HTTPS to the AI backend, deleted immediately after"
+          formats="PDF"
+          fileLimit="Not stated — no fixed size cap published"
+          browserSupport="Chrome, Firefox, Safari, Edge"
+        />
         <ToolSEOSection {...toolSeoData['pdf-ocr']} />
       </>
     )

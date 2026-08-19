@@ -20,6 +20,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 
@@ -238,6 +239,15 @@ export default function ExtractPDFAttachmentsPage() {
         <div className="attachments-info"><article><Paperclip size={21} /><h3>Broad attachment discovery</h3><p>Checks document name trees, PDF associated-file arrays, and file-attachment annotations on every page.</p></article><article><PackageOpen size={21} /><h3>Original bytes recovered</h3><p>Decodes supported PDF stream filters and downloads the embedded file bytes without converting their content.</p></article><article><ShieldCheck size={21} /><h3>Private and non-executing</h3><p>Extraction and ZIP creation run locally. Files are downloaded as data and never previewed or executed by the tool.</p></article></div>
       </div></main>
 
+      <ToolQuickFacts
+        definition="A PDF can contain complete files inside the document package, appearing in an attachments panel or connected to a paperclip-style file annotation. Common examples include spreadsheets, XML invoice data, source documents, images, and supporting evidence — all extractable individually or as a ZIP."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="PDF (exports the embedded files)"
+        fileLimit="Up to 100 MB — up to 500 attachments per PDF"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['extract-pdf-attachments']} />
       <SiteFooter />
     </div>

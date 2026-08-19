@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -554,6 +555,15 @@ export default function PDFViewerPage() {
         ref={fileInputRef} type="file" accept=".pdf,application/pdf"
         style={{display:'none'}}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
+      />
+      <ToolQuickFacts
+        definition="An online PDF viewer lets you open and read any PDF document directly in your browser — no Adobe Acrobat, no software installation, and no file download required. You get full navigation controls, text search, zoom, and on mobile, swipe and pinch-to-zoom — all from a browser tab on any device."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Rendered entirely in your browser — file never uploaded"
+        formats="PDF"
+        fileLimit="No fixed limit — capped only by device memory"
+        browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['pdf-viewer']} />
     </>

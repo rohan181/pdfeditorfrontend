@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import SiteFooter from '@/components/SiteFooter'
 
@@ -571,6 +572,15 @@ export default function QuizCreator() {
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display:'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}/>
     </div>
+    <ToolQuickFacts
+      definition="An AI quiz creator reads a PDF and generates a set of test questions based on the actual content — multiple-choice, true/false, or short-answer, complete with correct answers — turning any PDF into an instant study guide, practice exam, or classroom assessment."
+      price="Free — limited daily AI generations; Pro increases the question limit"
+      account="Free account required (AI feature)"
+      processing="Extracted text sent to AI backend for question generation"
+      formats="PDF in, PDF/CSV out"
+      fileLimit="Free: up to 10 questions/session · Pro: up to 50"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     <ToolSEOSection {...toolSeoData['quiz-creator']} />
     <SiteFooter />
     </>

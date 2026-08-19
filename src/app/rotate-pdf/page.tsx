@@ -3,6 +3,7 @@ import { useState, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import SiteFooter from '@/components/SiteFooter'
 
@@ -498,6 +499,15 @@ export default function RotatePDF() {
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }}/>
     </div>
+    <ToolQuickFacts
+      definition="A PDF rotation tool permanently changes the orientation of one or more pages in a PDF. If a page was scanned sideways, photographed upside down, or saved in the wrong orientation, rotating it corrects the display so readers don't have to tilt their head or device."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF"
+      fileLimit="No fixed limit — capped only by device memory"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     <ToolSEOSection {...toolSeoData['rotate-pdf']} />
     <SiteFooter />
     </>

@@ -17,6 +17,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 
@@ -342,6 +343,15 @@ export default function PDFUnlockPage() {
 
             <p className="unlock-note"><strong>Important:</strong> This tool does not guess, recover, or brute-force passwords and cannot remove certificate security or third-party DRM. Only unlock documents you own or are authorized to modify.</p>
 
+            <ToolQuickFacts
+              definition="Unlocking a PDF removes its standard password encryption and permission restrictions, producing a copy that can be opened without entering the password. You must provide the correct user or owner password when the document requires one."
+              price="Free — no account needed"
+              account="Not required"
+              processing="Entirely in your browser via WebAssembly — file never uploaded"
+              formats="PDF"
+              fileLimit="Up to 100 MB"
+              browserSupport="Chrome, Firefox, Safari, Edge"
+            />
             <ToolSEOSection {...toolSeoData['pdf-unlock']} />
           </div>
         </main>

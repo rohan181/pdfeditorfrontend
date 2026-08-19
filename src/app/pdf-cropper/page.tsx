@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -925,6 +926,15 @@ export default function PDFCropperPage() {
         ref={fileInputRef} type="file" accept=".pdf,application/pdf"
         style={{display:'none'}}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
+      />
+      <ToolQuickFacts
+        definition="A PDF cropper adjusts the visible area of each page by moving the page boundary inward, hiding content outside the new boundary. The most common use is removing unwanted white margins from scanned documents, cropping scanner borders, or trimming a full-bleed PDF to a specific print size."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="PDF"
+        fileLimit="No fixed limit — capped only by device memory"
+        browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['pdf-cropper']} />
     </>

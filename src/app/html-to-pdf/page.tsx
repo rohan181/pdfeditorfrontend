@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 type PageSize   = 'a4' | 'letter' | 'legal'
@@ -470,6 +471,15 @@ export default function HtmlToPdf() {
         }}
       />
     </div>
+    <ToolQuickFacts
+      definition="An HTML to PDF converter takes a webpage — either a live URL or a local .html file — and renders it as a PDF document. The output looks exactly like the page does in a browser: styles, images, fonts, and layout are all captured."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="HTML in, PDF out"
+      fileLimit="No fixed limit — capped only by device memory"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     <ToolSEOSection {...toolSeoData['html-to-pdf']} />
     </>
   )

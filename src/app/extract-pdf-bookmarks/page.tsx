@@ -20,6 +20,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 
@@ -514,6 +515,15 @@ export default function ExtractPDFBookmarksPage() {
       </div>
     </main>
 
+    <ToolQuickFacts
+      definition="PDF bookmarks are entries in a document outline that help readers jump to chapters, sections, appendices, or other locations. Unlike a printed table of contents, bookmarks are stored as a separate hierarchy with parent and child relationships, which this tool reads and exports."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF in, CSV/JSON out"
+      fileLimit="Up to 100 MB and 2,000 pages"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     {seo && <ToolSEOSection {...seo} />}
     <SiteFooter />
   </div>

@@ -31,7 +31,7 @@ function Ul({ items }: { items: string[] }) {
 }
 
 export default function PrivacyPage() {
-  const updated = 'August 11, 2026'
+  const updated = 'August 14, 2026'
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>

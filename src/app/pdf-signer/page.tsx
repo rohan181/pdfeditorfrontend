@@ -5,6 +5,7 @@ import BrandImage from 'next/image'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 type SignMode = 'draw' | 'type' | 'upload'
@@ -640,6 +641,15 @@ export default function PDFSignerPage() {
           <input ref={fileInputRef} type="file" accept="application/pdf" style={{ display:'none' }}
             onChange={e => { const f=e.target.files?.[0]; if(f){setPdfFile(f);loadPDF(f)}; e.target.value='' }} />
         </div>
+        <ToolQuickFacts
+          definition="An electronic PDF signer lets you place a signature on a PDF document without printing, signing by hand, and scanning. Draw your signature, type it in a handwritten font, or upload an image of your existing signature, then place it anywhere on the page in seconds — no account needed."
+          price="Free — no account needed"
+          account="Not required"
+          processing="Entirely in your browser — document and signature never leave your device"
+          formats="PDF"
+          fileLimit="No fixed limit — capped only by device memory"
+          browserSupport="Chrome, Firefox, Safari, Edge"
+        />
         <ToolSEOSection {...toolSeoData['pdf-signer']} />
       </>
     )

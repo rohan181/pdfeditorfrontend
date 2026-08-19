@@ -201,32 +201,36 @@ export default async function ManageSubscriptionPage() {
         <Card>
           <Label>Plan features</Label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {[
-              ['AI Form Filler',         isPro],
-              ['PDF Summarizer',         isPro],
-              ['PDF Translator',         isPro],
-              ['PDF Mind Map',           isPro],
-              ['Quiz Creator',           isPro],
-              ['PDF OCR Scanner',        isPro],
-              ['PDF Editor',             true],
-              ['PDF Merger & Splitter',  true],
-              ['PDF Compressor',         true],
-              ['PDF → Word / Excel',     isPro],
-              ['Password Lock',          true],
-              ['PDF Watermarker',        true],
-            ].map(([feature, included]) => (
-              <div key={feature as string} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, background: included ? 'rgba(8,145,178,.05)' : '#f9fafb' }}>
-                <span style={{ fontSize: 13, flexShrink: 0, color: included ? '#0891b2' : '#d1d5db' }}>
-                  {included ? '✓' : '✕'}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: included ? '#1d1d1f' : '#9ca3af' }}>
-                  {feature as string}
-                </span>
-                {!included && (
-                  <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#0891b2', background: 'rgba(8,145,178,.1)', padding: '2px 7px', borderRadius: 99, whiteSpace: 'nowrap' }}>Pro</span>
-                )}
-              </div>
-            ))}
+            {([
+              ['AI Form Filler',         'ai'],
+              ['PDF Summarizer',         'ai'],
+              ['PDF Translator',         'ai'],
+              ['PDF Mind Map',           'ai'],
+              ['Quiz Creator',           'ai'],
+              ['PDF OCR Scanner',        'ai'],
+              ['PDF Editor',             'core'],
+              ['PDF Merger & Splitter',  'core'],
+              ['PDF Compressor',         'core'],
+              ['PDF → Word / Excel',     'ai'],
+              ['Password Lock',          'core'],
+              ['PDF Watermarker',        'core'],
+            ] as const).map(([feature, kind]) => {
+              // Core tools are always available. AI tools are available to
+              // everyone — free accounts get 5 uses/day, Pro gets unlimited —
+              // never fully excluded, so this never shows a flat "not included".
+              const unlimited = kind === 'core' || isPro
+              return (
+                <div key={feature} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, background: unlimited ? 'rgba(8,145,178,.05)' : '#f9fafb' }}>
+                  <span style={{ fontSize: 13, flexShrink: 0, color: '#0891b2' }}>✓</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: '#1d1d1f' }}>
+                    {feature}
+                  </span>
+                  {!unlimited && (
+                    <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#0891b2', background: 'rgba(8,145,178,.1)', padding: '2px 7px', borderRadius: 99, whiteSpace: 'nowrap' }}>5/day</span>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </Card>
 

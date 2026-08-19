@@ -5,6 +5,7 @@ import BrandImage from 'next/image'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import {
   type FilterType, DEF_CORNERS, isDefaultCrop,
@@ -562,6 +563,15 @@ export default function ImageToPDFPage() {
           </div>
           <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" multiple style={{display:'none'}} onChange={e=>{if(e.target.files)loadFiles(e.target.files);e.target.value=''}} />
         </div>
+        <ToolQuickFacts
+          definition="An image to PDF converter takes one or more image files — JPG, PNG, WEBP, or others — and packages them into a single PDF document. Each image becomes a page, and you control the page size, order, and orientation, producing a universally compatible document."
+          price="Free — no account needed"
+          account="Not required"
+          processing="Entirely in your browser — file never uploaded"
+          formats="JPG, PNG, WEBP, GIF, BMP in, PDF out"
+          fileLimit="No fixed limit — capped only by device memory"
+          browserSupport="Chrome, Firefox, Safari, Edge"
+        />
         <ToolSEOSection {...toolSeoData['image-to-pdf']} />
       </>
     )

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
@@ -536,6 +537,15 @@ export default function PDFPageManagerPage() {
           </div>
         </div>
       </div>
+      <ToolQuickFacts
+        definition="A PDF page manager gives you full control over the page structure of a document from a single interface. Reorder pages by dragging, rotate individual pages, delete unwanted pages, and insert blank pages, then save all changes to a new PDF in one step."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="PDF"
+        fileLimit="No fixed limit — works with PDFs of any length"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-page-manager']} />
     </>
   )

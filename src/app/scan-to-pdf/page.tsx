@@ -4,6 +4,7 @@ import Link from 'next/link'
 import BrandImage from 'next/image'
 import SiteNav from '@/components/SiteNav'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import {
   type FilterType, DEF_CORNERS, isDefaultCrop,
@@ -588,6 +589,15 @@ export default function ScanToPDFPage() {
           <input ref={fileInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }}
             onChange={e => { if (e.target.files) loadFiles(e.target.files); e.target.value = '' }} />
         </div>
+        <ToolQuickFacts
+          definition="Scan to PDF turns your phone or laptop camera into a document scanner. Instead of a flat photo with a crooked angle, it detects the edges of the paper, corrects the perspective so the page looks flat and rectangular, and applies a scan-style filter to the result."
+          price="Free — no account needed"
+          account="Not required"
+          processing="Capture and processing run entirely on your device"
+          formats="Camera/JPG/PNG in, PDF out"
+          fileLimit="No fixed limit — capture and processing run on your device"
+          browserSupport="Chrome, Firefox, Safari, Edge"
+        />
         <ToolSEOSection {...toolSeoData['scan-to-pdf']} />
       </>
     )

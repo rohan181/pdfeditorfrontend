@@ -5,6 +5,7 @@ import type { PDFDocumentProxy } from 'pdfjs-dist'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 let _pdfjs: typeof import('pdfjs-dist') | null = null
@@ -413,6 +414,15 @@ export default function PDFWatermarkPage() {
               </div>
             </div>
           </section>
+          <ToolQuickFacts
+            definition="A PDF watermark tool stamps a visible mark — text such as “CONFIDENTIAL” or “DRAFT”, or an image such as a company logo — across every page of a PDF. The mark is embedded directly into the page content, visible to all readers and deterring unauthorised distribution or copying."
+            price="Free — no account needed"
+            account="Not required"
+            processing="Entirely in your browser — file never uploaded"
+            formats="PDF"
+            fileLimit="No fixed limit — capped only by device memory"
+            browserSupport="Chrome, Firefox, Safari, Edge"
+          />
           <ToolSEOSection {...toolSeoData['pdf-watermark']} />
           <SiteFooter />
         </div>

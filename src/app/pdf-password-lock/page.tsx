@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
@@ -398,6 +399,15 @@ export default function PDFPasswordLockPage() {
           </div>
         </div>
       </div>
+      <ToolQuickFacts
+        definition="A PDF password lock encrypts a PDF file so anyone who tries to open it must enter the correct password first. Without it, the content is completely unreadable, even if someone obtains a copy of the file. EditPDF AI uses AES-256 encryption, the strongest level available in the PDF specification."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser via WebAssembly — file never uploaded"
+        formats="PDF"
+        fileLimit="No fixed limit — capped only by device memory"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-password-lock']} />
     </>
   )

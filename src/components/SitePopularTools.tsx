@@ -22,7 +22,7 @@ const popular: { label: string; href: string; Icon: any; tier: ToolTier; kind: T
   { label:'Split PDF',          href:'/pdf-splitter',       Icon:Split,     tier:'free', kind:'standard' },
   { label:'Extract Pages',      href:'/extract-pages',      Icon:Scissors,  tier:'free', kind:'standard' },
   { label:'Sign PDF',           href:'/pdf-signer',         Icon:PenTool,   tier:'free', kind:'security' },
-  { label:'PDF to Word',        href:'/pdf-to-word',        Icon:FileType,  tier:'pro',  kind:'standard' },
+  { label:'PDF to Word',        href:'/pdf-to-word',        Icon:FileType,  tier:'ai',   kind:'standard' },
   { label:'AI PDF Form Filler', href:'/ai-pdf-form-filler', Icon:Sparkles,  tier:'ai',   kind:'ai'       },
 ]
 

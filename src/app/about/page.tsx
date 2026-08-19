@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { buildToolMetadata } from '@/lib/seo/metadata'
 import { TOOL_METADATA } from '@/lib/seo/routes'
+import { TOOL_COUNT } from '@/lib/toolMeta'
 
 export const metadata = buildToolMetadata(TOOL_METADATA['about'])
 
@@ -9,7 +10,7 @@ const VALUES = [
   {
     icon: '🔓',
     title: 'Free by default',
-    body: 'We believe powerful PDF tools should not cost money. All 50+ core tools are permanently free — no trial period, no hidden limits, no credit card.',
+    body: `We believe powerful PDF tools should not cost money. All ${TOOL_COUNT}+ core tools are permanently free — no trial period, no hidden limits, no credit card.`,
   },
   {
     icon: '🔒',
@@ -29,7 +30,7 @@ const VALUES = [
 ]
 
 const STATS = [
-  { value: '50+',  label: 'Free PDF tools' },
+  { value: `${TOOL_COUNT}+`,  label: 'Free PDF tools' },
   { value: '100%', label: 'Browser-based, no install' },
   { value: '$0',   label: 'Cost for core tools' },
   { value: '$1',   label: 'Pro plan per month' },

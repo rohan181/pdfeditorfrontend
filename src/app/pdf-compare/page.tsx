@@ -26,6 +26,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 
@@ -535,6 +536,15 @@ export default function PDFComparePage() {
         <p className="compare-note"><strong>Review important documents:</strong> comparison highlights likely differences, but it is not a substitute for legal review, accessibility testing, signature validation, or PDF metadata inspection.</p>
       </div></main>
 
+      <ToolQuickFacts
+        definition="PDF comparison checks the same page position in two document versions and identifies visible changes, text revisions, page-size differences, and pages that were added or removed. It's useful when a revised contract, report, proof, or form must be checked against its earlier version."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Both PDFs rendered and compared entirely in your browser"
+        formats="PDF (compares two files, exports CSV)"
+        fileLimit="Up to 100 MB and 150 pages per file"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-compare']} />
       <SiteFooter />
     </div>

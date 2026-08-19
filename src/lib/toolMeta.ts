@@ -60,4 +60,9 @@ const toolMeta: ToolMeta[] = [
 
 export const toolMetaMap = Object.fromEntries(toolMeta.map(t => [t.slug, t]))
 
+// Single source of truth for "how many tools does this site have" copy —
+// import this instead of hardcoding "50+" so the number can't drift from
+// the actual registry as tools are added or removed.
+export const TOOL_COUNT = toolMeta.length
+
 export default toolMeta

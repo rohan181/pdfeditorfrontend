@@ -3,6 +3,7 @@ import { useState, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import SiteFooter from '@/components/SiteFooter'
 
@@ -501,6 +502,15 @@ export default function ExtractPages() {
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }}/>
     </div>
+    <ToolQuickFacts
+      definition="A PDF page extractor lets you select specific pages from within a PDF and save them as a new, standalone file. Unlike splitting, which divides a PDF by sequential ranges, extraction lets you cherry-pick any combination of pages regardless of where they appear in the original document."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF"
+      fileLimit="No fixed limit — capped only by device memory"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     <ToolSEOSection {...toolSeoData['extract-pages']} />
     <SiteFooter />
     </>

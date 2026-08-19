@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback, useMemo, memo } from 'react'
 import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import Image from 'next/image'
+import { TOOL_COUNT } from '@/lib/toolMeta'
 import {
   motion, AnimatePresence,
   useScroll, useTransform,
@@ -64,9 +65,9 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   { name:'Extract Pages',     tag:'LIVE', href:'/extract-pages',      cat:'Pages',    Icon:Scissors,        iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Pull specific pages into a new PDF',    tier:'free' },
   { name:'Delete Pages',      tag:'LIVE', href:'/delete-pages',       cat:'Pages',    Icon:Trash2,          iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Remove unwanted pages permanently',     tier:'free' },
   // ── Convert ─────────────────────────────────────────────────────────────────
-  { name:'PDF → Word',        tag:'LIVE', href:'/pdf-to-word',        cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#16a34a,#22c55e)', desc:'Convert PDF to editable Word doc',      tier:'pro'  },
-  { name:'PDF → Excel',       tag:'LIVE', href:'/pdf-to-excel',       cat:'Convert',  Icon:FileSpreadsheet, iconBg:'linear-gradient(135deg,#15803d,#16a34a)', desc:'Extract tables to spreadsheet',         tier:'pro'  },
-  { name:'PDF → PowerPoint',  tag:'LIVE', href:'/pdf-to-ppt',         cat:'Convert',  Icon:Presentation,    iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Turn slides into editable PPT',         tier:'pro'  },
+  { name:'PDF → Word',        tag:'LIVE', href:'/pdf-to-word',        cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#16a34a,#22c55e)', desc:'Convert PDF to editable Word doc',      tier:'ai'  },
+  { name:'PDF → Excel',       tag:'LIVE', href:'/pdf-to-excel',       cat:'Convert',  Icon:FileSpreadsheet, iconBg:'linear-gradient(135deg,#15803d,#16a34a)', desc:'Extract tables to spreadsheet',         tier:'ai'  },
+  { name:'PDF → PowerPoint',  tag:'LIVE', href:'/pdf-to-ppt',         cat:'Convert',  Icon:Presentation,    iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Turn slides into editable PPT',         tier:'ai'  },
   { name:'Excel / CSV → PDF', tag:'LIVE', href:'/excel-to-pdf',       cat:'Convert',  Icon:Table,           iconBg:'linear-gradient(135deg,#059669,#10b981)', desc:'Spreadsheets to perfect PDF',           tier:'free' },
   { name:'PPT → PDF',         tag:'LIVE', href:'/ppt-to-pdf',         cat:'Convert',  Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#b45309,#d97706)', desc:'Presentations to PDF instantly',        tier:'free' },
   { name:'Word → PDF',        tag:'LIVE', href:'/word-to-pdf',        cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Convert Word .docx to PDF',             tier:'free' },
@@ -236,7 +237,7 @@ function BrowserUI() {
         </div>
         {/* Right panel — tools list */}
         <div style={{background:'#F5F5F7',borderLeft:'1px solid rgba(0,0,0,.06)',padding:'11px 9px',display:'flex',flexDirection:'column',gap:6}}>
-          <div style={{...MONO,fontSize:8,fontWeight:700,color:'rgba(0,0,0,.4)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:2}}>50+ Tools</div>
+          <div style={{...MONO,fontSize:8,fontWeight:700,color:'rgba(0,0,0,.4)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:2}}>{TOOL_COUNT}+ Tools</div>
           {tasks.map(({label,color,d})=>(
             <div key={label} style={{display:'flex',alignItems:'center',gap:6,padding:'6px 7px',background:'#fff',borderRadius:7,border:'1px solid rgba(0,0,0,.06)',animation:`fin .35s ${d} both`,opacity:0}}>
               <div style={{width:6,height:6,borderRadius:'50%',background:color,flexShrink:0}}/>
@@ -304,9 +305,9 @@ const NAV_CATS: AHNavCat[] = [
   {
     label:'Convert', href:'/#tools', color:'#16a34a', Icon:FileType,
     tools:[
-      { name:'PDF → Word',    href:'/pdf-to-word',   tier:'pro',  Icon:FileType,        bg:'#16a34a' },
-      { name:'PDF → Excel',   href:'/pdf-to-excel',  tier:'pro',  Icon:FileSpreadsheet, bg:'#15803d' },
-      { name:'PDF → PPT',     href:'/pdf-to-ppt',    tier:'pro',  Icon:Presentation,    bg:'#d97706' },
+      { name:'PDF → Word',    href:'/pdf-to-word',   tier:'ai',  Icon:FileType,        bg:'#16a34a' },
+      { name:'PDF → Excel',   href:'/pdf-to-excel',  tier:'ai',  Icon:FileSpreadsheet, bg:'#15803d' },
+      { name:'PDF → PPT',     href:'/pdf-to-ppt',    tier:'ai',  Icon:Presentation,    bg:'#d97706' },
       { name:'Word → PDF',    href:'/word-to-pdf',   tier:'free', Icon:FileType,        bg:'#2563eb' },
       { name:'Excel → PDF',   href:'/excel-to-pdf',  tier:'free', Icon:Table,           bg:'#059669' },
       { name:'PPT → PDF',     href:'/ppt-to-pdf',    tier:'free', Icon:Presentation,    bg:'#b45309' },
@@ -600,7 +601,7 @@ function Nav() {
                   <Link prefetch={false} role="menuitem" href="#tools" onClick={()=>closeMenuNow()}
                     style={{...FI,display:'flex',alignItems:'center',gap:5,
                       fontSize:12,fontWeight:600,color:'#6b7280',textDecoration:'none'}}>
-                    See all 50+ tools <ArrowRight size={11} strokeWidth={2.5}/>
+                    See all {TOOL_COUNT}+ tools <ArrowRight size={11} strokeWidth={2.5}/>
                   </Link>
                 </div>
               </div>
@@ -696,7 +697,7 @@ function Nav() {
                     <Link prefetch={false} href="/#tools" onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
                       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,
                         height:48,...FI,fontSize:13,fontWeight:700,color:'#2563eb'}}>
-                        See all 50+ tools <ArrowRight size={13} strokeWidth={2.5}/>
+                        See all {TOOL_COUNT}+ tools <ArrowRight size={13} strokeWidth={2.5}/>
                       </div>
                     </Link>
                   </div>

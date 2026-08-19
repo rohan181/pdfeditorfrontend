@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import guides, { guideMap, type Guide, type ContentBlock } from '@/lib/guidesData'
 import SiteFooter from '@/components/SiteFooter'
+import { ORGANIZATION_ID } from '@/lib/seo/site'
 
 export function generateStaticParams() {
   return guides.map(g => ({ slug: g.slug }))
@@ -97,17 +98,8 @@ function GuideContent({ guide }: { guide: Guide }) {
     datePublished:    guide.datePublished,
     dateModified:     guide.dateModified,
     url:              `https://www.editpdfai.com/guides/${guide.slug}`,
-    author: {
-      '@type': 'Organization',
-      name:    'EditPDF AI',
-      url:     'https://www.editpdfai.com/about',
-    },
-    publisher: {
-      '@type': 'Organization',
-      name:    'EditPDF AI',
-      url:     'https://www.editpdfai.com',
-      logo:    { '@type': 'ImageObject', url: 'https://www.editpdfai.com/logo-square.svg', width: 512, height: 512 },
-    },
+    author:    { '@id': ORGANIZATION_ID },
+    publisher: { '@id': ORGANIZATION_ID },
     breadcrumb: {
       '@type': 'BreadcrumbList',
       itemListElement: [

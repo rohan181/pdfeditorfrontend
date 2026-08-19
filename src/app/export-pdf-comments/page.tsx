@@ -20,6 +20,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 import { inspectPDFComments, type PDFCommentInspection, type PDFCommentKind, type PDFCommentRecord } from '@/lib/pdfCommentExtractor'
@@ -200,6 +201,15 @@ export default function ExportPDFCommentsPage() {
       </section>
       <section className="comments-info"><article><Highlighter size={20} /><h3>Broad markup coverage</h3><p>Captures notes, text boxes, highlights, underlines, strikeouts, stamps, ink, shapes, carets, attachments, redactions, and other review annotations.</p></article><article><Reply size={20} /><h3>Review context retained</h3><p>Exports authors, subjects, comment text, dates, states, annotation IDs, intents, and supported reply relationships.</p></article><article><MapPin size={20} /><h3>Page locations included</h3><p>Every record includes its physical PDF page and annotation rectangle for review, migration, accessibility, and remediation workflows.</p></article></section>
     </div></main>
+    <ToolQuickFacts
+      definition="A PDF comment exporter reads review annotations stored separately from normal page content — sticky notes, text boxes, highlights, underlines, strikeouts, stamps, ink drawings, shapes, and other markup — and exports them as structured, safe CSV or JSON."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF in, CSV/JSON out"
+      fileLimit="Up to 100 MB and 2,000 pages"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     {seo && <ToolSEOSection {...seo} />}
     <SiteFooter />
   </div>

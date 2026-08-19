@@ -28,6 +28,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 import {
@@ -284,6 +285,15 @@ export default function PDFBookmarksManagerPage() {
       </section>
       <section className="bm-manager-info"><article><ShieldCheck size={20} /><h3>Source remains untouched</h3><p>Edits are applied to a new browser-generated copy. No bookmark title or PDF is sent to analytics.</p></article><article><FolderTree size={20} /><h3>Proper linked hierarchy</h3><p>Parent, child, previous, next, first, last, and count entries are rebuilt together for reliable PDF navigation.</p></article><article><Link2 size={20} /><h3>Destination-aware</h3><p>Page targets are editable. Supported web, external-PDF, and named actions remain intact unless retargeted.</p></article></section>
     </div></main>
+    <ToolQuickFacts
+      definition="A PDF bookmarks manager edits the interactive outline shown in a PDF reader's navigation panel. Bookmark entries can point to pages, contain nested children, start open or closed, or invoke supported web, remote-PDF, and named actions — all editable before you download a new PDF."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF"
+      fileLimit="Up to 100 MB and 2,000 pages"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     {seo && <ToolSEOSection {...seo} />}
     <SiteFooter />
   </div>

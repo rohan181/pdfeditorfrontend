@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -580,6 +581,15 @@ export default function ExcelToPDFPage() {
 
       <input ref={fileRef} type="file" accept=".csv,.xls,.xlsx" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
+      <ToolQuickFacts
+        definition="An Excel to PDF converter takes an .xlsx or .xls spreadsheet and renders it as a fixed-layout PDF document. Every worksheet becomes a set of pages, with cell colours, borders, charts, merged cells, and number formatting all faithfully reproduced."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="XLSX, XLS, CSV in, PDF out"
+        fileLimit="No fixed limit — capped only by device memory"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['excel-to-pdf']} />
     </>
   )

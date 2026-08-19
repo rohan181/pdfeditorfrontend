@@ -21,6 +21,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 
@@ -353,6 +354,15 @@ export default function RemovePDFMetadataPage() {
         <p className="metadata-note"><strong>Metadata is only one privacy layer:</strong> visible page content, comments, form values, filenames, bookmarks, and embedded attachments can still reveal information. Review the cleaned PDF before sharing it.</p>
       </div></main>
 
+      <ToolQuickFacts
+        definition="PDF metadata can contain an author name, document title, editing software, creation and modification dates, search keywords, XMP records, and internal document identifiers. Removing it creates a cleaner sharing copy without those common hidden properties."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="PDF"
+        fileLimit="Up to 100 MB"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['remove-pdf-metadata']} />
       <SiteFooter />
     </div>

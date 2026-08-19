@@ -21,6 +21,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 
@@ -462,6 +463,15 @@ export default function ExportPDFFormDataPage() {
       </div>
     </main>
 
+    <ToolQuickFacts
+      definition="A fillable PDF normally stores answers in an AcroForm field tree. Each field can have a name, type, value, validation flags, available choices, and one or more page widgets. This tool reads that tree and exports the values as structured CSV or JSON."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF in, CSV/JSON out"
+      fileLimit="Up to 100 MB and 500 pages"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     {seo && <ToolSEOSection {...seo} />}
     <SiteFooter />
   </div>

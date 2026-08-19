@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // The editor pulls in PDF rendering and editing engines. Keep them out of the
@@ -141,6 +142,19 @@ const FAQS = [
   { q: 'What is the difference between this and the AI Form Filler?', a: 'The PDF Editor focuses on manual editing — text, images, shapes, signatures and page management. The AI Form Filler adds conversational AI that detects and auto-fills form fields from your context.' },
 ]
 
+// Generated from the same FAQS array that renders the visible FAQ section
+// below — single source of truth, can't drift out of sync. Not declared in
+// layout.tsx.
+const FAQ_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQS.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+}
+
 export default function PDFEditorPage() {
   const [editorOpen, setEditorOpen] = useState(false)
 
@@ -160,6 +174,7 @@ export default function PDFEditorPage() {
   return (
     <div className="pg">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
 
       {/* Ambient */}
       <div className="amb" aria-hidden="true">
@@ -210,6 +225,16 @@ export default function PDFEditorPage() {
           </div>
         </div>
       </header>
+
+      <ToolQuickFacts
+        definition="An online PDF editor lets you open a PDF in your browser and make direct changes — editing text, replacing images, adding annotations, and managing pages — without installing Adobe Acrobat or any other software. Changes are embedded into the file, which downloads as a standard PDF that works in any viewer."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="PDF"
+        fileLimit="No fixed limit — capped only by device memory"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
 
       {/* ── TOOLS SHOWCASE ──────────────────────────────────────── */}
       <section className="tools-sec" aria-labelledby="tools-h">

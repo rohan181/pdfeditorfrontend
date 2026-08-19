@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -582,6 +583,15 @@ export default function PPTToPDFPage() {
 
       <input ref={fileRef} type="file" accept=".pptx,.ppt" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
+      <ToolQuickFacts
+        definition="A PowerPoint to PDF converter takes a .pptx or .ppt presentation and converts each slide into a page in a PDF document. The visual design of every slide — backgrounds, fonts, images, charts, and text boxes — is preserved exactly, viewable on any device without PowerPoint installed."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="PPTX, PPT in, PDF out"
+        fileLimit="No fixed limit — capped only by device memory"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['ppt-to-pdf']} />
     </>
   )

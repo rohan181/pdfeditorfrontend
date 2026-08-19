@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import Image from 'next/image'
+import { TOOL_COUNT } from '@/lib/toolMeta'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -61,9 +62,9 @@ const NAV_CATS: NavCat[] = [
   {
     label: 'Convert', href: '/#tools', color: '#16a34a', Icon: FileType,
     tools: [
-      { name: 'PDF → Word',    href: '/pdf-to-word',   tier: 'pro',  Icon: FileType,        bg: '#16a34a' },
-      { name: 'PDF → Excel',   href: '/pdf-to-excel',  tier: 'pro',  Icon: FileSpreadsheet, bg: '#15803d' },
-      { name: 'PDF → PPT',     href: '/pdf-to-ppt',    tier: 'pro',  Icon: Presentation,    bg: '#d97706' },
+      { name: 'PDF → Word',    href: '/pdf-to-word',   tier: 'ai',  Icon: FileType,        bg: '#16a34a' },
+      { name: 'PDF → Excel',   href: '/pdf-to-excel',  tier: 'ai',  Icon: FileSpreadsheet, bg: '#15803d' },
+      { name: 'PDF → PPT',     href: '/pdf-to-ppt',    tier: 'ai',  Icon: Presentation,    bg: '#d97706' },
       { name: 'Word → PDF',    href: '/word-to-pdf',   tier: 'free', Icon: FileType,        bg: '#2563eb' },
       { name: 'Excel → PDF',   href: '/excel-to-pdf',  tier: 'free', Icon: Table,           bg: '#059669' },
       { name: 'PPT → PDF',     href: '/ppt-to-pdf',    tier: 'free', Icon: Presentation,    bg: '#b45309' },
@@ -332,7 +333,7 @@ export default function SiteNav() {
                 <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'flex-end' }}>
                   <Link prefetch={false} href="/#tools" onClick={() => setToolsOpen(false)}
                     style={{ ...FI, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: '#6b7280', textDecoration: 'none' }}>
-                    See all 50+ tools <ArrowRight size={11} strokeWidth={2.5} />
+                    See all {TOOL_COUNT}+ tools <ArrowRight size={11} strokeWidth={2.5} />
                   </Link>
                 </div>
               </div>

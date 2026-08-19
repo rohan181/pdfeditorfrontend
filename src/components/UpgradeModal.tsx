@@ -54,7 +54,7 @@ export default function UpgradeModal() {
 
         {/* Feature list */}
         <div style={{ background: '#f8fafc', borderRadius: 12, padding: '14px 18px', marginBottom: 24, textAlign: 'left' }}>
-          {['Unlimited AI uses', 'All 19 AI tools', 'Priority processing', 'No daily resets'].map(f => (
+          {['Unlimited AI uses', 'All 10 AI tools', 'Priority processing', 'No daily resets'].map(f => (
             <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 13, color: '#374151' }}>
               <span style={{ color: '#0891b2', fontWeight: 700, fontSize: 15 }}>✓</span> {f}
             </div>

@@ -20,6 +20,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 import { inspectPDFLinks, type PDFLinkInspection, type PDFLinkKind, type PDFLinkRecord } from '@/lib/pdfLinkExtractor'
@@ -209,6 +210,15 @@ export default function ExtractPDFLinksPage() {
       </section>
       <section className="links-info"><article><ShieldCheck size={20} /><h3>Targets are never opened</h3><p>URLs, remote files, actions, and named destinations are decoded as text only. Embedded JavaScript is flagged but its code is not returned or executed.</p></article><article><MapPin size={20} /><h3>Page and rectangle locations</h3><p>Each record includes its PDF page and clickable rectangle coordinates, making document QA and remediation easier.</p></article><article><ExternalLink size={20} /><h3>Structured exports</h3><p>CSV is convenient for audits and spreadsheets. JSON preserves typed targets, destination pages, rectangles, and descriptions.</p></article></section>
     </div></main>
+    <ToolQuickFacts
+      definition="A PDF link extractor reads interactive Link annotations stored on document pages — links that open websites or email addresses, jump to another page, reference another PDF, or submit a form. Visible URL text without an actual annotation is not clickable and is therefore not reported."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF in, CSV/JSON out"
+      fileLimit="Up to 100 MB and 2,000 pages"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     {seo && <ToolSEOSection {...seo} />}
     <SiteFooter />
   </div>

@@ -30,6 +30,7 @@ import {
 import SiteFooter from "@/components/SiteFooter";
 import SiteNav from "@/components/SiteNav";
 import ToolSEOSection from "@/components/ToolSEOSection";
+import ToolQuickFacts from "@/components/ToolQuickFacts";
 import { trackEvent } from "@/lib/analytics";
 import {
   type PDFChatCitation,
@@ -567,6 +568,15 @@ export default function ChatWithPDFPage() {
           </div>
         </main>
 
+        <ToolQuickFacts
+          definition="Chat with PDF is an AI document question-and-answer tool. It reads the searchable text in a PDF, finds the pages most relevant to your question, and writes a grounded response with page references and short supporting quotes you can check against the source."
+          price="Free — 5 AI questions/day; Pro removes the daily limit"
+          account="Free account required (AI feature)"
+          processing="Relevant page text and your question sent to AI; the PDF file itself stays local"
+          formats="PDF"
+          fileLimit="Up to 50 MB and 1,000 pages"
+          browserSupport="Chrome, Firefox, Safari, Edge"
+        />
         <ToolSEOSection {...toolSeoData["chat-with-pdf"]} />
         <SiteFooter />
         <input ref={inputRef} type="file" accept="application/pdf,.pdf" onChange={chooseFile} hidden />

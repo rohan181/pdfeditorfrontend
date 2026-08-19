@@ -19,6 +19,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 import { inspectPDFLinks, removePDFLinks, type PDFLinkInspection, type PDFLinkKind } from '@/lib/pdfLinkExtractor'
@@ -174,6 +175,15 @@ export default function RemovePDFLinksPage() {
       <section className="unlink-info"><article><Unlink2 size={20} /><h3>All page link types</h3><p>Removes web URLs, email and phone actions, page jumps, remote PDFs, file launches, form submissions, and script links.</p></article><article><Eye size={20} /><h3>Visible pages preserved</h3><p>Text, images, vector artwork, forms, bookmarks, comments, page order, and page labels remain in the new copy.</p></article><article><ShieldCheck size={20} /><h3>Verified before download</h3><p>The output is reopened locally and checked to confirm that no page Link annotations remain.</p></article></section>
       <p className="unlink-footnote"><strong>What this tool does not remove:</strong> plain URL text, QR codes, document-level open actions, embedded files, or links drawn into page artwork. Review the downloaded PDF before sharing it.</p>
     </div></main>
+    <ToolQuickFacts
+      definition="A PDF link remover deletes page-level Link annotations: the invisible clickable rectangles that can open websites, start emails or calls, jump between pages, launch files, or submit forms. It does not erase visible URL text, underlines, QR codes, or artwork drawn on the page."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF"
+      fileLimit="Up to 100 MB and 2,000 pages"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     {seo && <ToolSEOSection {...seo} />}
     <SiteFooter />
   </div>

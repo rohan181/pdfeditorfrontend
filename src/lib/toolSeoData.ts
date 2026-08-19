@@ -50,6 +50,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-splitter': {
+    toolSlug: 'pdf-splitter',
     whatIs: [
       'What is a PDF splitter?',
       'A PDF splitter is a tool that divides one PDF file into multiple separate PDF files. Instead of sharing or printing an entire 50-page report when a colleague only needs pages 12–18, you split out exactly the pages you need and send those alone.',
@@ -84,6 +85,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-merger': {
+    toolSlug: 'pdf-merger',
     whatIs: [
       'What is a PDF merger?',
       'A PDF merger is a tool that combines two or more separate PDF files into a single, unified PDF document. Instead of emailing five attachments, you merge them into one polished file that opens in the correct order and is far easier for the recipient to navigate.',
@@ -119,6 +121,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-compressor': {
+    toolSlug: 'pdf-compressor',
     whatIs: [
       'What is a PDF compressor?',
       'A PDF compressor reduces the file size of a PDF document by re-encoding embedded images at lower quality and removing redundant data. A 25 MB scan of a brochure can often be brought down to 2–3 MB with no visible difference on screen — making it suitable for email, web upload, or cloud storage.',
@@ -155,6 +158,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-signer': {
+    toolSlug: 'pdf-signer',
     whatIs: [
       'What is an electronic PDF signer?',
       'An electronic PDF signer lets you place a legally recognised signature on a PDF document without printing, signing by hand, and scanning. You can draw your signature, type it in a handwritten font, or upload an image of your existing signature — and place it anywhere on the page in seconds.',
@@ -189,6 +193,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-watermark': {
+    toolSlug: 'pdf-watermark',
     whatIs: [
       'What is a PDF watermark tool?',
       'A PDF watermark tool stamps a visible mark — text such as "CONFIDENTIAL" or "DRAFT", or an image such as a company logo — across every page of a PDF. The watermark is embedded directly into the page content, making it visible to all readers and deterring unauthorised distribution or copying.',
@@ -223,10 +228,11 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-password-lock': {
+    toolSlug: 'pdf-password-lock',
     whatIs: [
       'What is a PDF password lock?',
       'A PDF password lock encrypts a PDF file so that anyone who tries to open it must enter the correct password first. Without the password, the content is completely unreadable — even if someone obtains a copy of the file. EditPDF AI uses AES-256 encryption, the strongest level available in the PDF specification, equivalent to the standard used by banks and government agencies.',
-      'Beyond an open password, you can also set a permissions password that restricts what a recipient can do with the document — preventing printing, copying text, or making edits — even after they have opened it. Encryption runs on our server using qpdf, over an HTTPS connection; your file and the password are used only to produce the locked PDF and are deleted immediately afterward.',
+      'Beyond an open password, you can also set a permissions password that restricts what a recipient can do with the document — preventing printing, copying text, or making edits — even after they have opened it. Encryption runs through qpdf compiled to WebAssembly and executes entirely in your browser; your file and password never leave your device.',
     ],
     users: [
       { who: 'HR & payroll teams', why: 'Password-protect payslips, salary letters, and personal employee records before emailing them to individuals.' },
@@ -240,19 +246,19 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'pdf-redactor', label: 'Redact text before locking' },
       { slug: 'pdf-signer', label: 'Digitally sign your PDF' },
     ],
-    formats: { input: ['PDF'], limit: 'No fixed size limit stated — processed on our server over HTTPS' },
-    privacy: 'Encryption runs on our server using qpdf over an HTTPS connection. Your file and password are used only to create the locked PDF and are deleted immediately afterward.',
+    formats: { input: ['PDF'], limit: 'No fixed limit — runs in your browser, capped only by device memory' },
+    privacy: 'Encryption runs through qpdf compiled to WebAssembly, entirely in your browser. Your file and password never leave your device.',
     steps: [
-      { title: 'Upload your PDF', body: 'Select the PDF you want to protect. It is uploaded securely over HTTPS to be encrypted.' },
+      { title: 'Choose your PDF', body: 'Select the PDF you want to protect. It is read locally in your browser — never uploaded.' },
       { title: 'Set a password', body: 'Enter an open password (required to view) and optionally a permissions password (controls printing and editing rights).' },
-      { title: 'Download the protected file', body: 'Click Protect PDF. The encrypted file downloads instantly, and the temporary copy on our server is deleted right after — open it in any PDF viewer and the password will be required.' },
+      { title: 'Download the protected file', body: 'Click Protect PDF. Encryption runs locally in your browser and the encrypted file downloads instantly — open it in any PDF viewer and the password will be required.' },
     ],
     faqs: [
       { q: 'What encryption does the PDF password use?', a: 'We apply AES-256 encryption, the same standard used by banks and government agencies. It is the strongest encryption available in the PDF specification.' },
       { q: 'Can I set different passwords for viewing and editing?', a: 'Yes. The "open" password is required to open the file. The "permissions" password controls whether the viewer can print or copy text, even after opening.' },
       { q: 'Can I remove the password from a PDF I own?', a: 'If you know the password, yes — open the protected PDF in our tool and use the Remove Password option.' },
       { q: 'Does password protection prevent copying text?', a: 'You can restrict copying by setting a permissions password. Without the permissions password, the viewer cannot copy text from the PDF.' },
-      { q: 'Is my PDF sent to a server?', a: 'Yes. Encryption runs on our server using qpdf over an HTTPS connection. Your file and password are used only to create the locked PDF and are deleted immediately afterward — never stored long-term.' },
+      { q: 'Is my PDF sent to a server?', a: 'No. Encryption runs through WebAssembly entirely in your browser. Your file and password are never uploaded anywhere.' },
     ],
   },
 
@@ -798,6 +804,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'image-to-pdf': {
+    toolSlug: 'image-to-pdf',
     whatIs: [
       'What is an image to PDF converter?',
       'An image to PDF converter takes one or more image files — JPG, PNG, WEBP, or others — and packages them into a single PDF document. Each image becomes a page in the PDF, and you control the page size, order, and orientation. The result is a universally compatible document that can be shared, printed, or submitted anywhere PDFs are accepted.',
@@ -834,6 +841,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'word-to-pdf': {
+    toolSlug: 'word-to-pdf',
     whatIs: [
       'What is a Word to PDF converter?',
       'A Word to PDF converter takes a Microsoft Word document (.docx) and produces a PDF file that looks identical to the original — preserving fonts, tables, images, columns, headers, footers, and page breaks. Unlike a Word file, the resulting PDF displays the same on every device and cannot be accidentally edited by the recipient.',
@@ -869,6 +877,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-to-word': {
+    toolSlug: 'pdf-to-word',
     whatIs: [
       'What is a PDF to Word converter?',
       'A PDF to Word converter extracts the text, tables, and images from a PDF file and re-creates the content as an editable .docx file that you can open in Microsoft Word, Google Docs, or LibreOffice. This lets you make substantive edits to a document that was previously locked in PDF format.',
@@ -899,10 +908,13 @@ const data: Record<string, ToolSEOData> = {
       { q: 'What Word format does the output use?', a: 'The output is a .docx file compatible with Microsoft Word 2007 and later, Google Docs, LibreOffice, and all modern word processors.' },
       { q: 'Are images in the PDF included in the Word document?', a: 'Yes. Images are extracted and embedded in the .docx file at their original resolution.' },
       { q: 'Is the PDF sent to a server for conversion?', a: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text (not the PDF) is sent to the AI to rebuild the document as Word.' },
+      { q: 'Do I need an account, and is it free?', a: 'Yes — a free account is required, since this is an AI-powered conversion. Free accounts get 5 PDF-to-Word conversions per day; Pro removes the daily limit.' },
+      { q: 'Should I check the converted document before using it?', a: 'Yes. The AI rebuilds the document structure from extracted text, and can occasionally misjudge heading levels, list formatting, or table layout. Review the .docx output — especially for contracts, forms, or anything you plan to submit — before relying on it.' },
     ],
   },
 
   'pdf-to-excel': {
+    toolSlug: 'pdf-to-excel',
     whatIs: [
       'What is a PDF to Excel converter?',
       'A PDF to Excel converter detects tables and structured numerical data embedded in a PDF and maps them into the rows and columns of an .xlsx spreadsheet. Rather than manually retyping dozens of rows of financial figures, you can have the data in an editable, sortable spreadsheet in seconds.',
@@ -933,10 +945,13 @@ const data: Record<string, ToolSEOData> = {
       { q: 'What Excel format is the output?', a: 'The output is a .xlsx file compatible with Microsoft Excel 2007 and later, Google Sheets, and LibreOffice Calc.' },
       { q: 'What if my PDF is a scanned image?', a: 'Use our PDF OCR tool first to convert the scan to searchable text, then convert to Excel.' },
       { q: 'Is my file kept private?', a: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text (not the PDF) is sent to the AI to build the spreadsheet.' },
+      { q: 'Do I need an account, and is it free?', a: 'Yes — a free account is required, since this is an AI-powered conversion. Free accounts get 5 PDF-to-Excel conversions per day; Pro removes the daily limit.' },
+      { q: 'Should I check the spreadsheet before using it?', a: 'Yes. The AI maps detected table structure into rows and columns, and can occasionally misalign a merged cell or misread a faint number. Review the figures — especially for financial or reporting use — before relying on them.' },
     ],
   },
 
   'pdf-to-images': {
+    toolSlug: 'pdf-to-images',
     whatIs: [
       'What is a PDF to image converter?',
       'A PDF to image converter renders each page of a PDF as a separate image file — JPG, PNG, or WEBP. This is the standard way to use PDF content on the web, in presentations, or in design software that does not support PDFs natively, such as image editors, CMS platforms, or social media schedulers.',
@@ -972,6 +987,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-to-ppt': {
+    toolSlug: 'pdf-to-ppt',
     whatIs: [
       'What is a PDF to PowerPoint converter?',
       'A PDF to PowerPoint converter transforms each page of a PDF into a slide in a .pptx file. The visual layout of every page is preserved as a high-quality image on its corresponding slide, giving you a PowerPoint presentation that looks identical to the source PDF and can be immediately opened in PowerPoint, Google Slides, or Keynote.',
@@ -1001,11 +1017,13 @@ const data: Record<string, ToolSEOData> = {
       { q: 'How many pages can I convert?', a: 'There is no hard limit. PDFs with dozens of pages convert into the equivalent number of slides.' },
       { q: 'Can I edit the text in PowerPoint after conversion?', a: 'Because each slide is a rendered image of the PDF page, text is not editable. For editable text, use our PDF to Word converter and paste content into slides manually.' },
       { q: 'What PowerPoint format is the output?', a: 'The output is a .pptx file compatible with PowerPoint 2007+, Google Slides, and LibreOffice Impress.' },
-      { q: 'Is my PDF processed on a server?', a: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text (not the PDF) is sent to the AI to rebuild the document as Word.' },
+      { q: 'Is my PDF processed on a server?', a: 'Your PDF file itself is never uploaded. Text is extracted from it locally in your browser, and only that extracted text (not the PDF) is sent to the AI to rebuild the slides.' },
+      { q: 'Do I need an account, and is it free?', a: 'Yes — a free account is required, since this is an AI-powered conversion. Free accounts get 5 PDF-to-PowerPoint conversions per day; Pro removes the daily limit.' },
     ],
   },
 
   'excel-to-pdf': {
+    toolSlug: 'excel-to-pdf',
     whatIs: [
       'What is an Excel to PDF converter?',
       'An Excel to PDF converter takes an .xlsx or .xls spreadsheet and renders it as a fixed-layout PDF document. Every worksheet becomes a set of pages in the PDF, with cell colours, borders, charts, merged cells, and number formatting all faithfully reproduced — so the reader sees exactly what you designed, regardless of what software they have installed.',
@@ -1040,6 +1058,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'ppt-to-pdf': {
+    toolSlug: 'ppt-to-pdf',
     whatIs: [
       'What is a PowerPoint to PDF converter?',
       'A PowerPoint to PDF converter takes a .pptx or .ppt presentation and converts each slide into a page in a PDF document. The visual design of every slide — backgrounds, fonts, images, charts, and text boxes — is preserved exactly in the PDF, which can then be opened on any device without PowerPoint installed.',
@@ -1074,6 +1093,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'html-to-pdf': {
+    toolSlug: 'html-to-pdf',
     whatIs: [
       'What is an HTML to PDF converter?',
       'An HTML to PDF converter takes a webpage — either a live URL or a local .html file — and renders it as a PDF document. The output looks exactly like the page does in a browser: styles, images, fonts, and layout are all captured. This is the standard approach for generating invoices, reports, certificates, and any other document built with HTML and CSS.',
@@ -1108,6 +1128,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'txt-to-pdf': {
+    toolSlug: 'txt-to-pdf',
     whatIs: [
       'What is a TXT to PDF converter?',
       'A TXT to PDF converter takes a plain-text (.txt) file and lays out its content as a formatted PDF document with your chosen font, size, line spacing, and margins. Plain text files have no visual formatting, so the converter applies a clean, professional layout that can be printed, shared, or archived as a standard PDF.',
@@ -1143,6 +1164,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'odt-to-pdf': {
+    toolSlug: 'odt-to-pdf',
     whatIs: [
       'What is an ODT to PDF converter?',
       'An ODT to PDF converter takes an OpenDocument Text (.odt) file — the default format of LibreOffice Writer and other open-source word processors — and converts it into a universally compatible PDF document. The PDF preserves fonts, styles, tables, images, headers, and footers exactly as they appear in the original.',
@@ -1177,6 +1199,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'rtf-to-pdf': {
+    toolSlug: 'rtf-to-pdf',
     whatIs: [
       'What is an RTF to PDF converter?',
       'An RTF to PDF converter takes a Rich Text Format (.rtf) document and produces a PDF file that can be opened by anyone, anywhere, without requiring a word processor. RTF is one of the oldest and most widely supported document formats — it preserves basic formatting like bold, italic, fonts, and simple tables — and converting it to PDF locks in that appearance permanently.',
@@ -1211,6 +1234,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-ocr': {
+    toolSlug: 'pdf-ocr',
     whatIs: [
       'What is PDF OCR?',
       'PDF OCR (Optical Character Recognition) is the process of analysing a scanned PDF or photo of a document and extracting the text it contains. A scanned document is essentially just an image — the text is not selectable, searchable, or copyable. OCR reads that image, identifies the characters, and produces a searchable text layer that makes the document fully functional.',
@@ -1247,6 +1271,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-summarizer': {
+    toolSlug: 'pdf-summarizer',
     whatIs: [
       'What is an AI PDF summarizer?',
       'An AI PDF summarizer reads the full text of a PDF document and produces a concise, coherent summary that captures the key points, arguments, and conclusions — without you having to read every page. Unlike a keyword search or a table of contents, the AI understands context, so the summary explains what the document means, not just what words appear in it.',
@@ -1279,10 +1304,12 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Does it work on scanned PDFs?', a: 'Scanned PDFs must contain a text layer (created by OCR) for summarisation to work. Use our PDF OCR tool first if the PDF is image-only.' },
       { q: 'Is my document content sent to an AI server?', a: 'The text content of your document is sent to our AI for processing. Raw file bytes are never transmitted — only the extracted text.' },
       { q: 'Do I need to create an account to summarize a PDF?', a: 'Yes — a free account is required to use the summarizer. Signing in takes a few seconds and needs no credit card, and gives you 5 free AI summaries per day. Core PDF tools like merge, split, and compress need no account at all; only AI-powered features require sign-in to keep the free tier fair.' },
+      { q: 'Should I rely on the summary without checking the original document?', a: 'No. Like any AI-generated summary, it can miss nuance or occasionally misstate a detail. For legal, medical, financial, or academic decisions, verify key facts and figures against the original PDF before relying on them.' },
     ],
   },
 
   'pdf-translator': {
+    toolSlug: 'pdf-translator',
     whatIs: [
       'What is a PDF translator?',
       'A PDF translator extracts the text from a PDF and uses AI to translate it into a different language, then delivers the result as a new PDF with the original layout preserved. Instead of receiving a plain text dump, you get a translated document that mirrors the structure of the original — paragraphs, headings, and sections in the right order.',
@@ -1319,6 +1346,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-redactor': {
+    toolSlug: 'pdf-redactor',
     whatIs: [
       'What is PDF redaction?',
       'PDF redaction is the permanent removal of sensitive text or images from a PDF document, replaced with solid black bars. Unlike highlighting text or drawing a black box on top, true redaction removes the underlying content from the PDF data itself — the redacted information cannot be recovered by selecting the area, viewing the source, or removing a layer.',
@@ -1354,6 +1382,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-annotate': {
+    toolSlug: 'pdf-annotate',
     whatIs: [
       'What is a PDF annotator?',
       'A PDF annotator lets you add notes, highlights, drawings, stamps, and text comments directly onto a PDF without altering the original content. Annotations are saved as a standard layer in the PDF file, so they appear in any PDF viewer — Adobe Acrobat, Apple Preview, Chrome, or any mobile reader — without requiring the annotator software to be installed.',
@@ -1389,10 +1418,11 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-form-builder': {
+    toolSlug: 'pdf-form-builder',
     whatIs: [
       'What is a PDF form builder?',
       'A PDF form builder lets you create interactive, fillable PDF forms — with text fields, checkboxes, radio buttons, dropdowns, and signature boxes — without any design or coding skills. You can start from a blank page or upload an existing PDF and add form fields on top of it. The output is a standard fillable PDF that anyone can complete in Adobe Reader or any modern PDF viewer.',
-      'Fillable PDF forms replace paper forms for data collection in business, healthcare, education, and government. The recipient fills in the fields digitally, saves the completed form, and returns it — no printing required. EditPDF AI\'s form builder is free with no limits on fields or pages.',
+      'Fillable PDF forms replace paper forms for data collection in business, healthcare, education, and government. The recipient fills in the fields digitally, saves the completed form, and returns it — no printing required. EditPDF AI\'s form builder is free with no limits on fields or pages; an optional AI Builder panel can also generate fields from a plain-language description, which requires a free account.',
     ],
     users: [
       { who: 'HR & recruitment teams', why: 'Build job application forms, onboarding questionnaires, and employee surveys that candidates can fill and submit digitally.' },
@@ -1408,7 +1438,7 @@ const data: Record<string, ToolSEOData> = {
       { slug: 'export-pdf-form-data', label: 'Export submitted form data' },
     ],
     formats: { input: ['PDF'], limit: 'No fixed page or field-count limit — free to use' },
-    privacy: 'Form building runs in your browser. The output is a standard fillable PDF — no account or server upload required.',
+    privacy: 'Manually adding and arranging form fields runs entirely in your browser — no account or server upload required. The optional AI Builder panel is a separate, account-gated feature: your request and the current field layout are sent to AI to generate or edit fields.',
     steps: [
       { title: 'Start with a blank page or PDF', body: 'Open a blank form or upload an existing PDF as the base. The form builder works on top of your chosen background.' },
       { title: 'Add form fields', body: 'Drag and drop text inputs, checkboxes, radio buttons, dropdowns, signatures, and date fields anywhere on the page.' },
@@ -1419,11 +1449,13 @@ const data: Record<string, ToolSEOData> = {
       { q: 'What field types are supported?', a: 'Text inputs, multi-line text areas, checkboxes, radio button groups, dropdown menus, date pickers, and signature fields are all available.' },
       { q: 'Can people fill in the form without creating an account?', a: 'Yes. The output is a standard fillable PDF that anyone can open and complete in Adobe Reader, Preview, or any modern PDF viewer — no account needed.' },
       { q: 'Can I pre-fill some fields with default values?', a: 'Yes. You can set default text for any field in the form builder. The recipient sees the defaults and can overwrite them.' },
-      { q: 'Is the form builder free?', a: 'Yes. Building and downloading fillable PDF forms is free with no page or field count limits.' },
+      { q: 'Is the form builder free?', a: 'Yes. Building and downloading fillable PDF forms manually is free with no page or field count limits. The optional AI Builder panel is a separate AI feature that requires a free account and counts toward your daily AI uses.' },
+      { q: 'What does the AI Builder do, and should I check its output?', a: 'The AI Builder adds or edits form fields from a plain-language description you type. It sends your request and the current field layout to AI to generate the changes. Always review the generated fields — positions, labels, and types — before sharing the form, since AI can occasionally misplace a field or misjudge its type.' },
     ],
   },
 
   'ai-pdf-form-filler': {
+    toolSlug: 'ai-pdf-form-filler',
     whatIs: [
       'What is an AI PDF form filler?',
       'An AI PDF form filler automatically detects input fields inside a PDF — named fields in interactive AcroForms, blank lines in scanned documents, tables, and checkboxes — and populates them based on context you provide. Instead of clicking through every field manually, you paste your details once and AI fills the entire form in seconds.',
@@ -1459,6 +1491,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'mind-map': {
+    toolSlug: 'mind-map',
     whatIs: [
       'What is an AI PDF mind map generator?',
       'An AI PDF mind map generator reads a document and automatically constructs a visual mind map showing the document\'s main topics, subtopics, and the relationships between ideas. Instead of manually diagramming a complex report or textbook chapter, you upload the PDF and the AI produces a structured, interactive map in seconds.',
@@ -1490,10 +1523,12 @@ const data: Record<string, ToolSEOData> = {
       { q: 'Can I export the mind map?', a: 'Yes. Export as a PNG image for presentations, or as a JSON file to import into other mind mapping tools.' },
       { q: 'Does my document get sent to a server?', a: 'The text content is sent to our AI backend for analysis. Raw file bytes are never transmitted. Text is deleted after the mind map is generated.' },
       { q: 'Do I need to create an account to generate a mind map?', a: 'Yes — mind map generation is an AI feature, so a free account is required. Sign-in takes a few seconds and needs no credit card. Free users get 5 free AI generations per day; Pro removes the daily limit and page-length cap.' },
+      { q: 'Should I rely on the mind map without checking the source document?', a: 'No. The AI groups and labels concepts automatically, and can occasionally misplace or oversimplify a topic. Treat it as a starting structure for understanding the document, and check important branches against the original text before relying on them.' },
     ],
   },
 
   'quiz-creator': {
+    toolSlug: 'quiz-creator',
     whatIs: [
       'What is an AI quiz creator from PDF?',
       'An AI quiz creator from PDF reads a document and generates a set of test questions based on the actual content — multiple-choice, true/false, or short-answer — complete with correct answers. This turns any PDF into an instant study guide, practice exam, or classroom assessment without the hours of manual question-writing.',
@@ -1529,6 +1564,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-editor': {
+    toolSlug: 'pdf-editor',
     whatIs: [
       'What is an online PDF editor?',
       'An online PDF editor lets you open a PDF in your browser and make direct changes to its content — editing text, replacing images, adding new content, filling form fields, inserting annotations, and managing pages — without installing Adobe Acrobat or any other software. Changes are embedded into the PDF and downloaded as a standard file that works in any viewer.',
@@ -1563,6 +1599,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-viewer': {
+    toolSlug: 'pdf-viewer',
     whatIs: [
       'What is an online PDF viewer?',
       'An online PDF viewer lets you open and read any PDF document directly in your browser — no Adobe Acrobat, no software installation, and no file download required. You get full navigation controls, text search, zoom, and on mobile, swipe and pinch-to-zoom — all from a browser tab on any device.',
@@ -1597,6 +1634,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'pdf-cropper': {
+    toolSlug: 'pdf-cropper',
     whatIs: [
       'What is a PDF cropper?',
       'A PDF cropper adjusts the visible area of each page in a PDF by moving the page boundary inward, hiding content outside the new boundary. The most common use is removing unwanted white margins from scanned documents, cropping scanner borders, or trimming a full-bleed PDF to a specific printable size.',
@@ -1631,6 +1669,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'rotate-pdf': {
+    toolSlug: 'rotate-pdf',
     whatIs: [
       'What is a PDF rotation tool?',
       'A PDF rotation tool permanently changes the orientation of one or more pages in a PDF file. If a page was scanned sideways, photographed upside down, or saved in the wrong orientation by the source application, rotating it corrects the display so readers do not have to tilt their head or their device.',
@@ -1665,6 +1704,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'extract-pages': {
+    toolSlug: 'extract-pages',
     whatIs: [
       'What is a PDF page extractor?',
       'A PDF page extractor lets you select specific pages from within a PDF and save them as a new, standalone PDF file. Unlike splitting (which divides a PDF by sequential ranges), extraction lets you cherry-pick any combination of pages — page 1, page 7, and pages 22–25 — regardless of where they appear in the original document.',
@@ -1699,6 +1739,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'delete-pages': {
+    toolSlug: 'delete-pages',
     whatIs: [
       'What is a PDF page deleter?',
       'A PDF page deleter removes unwanted pages from a PDF and saves the remaining pages as a new PDF file. Blank pages, duplicate pages, cover pages that should not be shared, or confidential sections that need to be stripped out can all be removed in seconds without re-creating the document from scratch.',
@@ -1733,6 +1774,7 @@ const data: Record<string, ToolSEOData> = {
   },
 
   'add-page-numbers': {
+    toolSlug: 'add-page-numbers',
     whatIs: [
       'What is an online PDF page numbering tool?',
       'An online PDF page numbering tool adds sequential page numbers to the header or footer of every page in a PDF document. You control the position (left, centre, or right), font, size, starting number, and which page to begin numbering from — the result is a professionally paginated PDF that is easy to reference and navigate.',

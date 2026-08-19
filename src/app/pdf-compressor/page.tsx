@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 const CSS = `
@@ -388,6 +389,15 @@ export default function PDFCompressorPage() {
           </div>
         </div>
       </div>
+      <ToolQuickFacts
+        definition="A PDF compressor reduces file size by re-encoding embedded images at lower quality and removing redundant data, often with no visible difference on screen. A 25 MB scan can shrink to 2–3 MB — small enough for email attachment limits, faster uploads, or cloud storage. Compression runs entirely in your browser."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser via a Web Worker — file never uploaded"
+        formats="PDF"
+        fileLimit="No fixed limit — capped only by device memory"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-compressor']} />
     </>
   )

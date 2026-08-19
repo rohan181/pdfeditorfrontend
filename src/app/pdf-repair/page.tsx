@@ -17,6 +17,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 
@@ -300,6 +301,15 @@ export default function PDFRepairPage() {
 
             <p className="repair-note"><AlertTriangle size={14} style={{ verticalAlign: -2, marginRight: 6 }} /><strong>Repair has limits:</strong> no automatic tool can restore content that is missing, overwritten, or irreversibly corrupted. Always keep the original file and review the repaired copy.</p>
 
+            <ToolQuickFacts
+              definition="Repairing a PDF rebuilds recoverable structural information — damaged cross-reference tables, inconsistent object references, and malformed page-tree entries — that stops a corrupted file from opening correctly. The tool creates a new, working copy without changing or overwriting the original file."
+              price="Free — no account needed"
+              account="Not required"
+              processing="Entirely in your browser via WebAssembly — file never uploaded"
+              formats="PDF"
+              fileLimit="Up to 100 MB"
+              browserSupport="Chrome, Firefox, Safari, Edge"
+            />
             <ToolSEOSection {...toolSeoData['pdf-repair']} />
           </div>
         </main>

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 
 const PDFEditor = dynamic(() => import('@/components/PDFEditor'), {
   ssr: false,
@@ -534,6 +535,16 @@ export default function AIPDFFormFillerPage() {
           </div>
         </div>
       </section>
+
+      <ToolQuickFacts
+        definition="An AI PDF form filler reads the fields in a PDF form — including scanned forms — and fills them automatically from information you provide once, instead of typing each field by hand. Review every field, add a signature, and download. Core tools are free; AI filling needs a free account, with five uses per day included."
+        price="Free to start — 5 AI uses/day; Pro removes the daily limit ($1/month)"
+        account="Free account required for AI filling"
+        processing="Text and page images sent to the AI backend; the original PDF stays on your device"
+        formats="PDF (interactive, flat, or scanned forms)"
+        fileLimit="Up to 50 MB"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
 
       {/* Ticker */}
       <div className="ticker" aria-hidden="true">

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -659,6 +660,15 @@ export default function PDFRedactorPage() {
           </div>
         </div>
       </div>
+      <ToolQuickFacts
+        definition="PDF redaction is the permanent removal of sensitive text or images from a PDF, replaced with solid black bars. Unlike highlighting or drawing a box on top, true redaction removes the underlying content from the PDF data itself — it cannot be recovered by selecting or viewing the source."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser, including AI-assisted pattern detection — file never uploaded"
+        formats="PDF"
+        fileLimit="No fixed limit — capped only by device memory"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-redactor']} />
     </>
   )

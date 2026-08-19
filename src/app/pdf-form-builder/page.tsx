@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
@@ -1138,6 +1139,15 @@ export default function PDFFormBuilderPage() {
           </div>
         </div>
       </div>
+      <ToolQuickFacts
+        definition="A PDF form builder lets you create interactive, fillable PDF forms — with text fields, checkboxes, radio buttons, dropdowns, and signature boxes — without any design or coding skills. Start from a blank page or an existing PDF; the output is a standard fillable PDF anyone can complete."
+        price="Manual building: free, no limits · AI Builder: 5 uses/day free, Pro unlimited"
+        account="Not required for manual building; free account needed for the optional AI Builder"
+        processing="Manual building runs entirely in your browser; the AI Builder sends your request and field layout to AI"
+        formats="PDF"
+        fileLimit="No fixed page or field-count limit"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-form-builder']} />
     </>
   )

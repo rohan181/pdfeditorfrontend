@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 const GREEN = '#217346'
@@ -496,6 +497,15 @@ export default function PDFToExcelPage() {
 
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
+      <ToolQuickFacts
+        definition="A PDF to Excel converter detects tables and structured numerical data embedded in a PDF and maps them into the rows and columns of an .xlsx spreadsheet — instead of manually retyping dozens of rows of figures, you get an editable, sortable spreadsheet in seconds."
+        price="Free — 5 AI conversions/day; Pro removes the daily limit"
+        account="Free account required (AI feature)"
+        processing="Text extracted locally; only that text is sent to AI to build the spreadsheet"
+        formats="PDF in, XLSX out"
+        fileLimit="No fixed limit stated"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-to-excel']} />
     </>
   )

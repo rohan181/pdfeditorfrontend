@@ -21,6 +21,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 import {
@@ -260,6 +261,15 @@ export default function PDFPageLabelsPage() {
       </section>
       <section className="page-labels-info"><article><Hash size={20} /><h3>Labels are not printed numbers</h3><p>Page labels change viewer navigation, thumbnails, and page lookup. They do not paint text onto the page itself.</p></article><article><ListOrdered size={20} /><h3>Section-aware numbering</h3><p>Use Roman numerals for front matter, decimal numbers for chapters, letters for appendices, and prefixes for exhibits.</p></article><article><ShieldCheck size={20} /><h3>Source remains untouched</h3><p>The label tree is written into a new browser-generated PDF. Your original document is never modified or uploaded.</p></article></section>
     </div></main>
+    <ToolQuickFacts
+      definition="PDF page labels are navigation names stored separately from printed page content. A viewer can show front matter as i, ii, iii, restart the main document at 1, label appendices A, B, C, or display identifiers such as EX-1, while the underlying page order stays unchanged."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF"
+      fileLimit="Up to 100 MB and 2,000 pages"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     {seo && <ToolSEOSection {...seo} />}
     <SiteFooter />
   </div>

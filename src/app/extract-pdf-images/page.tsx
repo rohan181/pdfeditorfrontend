@@ -22,6 +22,7 @@ import {
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import { trackEvent } from '@/lib/analytics'
 import toolSeoData from '@/lib/toolSeoData'
 
@@ -373,6 +374,15 @@ export default function ExtractPDFImagesPage() {
         <div className="extract-images-info"><article><Images size={21} /><h3>Embedded pixels, not pages</h3><p>Finds Image XObjects and inline bitmaps from page content instead of taking screenshots of complete PDF pages.</p></article><article><Layers size={21} /><h3>Deduplicates repeated assets</h3><p>Identical decoded pixels are downloaded once while the interface records every page and placement where they appear.</p></article><article><ShieldCheck size={21} /><h3>Lossless local output</h3><p>Images are decoded with PDF.js and saved as PNG locally, preserving pixel detail and supported transparency.</p></article></div>
       </div></main>
 
+      <ToolQuickFacts
+        definition="A PDF page can combine text, vector paths, and embedded bitmap images. Image extraction finds those underlying raster pictures — photographs, screenshots, and scanned image regions — and saves them separately as lossless PNGs, instead of taking a screenshot of the complete page."
+        price="Free — no account needed"
+        account="Not required"
+        processing="Entirely in your browser — file never uploaded"
+        formats="PDF in, PNG/ZIP out"
+        fileLimit="Up to 100 MB and 300 pages"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['extract-pdf-images']} />
       <SiteFooter />
     </div>

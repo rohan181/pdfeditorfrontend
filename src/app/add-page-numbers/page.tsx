@@ -3,6 +3,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import SiteFooter from '@/components/SiteFooter'
 
@@ -529,6 +530,15 @@ export default function AddPageNumbers() {
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display:'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
     </div>
+    <ToolQuickFacts
+      definition="An online PDF page numbering tool adds sequential page numbers to the header or footer of every page. You control the position, font, size, starting number, and which page to begin numbering from, producing a professionally paginated PDF that's easy to reference and navigate."
+      price="Free — no account needed"
+      account="Not required"
+      processing="Entirely in your browser — file never uploaded"
+      formats="PDF"
+      fileLimit="No fixed limit — capped only by device memory"
+      browserSupport="Chrome, Firefox, Safari, Edge"
+    />
     <ToolSEOSection {...toolSeoData['add-page-numbers']} />
     <SiteFooter />
     </>

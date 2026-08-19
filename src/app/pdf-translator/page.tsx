@@ -4,6 +4,7 @@ import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
+import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 
 // ─── Languages ────────────────────────────────────────────────────────────────
@@ -502,6 +503,15 @@ export default function PDFTranslatorPage() {
 
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
+      <ToolQuickFacts
+        definition="A PDF translator extracts the text from a PDF and uses AI to translate it into a different language, then delivers the result as a new PDF with the original layout preserved — paragraphs, headings, and sections in the same order as the source document."
+        price="Free — 5 translations/day; Pro is unlimited"
+        account="Free account required (AI feature)"
+        processing="Extracted text sent to AI for translation; raw file bytes stay on your device"
+        formats="PDF"
+        fileLimit="No fixed limit stated"
+        browserSupport="Chrome, Firefox, Safari, Edge"
+      />
       <ToolSEOSection {...toolSeoData['pdf-translator']} />
     </>
   )

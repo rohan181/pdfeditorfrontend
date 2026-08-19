@@ -8,14 +8,16 @@ const FREE_ITEMS = ['Core PDF tools — always free','No account for core tools'
 const PRO_ITEMS  = ['Everything in Free','Unlimited AI uses per day','PDF → Word / Excel / PPT','Priority processing','AI form autofill & chat fill']
 
 // "All PDF tools" / "No account needed" used to be marked ✓ for both tiers,
-// which directly contradicted the PDF→Office row two rows down (Pro-only)
-// and the fact that Pro itself obviously requires an account to bill. These
-// now say exactly what's true for each tier instead of a blanket claim.
+// which directly contradicted the fact that Pro itself obviously requires an
+// account to bill. These say exactly what's true for each tier instead of a
+// blanket claim. PDF → Word/Excel/PPT is an AI-gated conversion, not a
+// Pro-exclusive one — its API routes grant free accounts 5 uses/day via the
+// same checkAndIncrementUsage(userId, 5) gate as every other AI tool here.
 const COMPARE = [
   { label: 'Core PDF tools',                 free: true,    pro: true          },
   { label: 'Account required',               free: 'AI only', pro: true        },
   { label: 'AI form fill / summarise / OCR', free: '5/day', pro: '∞ Unlimited' },
-  { label: 'PDF → Word / Excel / PPT',       free: false,   pro: true          },
+  { label: 'PDF → Word / Excel / PPT',       free: '5/day', pro: '∞ Unlimited' },
   { label: 'Priority processing',            free: false,   pro: true          },
 ]
 

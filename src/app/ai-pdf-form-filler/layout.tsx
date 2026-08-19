@@ -1,5 +1,6 @@
 import { buildToolMetadata } from '@/lib/seo/metadata'
 import { TOOL_METADATA } from '@/lib/seo/routes'
+import { ORGANIZATION_ID } from '@/lib/seo/site'
 
 export const metadata = buildToolMetadata(TOOL_METADATA['ai-pdf-form-filler'])
 
@@ -35,12 +36,7 @@ const jsonLdApp = {
       description: 'Unlimited AI uses with the Pro plan.',
     },
   ],
-  provider: {
-    '@type': 'Organization',
-    '@id': 'https://www.editpdfai.com/#organization',
-    name: 'EditPDF AI',
-    url: 'https://www.editpdfai.com',
-  },
+  provider: { '@id': ORGANIZATION_ID },
   description: 'Autofill PDF forms with AI, review detected fields, add a signature, and download the completed document. A free account includes five AI uses per day.',
   featureList: ['AI form filling', 'E-signatures', 'PDF annotation', 'PDF OCR', 'Field auto-detection', 'Page management'],
   browserRequirements: 'Requires JavaScript. Works in Chrome, Firefox, Safari, Edge.',
