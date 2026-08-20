@@ -4,13 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 const LOSING = [
-  'Unlimited AI uses per day',
+  'No daily AI-action cap',
   'AI Form Filler & smart autofill',
   'PDF Summarizer & Translator',
   'PDF Mind Map & Quiz Creator',
   'PDF → Word, Excel, PowerPoint',
   'AI OCR scanner',
-  'Priority processing',
+  'Pro daily-cap exemption',
 ]
 
 export default function CancelSection({ cancelAtPeriodEnd }: { cancelAtPeriodEnd: boolean }) {

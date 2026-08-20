@@ -378,7 +378,7 @@ export default function ExtractPDFImagesPage() {
         definition="A PDF page can combine text, vector paths, and embedded bitmap images. Image extraction finds those underlying raster pictures — photographs, screenshots, and scanned image regions — and saves them separately as lossless PNGs, instead of taking a screenshot of the complete page."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="PDF in, PNG/ZIP out"
         fileLimit="Up to 100 MB and 300 pages"
         browserSupport="Chrome, Firefox, Safari, Edge"

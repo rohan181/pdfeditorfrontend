@@ -18,8 +18,8 @@ export async function POST(req: NextRequest) {
 
     const tier = await getUserSubscription(userId)
     if (tier === 'free') {
-      const allowed = await checkAndIncrementUsage(userId, 5)
-      if (!allowed) return Response.json({ error: 'Daily limit reached. Upgrade to Pro.' }, { status: 429 })
+      const allowed = await checkAndIncrementUsage(userId)
+      if (!allowed) return Response.json({ error: 'Daily limit reached. Upgrade to Pro to remove the daily AI-action cap.' }, { status: 429 })
     }
 
     const formData = await req.formData()

@@ -540,10 +540,10 @@ export default function ODTToPDFPage() {
           <div className="hero">
             <div className="badge">
               <span className="badge-dot"/>
-              100% In-Browser · No Upload
+              Local Browser Processing
             </div>
             <h1>ODT to <em>PDF</em></h1>
-            <p>Convert OpenDocument Text files to PDF instantly. Headings, paragraphs, lists and tables are all preserved — nothing sent to any server.</p>
+            <p>Convert supported OpenDocument Text content locally in your browser. Review headings, paragraphs, lists, and tables in the downloaded PDF.</p>
           </div>
 
           {loading ? (
@@ -631,7 +631,7 @@ export default function ODTToPDFPage() {
                 <div className="preview-hdr">
                   <div>
                     <div className="preview-ttl">Document Preview</div>
-                    <div className="preview-sub">Rendered content — formatting preserved in final PDF</div>
+                    <div className="preview-sub">Extracted structure — rebuilt in a new PDF layout</div>
                   </div>
                   <div className="stats-row">
                     <span className="stat-chip">📝 {s.words.toLocaleString()} words</span>
@@ -665,8 +665,8 @@ export default function ODTToPDFPage() {
           <div className="info-grid">
             <div className="info-card">
               <div className="info-icon">📂</div>
-              <h3>Full ODT Support</h3>
-              <p>Parses the OpenDocument XML directly — headings (H1–H6), paragraphs, lists, tables and text boxes all extracted correctly.</p>
+              <h3>Structured ODT Text</h3>
+              <p>Parses supported headings, paragraphs, lists, tables, and text boxes from OpenDocument XML into a new PDF layout.</p>
             </div>
             <div className="info-card">
               <div className="info-icon">📐</div>
@@ -675,8 +675,8 @@ export default function ODTToPDFPage() {
             </div>
             <div className="info-card">
               <div className="info-icon">🔒</div>
-              <h3>100% Private</h3>
-              <p>The ODT is unzipped and parsed entirely in your browser using JSZip + pdf-lib. No file is ever sent to any server.</p>
+              <h3>Local Processing</h3>
+              <p>The ODT is unzipped and parsed locally in your browser using JSZip and pdf-lib without an application document-processing request.</p>
             </div>
           </div>
 
@@ -689,12 +689,12 @@ export default function ODTToPDFPage() {
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
       />
       <ToolQuickFacts
-        definition="An ODT to PDF converter takes an OpenDocument Text (.odt) file — the default format of LibreOffice Writer and other open-source word processors — and converts it into a universally compatible PDF, preserving fonts, styles, tables, images, headers, and footers exactly."
+        definition="This ODT converter parses supported headings, paragraphs, lists, tables, and text boxes from OpenDocument XML and rebuilds them in a new PDF layout. Original fonts, images, headers, footers, and page layout are not reproduced."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="ODT in, PDF out"
-        fileLimit="No fixed limit — capped only by device memory"
+        fileLimit="Practical capacity depends on document complexity, extracted content, browser memory, and device performance"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['odt-to-pdf']} />

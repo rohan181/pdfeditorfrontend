@@ -6,6 +6,7 @@ import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
+import { AI_ACCESS_SUMMARY, CORE_ACCESS_SUMMARY } from '@/lib/productMessaging'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -1133,7 +1134,7 @@ export default function PDFFormBuilderPage() {
               <div style={{ fontSize:12, color:'rgba(0,0,0,.45)', lineHeight:1.6 }}>Select a field type, click and drag on the canvas to size and position it exactly.</div>
             </div>
             <div style={{ padding:16, background:'#fafafa', border:'1px solid #e8e8e8', borderRadius:12 }}>
-              <div style={{ fontSize:13, fontWeight:700, marginBottom:4 }}>🛡️ 100% Private</div>
+              <div style={{ fontSize:13, fontWeight:700, marginBottom:4 }}>🛡️ Local Manual Workflow</div>
               <div style={{ fontSize:12, color:'rgba(0,0,0,.45)', lineHeight:1.6 }}>Everything runs locally in your browser — nothing leaves your device.</div>
             </div>
           </div>
@@ -1141,7 +1142,7 @@ export default function PDFFormBuilderPage() {
       </div>
       <ToolQuickFacts
         definition="A PDF form builder lets you create interactive, fillable PDF forms — with text fields, checkboxes, radio buttons, dropdowns, and signature boxes — without any design or coding skills. Start from a blank page or an existing PDF; the output is a standard fillable PDF anyone can complete."
-        price="Manual building: free, no limits · AI Builder: 5 uses/day free, Pro unlimited"
+        price={`${CORE_ACCESS_SUMMARY} Optional AI Builder: ${AI_ACCESS_SUMMARY}`}
         account="Not required for manual building; free account needed for the optional AI Builder"
         processing="Manual building runs entirely in your browser; the AI Builder sends your request and field layout to AI"
         formats="PDF"

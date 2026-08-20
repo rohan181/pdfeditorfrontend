@@ -503,7 +503,7 @@ export default function RotatePDF() {
       definition="A PDF rotation tool permanently changes the orientation of one or more pages in a PDF. If a page was scanned sideways, photographed upside down, or saved in the wrong orientation, rotating it corrects the display so readers don't have to tilt their head or device."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF"
       fileLimit="No fixed limit — capped only by device memory"
       browserSupport="Chrome, Firefox, Safari, Edge"

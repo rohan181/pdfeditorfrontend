@@ -1748,7 +1748,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
     const src  = sources.find(s => s.id === slot?.sourceId)
 
     // ── Strategy 1: PDF.js text layer (exact positions, no server, no AI) ───────
-    // Works for any PDF with a real text layer (i.e. not a scanned image PDF).
+    // Works for PDFs with a supported text layer (not image-only scanned pages).
     // Finds underscores (___) and "Label:" + blank-space patterns.
     if (src) {
       try {

@@ -167,10 +167,10 @@ export async function POST(request: NextRequest) {
 
     const tier = await getUserSubscription(userId);
     if (tier === "free") {
-      const allowed = await checkAndIncrementUsage(userId, 5);
+      const allowed = await checkAndIncrementUsage(userId);
       if (!allowed) {
         return Response.json(
-          { error: "Daily limit reached. Upgrade to Pro for unlimited access at /pricing" },
+          { error: "Daily limit reached. Upgrade to Pro to remove the daily AI-action cap at /pricing" },
           { status: 429 },
         );
       }

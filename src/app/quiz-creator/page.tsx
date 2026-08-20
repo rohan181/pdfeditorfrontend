@@ -6,6 +6,7 @@ import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import SiteFooter from '@/components/SiteFooter'
+import { AI_ACCESS_SUMMARY, AI_ACCURACY_DISCLAIMER } from '@/lib/productMessaging'
 
 type QType = 'mcq' | 'short' | 'mixed'
 type Diff  = 'easy' | 'medium' | 'hard'
@@ -343,7 +344,7 @@ export default function QuizCreator() {
             <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:40, textAlign:'center' }}>
               <div style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'4px 12px', background:'#faf5ff', border:'1px solid rgba(124,58,237,.25)', borderRadius:20, fontSize:10, fontWeight:700, color:'#7c3aed', marginBottom:16, textTransform:'uppercase', letterSpacing:'.08em' }}>✦ AI-Powered</div>
               <h1 style={{ fontSize:36, fontWeight:800, letterSpacing:'-.05em', color:'#1d1d1f', marginBottom:10, lineHeight:1.1 }}>PDF <span style={{ color:'#7c3aed' }}>Quiz Creator</span></h1>
-              <p style={{ fontSize:14, color:'rgba(0,0,0,.42)', maxWidth:400, lineHeight:1.7, marginBottom:28 }}>Upload any PDF and Claude will create a custom quiz — multiple choice, short answer, or a mix.</p>
+              <p style={{ fontSize:14, color:'rgba(0,0,0,.42)', maxWidth:400, lineHeight:1.7, marginBottom:28 }}>Upload a PDF and AI will draft a quiz from extracted text — multiple choice, short answer, or a mix. Review the questions before use.</p>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, maxWidth:460 }}>
                 {[['🎯','Multiple Choice','4 options, instant grading'],['✍️','Short Answer','Write & check model answer'],['📍','Source References','Jump to the PDF passage']].map(([icon,t,d]) => (
                   <div key={t} style={{ padding:'14px 10px', border:'1px solid #e8e8e8', borderRadius:12, background:'#fff' }}>
@@ -573,12 +574,12 @@ export default function QuizCreator() {
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}/>
     </div>
     <ToolQuickFacts
-      definition="An AI quiz creator reads a PDF and generates a set of test questions based on the actual content — multiple-choice, true/false, or short-answer, complete with correct answers — turning any PDF into an instant study guide, practice exam, or classroom assessment."
-      price="Free — limited daily AI generations; Pro increases the question limit"
+      definition="An AI quiz creator uses extracted PDF text to generate multiple-choice, short-answer, or mixed practice questions and suggested answers. Review every question and answer against the source."
+      price={AI_ACCESS_SUMMARY}
       account="Free account required (AI feature)"
-      processing="Extracted text sent to AI backend for question generation"
+      processing={`Extracted text is sent through the AI route for question generation. ${AI_ACCURACY_DISCLAIMER}`}
       formats="PDF in, PDF/CSV out"
-      fileLimit="Free: up to 10 questions/session · Pro: up to 50"
+      fileLimit="The interface offers 5, 10, 15, or 20 questions per generation for both Free and Pro"
       browserSupport="Chrome, Firefox, Safari, Edge"
     />
     <ToolSEOSection {...toolSeoData['quiz-creator']} />

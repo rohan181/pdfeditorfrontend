@@ -16,8 +16,8 @@ export async function POST(req: NextRequest) {
 
     const tier = await getUserSubscription(userId)
     if (tier === 'free') {
-      const allowed = await checkAndIncrementUsage(userId, 5)
-      if (!allowed) return Response.json({ error: 'Daily limit reached. Upgrade to Pro for unlimited access.' }, { status: 429 })
+      const allowed = await checkAndIncrementUsage(userId)
+      if (!allowed) return Response.json({ error: 'Daily limit reached. Upgrade to Pro to remove the daily AI-action cap.' }, { status: 429 })
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY

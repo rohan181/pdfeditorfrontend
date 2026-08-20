@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import { SUPPORT_EMAIL, supportMailto } from '@/lib/entity'
 
 const FI = 'var(--font-dm,system-ui,sans-serif)'
 const MONO = 'var(--font-mono,monospace)'
@@ -30,7 +31,7 @@ export default function ContactPage() {
             Get in touch with EditPDF AI
           </h1>
           <p style={{ fontFamily: FI, fontSize: 16, color: '#6b7280', lineHeight: 1.65, maxWidth: 480, margin: 0 }}>
-            The EditPDF AI team reads every message and responds within <strong style={{ color: '#1d1d1f' }}>24–48 hours</strong>. Choose the right topic to help us reply faster.
+            Email is the published support channel for product, billing, privacy, and technical questions. Choose a topic to include a useful subject line.
           </p>
         </div>
 
@@ -40,15 +41,15 @@ export default function ContactPage() {
             <p style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#9ca3af', margin: '0 0 8px' }}>
               Email us directly
             </p>
-            <a href="mailto:support@editpdfai.com"
+            <a href={supportMailto()}
               style={{ fontFamily: FI, fontSize: 22, fontWeight: 800, color: '#0891b2', textDecoration: 'none', letterSpacing: '-0.03em', display: 'block', marginBottom: 6 }}>
-              support@editpdfai.com
+              {SUPPORT_EMAIL}
             </a>
             <p style={{ fontFamily: FI, fontSize: 13, color: '#6b7280', margin: 0 }}>
-              Response time: usually within 24–48 hours · Monday – Friday
+              No response-time commitment is currently published.
             </p>
           </div>
-          <a href="mailto:support@editpdfai.com"
+          <a href={supportMailto()}
             style={{ fontFamily: FI, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '12px 22px', background: '#1d1d1f', color: '#fff', borderRadius: 99, fontSize: 14, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>
             Send email →
           </a>
@@ -61,7 +62,7 @@ export default function ContactPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 12, marginBottom: 48 }}>
           {TOPICS.map(({ icon, title, body, subject }) => (
             <a key={title}
-              href={`mailto:support@editpdfai.com?subject=${encodeURIComponent(subject)}`}
+              href={supportMailto(subject)}
               style={{ textDecoration: 'none' }}>
               <div style={{ background: '#f9fafb', border: '1.5px solid #e5e7eb', borderRadius: 16, padding: '18px 20px', cursor: 'pointer', transition: 'border-color .12s, background .12s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#0891b2'; (e.currentTarget as HTMLDivElement).style.background = 'rgba(8,145,178,.03)' }}

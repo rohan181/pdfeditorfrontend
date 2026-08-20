@@ -289,7 +289,7 @@ export default function PDFBookmarksManagerPage() {
       definition="A PDF bookmarks manager edits the interactive outline shown in a PDF reader's navigation panel. Bookmark entries can point to pages, contain nested children, start open or closed, or invoke supported web, remote-PDF, and named actions — all editable before you download a new PDF."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF"
       fileLimit="Up to 100 MB and 2,000 pages"
       browserSupport="Chrome, Firefox, Safari, Edge"

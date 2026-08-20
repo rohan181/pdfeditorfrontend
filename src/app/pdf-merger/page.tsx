@@ -26,11 +26,11 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .back:hover{color:#1d1d1f}
 
 .hero{padding:64px 0 36px;text-align:center;border-bottom:1px solid #f0f0f0}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#fff5f5;border:1px solid rgba(226,75,74,.2);border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.08em;color:#E24B4A;margin-bottom:18px;text-transform:uppercase}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#fff5f5;border:1px solid rgba(180,35,60,.25);border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.08em;color:#b4233c;margin-bottom:18px;text-transform:uppercase}
 .bdot{width:5px;height:5px;border-radius:50%;background:#E24B4A}
 .hero h1{font-family:var(--font-jakarta,system-ui,sans-serif);font-size:clamp(30px,5vw,54px);font-weight:800;letter-spacing:-.05em;line-height:.97;color:#1d1d1f;margin-bottom:14px}
 .hero h1 em{font-style:normal;color:#E24B4A}
-.hero p{font-size:15px;color:rgba(0,0,0,.5);line-height:1.7;max-width:440px;margin:0 auto}
+.hero p{font-size:15px;color:#4b5563;line-height:1.7;max-width:440px;margin:0 auto}
 
 .card{background:#fff;border:1px solid #e8e8e8;border-radius:16px;padding:32px;margin:32px 0 16px;box-shadow:0 2px 20px rgba(0,0,0,.04)}
 @media(max-width:600px){.card{padding:20px 16px}}
@@ -280,7 +280,7 @@ export default function PDFMergerPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="pg">
+      <div className="pg" id="main-content">
 
         {/* Nav */}
         <SiteNav />
@@ -290,7 +290,7 @@ export default function PDFMergerPage() {
           <div className="wrap">
             <div className="badge"><span className="bdot"/>PDF Tools · Combine · Reorder · Free</div>
             <h1>Merge PDF<br/><em>Files</em></h1>
-            <p>Combine multiple PDF files into one. Drag to reorder, then download your merged PDF instantly.</p>
+            <p className="tool-hero-definition">A PDF merger combines two or more PDF files into one document in the order you choose. EditPDF AI reads and merges the files locally in your browser, lets you reorder whole files before combining them, and downloads a PDF output. Practical capacity depends on file size, page count, browser memory, and device performance.</p>
           </div>
         </div>
 
@@ -326,7 +326,7 @@ export default function PDFMergerPage() {
                   <h2>Drop your PDFs here</h2>
                   <p>Select two or more PDF files to combine them into one</p>
                   <button className="drop-btn">Choose PDF files</button>
-                  <div className="drop-note">All processing happens in your browser · 100% private</div>
+                  <div className="drop-note">Local browser processing · no application document-processing request</div>
                   <input ref={fileRef} type="file" accept=".pdf" multiple style={{ display:'none' }}
                     onChange={e => { if (e.target.files) addFiles(e.target.files) }} />
                 </div>
@@ -472,30 +472,29 @@ export default function PDFMergerPage() {
           {/* Info cards */}
           <div className="info-grid">
             <div className="info-card">
-              <h3>📂 Unlimited Files</h3>
-              <p>Combine as many PDFs as you need. Add files one by one or drop them all at once.</p>
+              <h3>📂 Multiple Files</h3>
+              <p>Combine multiple PDFs in one operation, subject to browser memory and device performance.</p>
             </div>
             <div className="info-card">
               <h3>↕ Drag to Reorder</h3>
               <p>Drag rows or use the ▲▼ buttons to set the exact order before merging.</p>
             </div>
             <div className="info-card">
-              <h3>🔒 100% Private</h3>
-              <p>All merging happens in your browser with pdf-lib. Your files never leave your device.</p>
+              <h3>🔒 Local Processing</h3>
+              <p>Merging runs locally in your browser with pdf-lib and does not use an application document-processing route.</p>
             </div>
           </div>
         </div>
       </div>
       <ToolQuickFacts
-        definition="A PDF merger combines two or more separate PDF files into a single, unified document. Instead of sending several attachments, you merge them into one file that opens in the correct order — easier to read, share, and file. Merging runs in your browser, so files never leave your device."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — files never uploaded"
-        formats="PDF"
-        fileLimit="No fixed limit — files 100 MB+ each may be slower"
-        browserSupport="Chrome, Firefox, Safari, Edge"
+        processing="Processed locally in your browser without an application document-processing request"
+        formats="Input: two or more PDF files · Output: one PDF"
+        fileLimit="Practical capacity depends on file size, page count, browser memory, and device performance"
+        browserSupport="Modern desktop and mobile browsers with JavaScript, Web Workers, and required file APIs"
       />
-      <ToolSEOSection {...toolSeoData['pdf-merger']} />
+      <ToolSEOSection {...toolSeoData['pdf-merger']} showDirectAnswer={false} />
     </>
   )
 }

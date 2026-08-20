@@ -532,7 +532,7 @@ export default function PDFComparePage() {
           </article>) : <div className="compare-empty">No pages match the current filter.</div>}</div>
         </section>}
 
-        <div className="compare-info"><article><ShieldCheck size={21} /><h3>Private comparison</h3><p>Both PDFs are rendered and compared inside your browser. Their pages and text are never uploaded.</p></article><article><ScanSearch size={21} /><h3>Two kinds of checks</h3><p>Pixel comparison finds layout and annotation changes while text extraction catches invisible text revisions.</p></article><article><Sparkles size={21} /><h3>Useful sensitivity</h3><p>Choose strict, balanced, or relaxed matching to handle subtle changes and compression noise.</p></article></div>
+        <div className="compare-info"><article><ShieldCheck size={21} /><h3>Local comparison</h3><p>Both PDFs are rendered and compared locally in your browser without an application document-processing request.</p></article><article><ScanSearch size={21} /><h3>Two kinds of checks</h3><p>Pixel comparison finds layout and annotation changes while text extraction catches invisible text revisions.</p></article><article><Sparkles size={21} /><h3>Useful sensitivity</h3><p>Choose strict, balanced, or relaxed matching to handle subtle changes and compression noise.</p></article></div>
         <p className="compare-note"><strong>Review important documents:</strong> comparison highlights likely differences, but it is not a substitute for legal review, accessibility testing, signature validation, or PDF metadata inspection.</p>
       </div></main>
 

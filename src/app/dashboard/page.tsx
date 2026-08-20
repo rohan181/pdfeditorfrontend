@@ -92,7 +92,7 @@ export default async function DashboardPage() {
                 {isPro ? 'Pro' : 'Free'}
               </p>
               <p style={{ fontSize: 13, color: isPro ? 'rgba(255,255,255,.7)' : '#6b7280', margin: 0 }}>
-                {isPro ? 'Unlimited AI · All tools' : `${limit} AI uses per day`}
+                {isPro ? 'No daily AI-action cap' : `${limit} AI actions per UTC day`}
               </p>
             </div>
 
@@ -175,8 +175,8 @@ export default async function DashboardPage() {
           <div style={{ marginTop: 20, background: '#1d1d1f', borderRadius: 20, padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(8,145,178,.3),transparent 70%)', pointerEvents: 'none' }} />
             <div>
-              <p style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 6px', letterSpacing: '-.03em' }}>Go unlimited with Pro</p>
-              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>Unlimited AI uses, all tools, priority processing — just $1.00/mo</p>
+              <p style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 6px', letterSpacing: '-.03em' }}>Remove the daily AI cap with Pro</p>
+              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>No daily AI-action cap; documented tool limits still apply — $1.00/mo</p>
             </div>
             <Link href="/pricing" style={{
               padding: '12px 28px', borderRadius: 12, background: 'linear-gradient(135deg,#0891b2,#0e7490)',

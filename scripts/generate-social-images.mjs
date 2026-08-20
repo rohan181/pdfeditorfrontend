@@ -3,7 +3,7 @@ import path from 'node:path'
 import sharp from 'sharp'
 
 const tools = [
-  ['home', 'Free Online PDF Editor', '35+ PDF Tools', '#2563EB', 'PDF'],
+  ['home', 'Online PDF Editor', 'Core & AI-Assisted Tools', '#2563EB', 'PDF'],
   ['pdf-editor', 'Edit PDFs Online', 'Edit & Annotate', '#2563EB', 'EDIT'],
   ['pdf-viewer', 'View PDF Files Online', 'Edit & Annotate', '#2563EB', 'VIEW'],
   ['pdf-annotate', 'Annotate PDFs Online', 'Edit & Annotate', '#0EA5E9', 'NOTE'],

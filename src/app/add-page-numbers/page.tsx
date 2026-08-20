@@ -534,7 +534,7 @@ export default function AddPageNumbers() {
       definition="An online PDF page numbering tool adds sequential page numbers to the header or footer of every page. You control the position, font, size, starting number, and which page to begin numbering from, producing a professionally paginated PDF that's easy to reference and navigate."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF"
       fileLimit="No fixed limit — capped only by device memory"
       browserSupport="Chrome, Firefox, Safari, Edge"

@@ -1,115 +1,92 @@
 'use client'
 import React from 'react'
 import Link from 'next/link'
+import JsonLd from '@/components/JsonLd'
+import ToolBreadcrumb from '@/components/ToolBreadcrumb'
+import { buildFaqStructuredData } from '@/lib/seo/structuredData'
+import { TOOL_GUIDES } from '@/lib/toolGuideLinks'
 import { toolMetaMap } from '@/lib/toolMeta'
-import { ORGANIZATION_ID } from '@/lib/seo/site'
 
 export interface ToolSEOStep    { title: string; body: string }
 export interface ToolSEOFAQ     { q: string; a: string }
 export interface ToolSEOUser    { who: string; why: string }
-export interface ToolSEOFormats { input: string[]; output?: string[]; limit?: string }
+export interface ToolSEOFormats { input: string[]; output: string[]; limit: string }
 
 interface Props {
   steps:    ToolSEOStep[]
   faqs:     ToolSEOFAQ[]
-  whatIs?:  string[]
-  users?:   ToolSEOUser[]
-  related?: { slug: string; label: string }[]
-  formats?: ToolSEOFormats
-  privacy?: string
+  whatIs:   string[]
+  users:    ToolSEOUser[]
+  related:  { slug: string; label: string }[]
+  formats:  ToolSEOFormats
+  privacy:  string
   toolSlug?: string
   showSteps?: boolean
   showFaq?: boolean
   includeSchema?: boolean
+  showDirectAnswer?: boolean
 }
 
 const PURPLE  = '#4F7FFA'
 const BG      = '#f7f8fa'
 
-const BASE = 'https://www.editpdfai.com'
-
-const GUIDES_BY_TOOL: Record<string, { href: string; label: string }[]> = {
-  'pdf-editor': [{ href: '/guides/how-to-edit-a-pdf-without-adobe', label: 'How to edit a PDF without Adobe Acrobat' }],
-  'pdf-compressor': [{ href: '/guides/how-to-reduce-pdf-file-size', label: 'How to reduce PDF file size without losing quality' }],
-  'ai-pdf-form-filler': [{ href: '/guides/how-to-fill-out-a-pdf-form-automatically', label: 'How to fill out a PDF form automatically with AI' }],
-  'pdf-signer': [{ href: '/guides/how-to-sign-a-pdf-online', label: 'How to sign a PDF online without printing' }],
-  'pdf-ocr': [{ href: '/guides/how-to-make-a-scanned-pdf-searchable', label: 'How to make a scanned PDF searchable' }],
-  'pdf-merger': [{ href: '/guides/how-to-merge-pdf-files', label: 'How to merge PDF files on any device' }],
-  'pdf-redactor': [{ href: '/guides/how-to-redact-sensitive-information-from-a-pdf', label: 'How to permanently redact sensitive information from a PDF' }],
-  'word-to-pdf': [{ href: '/guides/pdf-vs-word-which-format-to-use', label: 'PDF vs Word: which document format should you use?' }],
-  'pdf-to-word': [{ href: '/guides/pdf-vs-word-which-format-to-use', label: 'PDF vs Word: which document format should you use?' }],
+function lowerCaseLead(value: string) {
+  return value.length === 0 ? value : `${value[0].toLowerCase()}${value.slice(1)}`
 }
 
-export default function ToolSEOSection({ steps, faqs, whatIs, users, related, formats, privacy, toolSlug, showSteps = true, showFaq = true, includeSchema = true }: Props) {
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map(f => ({
-      '@type': 'Question',
-      name: f.q,
-      acceptedAnswer: { '@type': 'Answer', text: f.a },
-    })),
-  }
+function joinFormats(formats: string[]) {
+  if (formats.length < 2) return formats[0] ?? 'the supported file type'
+  if (formats.length === 2) return formats.join(' or ')
+  return `${formats.slice(0, -1).join(', ')}, or ${formats.at(-1)}`
+}
 
-  const relatedTools = related ?? []
-  const relevantGuides = toolSlug ? GUIDES_BY_TOOL[toolSlug] ?? [] : []
+function buildDirectAnswer(toolSlug: string, formats: ToolSEOFormats) {
+  const tool = toolMetaMap[toolSlug]
+  if (!tool) return null
+
+  const input = joinFormats(formats.input)
+  const output = joinFormats(formats.output)
+  const resultAction = toolSlug === 'pdf-viewer'
+    ? 'read the PDF on screen'
+    : toolSlug === 'chat-with-pdf'
+      ? 'review the cited answer on the page'
+      : `download or use the resulting ${output}`
+  const access = tool.access === 'core'
+    ? 'The core workflow runs locally in your browser without an application document-processing request.'
+    : tool.access === 'metered-ai'
+      ? 'AI processing requires sign-in and uses the shared daily allowance; processing details identify the content sent.'
+      : 'Core controls run locally in your browser; optional AI actions require sign-in and use the shared daily AI allowance.'
+
+  return `${tool.name} is a browser-based tool that lets you ${lowerCaseLead(tool.desc)}. Choose ${input}, use the controls above to configure the result, then ${resultAction}. ${access} See formats, limits, and processing.`
+}
+
+export default function ToolSEOSection({ steps, faqs, whatIs, users, related, formats, privacy, toolSlug, showSteps = true, showFaq = true, includeSchema = true, showDirectAnswer = true }: Props) {
+  const relatedTools = related.slice(0, 5)
+  const visibleFaqs = faqs.slice(0, 6)
+  const relevantGuides = toolSlug ? TOOL_GUIDES[toolSlug] ?? [] : []
 
   const toolMeta = toolSlug ? toolMetaMap[toolSlug] : null
-
-  const breadcrumbSchema = toolSlug && toolMeta ? {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home',     item: `${BASE}/` },
-      { '@type': 'ListItem', position: 2, name: toolMeta.name, item: `${BASE}/${toolSlug}` },
-    ],
-  } : null
-
-  const softwareSchema = toolSlug && toolMeta ? {
-    '@context': 'https://schema.org',
-    '@type': 'SoftwareApplication',
-    name: toolMeta.name,
-    description: toolMeta.desc,
-    url: `${BASE}/${toolSlug}`,
-    applicationCategory: 'UtilityApplication',
-    operatingSystem: 'Web',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-    provider: { '@id': ORGANIZATION_ID },
-  } : null
-
-  // Lets answer engines (Google AI Overviews, ChatGPT, Perplexity) cite the
-  // exact steps directly instead of only indexing the FAQ text.
-  const howToSchema = steps.length > 0 ? {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: toolMeta ? `How to use ${toolMeta.name}` : 'How it works',
-    ...(toolSlug ? { url: `${BASE}/${toolSlug}` } : {}),
-    step: steps.map((s, i) => ({
-      '@type': 'HowToStep',
-      position: i + 1,
-      name: s.title,
-      text: s.body,
-    })),
-  } : null
+  const directAnswer = toolSlug ? buildDirectAnswer(toolSlug, formats) : null
 
   return (
-    <div className="tool-seo-section" style={{ fontFamily: 'var(--font-inter,system-ui,sans-serif)', color: '#1d1d1f' }}>
-      {includeSchema && showFaq && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />}
-      {includeSchema && breadcrumbSchema && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      )}
-      {includeSchema && softwareSchema && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }} />
-      )}
-      {includeSchema && showSteps && howToSchema && (
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }} />
+    <div className="tool-seo-section" data-tool-slug={toolSlug} style={{ fontFamily: 'var(--font-inter,system-ui,sans-serif)', color: '#1d1d1f' }}>
+      {includeSchema && showFaq && toolSlug && visibleFaqs.length > 0 && (
+        <JsonLd
+          id={`tool-faq-structured-data-${toolSlug}`}
+          data={buildFaqStructuredData(`/${toolSlug}`, visibleFaqs)}
+        />
       )}
 
       {/* ── What is + Who uses ── */}
-      {(whatIs || users) && (
+      {(whatIs.length > 0 || users.length > 0) && (
         <section aria-label={toolMeta ? `About ${toolMeta.name}` : 'About this PDF tool'} style={{ background: '#fff', borderTop: '1px solid #ebebeb', padding: '64px 24px' }}>
           <div style={{ maxWidth: 960, margin: '0 auto' }}>
-            {whatIs && (
+            {toolMeta && (
+              <div style={{ marginBottom: 30 }}>
+                <ToolBreadcrumb toolName={toolMeta.name} />
+              </div>
+            )}
+            {whatIs.length > 0 && (
               <div className="tool-seo-intro" style={{ maxWidth: 720, marginBottom: users ? 56 : 0 }}>
                 <div style={{ fontSize: 10.5, fontWeight: 800, color: PURPLE, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>
                   Clear, practical guidance
@@ -117,12 +94,17 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
                 <h2 style={{ fontSize: 'clamp(22px,2.5vw,32px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 20 }}>
                   {whatIs[0]}
                 </h2>
+                {showDirectAnswer && directAnswer && (
+                  <p className="tool-seo-direct-answer" style={{ fontSize: 16, color: '#1f2937', lineHeight: 1.75, margin: '0 0 18px', fontWeight: 520 }}>
+                    {directAnswer}
+                  </p>
+                )}
                 {whatIs.slice(1).map((p, i) => (
                   <p key={i} style={{ fontSize: 15.5, color: '#374151', lineHeight: 1.8, marginBottom: 14, marginTop: 0 }}>{p}</p>
                 ))}
               </div>
             )}
-            {users && (
+            {users.length > 0 && (
               <div>
                 <h2 style={{ fontSize: 'clamp(20px,2.2vw,28px)', fontWeight: 800, letterSpacing: '-.04em', color: '#1d1d1f', marginBottom: 10 }}>
                   Practical examples
@@ -140,6 +122,38 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
                 </div>
               </div>
             )}
+          </div>
+        </section>
+      )}
+
+      {toolMeta && (
+        <section className="tool-seo-capabilities" aria-labelledby={`tool-capabilities-${toolSlug}`} style={{ background: BG, borderTop: '1px solid #ebebeb', padding: '48px 24px' }}>
+          <div style={{ maxWidth: 960, margin: '0 auto' }}>
+            <h2 id={`tool-capabilities-${toolSlug}`} style={{ fontSize: 'clamp(20px,2.2vw,28px)', fontWeight: 800, letterSpacing: '-.04em', color: '#1d1d1f', margin: '0 0 22px' }}>
+              {toolMeta.name} capabilities
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14 }}>
+              <div className="tool-seo-capability" style={{ background: '#fff', borderRadius: 14, padding: '18px 16px', border: '1.5px solid #e8eaed' }}>
+                <h3 style={{ fontSize: 13.5, fontWeight: 800, margin: '0 0 7px' }}>Focused workflow</h3>
+                <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.65, margin: 0 }}>{toolMeta.desc}.</p>
+              </div>
+              <div className="tool-seo-capability" style={{ background: '#fff', borderRadius: 14, padding: '18px 16px', border: '1.5px solid #e8eaed' }}>
+                <h3 style={{ fontSize: 13.5, fontWeight: 800, margin: '0 0 7px' }}>Supported workflow</h3>
+                <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.65, margin: 0 }}>
+                  Accepts {joinFormats(formats.input)} and produces {joinFormats(formats.output)}. {formats.limit}
+                </p>
+              </div>
+              <div className="tool-seo-capability" style={{ background: '#fff', borderRadius: 14, padding: '18px 16px', border: '1.5px solid #e8eaed' }}>
+                <h3 style={{ fontSize: 13.5, fontWeight: 800, margin: '0 0 7px' }}>Access and processing</h3>
+                <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.65, margin: 0 }}>
+                  {toolMeta.access === 'core'
+                    ? 'Core tool with browser-based document processing.'
+                    : toolMeta.access === 'metered-ai'
+                      ? 'Signed-in, metered AI tool with a shared daily allowance.'
+                      : 'Core browser tools with separate, signed-in metered AI actions.'}
+                </p>
+              </div>
+            </div>
           </div>
         </section>
       )}
@@ -165,15 +179,13 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
       </section>}
 
       {/* ── Formats + Privacy ── */}
-      {(formats || privacy) && (
-        <section style={{ background: '#fff', borderTop: '1px solid #ebebeb', padding: '40px 24px' }}>
+      <section style={{ background: '#fff', borderTop: '1px solid #ebebeb', padding: '40px 24px' }}>
           <div style={{ maxWidth: 860, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {formats && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'flex-start' }}>
+            <div className="tool-seo-formats" style={{ display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'flex-start' }}>
                 <div>
                   <div style={{ fontSize: 10.5, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>
-                    {formats.output ? 'Input formats' : 'Supported formats'}
+                    Input formats
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {formats.input.map(f => (
@@ -181,9 +193,9 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
                     ))}
                   </div>
                 </div>
-                {formats.output && formats.output.length > 0 && (
+                {formats.output.length > 0 && (
                   <div>
-                    <div style={{ fontSize: 10.5, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>Output format</div>
+                    <div style={{ fontSize: 10.5, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>Output formats</div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {formats.output.map(f => (
                         <span key={f} style={{ background: '#f0fdf4', color: '#15803d', borderRadius: 6, padding: '4px 10px', fontSize: 12, fontWeight: 700, border: '1px solid #bbf7d0', letterSpacing: '.02em' }}>{f}</span>
@@ -191,17 +203,13 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
                     </div>
                   </div>
                 )}
-                {formats.limit && (
-                  <div>
+                <div>
                     <div style={{ fontSize: 10.5, fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 8 }}>File limit</div>
-                    <div style={{ fontSize: 13, color: '#374151', fontWeight: 600 }}>{formats.limit}</div>
-                  </div>
-                )}
-              </div>
-            )}
+                    <div className="tool-seo-limit" style={{ fontSize: 13, color: '#374151', fontWeight: 600 }}>{formats.limit}</div>
+                </div>
+            </div>
 
-            {privacy && (
-              <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div className="tool-seo-privacy" style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
                   <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7l-9-5z" fill="#1d4ed8" opacity=".15"/>
                   <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7l-9-5z" stroke="#1d4ed8" strokeWidth="1.5" strokeLinejoin="round"/>
@@ -211,11 +219,9 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
                   <div style={{ fontWeight: 800, fontSize: 13, color: '#1d4ed8', marginBottom: 3 }}>Privacy &amp; security</div>
                   <p style={{ fontSize: 13, color: '#374151', lineHeight: 1.65, margin: 0 }}>{privacy}</p>
                 </div>
-              </div>
-            )}
+            </div>
           </div>
-        </section>
-      )}
+      </section>
 
       {/* ── FAQ ── */}
       {showFaq && <section style={{ padding: '56px 24px 72px', background: BG, borderTop: '1px solid #ebebeb' }}>
@@ -224,17 +230,17 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
             Frequently asked questions
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {faqs.map((f, i) => (
+            {visibleFaqs.map((f, i) => (
               <details className="tool-seo-faq" key={i} style={{ background: '#fff', borderRadius: 14, border: '1.5px solid #e8eaed', overflow: 'hidden' }}>
                 <summary style={{
                   padding: '16px 20px', fontWeight: 700, fontSize: 14.5, color: '#1d1d1f',
                   cursor: 'pointer', listStyle: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   letterSpacing: '-.01em',
                 }}>
-                  {f.q}
+                  <span className="tool-seo-faq-question">{f.q}</span>
                   <span className="tool-seo-faq-icon" aria-hidden="true" style={{ fontSize: 18, color: PURPLE, marginLeft: 12, flexShrink: 0, lineHeight: 1 }}>+</span>
                 </summary>
-                <div style={{ padding: '0 20px 16px', fontSize: 14, color: '#4b5563', lineHeight: 1.7 }}>
+                <div className="tool-seo-faq-answer" style={{ padding: '0 20px 16px', fontSize: 14, color: '#4b5563', lineHeight: 1.7 }}>
                   {f.a}
                 </div>
               </details>
@@ -307,7 +313,7 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
         <section aria-label={`${toolMeta.name} actions`} style={{ background: '#fff', borderTop: '1px solid #ebebeb', padding: '64px 24px 72px' }}>
           <div className="tool-seo-cta" style={{ maxWidth: 760, margin: '0 auto', textAlign: 'center', padding: '40px 24px', borderRadius: 20, background: 'linear-gradient(135deg,#eff6ff 0%,#f5f3ff 100%)', border: '1.5px solid #dbeafe' }}>
             <div style={{ fontSize: 10.5, fontWeight: 800, color: PURPLE, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>
-              Free online PDF tool
+              {toolMeta.access === 'core' ? 'Core PDF tool' : toolMeta.access === 'metered-ai' ? 'Metered AI tool' : 'Core tool with optional AI'}
             </div>
             <h2 style={{ fontSize: 'clamp(23px,3vw,34px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, margin: '0 0 12px', color: '#0f172a' }}>
               Ready to use {toolMeta.name}?

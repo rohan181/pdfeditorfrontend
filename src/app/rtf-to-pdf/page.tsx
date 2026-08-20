@@ -417,10 +417,10 @@ export default function RTFToPDFPage() {
           <div className="hero">
             <div className="badge">
               <span className="badge-dot"/>
-              100% In-Browser · No Upload
+              Local Browser Processing
             </div>
             <h1>RTF to <em>PDF</em></h1>
-            <p>Convert Rich Text Format files to clean, paginated PDF instantly. Text and structure extracted in your browser — nothing sent to any server.</p>
+            <p>Convert Rich Text Format files to paginated PDFs with local browser processing. Review the downloaded layout before sharing.</p>
           </div>
 
           {parsing ? (
@@ -552,8 +552,8 @@ export default function RTFToPDFPage() {
           <div className="info-grid">
             <div className="info-card">
               <div className="info-icon">📄</div>
-              <h3>Full RTF Support</h3>
-              <p>Handles RTF from Word, WordPad, LibreOffice and Pages. Unicode, hex-escaped and ASCII characters all decoded correctly.</p>
+              <h3>RTF Text Extraction</h3>
+              <p>Extracts supported Unicode, hex-escaped, and ASCII text while stripping RTF formatting controls and embedded objects.</p>
             </div>
             <div className="info-card">
               <div className="info-icon">📐</div>
@@ -562,8 +562,8 @@ export default function RTFToPDFPage() {
             </div>
             <div className="info-card">
               <div className="info-icon">🔒</div>
-              <h3>100% Private</h3>
-              <p>RTF parsing and PDF creation both run entirely in your browser using pdf-lib — no file is ever sent to any server.</p>
+              <h3>Local Processing</h3>
+              <p>RTF parsing and PDF creation run locally in your browser using pdf-lib without an application document-processing request.</p>
             </div>
           </div>
 
@@ -576,12 +576,12 @@ export default function RTFToPDFPage() {
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
       />
       <ToolQuickFacts
-        definition="An RTF to PDF converter takes a Rich Text Format (.rtf) document and produces a PDF file that can be opened by anyone, anywhere, without a word processor. RTF preserves basic formatting like bold, italic, fonts, and simple tables — converting it to PDF locks in that appearance permanently."
+        definition="This RTF converter extracts supported plain text, strips RTF formatting controls and embedded objects, and creates a newly formatted PDF using the page, font-size, and line-spacing settings you choose."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="RTF in, PDF out"
-        fileLimit="No page or file size limit"
+        fileLimit="Practical capacity depends on extracted text length, browser memory, and device performance"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['rtf-to-pdf']} />

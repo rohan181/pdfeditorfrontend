@@ -1,63 +1,116 @@
 import type { Metadata } from 'next'
-import { SITE_NAME, DEFAULT_OG_IMAGE, OG_IMAGE_WIDTH, OG_IMAGE_HEIGHT, absoluteUrl } from './site'
+import {
+  DEFAULT_OG_IMAGE,
+  OG_IMAGE_HEIGHT,
+  OG_IMAGE_WIDTH,
+  SITE_NAME,
+  absoluteUrl,
+} from './site'
 
-export interface ToolMetadataInput {
-  /** Route path, e.g. '/pdf-merger'. Used to build the canonical + OG url. */
+export type SeoRobots = Readonly<{
+  index: boolean
+  follow: boolean
+}>
+
+export interface PageSeoConfig {
+  /** Public route path. Query strings and hashes are discarded when URLs are built. */
   path: string
   title: string
   description: string
-  /** Overrides for the OpenGraph card; default to title/description. */
+  /** Defaults to `path`. Use `null` for private/noindex pages that should not emit a canonical. */
+  canonicalPath?: string | null
+  /** Defaults to `path`. This is intentionally independent from the canonical field. */
+  ogUrl?: string
   ogTitle?: string
   ogDescription?: string
-  /** Overrides for the Twitter card; default to ogTitle/ogDescription. */
-  twitterTitle?: string
-  twitterDescription?: string
-  /** Defaults to the site-wide branded OG image. */
+  ogType?: 'website' | 'article'
+  /** Local image paths are made absolute against the production origin. */
   ogImage?: string
   ogImageAlt?: string
-  /** Defaults to indexable. Set true for private/transactional pages. */
-  noindex?: boolean
+  publishedTime?: string
+  modifiedTime?: string
+  twitterCard?: 'summary' | 'summary_large_image'
+  twitterTitle?: string
+  twitterDescription?: string
+  twitterImage?: string
+  /** Public pages default to index/follow. Private routes must opt into noindex/follow. */
+  robots?: SeoRobots
 }
 
-// Deliberately no `keywords` field — Google has not used the meta keywords
-// tag as a ranking signal since 2009, so it's dead weight we don't reproduce.
-export function buildToolMetadata(input: ToolMetadataInput): Metadata {
-  const url = absoluteUrl(input.path)
-  const ogImage = input.ogImage ?? DEFAULT_OG_IMAGE
-  const ogImageAlt = input.ogImageAlt ?? input.title
-  const ogTitle = input.ogTitle ?? input.title
-  const ogDescription = input.ogDescription ?? input.description
+const INDEX_FOLLOW: SeoRobots = { index: true, follow: true }
+
+function socialImageUrl(image: string): string {
+  if (/^https?:\/\//i.test(image)) return image
+  return absoluteUrl(image)
+}
+
+/**
+ * Converts the typed page SEO configuration into Next.js App Router metadata.
+ * Canonical and social URLs always use the verified production origin; request
+ * query parameters, preview hosts and deployment environment variables cannot
+ * alter them.
+ */
+export function buildPageMetadata(input: PageSeoConfig): Metadata {
+  const robots = input.robots ?? INDEX_FOLLOW
+  const canonicalPath = input.canonicalPath === undefined ? input.path : input.canonicalPath
+  const canonicalUrl = canonicalPath === null ? undefined : absoluteUrl(canonicalPath)
+  const openGraphUrl = absoluteUrl(input.ogUrl ?? canonicalPath ?? input.path)
+  const openGraphTitle = input.ogTitle ?? input.title
+  const openGraphDescription = input.ogDescription ?? input.description
+  const openGraphImage = socialImageUrl(input.ogImage ?? DEFAULT_OG_IMAGE)
+  const twitterImage = socialImageUrl(input.twitterImage ?? input.ogImage ?? DEFAULT_OG_IMAGE)
 
   return {
-    title: input.title,
+    title: { absolute: input.title },
     description: input.description,
-    alternates: { canonical: url },
-    robots: input.noindex
-      ? { index: false, follow: true }
-      : {
+    ...(canonicalUrl ? { alternates: { canonical: canonicalUrl } } : {}),
+    robots: robots.index
+      ? {
           index: true,
-          follow: true,
+          follow: robots.follow,
           googleBot: {
             index: true,
-            follow: true,
+            follow: robots.follow,
             'max-image-preview': 'large',
             'max-snippet': -1,
             'max-video-preview': -1,
           },
+        }
+      : {
+          index: false,
+          follow: robots.follow,
+          googleBot: { index: false, follow: robots.follow },
         },
     openGraph: {
-      title: ogTitle,
-      description: ogDescription,
-      type: 'website',
-      url,
+      title: openGraphTitle,
+      description: openGraphDescription,
+      type: input.ogType ?? 'website',
+      url: openGraphUrl,
       siteName: SITE_NAME,
-      images: [{ url: ogImage, width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT, alt: ogImageAlt }],
+      locale: 'en_US',
+      images: [{
+        url: openGraphImage,
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        alt: input.ogImageAlt ?? input.title,
+      }],
+      ...(input.ogType === 'article' && input.publishedTime
+        ? { publishedTime: input.publishedTime }
+        : {}),
+      ...(input.ogType === 'article' && input.modifiedTime
+        ? { modifiedTime: input.modifiedTime }
+        : {}),
     },
     twitter: {
-      card: 'summary_large_image',
-      title: input.twitterTitle ?? ogTitle,
-      description: input.twitterDescription ?? ogDescription,
-      images: [ogImage],
+      card: input.twitterCard ?? 'summary_large_image',
+      title: input.twitterTitle ?? openGraphTitle,
+      description: input.twitterDescription ?? openGraphDescription,
+      images: [twitterImage],
     },
   }
 }
+
+// Backwards-compatible names for route layouts. Both aliases use the single
+// page-level builder above; new code should use PageSeoConfig/buildPageMetadata.
+export type ToolMetadataInput = PageSeoConfig
+export const buildToolMetadata = buildPageMetadata

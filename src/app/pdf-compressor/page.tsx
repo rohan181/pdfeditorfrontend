@@ -25,11 +25,11 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .back:hover{color:#1d1d1f}
 
 .hero{padding:64px 0 36px;text-align:center;border-bottom:1px solid #f0f0f0}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#fff5f5;border:1px solid rgba(226,75,74,.2);border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.08em;color:#E24B4A;margin-bottom:18px;text-transform:uppercase}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#fff5f5;border:1px solid rgba(180,35,60,.25);border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.08em;color:#b4233c;margin-bottom:18px;text-transform:uppercase}
 .bdot{width:5px;height:5px;border-radius:50%;background:#E24B4A}
 .hero h1{font-family:var(--font-jakarta,system-ui,sans-serif);font-size:clamp(30px,5vw,54px);font-weight:800;letter-spacing:-.05em;line-height:.97;color:#1d1d1f;margin-bottom:14px}
 .hero h1 em{font-style:normal;color:#E24B4A}
-.hero p{font-size:15px;color:rgba(0,0,0,.5);line-height:1.7;max-width:420px;margin:0 auto}
+.hero p{font-size:15px;color:#4b5563;line-height:1.7;max-width:420px;margin:0 auto}
 
 .card{background:#fff;border:1px solid #e8e8e8;border-radius:16px;padding:32px;margin:32px 0 16px;box-shadow:0 2px 20px rgba(0,0,0,.04)}
 @media(max-width:600px){.card{padding:18px}}
@@ -256,7 +256,7 @@ export default function PDFCompressorPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="pg">
+      <div className="pg" id="main-content">
 
         {/* Nav */}
         <SiteNav />
@@ -266,7 +266,7 @@ export default function PDFCompressorPage() {
           <div className="wrap">
             <div className="badge"><span className="bdot"/>PDF Tools · Free · Fast</div>
             <h1>Compress Your<br/><em>PDF</em> File</h1>
-            <p>Reduce PDF file size with four compression levels — from lossless to maximum squeeze.</p>
+            <p className="tool-hero-definition">A PDF compressor reduces file size by rendering each PDF page at the selected resolution, encoding it as JPEG, and rebuilding the document locally in your browser. EditPDF AI offers four lossy compression levels. The output may not be smaller, and its text is no longer selectable or searchable, so inspect quality before sharing.</p>
           </div>
         </div>
 
@@ -313,7 +313,7 @@ export default function PDFCompressorPage() {
                   >
                     <span className="drop-icon">📄</span>
                     <h2>Drop your PDF here</h2>
-                    <p>Drag & drop or click to browse · up to 100 MB</p>
+                    <p>Drag &amp; drop or click to browse · practical capacity depends on this device</p>
                     <button className="drop-btn">Choose PDF</button>
                     <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }}
                       onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
@@ -376,11 +376,11 @@ export default function PDFCompressorPage() {
           <div className="info-grid">
             <div className="info-card">
               <h3>⚡ 4 Levels</h3>
-              <p>From lossless prepress quality to maximum squeeze for email and web sharing.</p>
+              <p>Choose from higher-detail to smaller-output settings for email and web sharing.</p>
             </div>
             <div className="info-card">
               <h3>🔒 Private</h3>
-              <p>Compression runs entirely in your browser — your PDF is never uploaded to a server.</p>
+              <p>Compression runs locally in your browser without an application document-processing request.</p>
             </div>
             <div className="info-card">
               <h3>📂 Universal</h3>
@@ -390,15 +390,14 @@ export default function PDFCompressorPage() {
         </div>
       </div>
       <ToolQuickFacts
-        definition="A PDF compressor reduces file size by re-encoding embedded images at lower quality and removing redundant data, often with no visible difference on screen. A 25 MB scan can shrink to 2–3 MB — small enough for email attachment limits, faster uploads, or cloud storage. Compression runs entirely in your browser."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser via a Web Worker — file never uploaded"
-        formats="PDF"
-        fileLimit="No fixed limit — capped only by device memory"
-        browserSupport="Chrome, Firefox, Safari, Edge"
+        processing="Processed locally in your browser via a Web Worker"
+        formats="Input: PDF · Output: image-based PDF"
+        fileLimit="Practical capacity depends on page count, image dimensions, browser memory, and device performance"
+        browserSupport="Modern desktop and mobile browsers with JavaScript, canvas, Web Workers, and required file APIs"
       />
-      <ToolSEOSection {...toolSeoData['pdf-compressor']} />
+      <ToolSEOSection {...toolSeoData['pdf-compressor']} showDirectAnswer={false} />
     </>
   )
 }

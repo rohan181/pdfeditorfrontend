@@ -1,7 +1,13 @@
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
-import { TOOL_COUNT } from '@/lib/toolMeta'
+import { SUPPORT_EMAIL, supportMailto } from '@/lib/entity'
+import {
+  AI_ACCURACY_DISCLAIMER,
+  FREE_AI_DAILY_LIMIT,
+  PROCESSING_PRIVACY_SUMMARY,
+  PRODUCT_ACCESS_SUMMARY,
+} from '@/lib/productMessaging'
 
 const FI = 'var(--font-dm,system-ui,sans-serif)'
 const MONO = 'var(--font-mono,monospace)'
@@ -9,15 +15,15 @@ const MONO = 'var(--font-mono,monospace)'
 const FAQS = [
   {
     q: 'Is EditPDF AI free to use?',
-    a: `All ${TOOL_COUNT}+ PDF tools (edit, merge, split, compress, watermark, sign, etc.) are completely free with no account required. AI-powered features (Summarizer, Form Filler, Translator, Mind Map, Quiz Creator, OCR) are free up to 5 uses per day. Pro gives you unlimited AI uses.`,
+    a: PRODUCT_ACCESS_SUMMARY,
   },
   {
     q: 'Do my files get uploaded to your servers?',
-    a: 'No. All core PDF tools run entirely in your browser — your files never leave your device. For AI features, only the extracted text content (not the raw PDF) is sent for processing. We do not store any file content.',
+    a: PROCESSING_PRIVACY_SUMMARY,
   },
   {
     q: 'Why is the AI feature saying I\'ve reached my daily limit?',
-    a: 'Free accounts can use AI features up to 5 times per day. The limit resets at midnight UTC. You can upgrade to Pro for unlimited AI uses with no daily resets.',
+    a: `Signed-in free accounts can make up to ${FREE_AI_DAILY_LIMIT} metered AI actions per UTC day. Pro removes the daily AI-action cap, while each tool keeps its file, page, input, output, and processing constraints.`,
   },
   {
     q: 'How do I cancel my Pro subscription?',
@@ -25,11 +31,11 @@ const FAQS = [
   },
   {
     q: 'I cancelled but was charged again — what do I do?',
-    a: 'If you cancelled before the renewal date and were still charged, please email us at support@editpdfai.com with the details and we will issue a refund promptly.',
+    a: `If you cancelled before the renewal date and were still charged, email ${SUPPORT_EMAIL} with the billing details so the subscription and charge can be reviewed against the published Terms. Do not send a full card number.`,
   },
   {
     q: 'Can I get a refund?',
-    a: 'Yes. We offer refunds within 7 days of your first payment if you are not satisfied. Contact us at support@editpdfai.com. Refunds are not available for renewals.',
+    a: `Refund eligibility is described in the Terms of Service. Email ${SUPPORT_EMAIL} with the account email and charge date so the request can be reviewed; do not send a full card number.`,
   },
   {
     q: 'My PDF conversion looks wrong — what should I do?',
@@ -37,15 +43,19 @@ const FAQS = [
   },
   {
     q: 'Is my data private?',
-    a: 'Yes. Files are processed in your browser. AI features use only required text context — no raw file upload. We do not store PDFs or document content. Payment is handled by Stripe under PCI-DSS standards. See our Privacy Policy for full details.',
+    a: `${PROCESSING_PRIVACY_SUMMARY} Payment fields and subscription processing are provided by Stripe. See the Privacy Policy for feature-specific details.`,
+  },
+  {
+    q: 'How accurate are AI results?',
+    a: AI_ACCURACY_DISCLAIMER,
   },
   {
     q: 'Which browsers are supported?',
-    a: 'EditPDF AI works in all modern browsers: Chrome, Safari, Firefox, and Edge. For best performance, use the latest version of Chrome or Safari.',
+    a: 'EditPDF AI is designed for current Chrome, Safari, Firefox, and Edge releases. Tool support and performance vary with browser capabilities, document complexity, and device resources.',
   },
   {
     q: 'How do I request deletion of my data?',
-    a: 'Email support@editpdfai.com with the subject "Data Deletion Request" and the email address associated with your account. We will delete your account and all associated data within 30 days.',
+    a: `Email ${SUPPORT_EMAIL} with the subject "Data Deletion Request" and the email address associated with your account. The request will be reviewed against the account-associated records and available deletion steps.`,
   },
 ]
 
@@ -73,12 +83,12 @@ export default function SupportPage() {
         <div style={{ background: '#f5f5f7', borderRadius: 20, padding: '24px 28px', marginBottom: 56, display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 220 }}>
             <p style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9ca3af', margin: '0 0 8px' }}>Contact us</p>
-            <a href="mailto:support@editpdfai.com"
+            <a href={supportMailto()}
               style={{ fontFamily: FI, fontSize: 18, fontWeight: 800, color: '#0891b2', textDecoration: 'none', letterSpacing: '-0.02em' }}>
-              support@editpdfai.com
+              {SUPPORT_EMAIL}
             </a>
             <p style={{ fontFamily: FI, fontSize: 13, color: '#6b7280', margin: '6px 0 0' }}>
-              We usually respond within 24–48 hours.
+              Include the affected tool, browser, and a description of the issue. Do not email sensitive document content.
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 160 }}>
@@ -118,11 +128,11 @@ export default function SupportPage() {
         <div style={{ marginTop: 48, textAlign: 'center', padding: '32px', background: '#f5f5f7', borderRadius: 20 }}>
           <p style={{ fontFamily: FI, fontSize: 16, fontWeight: 700, color: '#1d1d1f', margin: '0 0 6px' }}>Still need help?</p>
           <p style={{ fontFamily: FI, fontSize: 14, color: '#6b7280', margin: '0 0 16px' }}>
-            We read every email and respond within 24–48 hours.
+            Email is the published support channel. No response-time commitment is currently published.
           </p>
-          <a href="mailto:support@editpdfai.com"
+          <a href={supportMailto()}
             style={{ fontFamily: FI, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '11px 24px', background: '#1d1d1f', color: '#fff', borderRadius: 99, fontSize: 14, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.02em' }}>
-            Email support@editpdfai.com
+            Email {SUPPORT_EMAIL}
           </a>
         </div>
 

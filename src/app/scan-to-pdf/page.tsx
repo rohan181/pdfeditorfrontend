@@ -580,7 +580,7 @@ export default function ScanToPDFPage() {
               {[
                 { icon: '📐', t: 'Auto edge detect', b: 'Finds document borders and corrects perspective automatically' },
                 { icon: '🎨', t: 'Scan filters', b: 'Enhanced, B&W, and grayscale modes like a real scanner app' },
-                { icon: '🔒', t: '100% private', b: 'Photos are processed on-device — nothing is uploaded' },
+                { icon: '🔒', t: 'Local processing', b: 'Camera capture and PDF generation run on your device' },
               ].map(f => (
                 <div key={f.t} className="lp-feat"><div className="lp-feat-icon">{f.icon}</div><div className="lp-feat-ttl">{f.t}</div><div className="lp-feat-body">{f.b}</div></div>
               ))}

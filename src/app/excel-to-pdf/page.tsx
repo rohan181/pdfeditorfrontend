@@ -563,16 +563,16 @@ export default function ExcelToPDFPage() {
           {/* Info cards */}
           <div className="info-grid">
             <div className="info-card">
-              <h3>📄 Full XLSX Support</h3>
-              <p>Reads .xlsx, .xls, and .csv files using SheetJS — the industry-standard spreadsheet parser.</p>
+              <h3>📄 Spreadsheet Input</h3>
+              <p>Reads displayed cell values from .xlsx, .xls, and .csv files using SheetJS.</p>
             </div>
             <div className="info-card">
               <h3>📑 One PDF Per Sheet</h3>
               <p>Multi-sheet workbooks are split into individual PDFs — one per sheet — with headers repeated on every page.</p>
             </div>
             <div className="info-card">
-              <h3>🔒 100% Private</h3>
-              <p>Everything runs in your browser. Your file never leaves your device — no server uploads at all.</p>
+              <h3>🔒 Local Processing</h3>
+              <p>Spreadsheet parsing and PDF generation run locally in your browser without an application document-processing request.</p>
             </div>
           </div>
 
@@ -582,12 +582,12 @@ export default function ExcelToPDFPage() {
       <input ref={fileRef} type="file" accept=".csv,.xls,.xlsx" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
       <ToolQuickFacts
-        definition="An Excel to PDF converter takes an .xlsx or .xls spreadsheet and renders it as a fixed-layout PDF document. Every worksheet becomes a set of pages, with cell colours, borders, charts, merged cells, and number formatting all faithfully reproduced."
+        definition="This converter reads displayed cell values from .xlsx, .xls, or .csv input and creates a newly styled table PDF for each non-empty sheet. It does not reproduce workbook charts, images, formulas, merged-cell layout, or original formatting."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="XLSX, XLS, CSV in, PDF out"
-        fileLimit="No fixed limit — capped only by device memory"
+        fileLimit="Practical capacity depends on row and column counts, browser memory, and device performance"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['excel-to-pdf']} />

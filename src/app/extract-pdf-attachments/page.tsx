@@ -243,7 +243,7 @@ export default function ExtractPDFAttachmentsPage() {
         definition="A PDF can contain complete files inside the document package, appearing in an attachments panel or connected to a paperclip-style file annotation. Common examples include spreadsheets, XML invoice data, source documents, images, and supporting evidence — all extractable individually or as a ZIP."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="PDF (exports the embedded files)"
         fileLimit="Up to 100 MB — up to 500 attachments per PDF"
         browserSupport="Chrome, Firefox, Safari, Edge"

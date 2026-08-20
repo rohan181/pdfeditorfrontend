@@ -7,6 +7,7 @@ import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
+import { AI_ACCESS_SUMMARY, AI_ACCURACY_DISCLAIMER } from '@/lib/productMessaging'
 
 type LengthOpt = 'brief' | 'standard' | 'detailed'
 type FocusOpt  = 'general' | 'technical' | 'legal' | 'medical' | 'financial'
@@ -294,9 +295,9 @@ export default function PDFSummarizerPage() {
           <div className="lp-uc">
             <div style={{textAlign:'center',marginBottom:36}}>
               <div className="hero-badge">✦ AI Powered</div>
-              <h1 className="hero-h1">Summarize any<br/><em>PDF</em> instantly</h1>
-              <p style={{fontSize:14,color:'rgba(0,0,0,.42)',lineHeight:1.7,maxWidth:400,margin:'0 auto 28px'}}>
-                Upload a PDF and get a structured AI summary with key points, notable details and a conclusion — in seconds.
+              <h1 className="hero-h1">Summarize PDF text<br/><em>with AI</em></h1>
+              <p className="tool-hero-definition" style={{fontSize:14,color:'rgba(0,0,0,.42)',lineHeight:1.7,maxWidth:520,margin:'0 auto 28px'}}>
+                An AI PDF summarizer extracts text from a searchable PDF in your browser and sends up to 80,000 characters through the summarization route. It returns a brief, standard, or detailed TXT-ready summary. AI output can omit context or misstate details, so verify important names, figures, dates, and conclusions against the original PDF.
               </p>
             </div>
 
@@ -327,15 +328,14 @@ export default function PDFSummarizerPage() {
             onChange={e=>{const f=e.target.files?.[0];if(f)loadFile(f);e.target.value=''}} />
         </div>
         <ToolQuickFacts
-          definition="An AI PDF summarizer reads a document and produces a concise summary — key points, section breakdowns, and important figures — in seconds, instead of you reading the whole file. It works on reports, research papers, and contracts, and keeps domain-specific terminology accurate for legal, medical, and technical documents."
-          price="Free — 5 AI summaries/day; Pro removes the page-length cap"
-          account="Free account required (AI feature)"
-          processing="Extracted text sent to AI; raw file bytes never transmitted"
-          formats="PDF"
-          fileLimit="Free: page limit applies · Pro: unlimited length"
-          browserSupport="Chrome, Firefox, Safari, Edge"
+          price={AI_ACCESS_SUMMARY}
+          account="Sign-in is required for AI summarization"
+          processing={`Up to 80,000 extracted text characters are sent through the AI route; the selected PDF bytes are not sent by this tool. ${AI_ACCURACY_DISCLAIMER}`}
+          formats="Input: searchable PDF · Output: on-page summary or TXT"
+          fileLimit="Up to 80,000 extracted text characters per summary for both Free and Pro"
+          browserSupport="Modern desktop and mobile browsers with JavaScript and required file APIs"
         />
-        <ToolSEOSection {...toolSeoData['pdf-summarizer']} />
+        <ToolSEOSection {...toolSeoData['pdf-summarizer']} showDirectAnswer={false} />
       </>
     )
   }

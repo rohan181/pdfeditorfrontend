@@ -40,6 +40,7 @@ import {
   selectRelevantPages,
 } from "@/lib/pdfChat";
 import toolSeoData from "@/lib/toolSeoData";
+import { AI_ACCESS_SUMMARY, AI_ACCURACY_DISCLAIMER, FREE_AI_DAILY_LIMIT } from "@/lib/productMessaging";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const MAX_PAGES = 1_000;
@@ -398,7 +399,7 @@ export default function ChatWithPDFPage() {
             <div className="chatpdf-trust">
               <span><ShieldCheck size={14} /> PDF parsed in your browser</span>
               <span><FileSearch size={14} /> Verified page citations</span>
-              <span><MessageSquareText size={14} /> 5 free AI questions daily</span>
+              <span><MessageSquareText size={14} /> Free includes {FREE_AI_DAILY_LIMIT} AI actions per UTC day</span>
             </div>
           </div>
         </header>
@@ -570,9 +571,9 @@ export default function ChatWithPDFPage() {
 
         <ToolQuickFacts
           definition="Chat with PDF is an AI document question-and-answer tool. It reads the searchable text in a PDF, finds the pages most relevant to your question, and writes a grounded response with page references and short supporting quotes you can check against the source."
-          price="Free — 5 AI questions/day; Pro removes the daily limit"
+          price={AI_ACCESS_SUMMARY}
           account="Free account required (AI feature)"
-          processing="Relevant page text and your question sent to AI; the PDF file itself stays local"
+          processing={`Relevant page text, recent chat context, and your question are sent to AI; the selected PDF file stays local. ${AI_ACCURACY_DISCLAIMER}`}
           formats="PDF"
           fileLimit="Up to 50 MB and 1,000 pages"
           browserSupport="Chrome, Firefox, Safari, Edge"

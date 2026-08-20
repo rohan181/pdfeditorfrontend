@@ -431,10 +431,10 @@ export default function WordToPDFPage() {
           <div className="hero">
             <div className="badge">
               <span className="badge-dot"/>
-              100% In-Browser · No Upload
+              Local Browser Processing
             </div>
             <h1>Word to <em>PDF</em></h1>
-            <p>Convert .docx files instantly — headings, lists, tables and formatting preserved. Everything runs in your browser, nothing sent to any server.</p>
+            <p>Rebuild supported .docx text, headings, lists, and tables in a new PDF. Complex layouts, images, custom fonts, headers, and footers may differ or be omitted.</p>
           </div>
 
           {loading ? (
@@ -470,7 +470,7 @@ export default function WordToPDFPage() {
                     <span style={{width:5,height:5,borderRadius:'50%',background:'#2563eb',display:'inline-block'}}/>
                     DOCX only
                   </div>
-                  <p>Microsoft Word 2007+ format — headings, paragraphs, lists, tables and inline formatting are all preserved</p>
+                  <p>Microsoft Word 2007+ format — supported text, headings, lists, and table content are rebuilt in a new PDF layout</p>
                   <button className="browse-btn">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     Choose File
@@ -567,8 +567,8 @@ export default function WordToPDFPage() {
           <div className="info-grid">
             <div className="info-card">
               <div className="info-icon">📝</div>
-              <h3>Full .docx Support</h3>
-              <p>Powered by Mammoth.js — reads headings, paragraphs, lists, tables and inline formatting from Word 2007+ files.</p>
+              <h3>Supported DOCX Content</h3>
+              <p>Mammoth.js reads supported headings, paragraphs, lists, tables, and inline text formatting from Word 2007+ files.</p>
             </div>
             <div className="info-card">
               <div className="info-icon">📐</div>
@@ -577,8 +577,8 @@ export default function WordToPDFPage() {
             </div>
             <div className="info-card">
               <div className="info-icon">🔒</div>
-              <h3>100% Private</h3>
-              <p>Your document is parsed entirely in your browser using WebAssembly. Nothing is ever sent to any server.</p>
+              <h3>Local Processing</h3>
+              <p>The document is parsed and the PDF is generated locally in your browser without an application document-processing request.</p>
             </div>
           </div>
 
@@ -591,12 +591,12 @@ export default function WordToPDFPage() {
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
       />
       <ToolQuickFacts
-        definition="A Word to PDF converter takes a Microsoft Word document (.docx) and produces a PDF that looks identical to the original — preserving fonts, tables, images, columns, headers, footers, and page breaks. The resulting PDF displays the same on every device and can't be accidentally edited."
+        definition="This Word to PDF converter reads a DOCX with Mammoth.js and rebuilds supported text, headings, lists, and tables in a new PDF layout. Images, custom fonts, columns, headers, footers, and pagination may differ or be omitted."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="DOCX in, PDF out"
-        fileLimit="No page limit — documents of any length are supported"
+        fileLimit="Practical capacity depends on document complexity, extracted content, browser memory, and device performance"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['word-to-pdf']} />

@@ -401,9 +401,9 @@ body { overflow-x:clip; }
   display:grid; grid-template-columns:300px minmax(0,1fr); align-items:center; gap:56px;
   max-width:1200px; margin:0 auto;
 }
-.home-scroll-placeholder-copy span { display:block; font:700 10px ui-monospace,monospace; color:#64748B; letter-spacing:.14em; text-transform:uppercase; margin-bottom:14px; }
+.home-scroll-placeholder-copy span { display:block; font:700 10px ui-monospace,monospace; color:#475569; letter-spacing:.14em; text-transform:uppercase; margin-bottom:14px; }
 .home-scroll-placeholder-copy strong { display:block; font:800 clamp(28px,4vw,54px)/.98 var(--font-jakarta,system-ui); color:#1D1D1F; letter-spacing:-.05em; }
-.home-scroll-placeholder-copy p { color:#6B7280; font:400 15px/1.65 var(--font-dm,system-ui); }
+.home-scroll-placeholder-copy p { color:#4B5563; font:400 15px/1.65 var(--font-dm,system-ui); }
 .home-scroll-placeholder-dots { display:flex; gap:7px; margin-top:22px; }
 .home-scroll-placeholder-dots i { width:7px; height:7px; border-radius:99px; background:#D1D5DB; }
 .home-scroll-placeholder-dots i:first-child { width:28px; background:#2563EB; }

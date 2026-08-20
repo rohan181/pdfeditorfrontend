@@ -543,12 +543,12 @@ export default function ImageToPDFPage() {
           <div className="lp-uc">
             <div style={{textAlign:'center',marginBottom:32}}>
               <div className="lp-badge">🖼 Image → PDF</div>
-              <h1 className="lp-h1">Turn images into<br/>a <em>PDF</em> instantly</h1>
-              <p className="lp-sub">Upload JPG, PNG, WEBP, GIF or BMP — scan, crop, enhance and convert. Everything runs in your browser.</p>
+              <h1 className="lp-h1">Turn images into<br/>one <em>PDF</em></h1>
+              <p className="lp-sub">Upload JPG, PNG, WEBP, GIF, BMP, HEIC or HEIF — scan, crop, enhance and convert in your browser.</p>
             </div>
             <div ref={dropZoneRef} className="drop-z" onClick={() => fileInputRef.current?.click()}>
               <div className="drop-icon">🖼</div>
-              <div className="drop-txt">Drop images here, or click to choose<br/><span style={{fontSize:11,color:'rgba(0,0,0,.28)'}}>Multiple files supported · nothing leaves your browser</span></div>
+              <div className="drop-txt">Drop images here, or click to choose<br/><span style={{fontSize:11,color:'rgba(0,0,0,.28)'}}>Multiple files supported · local document conversion</span></div>
               <button className="drop-btn" onClick={e=>{e.stopPropagation();fileInputRef.current?.click()}}>Choose Images</button>
               <div className="fmt-chips" style={{marginTop:18}}>
                 {['JPG','PNG','WEBP','GIF','BMP','HEIC'].map(f=><span key={f} className="fmt-chip">{f}</span>)}
@@ -556,7 +556,7 @@ export default function ImageToPDFPage() {
             </div>
             {error && <div role="alert" className="err-bar">{error}</div>}
             <div className="lp-feats">
-              {[{icon:'📷',t:'Smart Scan',b:'Auto-detect & crop document edges, fix perspective'},{icon:'🎨',t:'Filters',b:'Enhanced, B&W, sepia, sharpen — per image'},{icon:'🔒',t:'100% private',b:'In-browser only — no server uploads'}].map(f=>(
+              {[{icon:'📷',t:'Smart Scan',b:'Auto-detect & crop document edges, fix perspective'},{icon:'🎨',t:'Filters',b:'Enhanced, B&W, sepia, sharpen — per image'},{icon:'🔒',t:'Local processing',b:'Image conversion runs in your browser'}].map(f=>(
                 <div key={f.t} className="lp-feat"><div className="lp-feat-icon">{f.icon}</div><div className="lp-feat-ttl">{f.t}</div><div className="lp-feat-body">{f.b}</div></div>
               ))}
             </div>
@@ -564,12 +564,12 @@ export default function ImageToPDFPage() {
           <input ref={fileInputRef} type="file" accept="image/*,.heic,.heif" multiple style={{display:'none'}} onChange={e=>{if(e.target.files)loadFiles(e.target.files);e.target.value=''}} />
         </div>
         <ToolQuickFacts
-          definition="An image to PDF converter takes one or more image files — JPG, PNG, WEBP, or others — and packages them into a single PDF document. Each image becomes a page, and you control the page size, order, and orientation, producing a universally compatible document."
+          definition="An image to PDF converter takes one or more supported image files and packages them into a single PDF document. Each prepared image becomes a page, and you can control page size, order, orientation, margins, and quality before saving the result to your device."
           price="Free — no account needed"
           account="Not required"
-          processing="Entirely in your browser — file never uploaded"
-          formats="JPG, PNG, WEBP, GIF, BMP in, PDF out"
-          fileLimit="No fixed limit — capped only by device memory"
+          processing="Processed locally in your browser without an application document-processing request"
+          formats="JPG, PNG, WEBP, GIF, BMP, HEIC, HEIF in; PDF out"
+          fileLimit="No fixed application limit; practical capacity depends on image dimensions, browser memory, and device performance"
           browserSupport="Chrome, Firefox, Safari, Edge"
         />
         <ToolSEOSection {...toolSeoData['image-to-pdf']} />

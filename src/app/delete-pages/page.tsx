@@ -540,7 +540,7 @@ export default function DeletePages() {
       definition="A PDF page deleter removes unwanted pages from a PDF and saves the remaining pages as a new file. Blank pages, duplicate pages, cover pages that shouldn't be shared, or confidential sections can all be removed in seconds without re-creating the document from scratch."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF"
       fileLimit="No fixed limit — capped only by device memory"
       browserSupport="Chrome, Firefox, Safari, Edge"

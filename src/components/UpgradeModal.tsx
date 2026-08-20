@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { AI_TOOL_COUNT } from '@/lib/toolMeta'
+import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
 
 export default function UpgradeModal() {
   const [open, setOpen] = useState(false)
@@ -48,13 +50,13 @@ export default function UpgradeModal() {
           Daily limit reached
         </h2>
         <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.6 }}>
-          You've used all 5 free AI credits for today.<br/>
-          Upgrade to <strong style={{ color: '#0891b2' }}>Pro</strong> for unlimited access to all AI tools.
+          You have used the {FREE_AI_DAILY_LIMIT} AI actions included with Free for this UTC day.<br/>
+          Upgrade to <strong style={{ color: '#0891b2' }}>Pro</strong> to remove the daily AI-action cap. Tool-specific limits still apply.
         </p>
 
         {/* Feature list */}
         <div style={{ background: '#f8fafc', borderRadius: 12, padding: '14px 18px', marginBottom: 24, textAlign: 'left' }}>
-          {['Unlimited AI uses', 'All 10 AI tools', 'Priority processing', 'No daily resets'].map(f => (
+          {['No daily AI-action cap', `AI actions across ${AI_TOOL_COUNT} tools`, 'Same documented tool limits', 'No daily quota reset required'].map(f => (
             <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 13, color: '#374151' }}>
               <span style={{ color: '#0891b2', fontWeight: 700, fontSize: 15 }}>✓</span> {f}
             </div>

@@ -262,13 +262,13 @@ export default function PDFFlattenPage() {
             )}
           </section>
           {!file && error && <div className="flatten-error" role="alert" style={{ marginTop: 14 }}><X size={16} /><span>{error}</span></div>}
-          <div className="flatten-info"><article><MousePointer2 size={21} /><h3>Permanent form values</h3><p>Turn completed form fields into regular page content so recipients cannot accidentally change them.</p></article><article><Layers size={21} /><h3>Consistent appearance</h3><p>Full visual flatten makes every supported viewer and printer display the same visible page.</p></article><article><ShieldCheck size={21} /><h3>Private by design</h3><p>Both methods run locally in your browser. The PDF is never uploaded to our servers.</p></article></div>
+          <div className="flatten-info"><article><MousePointer2 size={21} /><h3>Permanent form values</h3><p>Turn completed form fields into regular page content so recipients cannot accidentally change them.</p></article><article><Layers size={21} /><h3>Consistent appearance</h3><p>Full visual flatten helps supported viewers and printers display a consistent visible page.</p></article><article><ShieldCheck size={21} /><h3>Local processing</h3><p>Both methods run locally in your browser without an application document-processing request.</p></article></div>
           <p className="flatten-note"><LockKeyhole size={14} style={{ verticalAlign: -2, marginRight: 6 }} /><strong>Keep the original:</strong> flattening is intentionally difficult to reverse. Save an editable copy before making fields or annotations permanent.</p>
           <ToolQuickFacts
             definition="Flattening makes interactive or layered PDF content permanent — form field values, comments, and annotations become regular, non-editable page content that cannot be accidentally changed. It's commonly used after completing a form or preparing a final copy for printing and distribution."
             price="Free — no account needed"
             account="Not required"
-            processing="Entirely in your browser — file never uploaded"
+            processing="Processed locally in your browser without an application document-processing request"
             formats="PDF"
             fileLimit="Up to 100 MB"
             browserSupport="Chrome, Firefox, Safari, Edge"

@@ -1,4 +1,10 @@
 import Link from 'next/link'
+import {
+  AI_ACCURACY_DISCLAIMER,
+  FREE_AI_DAILY_LIMIT,
+  PROCESSING_PRIVACY_SUMMARY,
+  PRODUCT_ACCESS_SUMMARY,
+} from '@/lib/productMessaging'
 
 const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
@@ -6,27 +12,31 @@ const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Men
 export const FAQ_ITEMS = [
   {
     q: 'Can I use these online PDF tools for free without signing up?',
-    a: 'Yes. All core PDF tools — edit, merge, split, compress, sign, watermark, and more — are free with no limits and no account required. AI features (Form Filler, Summarizer, OCR, etc.) include 5 free uses per day. Upgrade to Pro (US$1/month) for unlimited AI use.',
+    a: PRODUCT_ACCESS_SUMMARY,
   },
   {
     q: 'Do I need to create an account?',
-    a: 'No account is required for any of the core tools. Sign in to unlock AI features (5 free per day) and Pro benefits such as unlimited AI, PDF-to-Word conversion, and priority processing.',
+    a: 'Core browser workflows do not require an account. AI-assisted actions, including PDF-to-Word, PDF-to-Excel and PDF-to-PowerPoint, require sign-in and share the free daily AI-action allowance. Pro removes the daily cap.',
   },
   {
     q: 'Are my PDF files uploaded to a server?',
-    a: 'Core tools process your PDF entirely in your browser — nothing is uploaded. For AI features, we send only what’s needed — text for most tools, or a page image for OCR and visual form detection — never the raw PDF file.',
+    a: PROCESSING_PRIVACY_SUMMARY,
   },
   {
     q: 'What is the maximum file size?',
-    a: 'You can upload PDFs up to 100 MB. Most browser-based tools handle files well below this limit instantly. For very large files, compression before processing is recommended.',
+    a: 'Limits vary by tool. Several local tools accept PDFs up to 100 MB, while Chat with PDF also enforces a 1,000-page limit and AI routes apply their own text, image, token, or request-size constraints. Check the selected tool before processing.',
   },
   {
     q: 'What counts as an AI use?',
-    a: 'Each interaction with an AI tool (one form fill, one summary, one OCR scan, one mind map, etc.) counts as one AI use. You get 5 free AI uses per day. Pro subscribers get unlimited uses.',
+    a: `One metered AI action is a server-backed operation such as a form fill, summary, OCR page scan, translation, mind map, quiz, or AI-assisted conversion. Signed-in free accounts can make ${FREE_AI_DAILY_LIMIT} per UTC day; Pro has no daily action cap, while tool-specific limits remain.`,
   },
   {
     q: 'Can I edit scanned PDFs?',
-    a: 'Yes. Use the PDF OCR Scanner to extract and copy text from any scanned document. Once extracted, you can edit, translate, or summarise the content with our other tools.',
+    a: 'The PDF OCR tool can extract text from supported scanned pages by sending rendered page images to the AI OCR route. Recognition quality varies, so review extracted text before editing, translating, or summarising it.',
+  },
+  {
+    q: 'Can I rely on AI output without checking it?',
+    a: AI_ACCURACY_DISCLAIMER,
   },
 ]
 

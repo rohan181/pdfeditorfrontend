@@ -449,7 +449,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
                 Documents
                 <span style={{ marginLeft:6, fontSize:10, fontWeight:400, color:'#94a3b8',
                   textTransform:'none', letterSpacing:0 }}>
-                  passport · licence · ID · any PDF or image
+                  passport · licence · ID · supported PDF or image
                 </span>
               </label>
               {docs.length > 0 && (

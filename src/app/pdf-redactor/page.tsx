@@ -630,9 +630,9 @@ export default function PDFRedactorPage() {
         {Nav}
         <div className="hero">
           <div className="wrap">
-            <div className="badge"><span className="bdot"/>Privacy · Security · Permanent Redaction</div>
+            <div className="badge"><span className="bdot"/>Local Processing · Opaque Cover Boxes</div>
             <h1>PDF<br/><em>Redactor</em></h1>
-            <p>Draw boxes over sensitive content — redactions are burned permanently into the PDF.</p>
+            <p>Draw opaque boxes over selected PDF areas and download a visibly marked copy.</p>
           </div>
         </div>
         <div className="wrap" style={{ flex:1 }}>
@@ -646,7 +646,7 @@ export default function PDFRedactorPage() {
             >
               <span className="drop-icon">🔒</span>
               <h2>Drop your PDF here</h2>
-              <p>Draw redaction boxes over sensitive content, then download the secured PDF</p>
+              <p>Draw opaque cover boxes over selected areas, then download the marked PDF</p>
               <button className="drop-btn">Choose PDF</button>
               <input ref={fileRef} type="file" accept=".pdf" style={{ display:'none' }}
                 onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f) }} />
@@ -655,16 +655,16 @@ export default function PDFRedactorPage() {
           </div>
           <div className="info-grid">
             <div className="info-card"><h3>✏️ Draw to Redact</h3><p>Click and drag on any page to draw a redaction box. Remove it before applying if needed.</p></div>
-            <div className="info-card"><h3>🔒 Permanent</h3><p>Redactions are painted directly onto PDF pages — content underneath cannot be recovered.</p></div>
-            <div className="info-card"><h3>🛡️ 100% Private</h3><p>Everything runs in your browser with pdf-lib. Your document never leaves your device.</p></div>
+            <div className="info-card"><h3>⚠️ Visual cover</h3><p>The tool adds opaque rectangles but does not remove underlying PDF objects. Do not use it as a secure redaction workflow.</p></div>
+            <div className="info-card"><h3>🛡️ Local Processing</h3><p>Redaction runs locally in your browser with pdf-lib without an application document-processing request.</p></div>
           </div>
         </div>
       </div>
       <ToolQuickFacts
-        definition="PDF redaction is the permanent removal of sensitive text or images from a PDF, replaced with solid black bars. Unlike highlighting or drawing a box on top, true redaction removes the underlying content from the PDF data itself — it cannot be recovered by selecting or viewing the source."
+        definition="This browser tool places opaque rectangles over selected PDF areas. It does not remove underlying text, images, metadata, or other PDF objects, so it is a visual-marking tool rather than a secure content-removal workflow."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser, including AI-assisted pattern detection — file never uploaded"
+        processing="Processed locally in your browser, including rule-based pattern detection"
         formats="PDF"
         fileLimit="No fixed limit — capped only by device memory"
         browserSupport="Chrome, Firefox, Safari, Edge"
@@ -843,7 +843,7 @@ export default function PDFRedactorPage() {
             <div className="apply-bar">
               {error && <div className="error-box" style={{ width:'100%' }}>{error}</div>}
               <button className="apply-btn" onClick={onApply} disabled={applying || totalRects===0}>
-                {applying ? '⏳ Applying…' : `🔒 Apply ${totalRects} redaction${totalRects!==1?'s':''} & Download`}
+                {applying ? '⏳ Applying…' : `Apply ${totalRects} cover box${totalRects!==1?'es':''} & Download`}
               </button>
               <button className="new-file-btn" onClick={reset}>New file</button>
             </div>
@@ -851,7 +851,7 @@ export default function PDFRedactorPage() {
             {applying && (
               <div className="prog-wrap">
                 <div className="prog-bar"><div className="prog-fill" style={{ width:`${progress}%` }} /></div>
-                <div className="prog-label">Burning redactions into PDF…</div>
+                <div className="prog-label">Adding opaque cover boxes to PDF…</div>
               </div>
             )}
           </div>

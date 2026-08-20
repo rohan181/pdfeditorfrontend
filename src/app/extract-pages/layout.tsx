@@ -1,26 +1,13 @@
+import ToolStructuredData from '@/components/ToolStructuredData'
 import { buildToolMetadata } from '@/lib/seo/metadata'
 import { TOOL_METADATA } from '@/lib/seo/routes'
-import { ORGANIZATION_ID } from '@/lib/seo/site'
 
 export const metadata = buildToolMetadata(TOOL_METADATA['extract-pages'])
-
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebApplication',
-  '@id': 'https://www.editpdfai.com/extract-pages#webapp',
-  provider: { '@id': ORGANIZATION_ID },
-  name: 'Extract PDF Pages',
-  url: 'https://www.editpdfai.com/extract-pages',
-  applicationCategory: 'UtilitiesApplication',
-  operatingSystem: 'Web',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-  description: 'Extract specific pages from a PDF online for free. Save selected pages as a new PDF document.',
-}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <ToolStructuredData slug="extract-pages" />
       {children}
     </>
   )

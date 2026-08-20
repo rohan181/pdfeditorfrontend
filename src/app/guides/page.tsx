@@ -1,44 +1,30 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import JsonLd from '@/components/JsonLd'
 import guides from '@/lib/guidesData'
 import SiteFooter from '@/components/SiteFooter'
 import { buildToolMetadata } from '@/lib/seo/metadata'
 import { TOOL_METADATA } from '@/lib/seo/routes'
+import { PRODUCT_ACCESS_SUMMARY } from '@/lib/productMessaging'
+import { buildGuidesCollectionStructuredData } from '@/lib/seo/structuredData'
 
 export const metadata = buildToolMetadata(TOOL_METADATA['guides'])
-
-const guidesSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: 'PDF Guides & How-To Articles',
-  description: 'Step-by-step guides for editing, compressing, signing, merging and securing PDF documents.',
-  url: 'https://www.editpdfai.com/guides',
-  mainEntity: {
-    '@type': 'ItemList',
-    itemListElement: guides.map((guide, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: guide.title,
-      url: `https://www.editpdfai.com/guides/${guide.slug}`,
-    })),
-  },
-}
 
 const ACCENT = '#4F7FFA'
 
 export default function GuidesPage() {
   return (
     <div style={{ fontFamily: 'var(--font-dm,system-ui,sans-serif)', color: '#1d1d1f', background: '#fff', minHeight: '100vh' }}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(guidesSchema) }} />
+      <JsonLd id="guides-structured-data" data={buildGuidesCollectionStructuredData(guides)} />
 
       {/* Nav */}
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
+        <Link prefetch={false} href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
           <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <Link href="/pricing" style={{ fontSize: 14, color: '#6b7280', textDecoration: 'none', fontWeight: 500 }}>Pricing</Link>
-          <Link href="/pdf-editor" style={{ fontSize: 14, fontWeight: 700, color: '#fff', textDecoration: 'none', padding: '8px 18px', borderRadius: 99, background: '#1d1d1f' }}>
+          <Link prefetch={false} href="/pricing" style={{ fontSize: 14, color: '#4b5563', textDecoration: 'none', fontWeight: 500 }}>Pricing</Link>
+          <Link prefetch={false} href="/pdf-editor" style={{ fontSize: 14, fontWeight: 700, color: '#fff', textDecoration: 'none', padding: '8px 18px', borderRadius: 99, background: '#1d1d1f' }}>
             Open Editor
           </Link>
         </div>
@@ -58,7 +44,7 @@ export default function GuidesPage() {
           PDF guides that actually help
         </h1>
         <p style={{ fontSize: 17, color: '#6b7280', lineHeight: 1.7, maxWidth: 560, margin: '0 auto' }}>
-          Step-by-step instructions for the most common PDF tasks — each one links directly to the free tool that does it.
+          Step-by-step instructions for common PDF tasks, with links to the relevant core or AI-assisted tool.
         </p>
       </section>
 
@@ -69,6 +55,7 @@ export default function GuidesPage() {
             <Link
               key={guide.slug}
               href={`/guides/${guide.slug}`}
+              prefetch={false}
               style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', background: '#f7f8fa', borderRadius: 16, padding: '24px 22px', border: '1.5px solid #e8eaed', transition: 'border-color .15s, box-shadow .15s' }}
               className="guide-card"
             >
@@ -97,9 +84,9 @@ export default function GuidesPage() {
           Ready to try it yourself?
         </h2>
         <p style={{ fontSize: 15, color: '#6b7280', margin: '0 0 28px' }}>
-          All tools are free. No account needed for core PDF tasks.
+          {PRODUCT_ACCESS_SUMMARY}
         </p>
-        <Link href="/pdf-editor" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '13px 28px', borderRadius: 12, background: 'linear-gradient(135deg,#4F7FFA,#8B3FEC)', color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+        <Link prefetch={false} href="/pdf-editor" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '13px 28px', borderRadius: 12, background: 'linear-gradient(135deg,#315fce,#6d28d9)', color: '#fff', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
           Open the free PDF editor →
         </Link>
       </section>

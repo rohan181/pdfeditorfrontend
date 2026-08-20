@@ -10,11 +10,11 @@ import Image from 'next/image'
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
 const FEATURES = [
-  'Unlimited AI uses — no daily resets',
+  'No daily AI-action cap',
   'AI form autofill, summarizer & translator',
   'PDF Mind Map & quiz creator',
   'PDF → Word, Excel, PowerPoint',
-  'Priority processing',
+  'Tool-specific input and processing limits still apply',
 ]
 
 function CheckoutForm() {
@@ -75,7 +75,7 @@ function CheckoutForm() {
       </button>
 
       <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', marginTop: 12 }}>
-        No contracts · Cancel anytime · Secured by Stripe
+        Recurring monthly billing · Cancel from account settings · Payment fields provided by Stripe
       </p>
     </form>
   )
@@ -126,10 +126,6 @@ export default function CheckoutPage() {
           <div style={{ background: '#1d1d1f', borderRadius: 24, padding: '32px 28px', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: -80, right: -80, width: 220, height: 380, borderRadius: '50%', background: 'radial-gradient(circle,rgba(8,145,178,.4),transparent 70%)', pointerEvents: 'none' }} />
 
-            <span style={{ display: 'inline-block', background: 'linear-gradient(135deg,#0891b2,#0e7490)', color: '#fff', borderRadius: 100, fontSize: 10, fontWeight: 800, padding: '4px 10px', letterSpacing: '.05em', marginBottom: 20 }}>
-              MOST POPULAR
-            </span>
-
             <p style={{ fontSize: 13, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.07em', margin: '0 0 8px' }}>EditPDF AI Pro</p>
 
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, marginBottom: 4 }}>
@@ -158,14 +154,9 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* Trust badges */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginTop: 20, flexWrap: 'wrap' }}>
-            {['256-bit SSL', 'Powered by Stripe', 'Cancel anytime'].map(t => (
-              <span key={t} style={{ fontSize: 12, color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ color: '#10b981' }}>✓</span>{t}
-              </span>
-            ))}
-          </div>
+          <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', margin: '20px 0 0', lineHeight: 1.6 }}>
+            Monthly recurring billing. Payment fields are provided by Stripe. Cancellation is available from account settings.
+          </p>
         </div>
 
         {/* Right — Payment form */}

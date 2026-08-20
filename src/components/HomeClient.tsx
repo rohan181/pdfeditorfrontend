@@ -8,6 +8,7 @@ import {
   MousePointer2, Layers, Download, ChevronRight,
   Shield, Globe, Clock, CheckCircle2, Minus,
 } from 'lucide-react'
+import { AI_TOOL_COUNT, CORE_TOOL_COUNT, TOOL_COUNT } from '@/lib/toolMeta'
 
 // ─── shared motion presets ──────────────────────────────────────────────────
 const E = [0.25, 0.46, 0.45, 0.94] as const
@@ -322,7 +323,7 @@ function SignatureMicro() {
             />
           </svg>
         </div>
-        <div style={{ fontSize: 8, color: '#bbb', letterSpacing: '0.06em', fontFamily: 'monospace' }}>LEGALLY BINDING</div>
+        <div style={{ fontSize: 8, color: '#bbb', letterSpacing: '0.06em', fontFamily: 'monospace' }}>REVIEW BEFORE USE</div>
       </div>
     </div>
   )
@@ -378,32 +379,32 @@ const FEATURES = [
   {
     icon: ScanLine,
     tag: 'OCR Engine',
-    title: 'Reads any document',
-    body: 'Proprietary OCR trained on millions of documents. Extracts text, tables and signatures from scanned or image-based PDFs instantly.',
+    title: 'Reads supported page images',
+    body: 'AI OCR extracts visible text from rendered scanned or image-based PDF pages. Recognition quality varies with the source image.',
     Micro: OCRMicro,
   },
   {
     icon: PenLine,
     tag: 'E-Signatures',
     title: 'Sign in seconds',
-    body: 'Draw, type or upload your signature. Placed with pixel accuracy, rendered at full PDF resolution, legally binding everywhere.',
+    body: 'Draw, type or upload a signature image and place it on a PDF page. Check local signature requirements before relying on the result.',
     Micro: SignatureMicro,
   },
   {
     icon: MousePointer2,
     tag: 'AI Detection',
     title: 'Fields find themselves',
-    body: 'The AI scans your PDF, identifies every interactive field, maps them to your data and fills the form — no manual work required.',
+    body: 'AI can suggest field positions and values from supplied context. Review every field before downloading or submitting the form.',
     Micro: FieldsMicro,
   },
 ]
 
 // ─── STATS ───────────────────────────────────────────────────────────────────
 const STATS = [
-  { val: '17',    unit: '',    label: 'AI-powered tools' },
-  { val: '140',   unit: '+',   label: 'Languages supported' },
-  { val: '99.9',  unit: '%',   label: 'Uptime SLA' },
-  { val: '<10',   unit: 'ms',  label: 'Response time' },
+  { val: `${TOOL_COUNT}`,      unit: '', label: 'Active tools' },
+  { val: `${CORE_TOOL_COUNT}`, unit: '', label: 'Core browser workflows' },
+  { val: `${AI_TOOL_COUNT}`,   unit: '', label: 'AI-assisted tools' },
+  { val: '5',                  unit: '', label: 'Free AI actions per UTC day' },
 ]
 
 // ─── SECTION WRAPPER (shared reveal) ────────────────────────────────────────
@@ -436,7 +437,7 @@ export default function HomeClient() {
           <motion.div {...fadeUp(0)} style={{ marginBottom: 28, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', border: '1px solid #e4e4e7', borderRadius: 99, fontSize: 12, color: '#666', letterSpacing: '0.01em', fontWeight: 500 }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981', display: 'inline-block', flexShrink: 0 }} />
-              17 AI tools · Free forever
+              {TOOL_COUNT} active tools · clear Free and Pro access
             </span>
           </motion.div>
 
@@ -447,7 +448,7 @@ export default function HomeClient() {
 
           {/* Sub */}
           <motion.p {...fadeUp(0.14)} style={{ fontSize: 18, color: '#777', lineHeight: 1.7, maxWidth: 500, margin: '0 auto 40px', fontWeight: 400, letterSpacing: '-0.01em' }}>
-            Edit, sign, annotate and AI-fill PDF forms in seconds. No account. No credit card. Runs in your browser.
+            Core editing, signing, and annotation workflows need no account. AI form filling requires sign-in and uses the daily AI allowance.
           </motion.p>
 
           {/* CTAs */}

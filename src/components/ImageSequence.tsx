@@ -212,7 +212,7 @@ const SCENES: Array<{
 }> = [
   {
     id: 0, tag: '01', sublabel: 'Start Here', headline: 'Drop it in.',
-    description: 'Upload most PDFs up to 100 MB. Opens instantly — no uploads, no waiting, fully private.',
+    description: 'Open supported PDFs up to 100 MB with local browser rendering. Loading time depends on the file and device.',
     bg: [
       // 1. Solid black floor
       '#000',

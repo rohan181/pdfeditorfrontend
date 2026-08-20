@@ -594,8 +594,8 @@ export default function PDFSplitterPage() {
               <p>Each part downloads as a separate PDF. Download individually or all at once.</p>
             </div>
             <div className="info-card">
-              <h3>🔒 100% Private</h3>
-              <p>All splitting happens in your browser with pdf-lib. Your file never leaves your device.</p>
+              <h3>🔒 Local Processing</h3>
+              <p>Splitting runs locally in your browser with pdf-lib without an application document-processing request.</p>
             </div>
           </div>
         </div>
@@ -604,7 +604,7 @@ export default function PDFSplitterPage() {
         definition="A PDF splitter divides one PDF file into multiple separate PDF files. Instead of sharing or printing an entire 50-page report when a colleague only needs pages 12–18, you split out exactly the pages you need and send those alone."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="PDF"
         fileLimit="No server-side limit — most PDFs up to 500 MB work fine"
         browserSupport="Chrome, Firefox, Safari, Edge"

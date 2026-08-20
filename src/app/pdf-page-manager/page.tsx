@@ -524,7 +524,7 @@ export default function PDFPageManagerPage() {
           <div className="info-grid">
             <div className="info-card">
               <h3>📚 Multiple PDFs</h3>
-              <p>Load pages from as many PDFs as you like. Mix and match pages in any order.</p>
+              <p>Load pages from multiple PDFs and arrange them in any order, subject to browser memory and device performance.</p>
             </div>
             <div className="info-card">
               <h3>↕ Drag to Reorder</h3>
@@ -532,18 +532,18 @@ export default function PDFPageManagerPage() {
             </div>
             <div className="info-card">
               <h3>🔒 Private</h3>
-              <p>Everything runs in your browser. Your files are never uploaded to any server.</p>
+              <p>Page operations run locally in your browser without an application document-processing request.</p>
             </div>
           </div>
         </div>
       </div>
       <ToolQuickFacts
-        definition="A PDF page manager gives you full control over the page structure of a document from a single interface. Reorder pages by dragging, rotate individual pages, delete unwanted pages, and insert blank pages, then save all changes to a new PDF in one step."
+        definition="A PDF page manager lets you change a document's page structure from one interface. Reorder pages by dragging, rotate individual pages, delete unwanted pages, or arrange pages from multiple PDFs, then save the displayed sequence as a new PDF without changing the source files."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="PDF"
-        fileLimit="No fixed limit — works with PDFs of any length"
+        fileLimit="No fixed application limit; practical capacity depends on page complexity, browser memory, and device performance"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['pdf-page-manager']} />

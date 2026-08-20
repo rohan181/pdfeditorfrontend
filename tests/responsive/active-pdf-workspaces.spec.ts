@@ -17,6 +17,10 @@ test.beforeAll(async () => {
   samplePdf = Buffer.from(await pdf.save())
 })
 
+test.beforeEach(({ viewport }) => {
+  test.skip(viewport?.width !== 390, 'These workspace assertions target the phone breakpoint')
+})
+
 async function openSamplePdf(page: import('@playwright/test').Page, route: string, workspace: string) {
   await page.goto(route, { waitUntil: 'domcontentloaded' })
   await page.locator('input[type="file"][accept*="pdf"]').first().setInputFiles({
@@ -36,7 +40,7 @@ test('viewer stays usable after a PDF is open on a phone', async ({ page }) => {
     documentWidth: document.documentElement.scrollWidth,
     workspace: document.querySelector('.viewer')!.getBoundingClientRect().toJSON(),
     canvas: document.querySelector('.pdf-canvas')!.getBoundingClientRect().toJSON(),
-    controls: [...document.querySelectorAll('.viewer .toolbar button,.viewer .page-input')].map(control => {
+    controls: Array.from(document.querySelectorAll('.viewer .toolbar button,.viewer .page-input')).map(control => {
       const rect = control.getBoundingClientRect()
       return { width: rect.width, height: rect.height }
     }),
@@ -88,7 +92,7 @@ test('watermark controls stack above a full-width preview on a phone', async ({ 
       panel: panel.toJSON(),
       pages: pages.toJSON(),
       frame: frame.toJSON(),
-      topbarControls: [...document.querySelectorAll('.watermark-topbar button')]
+      topbarControls: Array.from(document.querySelectorAll('.watermark-topbar button'))
         .filter(button => getComputedStyle(button).display !== 'none')
         .map(button => button.getBoundingClientRect().height),
     }

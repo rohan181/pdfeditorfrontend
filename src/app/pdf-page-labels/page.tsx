@@ -265,7 +265,7 @@ export default function PDFPageLabelsPage() {
       definition="PDF page labels are navigation names stored separately from printed page content. A viewer can show front matter as i, ii, iii, restart the main document at 1, label appendices A, B, C, or display identifiers such as EX-1, while the underlying page order stays unchanged."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF"
       fileLimit="Up to 100 MB and 2,000 pages"
       browserSupport="Chrome, Firefox, Safari, Edge"

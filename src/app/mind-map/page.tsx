@@ -7,6 +7,7 @@ import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
+import { AI_ACCESS_SUMMARY, AI_ACCURACY_DISCLAIMER } from '@/lib/productMessaging'
 
 // ─── palette (one colour per PDF) ────────────────────────────────────────────
 const COLORS = ['#0891b2','#7c3aed','#16a34a','#dc2626','#d97706','#db2777','#2563eb','#059669']
@@ -382,7 +383,7 @@ export default function MindMapPage() {
         const msg = res.status === 401
           ? 'Please sign in to generate mind maps.'
           : res.status === 429
-          ? 'Daily limit reached. Upgrade to Pro for unlimited access.'
+          ? 'Daily limit reached. Upgrade to Pro to remove the daily AI-action cap.'
           : j.error ?? `Error ${res.status}`
         throw new Error(msg)
       }
@@ -797,11 +798,11 @@ export default function MindMapPage() {
         onChange={e => { if (e.target.files) addPDFs(Array.from(e.target.files)); e.target.value = '' }}/>
       <ToolQuickFacts
         definition="An AI PDF mind map generator reads a document and automatically constructs a visual mind map showing its main topics, subtopics, and the relationships between ideas — instead of manually diagramming a complex report or textbook chapter, you upload the PDF and get a structured map in seconds."
-        price="Free — 5 AI generations/day; Pro removes the daily limit and page cap"
+        price={AI_ACCESS_SUMMARY}
         account="Free account required (AI feature)"
-        processing="Extracted text sent to AI backend; raw file bytes never transmitted"
+        processing={`Extracted text is sent through the AI route; the selected PDF bytes are not sent by this tool. ${AI_ACCURACY_DISCLAIMER}`}
         formats="PDF in, PNG/JSON out"
-        fileLimit="Free: page limit applies · Pro: unlimited length"
+        fileLimit="Extracted text is truncated per source and by the AI route; the same content limits apply to Free and Pro"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['mind-map']} />

@@ -6,6 +6,7 @@ import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
+import { AI_ACCESS_SUMMARY, AI_ACCURACY_DISCLAIMER } from '@/lib/productMessaging'
 
 // ─── Languages ────────────────────────────────────────────────────────────────
 const POPULAR = [
@@ -455,7 +456,7 @@ export default function PDFTranslatorPage() {
             {!file && !streaming && !output && (
               <div className="hero">
                 <div className="hero-badge">🌐 AI Translation</div>
-                <h1 className="hero-h1">Translate any <em>PDF</em><br/>into 77 languages</h1>
+                <h1 className="hero-h1">Translate extracted <em>PDF text</em><br/>into 77 languages</h1>
                 <p className="hero-sub">Upload a PDF, pick your target language, and get a clean streaming translation powered by Claude.</p>
                 <div className="feat-grid">
                   <div className="feat"><div className="feat-icon">🌍</div><div className="feat-t">77 Languages</div><div className="feat-d">From Afrikaans to Zulu</div></div>
@@ -504,12 +505,12 @@ export default function PDFTranslatorPage() {
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
       <ToolQuickFacts
-        definition="A PDF translator extracts the text from a PDF and uses AI to translate it into a different language, then delivers the result as a new PDF with the original layout preserved — paragraphs, headings, and sections in the same order as the source document."
-        price="Free — 5 translations/day; Pro is unlimited"
+        definition="This PDF translator extracts document text, sends up to 50,000 characters to AI, and creates a newly formatted PDF or TXT file from the translation. It does not preserve the source page layout."
+        price={AI_ACCESS_SUMMARY}
         account="Free account required (AI feature)"
-        processing="Extracted text sent to AI for translation; raw file bytes stay on your device"
+        processing={`Up to 50,000 extracted text characters are sent through the AI translation route; the selected PDF bytes stay local. ${AI_ACCURACY_DISCLAIMER}`}
         formats="PDF"
-        fileLimit="No fixed limit stated"
+        fileLimit="Up to 50,000 extracted text characters per translation for Free and Pro"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['pdf-translator']} />

@@ -5,6 +5,7 @@ import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import Image from 'next/image'
 import { TOOL_COUNT } from '@/lib/toolMeta'
+import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import type { LucideIcon } from 'lucide-react'
 import {
@@ -110,7 +111,7 @@ const NAV_CATS: NavCat[] = [
 
 const TIER_BADGE = {
   free: { label: 'Free',       bg: 'rgba(22,163,74,.1)',  color: '#15803d' },
-  ai:   { label: '5 free/day', bg: 'rgba(124,58,237,.1)', color: '#7c3aed' },
+  ai:   { label: `${FREE_AI_DAILY_LIMIT}/UTC day`, bg: 'rgba(124,58,237,.1)', color: '#7c3aed' },
   pro:  { label: 'Pro',        bg: 'rgba(8,145,178,.1)',  color: '#0e7490' },
 }
 
@@ -228,7 +229,7 @@ export default function SiteNav() {
                 {subTier && (
                   <Link prefetch={false} href={subTier === 'pro' ? '/manage-subscription' : '/pricing'}
                     className="sn-desk-only" style={{ textDecoration: 'none' }}
-                    title={subTier === 'pro' ? 'Pro plan — unlimited AI uses' : 'Free plan — 5 AI uses per day'}>
+                    title={subTier === 'pro' ? 'Pro plan — no daily AI-action cap' : `Free plan — ${FREE_AI_DAILY_LIMIT} AI actions per UTC day`}>
                     <span style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 4,
                       fontSize: 10.5, fontWeight: 800, letterSpacing: '.04em', padding: '4px 9px', borderRadius: 99,
                       ...(subTier === 'pro'

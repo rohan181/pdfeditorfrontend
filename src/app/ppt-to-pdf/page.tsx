@@ -383,7 +383,7 @@ export default function PPTToPDFPage() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   const loadFile = useCallback(async (f: File) => {
-    if (!f.name.match(/\.pptx?$/i)) { setError('Please upload a .pptx or .ppt file.'); return }
+    if (!f.name.match(/\.pptx$/i)) { setError('Please upload a .pptx file. Legacy .ppt files are not supported.'); return }
     setError(''); setSlides(null); setFile(f); setParsing(true); setStep('Parsing presentation…'); setProgress(15)
     try {
       const buf = await f.arrayBuffer()
@@ -493,7 +493,7 @@ export default function PPTToPDFPage() {
             )}
 
             <div style={{ padding: '12px 16px', fontSize: 10, color: 'rgba(0,0,0,.35)', lineHeight: 1.6 }}>
-              Converted entirely in your browser — no upload required. Images are omitted; text and tables are preserved. JSZip loads from CDN on first use.
+              Converted locally in your browser. Images and original slide layouts are omitted; supported text is rebuilt in a new PDF theme. JSZip loads from a CDN on first use.
             </div>
           </aside>
 
@@ -515,11 +515,11 @@ export default function PPTToPDFPage() {
             {/* Hero */}
             {!file && !parsing && (
               <div className="hero">
-                <div className="hero-badge">✦ No Upload Required</div>
+                <div className="hero-badge">✦ Local Browser Conversion</div>
                 <h1 className="hero-h1">PowerPoint <em>to PDF</em></h1>
-                <p className="hero-sub">Convert .pptx presentations to PDF entirely in your browser. No data leaves your device.</p>
+                <p className="hero-sub">Convert supported .pptx slide text locally in your browser. Images and original layouts are omitted; review the downloaded PDF.</p>
                 <div className="feat-grid">
-                  <div className="feat"><div className="feat-icon">🔒</div><div className="feat-t">100% Private</div><div className="feat-d">Converted locally in browser</div></div>
+                  <div className="feat"><div className="feat-icon">🔒</div><div className="feat-t">Local Processing</div><div className="feat-d">Converted in your browser</div></div>
                   <div className="feat"><div className="feat-icon">📄</div><div className="feat-t">All Slides</div><div className="feat-d">Every slide → one PDF page</div></div>
                   <div className="feat"><div className="feat-icon">🎨</div><div className="feat-t">3 Themes</div><div className="feat-d">White, Navy, Dark</div></div>
                 </div>
@@ -581,15 +581,15 @@ export default function PPTToPDFPage() {
         </div>
       </div>
 
-      <input ref={fileRef} type="file" accept=".pptx,.ppt" style={{ display: 'none' }}
+      <input ref={fileRef} type="file" accept=".pptx" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
       <ToolQuickFacts
-        definition="A PowerPoint to PDF converter takes a .pptx or .ppt presentation and converts each slide into a page in a PDF document. The visual design of every slide — backgrounds, fonts, images, charts, and text boxes — is preserved exactly, viewable on any device without PowerPoint installed."
+        definition="This PowerPoint to PDF converter reads supported .pptx text and tables locally in the browser and creates PDF pages. It omits slide images and does not reproduce every PowerPoint layout feature, so review the output."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
-        formats="PPTX, PPT in, PDF out"
-        fileLimit="No fixed limit — capped only by device memory"
+        processing="Processed locally in your browser without an application document-processing request"
+        formats="PPTX in, PDF out"
+        fileLimit="Practical capacity depends on slide count, extracted text, browser memory, and device performance"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['ppt-to-pdf']} />

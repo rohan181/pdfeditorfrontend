@@ -382,9 +382,9 @@ export default function PDFWatermarkPage() {
                 <span className="h1-top">Protect your documents</span>
                 <span className="h1-main">PDF Watermarker</span>
               </h1>
-              <p className="hero-sub">Add custom text or image watermarks to any PDF. Control opacity, angle, size and position. Runs entirely in your browser.</p>
+              <p className="hero-sub">Add custom text or image watermarks to PDF files. Control opacity, angle, size and position in your browser.</p>
               <div className="hero-pills">
-                {[['Text & Image','Watermarks'],['Full','Opacity Control'],['Any','Angle'],['9','Positions'],['Free','Forever']].map(([v,l])=>(
+                {[['Text & Image','Watermarks'],['Full','Opacity Control'],['Any','Angle'],['9','Positions'],['Free Core','Workflow']].map(([v,l])=>(
                   <div key={l} className="hpill"><strong>{v}</strong><span>{l}</span></div>
                 ))}
               </div>
@@ -408,7 +408,7 @@ export default function PDFWatermarkPage() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                   Choose PDF File
                 </button>
-                <p className="upload-note">PDF · UP TO 100 MB · 100% PRIVATE</p>
+                <p className="upload-note">PDF · PRACTICAL LIMITS DEPEND ON YOUR DEVICE · LOCAL PROCESSING</p>
                 <input ref={fileInputRef} type="file" accept=".pdf,application/pdf" style={{ display:'none' }}
                   onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
               </div>
@@ -418,7 +418,7 @@ export default function PDFWatermarkPage() {
             definition="A PDF watermark tool stamps a visible mark — text such as “CONFIDENTIAL” or “DRAFT”, or an image such as a company logo — across every page of a PDF. The mark is embedded directly into the page content, visible to all readers and deterring unauthorised distribution or copying."
             price="Free — no account needed"
             account="Not required"
-            processing="Entirely in your browser — file never uploaded"
+            processing="Processed locally in your browser without an application document-processing request"
             formats="PDF"
             fileLimit="No fixed limit — capped only by device memory"
             browserSupport="Chrome, Firefox, Safari, Edge"
@@ -690,7 +690,7 @@ export default function PDFWatermarkPage() {
               {/* Hint for custom drag */}
               {isCustom && (
                 <div style={{ marginTop:6, fontSize:10, color:'#64748b', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:6, padding:'6px 9px', lineHeight:1.6 }}>
-                  Click or drag on any PDF page to place the watermark. The blue dot shows the current position.
+                  Click or drag on a PDF page to place the watermark. The blue dot shows the current position.
                 </div>
               )}
             </div>

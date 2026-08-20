@@ -205,7 +205,7 @@ export default function ExportPDFCommentsPage() {
       definition="A PDF comment exporter reads review annotations stored separately from normal page content — sticky notes, text boxes, highlights, underlines, strikeouts, stamps, ink drawings, shapes, and other markup — and exports them as structured, safe CSV or JSON."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF in, CSV/JSON out"
       fileLimit="Up to 100 MB and 2,000 pages"
       browserSupport="Chrome, Firefox, Safari, Edge"

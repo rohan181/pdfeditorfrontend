@@ -3,15 +3,16 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
 
 const LOSING = [
-  'Unlimited AI uses (back to 5/day)',
+  `No daily AI-action cap (returns to ${FREE_AI_DAILY_LIMIT}/UTC day)`,
   'AI form autofill & chat fill',
   'AI summarizer & translator',
   'PDF Mind Map generator',
   'PDF → Word, Excel, PowerPoint',
   'AI OCR & quiz creator',
-  'Priority processing',
+  'Pro daily-cap exemption',
 ]
 
 type Stage = 'confirm' | 'cancelled'

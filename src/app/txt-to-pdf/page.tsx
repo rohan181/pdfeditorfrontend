@@ -332,7 +332,7 @@ export default function TxtToPDFPage() {
           <div className="hero">
             <div className="badge">
               <span className="badge-dot"/>
-              100% In-Browser · No Upload
+              Local Browser Processing
             </div>
             <h1>TXT to <em>PDF</em></h1>
             <p>Convert any plain text file to a clean paginated PDF — or paste text directly. Supports .txt, .md, .csv, .log, .json and more.</p>
@@ -506,8 +506,8 @@ export default function TxtToPDFPage() {
             </div>
             <div className="info-card">
               <div className="info-icon">🔒</div>
-              <h3>100% Private</h3>
-              <p>Your text never leaves your browser. The PDF is generated entirely on your device using pdf-lib — zero server contact.</p>
+              <h3>Local Processing</h3>
+              <p>The PDF is generated locally in your browser using pdf-lib without an application document-processing request.</p>
             </div>
           </div>
 
@@ -524,7 +524,7 @@ export default function TxtToPDFPage() {
         definition="A TXT to PDF converter takes a plain-text (.txt) file and lays out its content as a formatted PDF with your chosen font, size, line spacing, and margins. Plain text files have no visual formatting, so the converter applies a clean, professional layout for printing or archiving."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="TXT in, PDF out"
         fileLimit="No fixed limit — long files are paginated automatically"
         browserSupport="Chrome, Firefox, Safari, Edge"

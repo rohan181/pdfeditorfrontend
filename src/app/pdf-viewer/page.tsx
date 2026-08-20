@@ -33,11 +33,11 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 /* ── Upload screen ── */
 .upload-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px}
 .hero{text-align:center;margin-bottom:36px;animation:fadeup .35s ease}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;background:#e0f0ff;border:1px solid rgba(10,132,255,.18);border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.08em;color:#0a84ff;text-transform:uppercase;margin-bottom:16px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;background:#e0f0ff;border:1px solid rgba(7,93,168,.25);border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.08em;color:#075da8;text-transform:uppercase;margin-bottom:16px}
 .badge-dot{width:5px;height:5px;border-radius:50%;background:#0a84ff;animation:pulse 2s ease infinite}
 .hero h1{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-.04em;color:#1d1d1f;line-height:1.05;margin-bottom:12px}
 .hero h1 em{font-style:normal;background:linear-gradient(135deg,#0a84ff,#34aadc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero p{font-size:15px;color:rgba(0,0,0,.42);line-height:1.65;max-width:420px;margin:0 auto}
+.hero p{font-size:15px;color:#4b5563;line-height:1.65;max-width:420px;margin:0 auto}
 
 .upload-card{background:#fff;border:1px solid #e5e5e7;border-radius:20px;padding:32px;width:100%;max-width:560px;box-shadow:0 4px 24px rgba(0,0,0,.07)}
 .err{padding:12px 16px;background:#fff5f5;border:1px solid rgba(220,38,38,.18);border-radius:10px;font-size:13px;color:#dc2626;margin-bottom:16px;display:flex;align-items:flex-start;gap:8px}
@@ -108,7 +108,7 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 
 /* Keyboard hint */
 .kb-hint{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
-.kb-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:rgba(0,0,0,.38);letter-spacing:-.01em}
+.kb-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#4b5563;letter-spacing:-.01em}
 .kb-key{padding:2px 7px;background:rgba(0,0,0,.06);border:1px solid rgba(0,0,0,.1);border-radius:5px;font-size:10px;font-weight:600;font-family:ui-monospace,monospace}
 
 /* Fullscreen */
@@ -383,7 +383,7 @@ export default function PDFViewerPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="pg">
+      <div className="pg" id="main-content">
 
         {/* Nav */}
         <SiteNav />
@@ -406,10 +406,10 @@ export default function PDFViewerPage() {
             <div className="hero">
               <div className="badge">
                 <span className="badge-dot"/>
-                In-Browser · No Upload
+                Local Browser Processing
               </div>
               <h1>PDF <em>Viewer</em></h1>
-              <p>Open and read any PDF instantly in your browser. Zoom, navigate, and download — all without leaving the page.</p>
+              <p className="tool-hero-definition">An online PDF viewer opens a PDF directly in your browser for on-screen reading without installing a desktop reader. EditPDF AI renders the selected file locally and provides page navigation, zoom, downloads, fullscreen mode, and touch navigation. The current viewer does not add text search, and practical capacity depends on browser memory and device performance.</p>
             </div>
 
             <div className="upload-card">
@@ -424,7 +424,7 @@ export default function PDFViewerPage() {
                 <div className="drop-inner">
                   <div className="drop-icon-wrap"><PDFIcon/></div>
                   <h2>Drop a PDF here to open it</h2>
-                  <p>Any PDF — documents, ebooks, reports, forms</p>
+                  <p>PDF documents, ebooks, reports, and forms</p>
                   <button className="browse-btn">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     Choose PDF
@@ -557,15 +557,14 @@ export default function PDFViewerPage() {
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
       />
       <ToolQuickFacts
-        definition="An online PDF viewer lets you open and read any PDF document directly in your browser — no Adobe Acrobat, no software installation, and no file download required. You get full navigation controls, text search, zoom, and on mobile, swipe and pinch-to-zoom — all from a browser tab on any device."
         price="Free — no account needed"
         account="Not required"
-        processing="Rendered entirely in your browser — file never uploaded"
-        formats="PDF"
-        fileLimit="No fixed limit — capped only by device memory"
-        browserSupport="Chrome, Firefox, Safari, Edge"
+        processing="Rendered locally in your browser without an application document-processing request"
+        formats="Input: PDF · Output: on-screen view or the unchanged selected PDF download"
+        fileLimit="No fixed cap is enforced by the file handler; practical capacity depends on browser memory and device performance"
+        browserSupport="Modern desktop and mobile browsers with JavaScript, canvas, and required file APIs"
       />
-      <ToolSEOSection {...toolSeoData['pdf-viewer']} />
+      <ToolSEOSection {...toolSeoData['pdf-viewer']} showDirectAnswer={false} />
     </>
   )
 }

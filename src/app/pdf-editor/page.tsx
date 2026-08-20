@@ -4,8 +4,10 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import JsonLd from '@/components/JsonLd'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
+import { buildFaqStructuredData } from '@/lib/seo/structuredData'
 import toolSeoData from '@/lib/toolSeoData'
 
 // The editor pulls in PDF rendering and editing engines. Keep them out of the
@@ -123,38 +125,28 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 `
 
 const TOOLS = [
-  { icon: '📝', title: 'Text Editor', desc: 'Click anywhere to add or edit text. Change font, size, color and opacity on any PDF.', bar: 'linear-gradient(90deg,#22d3ee,#0891b2)' },
+  { icon: '📝', title: 'Text Editor', desc: 'Add text and edit supported text objects. Change font, size, color and opacity.', bar: 'linear-gradient(90deg,#22d3ee,#0891b2)' },
   { icon: '🖼️', title: 'Image Insertion', desc: 'Insert photos, logos or graphics onto any page. Resize and reposition freely.', bar: 'linear-gradient(90deg,#a78bfa,#6d28d9)' },
-  { icon: '✍️', title: 'Signatures', desc: 'Draw, type or upload your signature and place it with pixel precision anywhere on the page.', bar: 'linear-gradient(90deg,#f59e0b,#b45309)' },
+  { icon: '✍️', title: 'Signatures', desc: 'Draw, type or upload a visual signature, then position and resize it on the page.', bar: 'linear-gradient(90deg,#f59e0b,#b45309)' },
   { icon: '🔆', title: 'Highlights & Markup', desc: 'Highlight text, draw freehand, add sticky notes and annotation boxes.', bar: 'linear-gradient(90deg,#4ade80,#16a34a)' },
   { icon: '🔷', title: 'Shapes & Lines', desc: 'Draw rectangles, ellipses, arrows, lines and polygons with custom stroke and fill.', bar: 'linear-gradient(90deg,#38bdf8,#0369a1)' },
   { icon: '🏷️', title: 'Stamps & Watermarks', desc: 'Apply APPROVED, CONFIDENTIAL, DRAFT and custom stamps. Add text or image watermarks.', bar: 'linear-gradient(90deg,#f472b6,#be185d)' },
-  { icon: '📄', title: 'Page Manager', desc: 'Reorder, rotate, delete or add blank pages. Drag thumbnails to reorganise any PDF.', bar: 'linear-gradient(90deg,#fb923c,#b45309)' },
-  { icon: '⬇️', title: 'Instant Export', desc: 'Download your edited PDF in one click — every change preserved with full fidelity.', bar: 'linear-gradient(90deg,#67e8f9,#0e7490)' },
+  { icon: '📄', title: 'Page Manager', desc: 'Reorder, rotate, delete or add blank pages by dragging page thumbnails.', bar: 'linear-gradient(90deg,#fb923c,#b45309)' },
+  { icon: '⬇️', title: 'Instant Export', desc: 'Download a new PDF containing the edits and page changes supported by the editor.', bar: 'linear-gradient(90deg,#67e8f9,#0e7490)' },
 ]
 
 const FAQS = [
-  { q: 'How can I edit a PDF online for free without signing up?', a: 'Upload your file to the free PDF Editor and start editing immediately. There is no subscription, credit card or account required. Add text, images, annotations or signatures, then download the completed PDF.' },
-  { q: 'Can I edit a scanned PDF?', a: 'Yes. You can add text, highlights, drawings, signatures and other content over a scanned PDF. Use the separate PDF OCR tool when you need to extract selectable text from scanned pages.' },
-  { q: 'Can I add a digital signature?', a: 'Yes. Draw a freehand signature, type your name in a handwriting style, or upload a signature image and place it anywhere on the document with drag-and-drop precision.' },
-  { q: 'Is my file uploaded to a server?', a: 'No. All editing happens locally inside your browser. Your PDF never leaves your device — nothing is stored or transmitted.' },
-  { q: 'Can I reorder or delete pages?', a: 'Yes. Open the Page Manager panel to drag pages into any order, rotate individual pages, delete unwanted ones, or insert blank pages anywhere.' },
-  { q: 'What is the difference between this and the AI Form Filler?', a: 'The PDF Editor focuses on manual editing — text, images, shapes, signatures and page management. The AI Form Filler adds conversational AI that detects and auto-fills form fields from your context.' },
+  { q: 'How can I edit a PDF without Adobe Acrobat?', a: 'Choose a PDF, use the browser editor to make supported text, image, annotation, signature, or page changes, and download a new PDF. The core editor does not require Adobe Acrobat or another desktop application.' },
+  { q: 'Can I edit text directly in a PDF?', a: 'Supported text objects can be edited directly. Scans, embedded fonts, complex layouts, and the internal PDF structure can limit direct text editing, so inspect the downloaded copy before using it.' },
+  { q: 'Is it safe to upload a PDF to the editor?', a: 'The manual editor reads and processes the selected PDF locally in your browser without an application document-processing request. Optional AI form actions use separate server routes and data handling.' },
+  { q: 'Can I use the PDF editor without signing up?', a: 'Yes. The core manual PDF editor is available without an account. Optional AI form actions require sign-in and use the shared daily AI allowance.' },
+  { q: 'Does the PDF editor work on mobile devices?', a: 'The editor includes a responsive mobile layout and touch-compatible controls. Editing a complex PDF may be easier on a larger screen, and practical performance depends on the document and available device memory.' },
+  { q: 'Can I edit a scanned PDF?', a: 'You can add text, highlights, drawings, signatures, and other overlays to a scanned PDF. Use PDF OCR first when you need to extract searchable or selectable text from scanned page images.' },
 ]
 
 // Generated from the same FAQS array that renders the visible FAQ section
 // below — single source of truth, can't drift out of sync. Not declared in
 // layout.tsx.
-const FAQ_JSON_LD = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: FAQS.map(f => ({
-    '@type': 'Question',
-    name: f.q,
-    acceptedAnswer: { '@type': 'Answer', text: f.a },
-  })),
-}
-
 export default function PDFEditorPage() {
   const [editorOpen, setEditorOpen] = useState(false)
 
@@ -174,7 +166,10 @@ export default function PDFEditorPage() {
   return (
     <div className="pg">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
+      <JsonLd
+        id="tool-faq-structured-data-pdf-editor"
+        data={buildFaqStructuredData('/pdf-editor', FAQS)}
+      />
 
       {/* Ambient */}
       <div className="amb" aria-hidden="true">
@@ -206,11 +201,11 @@ export default function PDFEditorPage() {
           <h1 id="hero-h1" className="hero-h1">
             <span className="h1-main">Free Online PDF Editor</span>
           </h1>
-          <p className="hero-sub">
-            Edit PDF files online for free. Add text, images, shapes, highlights and signatures, organize pages, apply stamps and download from your browser with no signup.
+          <p className="hero-sub tool-hero-definition">
+            An online PDF editor opens a PDF in your browser so you can make supported changes without installing desktop software. EditPDF AI lets you add or edit supported text, insert images, sign, annotate, and organize pages, then download a new PDF. Complex layouts, scans, and embedded fonts can limit direct text editing.
           </p>
           <div className="hero-cta-row">
-            <button className="btn-primary" onClick={openEditor} aria-label="Open PDF editor">
+            <button className="btn-primary" onClick={openEditor}>
               Edit a PDF — Free
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
                 <path d="M5 12h14M12 5l7 7-7 7" />
@@ -227,13 +222,12 @@ export default function PDFEditorPage() {
       </header>
 
       <ToolQuickFacts
-        definition="An online PDF editor lets you open a PDF in your browser and make direct changes — editing text, replacing images, adding annotations, and managing pages — without installing Adobe Acrobat or any other software. Changes are embedded into the file, which downloads as a standard PDF that works in any viewer."
         price="Free — no account needed"
-        account="Not required"
-        processing="Entirely in your browser — file never uploaded"
-        formats="PDF"
-        fileLimit="No fixed limit — capped only by device memory"
-        browserSupport="Chrome, Firefox, Safari, Edge"
+        account="No account for the core editor; sign-in is required only for optional AI actions"
+        processing="Manual editing runs locally in your browser; optional AI form actions have separate data handling"
+        formats="Input: PDF · Output: PDF"
+        fileLimit="No fixed cap is enforced by the file handler; practical capacity depends on PDF complexity and browser memory"
+        browserSupport="Modern desktop and mobile browsers with JavaScript and required file APIs"
       />
 
       {/* ── TOOLS SHOWCASE ──────────────────────────────────────── */}
@@ -244,11 +238,11 @@ export default function PDFEditorPage() {
           <p className="sec-sub">Use this free PDF editor to add text, annotate, sign and organize PDF pages — no plugins or account required.</p>
           <div className="tools-grid" role="list">
             {TOOLS.map(({ icon, title, desc, bar }) => (
-              <article key={title} className="tcard" role="listitem" style={{ '--bar': bar } as React.CSSProperties}>
+              <div key={title} className="tcard" role="listitem" style={{ '--bar': bar } as React.CSSProperties}>
                 <span className="tcard-icon" aria-hidden="true">{icon}</span>
                 <h3 className="tcard-title">{title}</h3>
                 <p className="tcard-desc">{desc}</p>
-              </article>
+              </div>
             ))}
           </div>
         </div>
@@ -265,15 +259,15 @@ export default function PDFEditorPage() {
           </p>
           <div className="steps" role="list">
             {([
-              ['1', 'Upload Your PDF', 'Drag and drop any PDF — scanned, flat or interactive. The editor loads it instantly inside your browser, no upload to any server.'],
+              ['1', 'Choose Your PDF', 'Select a supported scanned, flat or interactive PDF. The manual editor loads it locally in your browser.'],
               ['2', 'Make Your Edits', 'Use the toolbar to add text, images, shapes, highlights, signatures or stamps. Switch to Page Manager to reorder or rotate pages.'],
-              ['3', 'Download Instantly', 'Hit Download to save a pixel-perfect PDF with every change preserved. Your file never leaves your device.'],
+              ['3', 'Download Your Copy', 'Download a new PDF containing the edits and page changes supported by the editor.'],
             ] as const).map(([num, title, desc]) => (
-              <article key={num} className="step" role="listitem">
+              <div key={num} className="step" role="listitem">
                 <div className="step-num" aria-hidden="true">{num}</div>
                 <h3 className="step-title">{title}</h3>
                 <p className="step-desc">{desc}</p>
-              </article>
+              </div>
             ))}
           </div>
         </div>
@@ -288,8 +282,8 @@ export default function PDFEditorPage() {
           <div className="faq-grid">
             {FAQS.map(({ q, a }) => (
               <div key={q} className="fq">
-                <div className="fq-q"><span className="fq-ic" aria-hidden="true">✦</span><span>{q}</span></div>
-                <p className="fq-a">{a}</p>
+                <div className="fq-q"><span className="fq-ic" aria-hidden="true">✦</span><span className="tool-seo-faq-question">{q}</span></div>
+                <p className="fq-a tool-seo-faq-answer">{a}</p>
               </div>
             ))}
           </div>
@@ -302,7 +296,7 @@ export default function PDFEditorPage() {
           <div className="cta-inner">
             <div className="cta-glow" aria-hidden="true" />
             <h2 id="cta-h" className="cta-h">Your PDF, edited.<br />In seconds. Free.</h2>
-            <p className="cta-sub">No account. No watermark. No limits.</p>
+            <p className="cta-sub">No account or watermark for the core editor. Browser and tool-specific limits apply.</p>
             <div className="hero-cta-row">
               <button className="btn-primary" onClick={openEditor}>
                 Open PDF Editor

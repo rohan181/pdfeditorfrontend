@@ -305,7 +305,7 @@ export default function PDFRepairPage() {
               definition="Repairing a PDF rebuilds recoverable structural information — damaged cross-reference tables, inconsistent object references, and malformed page-tree entries — that stops a corrupted file from opening correctly. The tool creates a new, working copy without changing or overwriting the original file."
               price="Free — no account needed"
               account="Not required"
-              processing="Entirely in your browser via WebAssembly — file never uploaded"
+              processing="Processed locally in your browser via WebAssembly"
               formats="PDF"
               fileLimit="Up to 100 MB"
               browserSupport="Chrome, Firefox, Safari, Edge"

@@ -692,7 +692,7 @@ export default function PDFCropperPage() {
           /* ── Upload screen ── */
           <div className="upload-wrap">
             <div className="hero">
-              <div className="badge"><span className="badge-dot"/>In-Browser · No Upload</div>
+              <div className="badge"><span className="badge-dot"/>Local Browser Processing</div>
               <h1>PDF <em>Cropper</em></h1>
               <p>Drag the crop handles to define your trim area, then download the cropped PDF. Apply to one page or all pages at once.</p>
             </div>
@@ -931,7 +931,7 @@ export default function PDFCropperPage() {
         definition="A PDF cropper adjusts the visible area of each page by moving the page boundary inward, hiding content outside the new boundary. The most common use is removing unwanted white margins from scanned documents, cropping scanner borders, or trimming a full-bleed PDF to a specific print size."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="PDF"
         fileLimit="No fixed limit — capped only by device memory"
         browserSupport="Chrome, Firefox, Safari, Edge"

@@ -1,24 +1,28 @@
 import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
+import {
+  FREE_AI_DAILY_LIMIT,
+  PRODUCT_ACCESS_SUMMARY,
+} from '@/lib/productMessaging'
 
 const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
 
-const FREE_ITEMS = ['Core PDF tools — always free','No account for core tools','Edit, merge, split, compress','Sign & watermark PDFs','5 AI uses per day (free account)']
-const PRO_ITEMS  = ['Everything in Free','Unlimited AI uses per day','PDF → Word / Excel / PPT','Priority processing','AI form autofill & chat fill']
+const FREE_ITEMS = ['Core browser workflows need no account','Edit, merge, split, compress','Sign & watermark PDFs',`${FREE_AI_DAILY_LIMIT} metered AI actions per UTC day`,'AI conversions share the daily allowance']
+const PRO_ITEMS  = ['Everything in Free','No daily AI-action cap','PDF → Word / Excel / PPT','AI form autofill & chat fill','Tool-specific limits still apply']
 
 // "All PDF tools" / "No account needed" used to be marked ✓ for both tiers,
 // which directly contradicted the fact that Pro itself obviously requires an
 // account to bill. These say exactly what's true for each tier instead of a
 // blanket claim. PDF → Word/Excel/PPT is an AI-gated conversion, not a
-// Pro-exclusive one — its API routes grant free accounts 5 uses/day via the
-// same checkAndIncrementUsage(userId, 5) gate as every other AI tool here.
+// Pro-exclusive one — its API routes grant signed-in free accounts the shared
+// daily allowance through the same usage gate as every other AI tool here.
 const COMPARE = [
   { label: 'Core PDF tools',                 free: true,    pro: true          },
   { label: 'Account required',               free: 'AI only', pro: true        },
-  { label: 'AI form fill / summarise / OCR', free: '5/day', pro: '∞ Unlimited' },
-  { label: 'PDF → Word / Excel / PPT',       free: '5/day', pro: '∞ Unlimited' },
-  { label: 'Priority processing',            free: false,   pro: true          },
+  { label: 'AI form fill / summarise / OCR', free: `${FREE_AI_DAILY_LIMIT}/day`, pro: 'No daily cap' },
+  { label: 'PDF → Word / Excel / PPT',       free: `${FREE_AI_DAILY_LIMIT}/day`, pro: 'No daily cap' },
+  { label: 'Per-tool input limits',           free: true,    pro: true           },
 ]
 
 export default function SitePricingPreview() {
@@ -30,10 +34,10 @@ export default function SitePricingPreview() {
             Pricing
           </div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,36px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',lineHeight:1,margin:'0 0 8px'}}>
-            Free forever. Pro for power users.
+            Free core workflows. Pro removes the daily AI cap.
           </h2>
           <p style={{...FI,fontSize:15,color:'#6b7280',margin:0}}>
-            All core PDF tools are free — no card, no account. Upgrade for unlimited AI.
+            {PRODUCT_ACCESS_SUMMARY}
           </p>
         </div>
 

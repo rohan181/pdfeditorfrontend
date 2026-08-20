@@ -2,9 +2,13 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import JsonLd from '@/components/JsonLd'
 import guides, { guideMap, type Guide, type ContentBlock } from '@/lib/guidesData'
 import SiteFooter from '@/components/SiteFooter'
-import { ORGANIZATION_ID } from '@/lib/seo/site'
+import { buildPageMetadata } from '@/lib/seo/metadata'
+import { buildGuideStructuredData } from '@/lib/seo/structuredData'
+import { AI_ACCESS_SUMMARY } from '@/lib/productMessaging'
+import { toolMetaMap } from '@/lib/toolMeta'
 
 export function generateStaticParams() {
   return guides.map(g => ({ slug: g.slug }))
@@ -14,31 +18,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const guide = guideMap[slug]
   if (!guide) return {}
-  return {
-    title:       { absolute: guide.seoTitle },
+  return buildPageMetadata({
+    path: `/guides/${guide.slug}`,
+    title: guide.seoTitle,
     description: guide.description,
-    alternates:  { canonical: `https://www.editpdfai.com/guides/${guide.slug}` },
-    openGraph: {
-      title:       guide.seoTitle,
-      description: guide.description,
-      type:        'article',
-      url:         `https://www.editpdfai.com/guides/${guide.slug}`,
-      siteName:    'EditPDF AI',
-      publishedTime: guide.datePublished,
-      modifiedTime:  guide.dateModified,
-      images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: guide.title }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: guide.seoTitle,
-      description: guide.description,
-      images: ['/opengraph-image'],
-    },
-    robots: { index: true, follow: true },
-  }
+    ogType: 'article',
+    ogImageAlt: guide.title,
+    ...(guide.datePublished ? { publishedTime: guide.datePublished } : {}),
+    ...(guide.dateModified ? { modifiedTime: guide.dateModified } : {}),
+  })
 }
 
-const PURPLE = '#4F7FFA'
+const PURPLE = '#315fce'
 const BG     = '#f7f8fa'
 
 function Block({ block }: { block: ContentBlock }) {
@@ -90,40 +81,34 @@ function Block({ block }: { block: ContentBlock }) {
 }
 
 function GuideContent({ guide }: { guide: Guide }) {
-  const jsonLd = {
-    '@context':       'https://schema.org',
-    '@type':          'Article',
-    headline:         guide.title,
-    description:      guide.description,
-    datePublished:    guide.datePublished,
-    dateModified:     guide.dateModified,
-    url:              `https://www.editpdfai.com/guides/${guide.slug}`,
-    author:    { '@id': ORGANIZATION_ID },
-    publisher: { '@id': ORGANIZATION_ID },
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home',   item: 'https://www.editpdfai.com' },
-        { '@type': 'ListItem', position: 2, name: 'Guides', item: 'https://www.editpdfai.com/guides' },
-        { '@type': 'ListItem', position: 3, name: guide.title, item: `https://www.editpdfai.com/guides/${guide.slug}` },
-      ],
-    },
-  }
-
   const otherGuides = guides.filter(g => g.slug !== guide.slug).slice(0, 4)
+  const toolAccess = toolMetaMap[guide.toolSlug]?.access ?? 'core'
+  const accessLabel = toolAccess === 'core'
+    ? 'Core PDF tool'
+    : toolAccess === 'metered-ai'
+      ? 'Metered AI tool'
+      : 'Core tool with optional AI'
+  const accessSummary = toolAccess === 'core'
+    ? 'The core workflow is available without an account. Browser and tool-specific limits apply.'
+    : toolAccess === 'metered-ai'
+      ? AI_ACCESS_SUMMARY
+      : `Core manual tools are available without an account. Optional AI actions use the signed-in daily allowance. ${AI_ACCESS_SUMMARY}`
 
   return (
     <div style={{ fontFamily: 'var(--font-dm,system-ui,sans-serif)', color: '#1d1d1f', background: '#fff', minHeight: '100vh' }}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd
+        id={`guide-structured-data-${guide.slug}`}
+        data={buildGuideStructuredData(guide)}
+      />
 
       {/* Nav */}
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
+        <Link prefetch={false} href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
           <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} priority />
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <Link href="/guides" style={{ fontSize: 14, color: '#6b7280', textDecoration: 'none', fontWeight: 500 }}>← All guides</Link>
-          <Link href={`/${guide.toolSlug}`} style={{ fontSize: 14, fontWeight: 700, color: '#fff', textDecoration: 'none', padding: '8px 18px', borderRadius: 99, background: PURPLE }}>
+          <Link prefetch={false} href="/guides" style={{ fontSize: 14, color: '#4b5563', textDecoration: 'none', fontWeight: 500 }}>← All guides</Link>
+          <Link prefetch={false} href={`/${guide.toolSlug}`} style={{ fontSize: 14, fontWeight: 700, color: '#fff', textDecoration: 'none', padding: '8px 18px', borderRadius: 99, background: PURPLE }}>
             {guide.ctaLabel}
           </Link>
         </div>
@@ -131,31 +116,39 @@ function GuideContent({ guide }: { guide: Guide }) {
 
       {/* Breadcrumb */}
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '16px 24px 0' }}>
-        <nav aria-label="Breadcrumb" style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12.5, color: '#9ca3af', flexWrap: 'wrap' }}>
-          <Link href="/" style={{ color: '#9ca3af', textDecoration: 'none', fontWeight: 500 }}>Home</Link>
+        <nav aria-label="Breadcrumb" style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12.5, color: '#64748b', flexWrap: 'wrap' }}>
+          <Link prefetch={false} href="/" style={{ color: '#64748b', textDecoration: 'none', fontWeight: 500 }}>Home</Link>
           <span>›</span>
-          <Link href="/guides" style={{ color: '#9ca3af', textDecoration: 'none', fontWeight: 500 }}>Guides</Link>
+          <Link prefetch={false} href="/guides" style={{ color: '#64748b', textDecoration: 'none', fontWeight: 500 }}>Guides</Link>
           <span>›</span>
           <span style={{ color: '#6b7280', fontWeight: 600 }}>{guide.title}</span>
         </nav>
       </div>
 
       {/* Article */}
-      <article style={{ maxWidth: 720, margin: '0 auto', padding: '36px 24px 72px' }}>
+      <article id="main-content" style={{ maxWidth: 720, margin: '0 auto', padding: '36px 24px 72px' }}>
 
         {/* Meta */}
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#9ca3af' }}>
             {guide.readTime}
           </span>
-          <span style={{ width: 3, height: 3, borderRadius: 9, background: '#d1d5db' }} />
-          <span style={{ fontSize: 11.5, color: '#9ca3af', fontWeight: 500 }}>
-            Updated {new Date(guide.dateModified).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </span>
-          <span style={{ width: 3, height: 3, borderRadius: 9, background: '#d1d5db' }} />
-          <span style={{ fontSize: 11.5, color: '#9ca3af', fontWeight: 500 }}>
-            By the EditPDF AI team
-          </span>
+          {guide.datePublished && (
+            <>
+              <span style={{ width: 3, height: 3, borderRadius: 9, background: '#d1d5db' }} />
+              <span style={{ fontSize: 11.5, color: '#9ca3af', fontWeight: 500 }}>
+                Published <time dateTime={guide.datePublished}>{new Date(`${guide.datePublished}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}</time>
+              </span>
+            </>
+          )}
+          {guide.dateModified && (
+            <>
+              <span style={{ width: 3, height: 3, borderRadius: 9, background: '#d1d5db' }} />
+              <span style={{ fontSize: 11.5, color: '#9ca3af', fontWeight: 500 }}>
+                Last reviewed <time dateTime={guide.dateModified}>{new Date(`${guide.dateModified}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}</time>
+              </span>
+            </>
+          )}
         </div>
 
         <h1 style={{ fontSize: 'clamp(26px,4.5vw,40px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, margin: '0 0 20px', color: '#1d1d1f' }}>
@@ -178,18 +171,40 @@ function GuideContent({ guide }: { guide: Guide }) {
           </section>
         ))}
 
+        {guide.relatedLinks && guide.relatedLinks.length > 0 && (
+          <section aria-labelledby="related-resources-heading" style={{ margin: '44px 0' }}>
+            <h2 id="related-resources-heading" style={{ fontSize: 'clamp(18px,2.5vw,24px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 18px', color: '#1d1d1f', lineHeight: 1.25 }}>
+              Related PDF tools and guides
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 12 }}>
+              {guide.relatedLinks.map(link => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  prefetch={false}
+                  className="guide-related-link"
+                  style={{ textDecoration: 'none', display: 'block', border: '1.5px solid #e5e7eb', borderRadius: 14, padding: '17px 16px', background: '#fff' }}
+                >
+                  <span style={{ display: 'block', color: '#1d1d1f', fontSize: 14.5, fontWeight: 800, lineHeight: 1.35, marginBottom: 6 }}>{link.title}</span>
+                  <span style={{ display: 'block', color: '#6b7280', fontSize: 13, lineHeight: 1.55 }}>{link.description}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Tool CTA */}
         <div style={{ margin: '48px 0', background: 'linear-gradient(135deg,rgba(79,127,250,.06),rgba(139,63,236,.06))', border: '1.5px solid rgba(79,127,250,.2)', borderRadius: 20, padding: '32px 28px' }}>
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 10 }}>
-            Try it now — free
+            {accessLabel}
           </div>
           <h3 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 10px', color: '#1d1d1f' }}>
             {guide.toolName}
           </h3>
           <p style={{ fontSize: 14.5, color: '#6b7280', lineHeight: 1.65, margin: '0 0 20px' }}>
-            No account needed. Works on Mac, Windows, iPhone, and Android.
+            {accessSummary}
           </p>
-          <Link href={`/${guide.toolSlug}`}
+          <Link prefetch={false} href={`/${guide.toolSlug}`}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '12px 24px', borderRadius: 12, background: 'linear-gradient(135deg,#4F7FFA,#8B3FEC)', color: '#fff', fontSize: 14.5, fontWeight: 700, textDecoration: 'none' }}>
             {guide.ctaLabel}
           </Link>
@@ -206,7 +221,7 @@ function GuideContent({ guide }: { guide: Guide }) {
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 14 }}>
               {otherGuides.map(g => (
-                <Link key={g.slug} href={`/guides/${g.slug}`}
+                <Link prefetch={false} key={g.slug} href={`/guides/${g.slug}`}
                   style={{ textDecoration: 'none', display: 'block', background: '#fff', borderRadius: 14, padding: '20px 18px', border: '1.5px solid #e8eaed' }}
                   className="more-guide-card">
                   <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: '#9ca3af', marginBottom: 8 }}>
@@ -227,6 +242,7 @@ function GuideContent({ guide }: { guide: Guide }) {
 
       <style>{`
         .more-guide-card:hover { border-color: ${PURPLE}; box-shadow: 0 4px 16px rgba(79,127,250,.1); }
+        .guide-related-link:hover { border-color: ${PURPLE} !important; box-shadow: 0 4px 16px rgba(79,127,250,.1); }
       `}</style>
     </div>
   )

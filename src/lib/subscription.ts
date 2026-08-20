@@ -1,4 +1,5 @@
 import { supabaseAdmin } from './supabase'
+import { FREE_AI_DAILY_LIMIT } from './productMessaging'
 
 export type SubscriptionTier = 'free' | 'pro' | 'team'
 
@@ -33,7 +34,7 @@ export async function getUserSubscription(userId: string): Promise<SubscriptionT
 // slip past the limit together — a losing request just retries the read.
 export async function checkAndIncrementUsage(
   userId: string,
-  freeLimit = 5,
+  freeLimit = FREE_AI_DAILY_LIMIT,
 ): Promise<boolean> {
   const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
 

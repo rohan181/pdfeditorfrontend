@@ -6,6 +6,7 @@ import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
+import { AI_ACCESS_SUMMARY, AI_ACCURACY_DISCLAIMER } from '@/lib/productMessaging'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -372,7 +373,7 @@ export default function PDFToWordPage() {
             </div>
 
             <div style={{ padding: '12px 16px', fontSize: 10, color: 'rgba(0,0,0,.35)', lineHeight: 1.6 }}>
-              Up to 60 000 characters (~40 pages) per conversion. AI reconstructs headings, paragraphs, tables, and lists automatically.
+              Up to 60,000 extracted text characters per conversion. AI drafts headings, paragraphs, tables, and lists; review the result against the source.
             </div>
           </aside>
 
@@ -398,10 +399,10 @@ export default function PDFToWordPage() {
               <div className="hero">
                 <div className="hero-badge">📘 AI-Powered</div>
                 <h1 className="hero-h1">PDF to <em>Word</em></h1>
-                <p className="hero-sub">Claude reads your PDF and rebuilds it as a properly structured Word document — with headings, lists, and tables intact.</p>
+                <p className="hero-sub">AI uses extracted PDF text to draft a structured Word document with proposed headings, lists, and tables. Review the result before use.</p>
                 <div className="feat-grid">
-                  <div className="feat"><div className="feat-icon">🏗️</div><div className="feat-t">Structure Preserved</div><div className="feat-d">Headings, paragraphs & lists</div></div>
-                  <div className="feat"><div className="feat-icon">📊</div><div className="feat-t">Tables Rebuilt</div><div className="feat-d">Data extracted & formatted</div></div>
+                  <div className="feat"><div className="feat-icon">🏗️</div><div className="feat-t">Structure Draft</div><div className="feat-d">Proposed headings, paragraphs & lists</div></div>
+                  <div className="feat"><div className="feat-icon">📊</div><div className="feat-t">Table Suggestions</div><div className="feat-d">Extracted text mapped into tables</div></div>
                   <div className="feat"><div className="feat-icon">💾</div><div className="feat-t">3 Formats</div><div className="feat-d">Word, Plain Text or HTML</div></div>
                 </div>
               </div>
@@ -445,12 +446,12 @@ export default function PDFToWordPage() {
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
       <ToolQuickFacts
-        definition="A PDF to Word converter extracts the text, tables, and images from a PDF and re-creates the content as an editable .docx file you can open in Microsoft Word, Google Docs, or LibreOffice — letting you make substantive edits to a document that was previously locked in PDF format."
-        price="Free — 5 AI conversions/day; Pro removes the daily limit"
+        definition="This PDF to Word tool extracts text locally, sends up to 60,000 characters to AI to draft structured HTML, and packages the result as an editable DOCX. It does not extract source images or reproduce the original page layout."
+        price={AI_ACCESS_SUMMARY}
         account="Free account required (AI feature)"
-        processing="Text extracted locally; only that text is sent to AI to rebuild the document"
+        processing={`Extracted text is sent through the AI route to generate structured HTML for the DOCX. ${AI_ACCURACY_DISCLAIMER}`}
         formats="PDF in, DOCX out"
-        fileLimit="No fixed limit stated"
+        fileLimit="Up to 60,000 extracted text characters per conversion for Free and Pro"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['pdf-to-word']} />

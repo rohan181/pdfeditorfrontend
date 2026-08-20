@@ -16,7 +16,7 @@ export default function Analytics() {
     <>
       {googleAnalyticsId && (
         <>
-          <Script id="google-analytics-bootstrap" strategy="afterInteractive">
+          <Script id="google-analytics-bootstrap" strategy="lazyOnload">
             {`
               window.dataLayer = window.dataLayer || [];
               window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
@@ -37,7 +37,7 @@ export default function Analytics() {
           <Script
             id="google-analytics"
             src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(googleAnalyticsId)}`}
-            strategy="afterInteractive"
+            strategy="lazyOnload"
           />
         </>
       )}
@@ -48,7 +48,7 @@ export default function Analytics() {
           type="module"
           src="https://static.cloudflareinsights.com/beacon.min.js"
           data-cf-beacon={JSON.stringify({ token: cloudflareToken })}
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
       )}
 
@@ -56,4 +56,3 @@ export default function Analytics() {
     </>
   )
 }
-

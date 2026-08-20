@@ -627,10 +627,10 @@ export default function PDFAnnotate() {
         onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }}/>
     </div>
     <ToolQuickFacts
-      definition="A PDF annotator lets you add notes, highlights, drawings, stamps, and text comments directly onto a PDF without altering the original content. Annotations are saved as a standard layer in the file, so they appear in any PDF viewer without requiring the annotator software installed."
+      definition="A PDF annotator lets you add notes, highlights, drawings, stamps, and text comments to a PDF. Saved annotations use standard PDF structures intended for compatible PDF viewers."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF"
       fileLimit="No fixed limit — capped only by device memory"
       browserSupport="Chrome, Firefox, Safari, Edge"

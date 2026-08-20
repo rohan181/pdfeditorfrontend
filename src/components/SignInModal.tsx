@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { SignInButton, SignUpButton } from '@clerk/nextjs'
 import { X, Sparkles, Lock } from 'lucide-react'
+import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
 
 export default function SignInModal() {
   const [open, setOpen] = useState(false)
@@ -89,7 +90,7 @@ export default function SignInModal() {
           fontSize: 14, color: '#6b7280', lineHeight: 1.65, margin: '0 0 28px',
           fontFamily: 'var(--font-dm,system-ui,sans-serif)',
         }}>
-          AI features are free — get <strong style={{ color: '#1d1d1f', fontWeight: 700 }}>5 uses every day</strong> with a free account.
+          A signed-in free account includes <strong style={{ color: '#1d1d1f', fontWeight: 700 }}>{FREE_AI_DAILY_LIMIT} metered AI actions per UTC day</strong>.
           No credit card required.
         </p>
 
@@ -135,7 +136,7 @@ export default function SignInModal() {
           fontFamily: 'var(--font-dm,system-ui,sans-serif)',
         }}>
           <Lock size={11} strokeWidth={2} />
-          Free forever · No card needed · Cancel anytime
+          Free account · No card needed · {FREE_AI_DAILY_LIMIT} AI actions per UTC day
         </div>
       </div>
     </div>

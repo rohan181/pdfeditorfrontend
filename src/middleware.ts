@@ -1,5 +1,39 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { PRODUCTION_ORIGIN } from '@/lib/seo/site'
+
+const CANONICAL_HOSTNAME = new URL(PRODUCTION_ORIGIN).hostname
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]'])
+
+/**
+ * Normalize every public production request in one hop. Local development is
+ * exempt so Playwright and developer servers remain accessible over HTTP.
+ */
+function getCanonicalRedirect(req: NextRequest) {
+  const forwardedHost = req.headers.get('x-forwarded-host')?.split(',')[0]?.trim()
+  const requestedHost = forwardedHost || req.headers.get('host') || req.nextUrl.host
+  const requestedHostname = requestedHost.replace(/:\d+$/, '').toLowerCase()
+
+  if (!requestedHostname || LOCAL_HOSTNAMES.has(requestedHostname)) return null
+
+  const forwardedProtocol = req.headers.get('x-forwarded-proto')?.split(',')[0]?.trim()
+  const requestedProtocol = (forwardedProtocol || req.nextUrl.protocol).replace(/:$/, '')
+  const currentPath = req.nextUrl.pathname
+  const canonicalPath = currentPath === '/' ? '/' : currentPath.replace(/\/+$/, '') || '/'
+
+  const isCanonical =
+    requestedHostname === CANONICAL_HOSTNAME &&
+    requestedProtocol === 'https' &&
+    currentPath === canonicalPath
+
+  if (isCanonical) return null
+
+  const destination = new URL(canonicalPath, `${PRODUCTION_ORIGIN}/`)
+  destination.search = req.nextUrl.search
+
+  return NextResponse.redirect(destination, 308)
+}
 
 // Pages that require a signed-in session (redirect to sign-in if not authed)
 const isProtectedPage = createRouteMatcher([
@@ -26,6 +60,9 @@ const isProtectedApi = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, req) => {
+  const canonicalRedirect = getCanonicalRedirect(req)
+  if (canonicalRedirect) return canonicalRedirect
+
   if (isProtectedPage(req)) {
     await auth.protect()
     return
@@ -42,5 +79,11 @@ export default clerkMiddleware(async (auth, req) => {
 })
 
 export const config = {
-  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: [
+    '/((?!.*\\..*|_next).*)',
+    '/',
+    '/(api|trpc)(.*)',
+    '/robots.txt',
+    '/sitemap.xml',
+  ],
 }

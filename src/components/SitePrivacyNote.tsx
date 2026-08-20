@@ -5,9 +5,9 @@ const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
 
 const CARDS = [
-  { Icon: Globe,      title: 'Browser-based processing', desc: 'PDF editing, compression, signing and page tools all run directly in your browser. Your file never leaves your device.' },
-  { Icon: Server,     title: 'No PDF storage',           desc: 'We do not store your documents on our servers. When you close the tab, your PDF is gone — permanently.' },
-  { Icon: Shield,     title: 'Raw PDFs never sent to AI', desc: 'AI features send only the text — or, for OCR and visual form detection, a rendered page image. Your raw PDF binary is never transmitted to any AI model.' },
+  { Icon: Globe,      title: 'Core tools process locally', desc: 'Editing, compression, signing, conversion, and page-management workflows process selected files in your browser.' },
+  { Icon: Server,     title: 'No document database',       desc: 'The application does not write PDF, image, or extracted document content to its database or object storage.' },
+  { Icon: Shield,     title: 'AI data depends on the feature', desc: 'AI tools may send extracted text, page images, uploaded images, or a PDF through server routes to configured processing providers.' },
 ]
 
 export default function SitePrivacyNote() {
@@ -22,7 +22,7 @@ export default function SitePrivacyNote() {
             Private Browser-Based PDF Processing
           </h2>
           <p style={{...FI,fontSize:15,color:'#CBD5E1',margin:'0 auto',maxWidth:440,lineHeight:1.65}}>
-            Privacy is not a feature — it is the foundation of how EditPDF AI is built.
+            Core tools process locally; AI features disclose the content they send for server-side processing.
           </p>
         </div>
 

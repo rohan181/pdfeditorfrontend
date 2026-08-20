@@ -8,17 +8,11 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig = {
   compress: true,
   poweredByHeader: false,
-
-  async redirects() {
-    return [
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'editpdfai.com' }],
-        destination: 'https://www.editpdfai.com/:path*',
-        permanent: true,
-      },
-    ]
-  },
+  trailingSlash: false,
+  // Middleware owns scheme, host and path normalization so combinations such
+  // as http + non-www + trailing slash resolve in one canonical redirect.
+  skipTrailingSlashRedirect: true,
+  skipMiddlewareUrlNormalize: true,
 
   // Content-Security-Policy is intentionally not set here: this app loads
   // scripts from Clerk, Stripe, PostHog, Google Analytics, Cloudflare Web

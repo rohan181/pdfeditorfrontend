@@ -2,6 +2,7 @@ import Link from 'next/link'
 import {
   FilePen, Minimize2, Merge, Split, PenTool, FileType, Sparkles, Scissors, ChevronRight,
 } from 'lucide-react'
+import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
 
 const FI = { fontFamily:'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily:'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
@@ -28,7 +29,7 @@ const popular: { label: string; href: string; Icon: any; tier: ToolTier; kind: T
 
 const TIER_BADGE: Record<ToolTier, { label: string; bg: string; color: string }> = {
   free: { label:'Free',       bg:'rgba(16,185,129,.1)',   color:'#047857' },
-  ai:   { label:'5 free/day', bg:'rgba(124,58,237,.1)',   color:'#6d28d9' },
+  ai:   { label:`${FREE_AI_DAILY_LIMIT}/UTC day`, bg:'rgba(124,58,237,.1)',   color:'#6d28d9' },
   pro:  { label:'Pro',        bg:'rgba(37,99,235,.1)',    color:'#1d4ed8' },
 }
 

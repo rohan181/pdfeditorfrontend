@@ -467,7 +467,7 @@ export default function ExportPDFFormDataPage() {
       definition="A fillable PDF normally stores answers in an AcroForm field tree. Each field can have a name, type, value, validation flags, available choices, and one or more page widgets. This tool reads that tree and exports the values as structured CSV or JSON."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF in, CSV/JSON out"
       fileLimit="Up to 100 MB and 500 pages"
       browserSupport="Chrome, Firefox, Safari, Edge"

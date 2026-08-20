@@ -1,7 +1,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Upload, Lock, Sparkles, FilePen, Layers, FileType, KeyRound, Merge } from 'lucide-react'
-import { TOOL_COUNT } from '@/lib/toolMeta'
+import {
+  PROCESSING_PRIVACY_SUMMARY,
+  PRODUCT_ACCESS_SUMMARY,
+  TOOL_CATALOGUE_SUMMARY,
+} from '@/lib/productMessaging'
+import { TRUSTPILOT_PROFILE_URL } from '@/lib/entity'
 
 const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
@@ -115,13 +120,13 @@ export default function SiteFooter() {
             </Link>
 
             <p style={{ ...FI, fontSize: 13, color: '#5b6472', lineHeight: 1.7, maxWidth: 220, margin: '0 0 16px' }}>
-              {TOOL_COUNT}+ browser-based PDF and AI tools. Edit, convert, protect and sign. Core tools need no account.
+              {PRODUCT_ACCESS_SUMMARY}
             </p>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 12px', background: 'rgba(22,163,74,.06)', border: '1px solid rgba(22,163,74,.16)', borderRadius: 10, marginBottom: 20, maxWidth: 240 }}>
               <Lock size={13} color="#16a34a" strokeWidth={2.2} style={{ flexShrink: 0, marginTop: 1 }} />
               <p style={{ ...FI, fontSize: 11.5, color: '#374151', lineHeight: 1.55, margin: 0 }}>
-                <strong style={{ color: '#166534' }}>Your files stay private.</strong> PDFs are processed in your browser. AI features use text context only — no raw file is uploaded.
+                <strong style={{ color: '#166534' }}>How processing works.</strong> {PROCESSING_PRIVACY_SUMMARY}
               </p>
             </div>
 
@@ -133,14 +138,12 @@ export default function SiteFooter() {
               ))}
             </div>
             <a
-              href="https://nz.trustpilot.com/review/editpdfai.com"
+              href={TRUSTPILOT_PROFILE_URL}
               target="_blank"
               rel="noopener noreferrer"
               style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 18, color: '#0F172A', fontSize: 12.5, fontWeight: 700, textDecoration: 'none' }}
-              aria-label="Write a review on Trustpilot for EditPDF AI"
             >
-              <span aria-hidden="true" style={{ color: '#00B67A', fontSize: 17, lineHeight: 1 }}>★</span>
-              Write a review on Trustpilot
+              View the EditPDF AI profile on Trustpilot <span aria-hidden="true">↗</span>
             </a>
             <p style={{ ...MONO, fontSize: 10, color: '#5b6472', letterSpacing: '0.04em' }}>
               © {new Date().getFullYear()} EditPDF AI. All rights reserved.
@@ -164,7 +167,7 @@ export default function SiteFooter() {
         <div style={{ borderTop: '1px solid #e5e5ea', padding: '16px 0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <span style={{ ...MONO, fontSize: 10, color: '#5b6472', letterSpacing: '0.04em' }}>
-              {TOOL_COUNT}+ TOOLS · FREE · AI FEATURES
+              {TOOL_CATALOGUE_SUMMARY.toUpperCase()}
             </span>
             <div style={{ display: 'flex', gap: 12 }}>
               {[['Privacy', '/privacy'], ['Terms', '/terms'], ['Contact', '/contact']].map(([l, h]) => (

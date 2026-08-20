@@ -443,8 +443,8 @@ export default function PDFToImagesPage() {
               <p>Export at screen, sharp, or print resolution — perfect for presentations and documents.</p>
             </div>
             <div className="info-card">
-              <h3>🔒 100% Private</h3>
-              <p>All conversion happens in your browser using PDF.js. Your file never leaves your device.</p>
+              <h3>🔒 Local Processing</h3>
+              <p>Conversion runs locally in your browser using PDF.js without an application document-processing request.</p>
             </div>
           </div>
         </div>
@@ -453,7 +453,7 @@ export default function PDFToImagesPage() {
         definition="A PDF to image converter renders each page of a PDF as a separate image file — JPG, PNG, or WEBP. This is the standard way to use PDF content on the web, in presentations, or in design software that doesn't support PDFs natively."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser — file never uploaded"
+        processing="Processed locally in your browser without an application document-processing request"
         formats="PDF in, JPG/PNG/WEBP out"
         fileLimit="No fixed limit — capped only by device memory"
         browserSupport="Chrome, Firefox, Safari, Edge"

@@ -2,11 +2,13 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { currentUser } from '@clerk/nextjs/server'
 import Link from 'next/link'
+import { supportMailto } from '@/lib/entity'
 import Image from 'next/image'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getUserSubscription } from '@/lib/subscription'
 import CancelSection from './CancelSection'
+import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
 
 const FI = 'var(--font-dm,system-ui,sans-serif)'
 const RED = '#E24B4A'
@@ -126,7 +128,7 @@ export default async function ManageSubscriptionPage() {
                 <div style={{ fontSize: 13, color: '#6b7280', marginTop: 2 }}>
                   {isPro
                     ? stripeSub ? `$${stripeSub.amount?.toFixed(2)}/${stripeSub.interval}` : 'Active subscription'
-                    : '5 AI uses per day · Free forever'}
+                    : `${FREE_AI_DAILY_LIMIT} AI actions per UTC day · Free account`}
                 </div>
               </div>
             </div>
@@ -172,7 +174,7 @@ export default async function ManageSubscriptionPage() {
                 ∞
               </div>
               <div>
-                <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1d1d1f' }}>Unlimited AI uses</p>
+                <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1d1d1f' }}>No daily AI-action cap</p>
                 <p style={{ margin: '2px 0 0', fontSize: 13, color: '#6b7280' }}>Used {usage} times today</p>
               </div>
             </div>
@@ -191,7 +193,7 @@ export default async function ManageSubscriptionPage() {
                 </p>
               )}
               <p style={{ margin: '8px 0 0', fontSize: 13, color: '#6b7280' }}>
-                Upgrade to Pro for unlimited AI uses every day.
+                Upgrade to Pro to remove the daily AI-action cap. Tool-specific limits still apply.
               </p>
             </div>
           )}
@@ -216,17 +218,17 @@ export default async function ManageSubscriptionPage() {
               ['PDF Watermarker',        'core'],
             ] as const).map(([feature, kind]) => {
               // Core tools are always available. AI tools are available to
-              // everyone — free accounts get 5 uses/day, Pro gets unlimited —
+              // everyone — free accounts get the shared daily allowance, while Pro bypasses the daily cap —
               // never fully excluded, so this never shows a flat "not included".
-              const unlimited = kind === 'core' || isPro
+              const included = kind === 'core' || isPro
               return (
-                <div key={feature} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, background: unlimited ? 'rgba(8,145,178,.05)' : '#f9fafb' }}>
+                <div key={feature} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, background: included ? 'rgba(8,145,178,.05)' : '#f9fafb' }}>
                   <span style={{ fontSize: 13, flexShrink: 0, color: '#0891b2' }}>✓</span>
                   <span style={{ fontSize: 13, fontWeight: 500, color: '#1d1d1f' }}>
                     {feature}
                   </span>
-                  {!unlimited && (
-                    <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#0891b2', background: 'rgba(8,145,178,.1)', padding: '2px 7px', borderRadius: 99, whiteSpace: 'nowrap' }}>5/day</span>
+                  {!included && (
+                    <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 700, color: '#0891b2', background: 'rgba(8,145,178,.1)', padding: '2px 7px', borderRadius: 99, whiteSpace: 'nowrap' }}>{FREE_AI_DAILY_LIMIT}/day</span>
                   )}
                 </div>
               )
@@ -262,7 +264,7 @@ export default async function ManageSubscriptionPage() {
         {/* Support link */}
         <p style={{ textAlign: 'center', fontSize: 13, color: '#9ca3af', margin: '8px 0 0' }}>
           Questions?{' '}
-          <a href="mailto:support@editpdfai.com" style={{ color: '#0891b2', textDecoration: 'none', fontWeight: 600 }}>
+          <a href={supportMailto()} style={{ color: '#0891b2', textDecoration: 'none', fontWeight: 600 }}>
             Contact support
           </a>
           {' · '}

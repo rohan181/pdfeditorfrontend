@@ -1,8 +1,7 @@
 export interface ToolQuickFactsProps {
-  /** One self-contained 40–60 word answer to "what is this tool" — placed
-   * immediately after the H1 so it can be lifted whole by an answer engine
-   * without needing surrounding page context. */
-  definition: string
+  /** Optional short definition for tool pages whose hero does not already
+   * provide the answer immediately after its H1. */
+  definition?: string
   price: string
   account: string
   processing: string
@@ -16,7 +15,7 @@ const LABEL: React.CSSProperties = {
   fontWeight: 800,
   letterSpacing: '.07em',
   textTransform: 'uppercase',
-  color: '#9ca3af',
+  color: '#64748b',
   marginBottom: 4,
 }
 
@@ -39,7 +38,8 @@ export default function ToolQuickFacts({ definition, price, account, processing,
 
   return (
     <section
-      aria-label="Quick facts"
+      aria-label="Verified facts"
+      className="tool-quick-facts"
       style={{
         maxWidth: 860,
         margin: '0 auto',
@@ -48,9 +48,14 @@ export default function ToolQuickFacts({ definition, price, account, processing,
       }}
     >
       <div style={{ background: '#f7f8fa', border: '1.5px solid #e8eaed', borderRadius: 16, padding: '22px 24px' }}>
-        <p style={{ fontSize: 15, color: '#374151', lineHeight: 1.7, margin: '0 0 18px', maxWidth: 700 }}>
-          {definition}
-        </p>
+        <h2 style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-.025em', color: '#1d1d1f', margin: definition ? '0 0 8px' : '0 0 18px' }}>
+          Verified facts
+        </h2>
+        {definition && (
+          <p className="tool-quick-definition" style={{ fontSize: 15, color: '#374151', lineHeight: 1.7, margin: '0 0 18px', maxWidth: 700 }}>
+            {definition}
+          </p>
+        )}
         <div
           style={{
             display: 'grid',
@@ -61,9 +66,9 @@ export default function ToolQuickFacts({ definition, price, account, processing,
           }}
         >
           {facts.map(([label, value]) => (
-            <div key={label}>
-              <div style={LABEL}>{label}</div>
-              <div style={VALUE}>{value}</div>
+            <div className="tool-quick-fact" data-fact-label={label} key={label}>
+              <div className="tool-quick-fact-label" style={LABEL}>{label}</div>
+              <div className="tool-quick-fact-value" style={VALUE}>{value}</div>
             </div>
           ))}
         </div>

@@ -5,6 +5,7 @@ import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import Image from 'next/image'
 import { TOOL_COUNT } from '@/lib/toolMeta'
+import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
 import {
   motion, AnimatePresence,
   useScroll, useTransform,
@@ -45,15 +46,15 @@ const CATS = [
 // ─── tools ───────────────────────────────────────────────────────────────────
 const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon; iconBg:string; desc:string; tier:'free'|'ai'|'pro' }[] = [
   // ── AI ──────────────────────────────────────────────────────────────────────
-  { name:'AI Form Filler',    tag:'LIVE', href:'/ai-pdf-form-filler', cat:'AI',       Icon:WandSparkles,    iconBg:'linear-gradient(135deg,#7c3aed,#a855f7)', desc:'Auto-fill any PDF form with AI',        tier:'ai'   },
+  { name:'AI Form Filler',    tag:'LIVE', href:'/ai-pdf-form-filler', cat:'AI',       Icon:WandSparkles,    iconBg:'linear-gradient(135deg,#7c3aed,#a855f7)', desc:'Suggest PDF form values with AI',        tier:'ai'   },
   { name:'Chat with PDF',     tag:'LIVE', href:'/chat-with-pdf',      cat:'AI',       Icon:MessageSquareText,iconBg:'linear-gradient(135deg,#6d28d9,#a855f7)', desc:'Ask questions with page citations',      tier:'ai'   },
   { name:'PDF OCR Scanner',   tag:'LIVE', href:'/pdf-ocr',            cat:'AI',       Icon:ScanText,        iconBg:'linear-gradient(135deg,#6366f1,#818cf8)', desc:'Extract text from scanned PDFs',        tier:'ai'   },
   { name:'PDF Summarizer',    tag:'LIVE', href:'/pdf-summarizer',     cat:'AI',       Icon:Sparkles,        iconBg:'linear-gradient(135deg,#8b5cf6,#c084fc)', desc:'Get instant AI summaries',              tier:'ai'   },
-  { name:'PDF Mind Map',      tag:'LIVE', href:'/mind-map',           cat:'AI',       Icon:BrainCircuit,    iconBg:'linear-gradient(135deg,#a855f7,#d946ef)', desc:'Visualise ideas from any PDF',          tier:'ai'   },
+  { name:'PDF Mind Map',      tag:'LIVE', href:'/mind-map',           cat:'AI',       Icon:BrainCircuit,    iconBg:'linear-gradient(135deg,#a855f7,#d946ef)', desc:'Visualise ideas from extracted PDF text',tier:'ai'   },
   { name:'Quiz Creator',      tag:'LIVE', href:'/quiz-creator',       cat:'AI',       Icon:ClipboardList,   iconBg:'linear-gradient(135deg,#7c3aed,#6366f1)', desc:'Generate quizzes from PDF content',     tier:'ai'   },
   { name:'PDF Translator',    tag:'LIVE', href:'/pdf-translator',     cat:'AI',       Icon:Languages,       iconBg:'linear-gradient(135deg,#6366f1,#06b6d4)', desc:'Translate PDFs to any language',        tier:'ai'   },
   // ── Edit ────────────────────────────────────────────────────────────────────
-  { name:'PDF Viewer',        tag:'LIVE', href:'/pdf-viewer',         cat:'Edit',     Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#0a84ff,#34aadc)', desc:'View any PDF in your browser',          tier:'free' },
+  { name:'PDF Viewer',        tag:'LIVE', href:'/pdf-viewer',         cat:'Edit',     Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#0a84ff,#34aadc)', desc:'View compatible PDFs in your browser',  tier:'free' },
   { name:'PDF Editor',        tag:'LIVE', href:'/pdf-editor',         cat:'Edit',     Icon:FilePen,         iconBg:'linear-gradient(135deg,#2563eb,#3b82f6)', desc:'Edit text, images and layout',          tier:'free' },
   { name:'PDF Annotator',     tag:'LIVE', href:'/pdf-annotate',       cat:'Edit',     Icon:MessageSquareText, iconBg:'linear-gradient(135deg,#0ea5e9,#38bdf8)', desc:'Highlight, comment and annotate',     tier:'free' },
   // ── Pages ───────────────────────────────────────────────────────────────────
@@ -67,9 +68,9 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   // ── Convert ─────────────────────────────────────────────────────────────────
   { name:'PDF → Word',        tag:'LIVE', href:'/pdf-to-word',        cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#16a34a,#22c55e)', desc:'Convert PDF to editable Word doc',      tier:'ai'  },
   { name:'PDF → Excel',       tag:'LIVE', href:'/pdf-to-excel',       cat:'Convert',  Icon:FileSpreadsheet, iconBg:'linear-gradient(135deg,#15803d,#16a34a)', desc:'Extract tables to spreadsheet',         tier:'ai'  },
-  { name:'PDF → PowerPoint',  tag:'LIVE', href:'/pdf-to-ppt',         cat:'Convert',  Icon:Presentation,    iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Turn slides into editable PPT',         tier:'ai'  },
-  { name:'Excel / CSV → PDF', tag:'LIVE', href:'/excel-to-pdf',       cat:'Convert',  Icon:Table,           iconBg:'linear-gradient(135deg,#059669,#10b981)', desc:'Spreadsheets to perfect PDF',           tier:'free' },
-  { name:'PPT → PDF',         tag:'LIVE', href:'/ppt-to-pdf',         cat:'Convert',  Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#b45309,#d97706)', desc:'Presentations to PDF instantly',        tier:'free' },
+  { name:'PDF → PowerPoint',  tag:'LIVE', href:'/pdf-to-ppt',         cat:'Convert',  Icon:Presentation,    iconBg:'linear-gradient(135deg,#d97706,#f59e0b)', desc:'Draft editable slides from PDF text',    tier:'ai'  },
+  { name:'Excel / CSV → PDF', tag:'LIVE', href:'/excel-to-pdf',       cat:'Convert',  Icon:Table,           iconBg:'linear-gradient(135deg,#059669,#10b981)', desc:'Export spreadsheet data to PDF',        tier:'free' },
+  { name:'PPT → PDF',         tag:'LIVE', href:'/ppt-to-pdf',         cat:'Convert',  Icon:MonitorPlay,     iconBg:'linear-gradient(135deg,#b45309,#d97706)', desc:'Rebuild supported PPTX text as PDF',    tier:'free' },
   { name:'Word → PDF',        tag:'LIVE', href:'/word-to-pdf',        cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Convert Word .docx to PDF',             tier:'free' },
   { name:'TXT → PDF',         tag:'LIVE', href:'/txt-to-pdf',         cat:'Convert',  Icon:FileText,        iconBg:'linear-gradient(135deg,#6366f1,#818cf8)', desc:'Turn plain text into a PDF',            tier:'free' },
   { name:'RTF → PDF',         tag:'LIVE', href:'/rtf-to-pdf',         cat:'Convert',  Icon:FileType,        iconBg:'linear-gradient(135deg,#b45309,#d97706)', desc:'Convert RTF documents to PDF',          tier:'free' },
@@ -81,11 +82,11 @@ const TOOLS: { name:string; tag:string; href:string; cat:string; Icon:LucideIcon
   // ── Protect ─────────────────────────────────────────────────────────────────
   { name:'PDF Password Lock', tag:'LIVE', href:'/pdf-password-lock',  cat:'Protect',  Icon:KeyRound,        iconBg:'linear-gradient(135deg,#dc2626,#ef4444)', desc:'Encrypt with a strong password',        tier:'free' },
   { name:'Unlock PDF',        tag:'LIVE', href:'/pdf-unlock',         cat:'Protect',  Icon:UnlockKeyhole,   iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Remove a password you already know',    tier:'free' },
-  { name:'PDF Watermarker',   tag:'LIVE', href:'/pdf-watermark',      cat:'Protect',  Icon:Stamp,           iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Add visible or hidden watermarks',      tier:'free' },
-  { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor',       cat:'Protect',  Icon:EyeOff,          iconBg:'linear-gradient(135deg,#374151,#6b7280)', desc:'Permanently black out sensitive text',  tier:'free' },
+  { name:'PDF Watermarker',   tag:'LIVE', href:'/pdf-watermark',      cat:'Protect',  Icon:Stamp,           iconBg:'linear-gradient(135deg,#2563eb,#60a5fa)', desc:'Add text or image watermarks',          tier:'free' },
+  { name:'PDF Redactor',      tag:'LIVE', href:'/pdf-redactor',       cat:'Protect',  Icon:EyeOff,          iconBg:'linear-gradient(135deg,#374151,#6b7280)', desc:'Cover selected areas with opaque boxes', tier:'free' },
   { name:'PDF E-Signer',      tag:'LIVE', href:'/pdf-signer',         cat:'Protect',  Icon:PenTool,         iconBg:'linear-gradient(135deg,#0d9488,#14b8a6)', desc:'Sign and collect signatures',           tier:'free' },
   // ── Organize ────────────────────────────────────────────────────────────────
-  { name:'PDF Compressor',    tag:'LIVE', href:'/pdf-compressor',     cat:'Organize', Icon:Minimize2,       iconBg:'linear-gradient(135deg,#d97706,#fbbf24)', desc:'Shrink file size without quality loss', tier:'free' },
+  { name:'PDF Compressor',    tag:'LIVE', href:'/pdf-compressor',     cat:'Organize', Icon:Minimize2,       iconBg:'linear-gradient(135deg,#d97706,#fbbf24)', desc:'Shrink files with adjustable quality',  tier:'free' },
   { name:'PDF Merger',        tag:'LIVE', href:'/pdf-merger',         cat:'Organize', Icon:Merge,           iconBg:'linear-gradient(135deg,#7c3aed,#8b5cf6)', desc:'Combine multiple PDFs into one',        tier:'free' },
   { name:'PDF Splitter',      tag:'LIVE', href:'/pdf-splitter',       cat:'Organize', Icon:Split,           iconBg:'linear-gradient(135deg,#e11d48,#f43f5e)', desc:'Split one PDF into many files',         tier:'free' },
   { name:'PDF Form Builder',  tag:'LIVE', href:'/pdf-form-builder',   cat:'Organize', Icon:FormInput,       iconBg:'linear-gradient(135deg,#0369a1,#0ea5e9)', desc:'Create fillable PDF forms',             tier:'free' },
@@ -250,7 +251,7 @@ function BrowserUI() {
               <motion.div animate={{width:['0%','40%']}} transition={{duration:1.2,delay:.5,ease:[0.22,1,0.36,1]}}
                 style={{height:'100%',background:'#7c3aed',borderRadius:99}}/>
             </div>
-            <div style={{fontSize:8,color:'rgba(0,0,0,.4)',fontWeight:600}}>2 / 5 used</div>
+            <div style={{fontSize:8,color:'rgba(0,0,0,.4)',fontWeight:600}}>2 / {FREE_AI_DAILY_LIMIT} used</div>
           </div>
           <div style={{height:26,background:'#1d1d1f',borderRadius:7,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
             <Download size={9} color="#fff" strokeWidth={2.5}/>
@@ -352,7 +353,7 @@ const NAV_CATS: AHNavCat[] = [
 
 const NAV_TIER_LABEL = {
   free: { label:'Free',       bg:'rgba(22,163,74,.1)',  color:'#15803d' },
-  ai:   { label:'5 free/day', bg:'rgba(124,58,237,.1)', color:'#7c3aed' },
+  ai:   { label:`${FREE_AI_DAILY_LIMIT}/UTC day`, bg:'rgba(124,58,237,.1)', color:'#7c3aed' },
   pro:  { label:'Pro',        bg:'rgba(8,145,178,.1)',  color:'#0e7490' },
 }
 
@@ -774,7 +775,7 @@ function Hero() {
     <section className="home-hero constellation-hero">
       <div className="constellation-grid" aria-hidden="true" />
       <span className="constellation-index index-left" aria-hidden="true">EDITPDF / UNIVERSE 01</span>
-      <span className="constellation-index index-right" aria-hidden="true">35 TOOLS / ONE FILE</span>
+      <span className="constellation-index index-right" aria-hidden="true">{TOOL_COUNT} TOOLS / ONE FILE</span>
 
       <div className="constellation-shell">
         <div className="constellation-intro">
@@ -793,15 +794,15 @@ function Hero() {
             <h1 className="constellation-brand-h1">EditPDF AI — Free, Private Online PDF Tools</h1>
             <p className="home-hero-title constellation-title constellation-tagline">
               <span className="constellation-title-plain">One PDF.</span>{' '}
-              <span className="constellation-title-gradient">35 ways forward.</span>
+              <span className="constellation-title-gradient">{TOOL_COUNT} ways forward.</span>
             </p>
             <p className="constellation-desc">Start with one document and choose what happens next—edit, sign, scan, translate, compress or protect it, all in your browser.</p>
           </div>
 
           <div className="constellation-actions hero-fade-in hero-fade-in-delay-1">
-            <Link href="/pdf-editor" className="constellation-primary" data-editor-cta><Upload size={16}/> Open a PDF <ArrowRight size={15}/></Link>
+            <Link prefetch={false} href="/pdf-editor" className="constellation-primary" data-editor-cta><Upload size={16}/> Open a PDF <ArrowRight size={15}/></Link>
             <a href="#tools" className="constellation-secondary">Browse all tools <ArrowUpRight size={14}/></a>
-            <div className="constellation-proof"><Shield size={13}/> Browser private <i/> Core tools need no account <i/> AI: 5 free uses/day with account</div>
+            <div className="constellation-proof"><Shield size={13}/> Core browser processing <i/> Core tools need no account <i/> Signed-in Free: {FREE_AI_DAILY_LIMIT} AI actions/UTC day</div>
           </div>
         </div>
 
@@ -815,7 +816,7 @@ function Hero() {
           <div className="constellation-axis axis-x" aria-hidden="true" />
           <div className="constellation-axis axis-y" aria-hidden="true" />
 
-          <Link href="/pdf-editor" className="constellation-core" data-editor-cta>
+          <Link prefetch={false} href="/pdf-editor" className="constellation-core" data-editor-cta>
             <div className="constellation-page-fold"><span/></div>
             <div className="constellation-core-meta"><span>PDF / INPUT</span><i>READY</i></div>
             <div className="constellation-core-icon"><FileText size={25} strokeWidth={1.7}/><i/></div>
@@ -829,7 +830,7 @@ function Hero() {
             {orbitTools.map(({code,label,detail,href,Icon,pos},index)=>(
               <div key={label} className={`constellation-node ${pos} hero-fade-in-scale`}
                 style={{animationDelay:`${.32+index*.045}s`}}>
-                <Link href={href}>
+                <Link prefetch={false} href={href}>
                   <small>{code}</small>
                   <span><Icon size={15} strokeWidth={1.8}/></span>
                   <div><strong>{label}</strong><em>{detail}</em></div>

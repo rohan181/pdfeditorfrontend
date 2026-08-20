@@ -81,7 +81,7 @@ function ToolsPlaceholder() {
     },
     {
       title: 'Convert PDF Files',
-      description: 'Convert PDFs to editable Word, Excel, PowerPoint and image formats, or create PDFs from common documents and web content.',
+      description: 'Create editable AI-assisted Word, Excel, or PowerPoint drafts from extracted PDF text, export page images, or rebuild supported source content as PDFs.',
       paths: ['/pdf-to-word', '/pdf-to-excel', '/pdf-to-ppt', '/pdf-to-images', '/word-to-pdf', '/excel-to-pdf', '/ppt-to-pdf', '/image-to-pdf', '/txt-to-pdf', '/rtf-to-pdf', '/odt-to-pdf', '/html-to-pdf'],
     },
     {

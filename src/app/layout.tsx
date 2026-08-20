@@ -2,11 +2,12 @@ import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans, DM_Sans } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import { SpeedInsights } from '@vercel/speed-insights/next'
-import UpgradeGateProvider from '@/components/UpgradeGateProvider'
-import PdfResultDock from '@/components/PdfResultDock'
+import ApplicationRuntime from '@/components/ApplicationRuntime'
 import Analytics from '@/components/Analytics'
 import SiteJsonLd from '@/components/SiteJsonLd'
-import { TOOL_COUNT } from '@/lib/toolMeta'
+import { buildPageMetadata } from '@/lib/seo/metadata'
+import { SITE_DEFAULT_SEO } from '@/lib/seo/routes'
+import { PRODUCTION_ORIGIN } from '@/lib/seo/site'
 import './globals.css'
 
 // Two font families only — Jakarta for headings (LCP-critical), DM Sans for body/UI
@@ -21,54 +22,9 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: { default: 'EditPDF AI — Edit smarter. Finish faster.', template: '%s' },
-  description: `Edit smarter. Finish faster. ${TOOL_COUNT}+ PDF and AI tools — edit, sign, OCR, translate, summarise and fill forms. Core tools need no account.`,
-  authors: [{ name: 'EditPDF AI', url: 'https://www.editpdfai.com' }],
-  creator: 'EditPDF AI',
-  publisher: 'EditPDF AI',
+  ...buildPageMetadata(SITE_DEFAULT_SEO),
   category: 'technology',
-  metadataBase: new URL('https://www.editpdfai.com'),
-  // No `alternates.canonical` here — every route below root now sets its own
-  // canonical explicitly via `buildToolMetadata()` (src/lib/seo/metadata.ts),
-  // and the homepage (src/app/page.tsx) hand-renders its own canonical <link>
-  // to work around Next's root-path trailing-slash normalization (see the
-  // comment there). Setting one here would cascade into a second, incorrect
-  // canonical on the homepage — confirmed by tests/qa/seo-metadata.spec.ts.
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  openGraph: {
-    type: 'website',
-    url: 'https://www.editpdfai.com',
-    siteName: 'EditPDF AI',
-    title: 'EditPDF AI — Edit smarter. Finish faster.',
-    description: `Edit smarter. Finish faster. ${TOOL_COUNT}+ PDF and AI tools. Core tools need no account.`,
-    locale: 'en_US',
-    images: [
-      {
-        url: '/opengraph-image',
-        width: 1200,
-        height: 630,
-        alt: 'EditPDF AI — Edit smarter. Finish faster.',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    site: '@editpdfai',
-    creator: '@editpdfai',
-    title: 'EditPDF AI — Edit smarter. Finish faster.',
-    description: `Edit smarter. Finish faster. ${TOOL_COUNT}+ PDF and AI tools. Core tools need no account.`,
-    images: ['/opengraph-image'],
-  },
+  metadataBase: new URL(PRODUCTION_ORIGIN),
   formatDetection: {
     email: false,
     address: false,
@@ -89,9 +45,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </head>
         <body style={{ fontFamily: 'var(--font-dm), system-ui, sans-serif' }}>
           <a href="#main-content" className="skip-to-content">Skip to content</a>
-          <UpgradeGateProvider />
           {children}
-          <PdfResultDock />
+          <ApplicationRuntime />
           <SpeedInsights />
           <Analytics />
         </body>

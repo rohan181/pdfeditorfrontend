@@ -1,9 +1,6 @@
-import type { Metadata } from 'next'
+import { metadataFor } from '@/lib/seo/routes'
 
-export const metadata: Metadata = {
-  title: 'Manage Subscription — EditPDF AI',
-  robots: { index: false, follow: true },
-}
+export const metadata = metadataFor('manage-subscription')
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return <>{children}</>

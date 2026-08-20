@@ -618,12 +618,12 @@ export default function PDFSignerPage() {
           <div className="uc">
             <div className="u-hero">
               <div className="u-badge">✍ E-Signer</div>
-              <h1 className="u-h1">Sign <em>PDF</em> online<br/>free — instantly</h1>
-              <p className="u-sub">Draw, type or upload your signature — place it anywhere and download instantly. 100% in-browser.</p>
+              <h1 className="u-h1">Sign a <em>PDF</em> online<br/>with a visual signature</h1>
+              <p className="u-sub tool-hero-definition">An online PDF signer places a visual signature on a PDF without printing or rescanning. You can draw a signature, type it with a supported script font, or upload a PNG or JPEG, then position and resize it before downloading. The tool runs locally, but it does not verify identity or create a certificate-based digital signature.</p>
             </div>
             <div ref={dropRef} className="u-drop" onClick={() => fileInputRef.current?.click()}>
               <div className="u-drop-icon">📄</div>
-              <div className="u-drop-txt">Drop your PDF here, or click to choose<br/><span style={{ fontSize:11, color:'rgba(0,0,0,.28)' }}>PDF files only · nothing leaves your browser</span></div>
+              <div className="u-drop-txt">Drop your PDF here, or click to choose<br/><span style={{ fontSize:11, color:'rgba(0,0,0,.28)' }}>PDF files only · local browser processing</span></div>
               <button className="u-drop-btn" onClick={e => { e.stopPropagation(); fileInputRef.current?.click() }}>Choose PDF</button>
             </div>
             <div className="u-feats">
@@ -642,15 +642,14 @@ export default function PDFSignerPage() {
             onChange={e => { const f=e.target.files?.[0]; if(f){setPdfFile(f);loadPDF(f)}; e.target.value='' }} />
         </div>
         <ToolQuickFacts
-          definition="An electronic PDF signer lets you place a signature on a PDF document without printing, signing by hand, and scanning. Draw your signature, type it in a handwritten font, or upload an image of your existing signature, then place it anywhere on the page in seconds — no account needed."
           price="Free — no account needed"
           account="Not required"
-          processing="Entirely in your browser — document and signature never leave your device"
-          formats="PDF"
-          fileLimit="No fixed limit — capped only by device memory"
-          browserSupport="Chrome, Firefox, Safari, Edge"
+          processing="The PDF and signature are processed locally in your browser without an application document-processing request"
+          formats="Input: PDF plus a drawn, typed, PNG, or JPEG signature · Output: PDF"
+          fileLimit="No fixed cap is enforced by the file handler; practical capacity depends on browser memory and device performance"
+          browserSupport="Modern desktop and mobile browsers with JavaScript, canvas, and required file APIs"
         />
-        <ToolSEOSection {...toolSeoData['pdf-signer']} />
+        <ToolSEOSection {...toolSeoData['pdf-signer']} showDirectAnswer={false} />
       </>
     )
   }

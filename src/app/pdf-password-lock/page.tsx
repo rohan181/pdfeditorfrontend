@@ -253,7 +253,7 @@ export default function PDFPasswordLockPage() {
           <div className="wrap">
             <div className="badge"><span className="bdot"/>PDF Security · AES-256</div>
             <h1>Password Lock<br/>Your <em>PDF</em></h1>
-            <p>Encrypt any PDF with AES-256 — open it in Chrome, Preview, Acrobat, or any modern reader.</p>
+            <p>Encrypt supported PDFs with AES-256 for readers that support standard encrypted PDF files.</p>
           </div>
         </div>
 
@@ -386,7 +386,7 @@ export default function PDFPasswordLockPage() {
           <div className="info-grid">
             <div className="info-card">
               <h3>🔐 AES-256</h3>
-              <p>Industry-standard AES-256 encryption — the same used by banks and governments.</p>
+              <p>The tool configures QPDF to create an AES-256 encrypted PDF for compatible readers.</p>
             </div>
             <div className="info-card">
               <h3>⚡ Instant download</h3>
@@ -400,10 +400,10 @@ export default function PDFPasswordLockPage() {
         </div>
       </div>
       <ToolQuickFacts
-        definition="A PDF password lock encrypts a PDF file so anyone who tries to open it must enter the correct password first. Without it, the content is completely unreadable, even if someone obtains a copy of the file. EditPDF AI uses AES-256 encryption, the strongest level available in the PDF specification."
+        definition="A PDF password lock applies standard PDF encryption so compatible readers request an open password before displaying the document. This tool configures QPDF to create an AES-256 encrypted PDF."
         price="Free — no account needed"
         account="Not required"
-        processing="Entirely in your browser via WebAssembly — file never uploaded"
+        processing="Processed locally in your browser via WebAssembly"
         formats="PDF"
         fileLimit="No fixed limit — capped only by device memory"
         browserSupport="Chrome, Firefox, Safari, Edge"

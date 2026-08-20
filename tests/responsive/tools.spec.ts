@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const toolRoutes = [
-  '/add-page-numbers', '/delete-pages', '/excel-to-pdf', '/extract-pages',
+  '/add-page-numbers', '/ai-pdf-form-filler', '/delete-pages', '/excel-to-pdf', '/extract-pages',
   '/html-to-pdf', '/image-to-pdf', '/mind-map', '/odt-to-pdf',
   '/pdf-annotate', '/pdf-compressor', '/pdf-cropper', '/pdf-editor',
   '/pdf-form-builder', '/pdf-merger', '/pdf-ocr', '/pdf-page-manager',
@@ -27,7 +27,7 @@ for (const route of toolRoutes) {
         return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden';
       };
 
-      const tinyButtons = navigator.maxTouchPoints > 0 ? [...document.querySelectorAll('button,[role="button"]')]
+      const tinyButtons = navigator.maxTouchPoints > 0 ? Array.from(document.querySelectorAll('button,[role="button"]'))
         .filter(visible)
         .filter((element) => {
           const rect = element.getBoundingClientRect();

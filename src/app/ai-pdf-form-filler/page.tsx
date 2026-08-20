@@ -4,7 +4,11 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
+import JsonLd from '@/components/JsonLd'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
+import ToolBreadcrumb from '@/components/ToolBreadcrumb'
+import { AI_ACCESS_SUMMARY, AI_ACCURACY_DISCLAIMER, FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
+import { buildFaqStructuredData } from '@/lib/seo/structuredData'
 
 const PDFEditor = dynamic(() => import('@/components/PDFEditor'), {
   ssr: false,
@@ -19,7 +23,7 @@ const PDFEditor = dynamic(() => import('@/components/PDFEditor'), {
         <div className="editor-loading-title">Preparing your AI PDF editor</div>
         <div className="editor-loading-copy">Loading form detection, editing and signing tools…</div>
         <div className="editor-loading-track" aria-hidden="true"><span /></div>
-        <div className="editor-loading-private">✓ Your PDF stays in your browser</div>
+        <div className="editor-loading-private">AI actions may send document content for processing</div>
       </div>
     </div>
   ),
@@ -71,7 +75,9 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(124,58,237,.07);border:1px solid rgba(124,58,237,.2);border-radius:20px;font-family:var(--fm);font-size:9px;letter-spacing:.16em;color:var(--p);margin-bottom:28px}
 .bdot{width:5px;height:5px;border-radius:50%;background:var(--p);box-shadow:0 0 6px var(--p);animation:bdot 2s ease-in-out infinite}
 @keyframes bdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.65)}}
-.hero-h1{font-family:var(--fd);font-weight:800;letter-spacing:-.055em;line-height:.92;margin-bottom:26px}
+.hero-heading{font-family:var(--fd);font-weight:800;letter-spacing:-.055em;line-height:.92;margin-bottom:26px}
+.hero-h1{font:inherit;letter-spacing:inherit;line-height:inherit;margin:0}
+.hero-heading .hero-sub{font-family:var(--fu);font-weight:400;letter-spacing:normal;line-height:1.75;margin:20px 0 22px}
 .h1-a{display:block;font-size:clamp(42px,4.7vw,64px);color:#1d1d1f}
 .h1-b{display:block;font-size:clamp(42px,4.7vw,64px);background:linear-gradient(110deg,#7c3aed 0%,#6366f1 45%,#0891b2 100%);background-size:220% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gflow 4s linear infinite}
 @keyframes gflow{0%{background-position:0% center}100%{background-position:220% center}}
@@ -314,45 +320,30 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 `
 
 const FEATURES = [
-  { icon: '🧠', title: 'AI Field Detection', desc: 'Paste your context once. AI identifies every form field — name, date, address, checkboxes — and fills them all in seconds.', ic: 'rgba(139,92,246,.14)', bar: 'linear-gradient(90deg,#8b5cf6,#6d28d9)', hb: 'rgba(139,92,246,.28)', glow: 'rgba(139,92,246,.1)', shad: 'rgba(139,92,246,.22)' },
-  { icon: '✍️', title: 'Digital Signatures', desc: 'Draw, type or upload your signature. Place it anywhere with pixel-perfect precision — no extensions required.', ic: 'rgba(245,158,11,.12)', bar: 'linear-gradient(90deg,#f59e0b,#d97706)', hb: 'rgba(245,158,11,.28)', glow: 'rgba(245,158,11,.08)', shad: 'rgba(245,158,11,.18)' },
-  { icon: '📝', title: 'Full Text Editing', desc: 'Click anywhere to add or edit text, change fonts, sizes and colors — on native or scanned PDFs alike.', ic: 'rgba(34,211,238,.12)', bar: 'linear-gradient(90deg,#22d3ee,#0891b2)', hb: 'rgba(34,211,238,.28)', glow: 'rgba(34,211,238,.08)', shad: 'rgba(34,211,238,.18)' },
-  { icon: '🔍', title: 'OCR for Scanned PDFs', desc: 'Built-in OCR reads image-based and scanned PDFs, making hidden fields editable instantly.', ic: 'rgba(74,222,128,.12)', bar: 'linear-gradient(90deg,#4ade80,#16a34a)', hb: 'rgba(74,222,128,.28)', glow: 'rgba(74,222,128,.08)', shad: 'rgba(74,222,128,.18)' },
+  { icon: '🧠', title: 'AI Field Detection', desc: 'Paste your context once. AI proposes matches for detected names, dates, addresses, checkboxes, and other supported fields.', ic: 'rgba(139,92,246,.14)', bar: 'linear-gradient(90deg,#8b5cf6,#6d28d9)', hb: 'rgba(139,92,246,.28)', glow: 'rgba(139,92,246,.1)', shad: 'rgba(139,92,246,.22)' },
+  { icon: '✍️', title: 'Signature Placement', desc: 'Draw, type or upload a signature image and position it on the page. Review the result before relying on it.', ic: 'rgba(245,158,11,.12)', bar: 'linear-gradient(90deg,#f59e0b,#d97706)', hb: 'rgba(245,158,11,.28)', glow: 'rgba(245,158,11,.08)', shad: 'rgba(245,158,11,.18)' },
+  { icon: '📝', title: 'Text Overlays', desc: 'Add and format text overlays on supported PDF pages, including flat or scanned form pages.', ic: 'rgba(34,211,238,.12)', bar: 'linear-gradient(90deg,#22d3ee,#0891b2)', hb: 'rgba(34,211,238,.28)', glow: 'rgba(34,211,238,.08)', shad: 'rgba(34,211,238,.18)' },
+  { icon: '🔍', title: 'OCR for Scanned PDFs', desc: 'AI analyzes rendered pages from image-based and scanned forms to propose field positions.', ic: 'rgba(74,222,128,.12)', bar: 'linear-gradient(90deg,#4ade80,#16a34a)', hb: 'rgba(74,222,128,.28)', glow: 'rgba(74,222,128,.08)', shad: 'rgba(74,222,128,.18)' },
   { icon: '📄', title: 'Page Management', desc: 'Reorder, rotate, delete or add blank pages. Merge PDFs or split pages — all in one editor.', ic: 'rgba(244,114,182,.12)', bar: 'linear-gradient(90deg,#f472b6,#be185d)', hb: 'rgba(244,114,182,.28)', glow: 'rgba(244,114,182,.08)', shad: 'rgba(244,114,182,.18)' },
-  { icon: '⚡', title: 'Instant Download', desc: 'Export your completed PDF in one click. Every annotation, signature and filled field preserved exactly.', ic: 'rgba(251,191,36,.12)', bar: 'linear-gradient(90deg,#fbbf24,#b45309)', hb: 'rgba(251,191,36,.28)', glow: 'rgba(251,191,36,.08)', shad: 'rgba(251,191,36,.18)' },
+  { icon: '⚡', title: 'PDF Export', desc: 'Review the populated fields, annotations, and visual signature, then export a completed PDF copy.', ic: 'rgba(251,191,36,.12)', bar: 'linear-gradient(90deg,#fbbf24,#b45309)', hb: 'rgba(251,191,36,.28)', glow: 'rgba(251,191,36,.08)', shad: 'rgba(251,191,36,.18)' },
 ]
 
 const FAQS = [
-  { q: 'What is an AI PDF form filler?', a: 'An AI PDF form filler detects input fields in a PDF and fills them automatically based on context you provide. You describe your details once and AI populates the entire form instantly — no clicking each field manually.' },
-  { q: 'Is it free to use?', a: 'Free to start — includes 5 AI uses per day. Core PDF tools (edit, sign, merge, compress) are always free with no limits. Upgrade to Pro for unlimited AI uses.' },
-  { q: 'Do I need to create an account?', a: 'A free account is required to use AI features. Sign in to get 5 free AI uses per day — no credit card needed. Upgrade to Pro for unlimited use. Your PDF is always processed in your browser and never stored.' },
-  { q: 'What types of PDFs are supported?', a: 'Both interactive PDF forms (AcroForms) and flat or scanned PDFs are supported. For scanned documents, the built-in OCR engine detects field positions automatically.' },
-  { q: 'Is my document data secure?', a: 'Your files are processed entirely in your browser and are never stored on our servers. AI features send only the relevant text context — never the raw file — and no data is retained.' },
-  { q: 'Can I add a digital signature?', a: 'Yes. Draw a freehand signature, type your name, or upload a signature image. Place it anywhere with drag-and-drop precision.' },
-  { q: 'Can it fill a W-9, 1099, or tax form automatically?', a: 'Yes. W-9, 1099, and other IRS tax forms are standard PDFs that the AI handles well. Paste your name, EIN/SSN, address, and tax classification once and the AI fills every matching field. Download the completed form and sign.' },
-  { q: 'How do I fill a PDF form online without Adobe Acrobat?', a: 'Upload your PDF to EditPDF AI, use the AI form filler to auto-detect and fill all fields, add a signature if needed, then download. No Adobe Acrobat subscription or desktop software required — everything runs free in your browser.' },
-  { q: "What's the difference between a fillable and a non-fillable PDF?", a: 'A fillable PDF (AcroForm) has interactive fields you can click and type into. A non-fillable or flat PDF is an image or static layout with no interactive fields. Our AI handles both: AcroForms are filled natively, and flat PDFs are filled using text overlays positioned by AI over the detected form areas.' },
-  { q: 'Can it fill a scanned PDF form?', a: 'Yes. For scanned paper forms that have been saved as image-based PDFs, the built-in OCR engine first extracts the layout and field positions. AI then fills the detected fields using text overlays. The result is a completed PDF that looks identical to a manually filled paper form.' },
-  { q: 'Can I use it to fill out a visa or immigration application form?', a: 'Yes. Visa and immigration forms are usually standard PDFs (fillable or scanned), which the AI handles the same way as any other form: paste your personal details once, and it matches them to the correct fields across the whole document. Always double-check every field against your official documents before submitting — the tool speeds up filling, but you are responsible for the accuracy of what you submit to an immigration authority.' },
+  { q: 'What is an AI PDF form filler?', a: 'An AI PDF form filler analyzes a PDF and proposes values for detected fields based on context you provide. Review and correct the populated fields before downloading or submitting the form.' },
+  { q: 'Can I use AI form filling without signing up?', a: `No. AI form filling requires an account. Signed-in free accounts receive up to ${FREE_AI_DAILY_LIMIT} metered AI actions per UTC day across AI tools; Pro removes the daily cap. Core manual editing is available separately without an AI action.` },
+  { q: 'What does AI PDF form filling cost?', a: AI_ACCESS_SUMMARY },
+  { q: 'Can the AI fill flat or scanned PDF forms?', a: 'The tool can analyze rendered pages from flat or scanned forms and propose text-overlay positions. It also handles supported interactive AcroForm fields. Results depend on the page layout and image quality.' },
+  { q: 'What document data is sent for AI filling?', a: 'Depending on the workflow, the server route can receive user-entered details, extracted text, a rendered form-page image, an uploaded identity-document image, or a complete PDF for document-level context. The application code does not write document content to its database or object storage.' },
+  { q: 'How accurate are AI-filled PDF fields?', a: AI_ACCURACY_DISCLAIMER },
 ]
 
-const FAQ_JSON_LD = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: FAQS.map(f => ({
-    '@type': 'Question',
-    name: f.q,
-    acceptedAnswer: { '@type': 'Answer', text: f.a },
-  })),
-}
-
-const TICKS = ['AI Form Filling','OCR Support','Digital Signature','Instant Export']
+const TICKS = ['AI Form Filling','OCR Support','Visual Signature','PDF Export']
 
 const DEMO = [
-  { label: 'Upload PDF',       color: '#6366f1', desc: 'Drop any PDF — AcroForm, flat or scanned' },
+  { label: 'Upload PDF',       color: '#6366f1', desc: 'Choose an AcroForm, flat or scanned PDF' },
   { label: 'Paste details',    color: '#7c3aed', desc: 'Type your info once in plain language' },
-  { label: 'AI detects fields',color: '#0891b2', desc: 'AI reads and maps every field instantly' },
-  { label: 'Fields filled',    color: '#16a34a', desc: 'All form fields filled automatically' },
+  { label: 'AI detects fields',color: '#0891b2', desc: 'AI analyzes the form and proposes field matches' },
+  { label: 'Fields filled',    color: '#16a34a', desc: 'Review the populated fields before export' },
   { label: 'Download PDF',     color: '#22c55e', desc: 'Export your completed PDF in one click' },
 ]
 
@@ -370,11 +361,6 @@ export default function AIPDFFormFillerPage() {
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setDemoPlaying(false)
-  }, [])
-
-  useEffect(() => {
-    const id = window.setTimeout(preloadEditor, 1200)
-    return () => window.clearTimeout(id)
   }, [])
 
   useEffect(() => {
@@ -413,9 +399,12 @@ export default function AIPDFFormFillerPage() {
   }, [])
 
   return (
-    <div className="pg">
+    <div className="pg" id="main-content">
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }} />
+      <JsonLd
+        id="tool-faq-structured-data-ai-pdf-form-filler"
+        data={buildFaqStructuredData('/ai-pdf-form-filler', FAQS)}
+      />
 
       {/* Fullscreen editor overlay */}
       {editorOpen && (
@@ -438,17 +427,22 @@ export default function AIPDFFormFillerPage() {
 
           {/* Left — copy */}
           <div className="hero-l">
+            <div style={{ marginBottom: 18 }}>
+              <ToolBreadcrumb toolName="AI PDF Form Filler" />
+            </div>
             <div className="hero-badge">
               <span className="bdot" /><span>AI-POWERED FORM FILLING</span>
             </div>
-            <h1 className="hero-h1">
-              <span className="h1-a">AI PDF Form Filler</span>
-              <span className="h1-b">Fill Forms Instantly</span>
-              <span className="h1-c">5 Free Uses/Day — Sign In Required</span>
-            </h1>
-            <p className="hero-sub">
-              Use our online AI PDF form filler to upload any PDF, paste your details once, and automatically fill every matching field.
-            </p>
+            <div className="hero-heading">
+              <h1 className="hero-h1">
+                <span className="h1-a">AI PDF Form Filler</span>
+              </h1>
+              <p className="hero-sub tool-hero-definition">
+                An AI PDF form filler analyzes supported interactive, flat, or scanned forms and proposes field values from information you provide. EditPDF AI can use text, rendered pages, uploaded images, or a PDF during AI workflows. Every proposed value remains editable and should be checked against the source before download or submission.
+              </p>
+              <div className="h1-b">Review AI-Suggested Fields</div>
+              <div className="h1-c">{FREE_AI_DAILY_LIMIT} AI Actions/UTC Day on Free — Sign In Required</div>
+            </div>
             <div className="cta-row">
               <button className="btn-p" onClick={openEditor} onPointerEnter={preloadEditor} onFocus={preloadEditor}>
                 Fill My PDF with AI
@@ -457,7 +451,7 @@ export default function AIPDFFormFillerPage() {
               <a className="btn-s2" href="#features">See features</a>
             </div>
             <div className="h-pills">
-              {([['5 AI Uses','/ Day Free'],['Sign In','Required'],['OCR','Built-in'],['Private','& Secure']] as const).map(([v, l]) => (
+              {([[`${FREE_AI_DAILY_LIMIT} AI Actions`,'/ UTC Day on Free'],['Sign In','Required'],['OCR','Built-in'],['Review','AI Output']] as const).map(([v, l]) => (
                 <div key={l} className="hpill"><strong>{v}</strong>{' '}<span>{l}</span></div>
               ))}
             </div>
@@ -465,7 +459,7 @@ export default function AIPDFFormFillerPage() {
             {/* Privacy note */}
             <div className="priv-box">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0,color:'#16a34a'}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span><strong>Your PDF stays in your browser.</strong> AI features only process the required text context and do not upload the raw file.</span>
+              <span><strong>Processing depends on the workflow.</strong> Manual field editing stays in the browser. AI routes may receive entered text, rendered pages, uploaded images, or a PDF.</span>
             </div>
           </div>
 
@@ -537,13 +531,12 @@ export default function AIPDFFormFillerPage() {
       </section>
 
       <ToolQuickFacts
-        definition="An AI PDF form filler reads the fields in a PDF form — including scanned forms — and fills them automatically from information you provide once, instead of typing each field by hand. Review every field, add a signature, and download. Core tools are free; AI filling needs a free account, with five uses per day included."
-        price="Free to start — 5 AI uses/day; Pro removes the daily limit ($1/month)"
-        account="Free account required for AI filling"
-        processing="Text and page images sent to the AI backend; the original PDF stays on your device"
-        formats="PDF (interactive, flat, or scanned forms)"
-        fileLimit="Up to 50 MB"
-        browserSupport="Chrome, Firefox, Safari, Edge"
+        price={AI_ACCESS_SUMMARY}
+        account="Sign-in is required for AI filling; core manual editing is available separately without an AI action"
+        processing={`AI workflows may send text, page images, uploaded images, or a PDF through server routes; manual editing stays in the browser. ${AI_ACCURACY_DISCLAIMER}`}
+        formats="Input: PDF; optional context: JPG, PNG, WebP, GIF, or PDF · Output: PDF"
+        fileLimit="Form PDF interface: 50 MB · Optional context file: 5 MB"
+        browserSupport="Modern desktop and mobile browsers with JavaScript and required file APIs"
       />
 
       {/* Ticker */}
@@ -569,10 +562,10 @@ export default function AIPDFFormFillerPage() {
               What is an AI PDF form filler?
             </h2>
             <p style={{ fontSize: 16, color: '#374151', lineHeight: 1.8, marginBottom: 16 }}>
-              An <strong>AI PDF form filler</strong> is a tool that reads the fields in a PDF form and fills them in automatically based on information you provide. Instead of clicking each box and typing your name, address, date, and other details repeatedly, you describe your information once — in plain language — and AI maps that context to every matching field instantly.
+              An <strong>AI PDF form filler</strong> analyzes detected fields in a PDF form and proposes values based on information you provide. Instead of retyping repeated details, you can supply that context once and then review the suggested matches.
             </p>
             <p style={{ fontSize: 16, color: '#374151', lineHeight: 1.8, marginBottom: 16 }}>
-              Traditional PDF form filling is tedious: open Acrobat, click field by field, type the same address you typed last week, repeat for the next form. AI form filling removes this entirely. Our tool detects both native AcroForm fields (the clickable boxes in an interactive PDF) and non-interactive forms (flat PDFs with underlines or tables). For scanned paper forms, OCR reads the layout first, then AI fills the detected fields.
+              The tool detects native AcroForm fields and can analyze rendered pages from supported flat or scanned forms. For scanned paper forms, AI page analysis proposes field locations and values. Layout and scan quality affect the result.
             </p>
             <p style={{ fontSize: 16, color: '#374151', lineHeight: 1.8 }}>
               The result: a completed, signable PDF you can review field by field before downloading. No Adobe Acrobat subscription or desktop software is required. AI filling requires a free account; manual editing and signing remain available as core tools.
@@ -586,13 +579,11 @@ export default function AIPDFFormFillerPage() {
             </h2>
             <div className="audience-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 16 }}>
               {[
-                { who: 'Job seekers', why: 'Auto-fill job application PDFs from a CV — name, contact, work history — in one paste instead of retyping everything.' },
-                { who: 'Freelancers & contractors', why: 'Complete W-9, 1099, and client onboarding forms without manually entering the same business details every time.' },
-                { who: 'Students', why: 'Fill scholarship applications, enrollment forms, and financial aid PDFs quickly — no PDF editor subscription needed.' },
-                { who: 'Small business owners', why: 'Process vendor agreements, insurance forms, and government applications without paying for Acrobat Pro.' },
-                { who: 'HR & recruiting teams', why: 'Populate employee onboarding packets and benefits enrollment forms from existing data in seconds.' },
-                { who: 'Legal & real estate', why: 'Fill lease agreements, disclosure forms, and standard legal documents without copying and re-entering client details.' },
-              ].map(u => (
+                { who: 'Job seekers', why: 'Provide relevant CV details once, then review the values proposed for detected fields in a supported job-application PDF.' },
+                { who: 'Freelancers & contractors', why: 'Reuse business details when reviewing detected fields in supported W-9, 1099, or client-onboarding forms.' },
+                { who: 'Students', why: 'Prepare supported scholarship, enrollment, or financial-aid forms while checking every AI-proposed value against source records.' },
+                { who: 'Small business owners', why: 'Review proposed values in supported vendor, insurance, or government forms before signing or submitting the result.' },
+              ].slice(0, 4).map(u => (
                 <div key={u.who} className="audience-card" style={{ background: '#f7f8fa', borderRadius: 14, padding: '20px 18px', border: '1.5px solid #e8eaed' }}>
                   <div style={{ fontFamily: 'var(--fd)', fontSize: 14, fontWeight: 800, color: '#1d1d1f', marginBottom: 7, letterSpacing: '-.02em' }}>{u.who}</div>
                   <p style={{ fontSize: 13.5, color: '#6b7280', lineHeight: 1.65, margin: 0 }}>{u.why}</p>
@@ -604,10 +595,10 @@ export default function AIPDFFormFillerPage() {
           {/* Form types */}
           <div>
             <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(22px,2.5vw,32px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 12 }}>
-              Works with every type of PDF form
+              Supported PDF form types
             </h2>
             <p style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.7, marginBottom: 28, maxWidth: 600 }}>
-              Whether the PDF is a native interactive form, a flat scanned document, or a government application — the AI detects and fills the fields.
+              The tool supports interactive AcroForms and can analyze rendered pages from supported flat or scanned forms. Results depend on layout and scan quality.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
               {[
@@ -773,15 +764,15 @@ export default function AIPDFFormFillerPage() {
         <div className="wrap">
           <span className="sec-eye">Simple process</span>
           <h2 className="sec-h">How to fill a PDF form<br />online with AI</h2>
-          <p className="sec-sub">No learning curve. Upload, describe your details, download the completed form.</p>
+          <p className="sec-sub">Upload a supported form, describe your details, review the proposed values, and download the completed PDF.</p>
           <p style={{ margin: '-22px auto 32px', maxWidth: 620, textAlign: 'center', fontSize: 13.5, color: '#64748b', lineHeight: 1.6 }}>
             Prefer a detailed walkthrough? Read <Link href="/guides/how-to-fill-out-a-pdf-form-automatically" style={{ color: '#6d28d9', fontWeight: 700 }}>how to fill out a PDF form automatically</Link>.
           </p>
           <div className="steps">
             {[
-              { n: '1', t: 'Upload your PDF', d: 'Drag and drop any PDF — AcroForm, flat or scanned. Loads instantly in your browser, no server processing.' },
-              { n: '2', t: 'Describe your details', d: 'Type your info in plain language. AI reads the form, matches every field and fills them all at once.' },
-              { n: '3', t: 'Sign & Download', d: 'Add your signature, make final edits, then export a pixel-perfect PDF — ready to send.' },
+              { n: '1', t: 'Upload your PDF', d: 'Choose an AcroForm, flat or scanned PDF. AI features may send PDF content, rendered pages, images or extracted text for processing.' },
+              { n: '2', t: 'Describe your details', d: 'Type your information in plain language. AI analyzes the form and proposes values for matching fields.' },
+              { n: '3', t: 'Sign & Download', d: 'Add a signature image, review every field and page, then export the completed PDF.' },
             ].map(s => (
               <div key={s.n} className="step">
                 <div className="step-num">{s.n}</div>
@@ -798,7 +789,7 @@ export default function AIPDFFormFillerPage() {
         <div className="wrap">
           <span className="sec-eye">Capabilities</span>
           <h2 className="sec-h">Automatic PDF form filler<br />features</h2>
-          <p className="sec-sub">AI-powered filling is just the start — a full PDF toolkit right alongside it.</p>
+          <p className="sec-sub">Review the supported field detection, text-overlay, signature-placement, page-management, and export controls available in this workflow.</p>
           <div className="fg3d-grid">
             {FEATURES.map(f => (
               <div
@@ -825,8 +816,8 @@ export default function AIPDFFormFillerPage() {
           <div className="faq-grid">
             {FAQS.map((f,i) => (
               <details key={f.q} className="fq" open={i===0}>
-                <summary className="fq-q"><span className="fq-ic">✦</span>{f.q}</summary>
-                <p className="fq-a">{f.a}</p>
+                <summary className="fq-q"><span className="fq-ic" aria-hidden="true">✦</span><span className="tool-seo-faq-question">{f.q}</span></summary>
+                <p className="fq-a tool-seo-faq-answer">{f.a}</p>
               </details>
             ))}
           </div>
@@ -838,35 +829,34 @@ export default function AIPDFFormFillerPage() {
         <div className="wrap" style={{ maxWidth: 1000 }}>
           <span style={{ fontFamily: 'var(--fm)', fontSize: 9, fontWeight: 700, letterSpacing: '.18em', color: 'var(--p)', textTransform: 'uppercase', display: 'block', marginBottom: 12, opacity: .7 }}>Why AI</span>
           <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(24px,3vw,36px)', fontWeight: 800, letterSpacing: '-.04em', lineHeight: 1.1, color: '#1d1d1f', marginBottom: 12 }}>
-            AI PDF form filler vs typing manually
+            AI-assisted form filling vs manual editing
           </h2>
           <p style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.7, marginBottom: 40, maxWidth: 560 }}>
-            Every minute you spend clicking form fields and retyping the same details is a minute wasted. Here is how AI form filling compares to doing it manually or with Adobe Acrobat.
+            AI-assisted suggestions can reduce repeated typing, while manual editing gives you direct control. The table highlights the workflows exposed by this page; availability in other products can vary by plan and version.
           </p>
 
           {/* Comparison table */}
           <div className="ai-compare" role="region" aria-label="AI form filling comparison" tabIndex={0} style={{ background: '#fff', borderRadius: 18, border: '1.5px solid #e5e7eb', marginBottom: 48 }}>
             <div className="ai-compare-head" style={{ display: 'grid', gridTemplateColumns: '1fr 130px 130px 140px', background: '#f9fafb', borderBottom: '1.5px solid #e5e7eb' }}>
-              {['', 'Manual typing', 'Adobe Acrobat', 'EditPDF AI'].map((h, i) => (
+              {['', 'Manual entry', 'Core editor', 'AI form filling'].map((h, i) => (
                 <span key={i} style={{ padding: '11px 18px', fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: i === 3 ? '#7c3aed' : '#9ca3af', textAlign: i > 0 ? 'center' : 'left', background: i === 3 ? 'rgba(124,58,237,.04)' : 'transparent', borderLeft: i === 3 ? '1px solid rgba(124,58,237,.12)' : 'none' }}>{h}</span>
               ))}
             </div>
             {[
-              { feat: 'Fill all fields at once', manual: false, adobe: false, ai: true },
-              { feat: 'Works on non-fillable / flat PDFs', manual: false, adobe: false, ai: true },
-              { feat: 'Fill from plain-language description', manual: false, adobe: false, ai: true },
-              { feat: 'OCR for scanned PDFs', manual: false, adobe: '$$', ai: true },
-              { feat: 'Digital signatures', manual: false, adobe: '$$', ai: true },
-              { feat: 'No subscription needed', manual: true, adobe: false, ai: true },
-              { feat: 'Works in the browser, no install', manual: false, adobe: false, ai: true },
-            ].map(({ feat, manual, adobe, ai }, i, arr) => (
+              { feat: 'Suggest values for detected fields', manual: false, core: false, ai: true },
+              { feat: 'Add text overlays to supported flat PDFs', manual: false, core: true, ai: true },
+              { feat: 'Use a plain-language description', manual: false, core: false, ai: true },
+              { feat: 'Analyze rendered scanned pages', manual: false, core: false, ai: true },
+              { feat: 'Place a visual signature', manual: false, core: true, ai: true },
+              { feat: 'Edit fields without an AI action', manual: true, core: true, ai: false },
+              { feat: 'Use a browser interface', manual: false, core: true, ai: true },
+            ].map(({ feat, manual, core, ai }, i, arr) => (
               <div className="ai-compare-row" key={feat} style={{ display: 'grid', gridTemplateColumns: '1fr 130px 130px 140px', borderBottom: i < arr.length - 1 ? '1px solid #f3f4f6' : 'none', alignItems: 'stretch' }}>
                 <span style={{ padding: '12px 18px', fontSize: 13.5, color: '#374151', fontWeight: 500, display: 'flex', alignItems: 'center' }}>{feat}</span>
-                {[manual, adobe, ai].map((v, ci) => (
+                {[manual, core, ai].map((v, ci) => (
                   <span key={ci} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, background: ci === 2 ? 'rgba(124,58,237,.04)' : 'transparent', borderLeft: ci === 2 ? '1px solid rgba(124,58,237,.1)' : 'none' }}>
-                    {v === true ? <span style={{ color: ci === 2 ? '#7c3aed' : '#16a34a', fontWeight: 800 }}>✓</span>
-                      : v === false ? <span style={{ color: '#d1d5db', fontSize: 18, lineHeight: 1 }}>—</span>
-                      : <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>{v}</span>}
+                    {v ? <span style={{ color: ci === 2 ? '#7c3aed' : '#16a34a', fontWeight: 800 }}>✓</span>
+                      : <span style={{ color: '#d1d5db', fontSize: 18, lineHeight: 1 }}>—</span>}
                   </span>
                 ))}
               </div>
@@ -884,19 +874,19 @@ export default function AIPDFFormFillerPage() {
             {[
               {
                 title: 'How to fill a W-9 tax form with AI',
-                body: 'Upload the W-9 PDF. Paste your legal name, business name, address, tax classification, and EIN or SSN into the chat. AI fills all boxes — Line 1 through Part II — in one pass. Sign the form digitally and download.',
+                body: 'Upload a supported W-9 PDF and provide the requested business details. AI can propose values for detected fields. Compare every proposal with the form instructions and your records before signing or submitting.',
               },
               {
                 title: 'How to autofill a job application PDF',
-                body: 'Upload the job application. Paste your CV or type your name, contact details, work history, and education. AI reads each question and fills the matching field. Review and add your signature before downloading.',
+                body: 'Upload a supported job-application PDF, then paste relevant CV text or type your details. Review the proposed field matches, correct omissions or formatting issues, and add a visual signature only when appropriate.',
               },
               {
                 title: 'How to fill a rental or lease agreement PDF',
-                body: 'Upload the lease PDF. Provide the tenant name, address, rent amount, start/end dates, and landlord name. AI locates and fills every corresponding field across all pages. Sign and download the completed agreement.',
+                body: 'Upload a supported lease PDF and provide the details needed for the detected fields. Inspect each page, correct every proposal, and confirm the recipient accepts the resulting PDF and signature method.',
               },
               {
                 title: 'How to fill a medical or insurance form PDF',
-                body: 'Upload the intake or claim form. Describe the patient name, date of birth, policy number, and condition details in plain language. AI maps your description to each labelled field — including checkboxes — and fills them all.',
+                body: 'Upload a supported intake or claim form and provide only the information you intend to process. Check proposed text and checkbox values carefully against source records before using the completed copy.',
               },
             ].map(g => (
               <div key={g.title} style={{ background: '#fff', borderRadius: 14, padding: '22px 20px', border: '1.5px solid #e5e7eb' }}>
@@ -919,14 +909,14 @@ export default function AIPDFFormFillerPage() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               </div>
               <div className="related-name">PDF Editor</div>
-              <div className="related-desc">Add text, images, shapes and annotations to any PDF.</div>
+              <div className="related-desc">Add text, images, shapes and annotations to supported PDFs.</div>
             </Link>
             <Link href="/pdf-signer" className="related-card">
               <div className="related-icon" style={{ background: 'rgba(124,58,237,0.1)' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round"><path d="M12 19l7-7-3-3-7 7v3h3z"/><path d="M18 5l1 1-9.5 9.5"/></svg>
               </div>
               <div className="related-name">PDF Signer</div>
-              <div className="related-desc">Draw, type or upload a signature and sign any PDF instantly.</div>
+              <div className="related-desc">Draw, type or upload a visual signature and place it on a PDF.</div>
             </Link>
             <Link href="/pdf-ocr" className="related-card">
               <div className="related-icon" style={{ background: 'rgba(8,145,178,0.1)' }}>
@@ -940,35 +930,14 @@ export default function AIPDFFormFillerPage() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               </div>
               <div className="related-name">PDF Compressor</div>
-              <div className="related-desc">Reduce PDF file size without losing quality.</div>
+              <div className="related-desc">Reduce PDF file size with adjustable image-quality settings.</div>
             </Link>
-            <Link href="/pdf-merger" className="related-card">
+            <Link href="/pdf-form-builder" className="related-card">
               <div className="related-icon" style={{ background: 'rgba(245,158,11,0.1)' }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round"><path d="M8 6H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-2"/><rect x="8" y="2" width="8" height="6" rx="1"/></svg>
               </div>
-              <div className="related-name">PDF Merger</div>
-              <div className="related-desc">Combine multiple PDF files into one document.</div>
-            </Link>
-            <Link href="/pdf-splitter" className="related-card">
-              <div className="related-icon" style={{ background: 'rgba(239,68,68,0.1)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              </div>
-              <div className="related-name">PDF Splitter</div>
-              <div className="related-desc">Split a PDF into separate files by page range.</div>
-            </Link>
-            <Link href="/pdf-to-word" className="related-card">
-              <div className="related-icon" style={{ background: 'rgba(59,130,246,0.1)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              </div>
-              <div className="related-name">PDF to Word</div>
-              <div className="related-desc">Convert any PDF to an editable Word document.</div>
-            </Link>
-            <Link href="/pdf-summarizer" className="related-card">
-              <div className="related-icon" style={{ background: 'rgba(168,85,247,0.1)' }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-              </div>
-              <div className="related-name">PDF Summarizer</div>
-              <div className="related-desc">Get AI-powered summaries of any PDF in seconds.</div>
+              <div className="related-name">PDF Form Builder</div>
+              <div className="related-desc">Add and arrange fillable form fields on a PDF.</div>
             </Link>
           </div>
         </div>
@@ -980,7 +949,7 @@ export default function AIPDFFormFillerPage() {
           <div className="cta-inner">
             <div className="cta-glow" />
             <h2 className="cta-h">Start filling PDFs<br />with AI right now</h2>
-            <p className="cta-sub">5 free AI uses per day. Sign in required. Upgrade to Pro for unlimited use.</p>
+            <p className="cta-sub">{AI_ACCESS_SUMMARY}</p>
             <button className="btn-p" onClick={openEditor} onPointerEnter={preloadEditor} onFocus={preloadEditor} style={{ margin: '0 auto' }}>
               Start AI Form Filler
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>

@@ -506,9 +506,9 @@ export default function ExtractPages() {
       definition="A PDF page extractor lets you select specific pages from within a PDF and save them as a new, standalone file. Unlike splitting, which divides a PDF by sequential ranges, extraction lets you cherry-pick any combination of pages regardless of where they appear in the original document."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF"
-      fileLimit="No fixed limit — capped only by device memory"
+      fileLimit="No fixed application limit; practical capacity depends on PDF complexity, browser memory, and device performance"
       browserSupport="Chrome, Firefox, Safari, Edge"
     />
     <ToolSEOSection {...toolSeoData['extract-pages']} />

@@ -6,6 +6,7 @@ import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
+import { AI_ACCESS_SUMMARY, AI_ACCURACY_DISCLAIMER } from '@/lib/productMessaging'
 
 const GREEN = '#217346'
 const LIGHT_GREEN = '#e8f5ee'
@@ -342,7 +343,7 @@ export default function PDFToExcelPage() {
               AI-Powered
             </div>
             <h1>PDF to <em>Excel</em></h1>
-            <p>Extract tables and structured data from any PDF and download as a ready-to-edit Excel spreadsheet.</p>
+            <p>Use AI to turn extracted PDF text into a structured Excel workbook, then review the generated rows and columns.</p>
           </div>
 
           {/* Upload / Convert card */}
@@ -480,15 +481,15 @@ export default function PDFToExcelPage() {
           <div className="info-grid">
             <div className="info-card">
               <h3>🤖 AI-Powered Extraction</h3>
-              <p>Claude reads your PDF and intelligently identifies tables, invoices, reports, and structured data — even from complex layouts.</p>
+              <p>AI uses up to 60,000 extracted text characters to propose rows and columns. Complex layouts and faint values require careful review.</p>
             </div>
             <div className="info-card">
               <h3>📋 Multiple Sheets</h3>
-              <p>Each table or data section is placed on its own sheet, keeping your data clean and organized in the output Excel file.</p>
+              <p>AI can propose separate sheets for detected data sections; review sheet boundaries, rows, columns, and values before use.</p>
             </div>
             <div className="info-card">
-              <h3>🔒 Private &amp; Secure</h3>
-              <p>Your PDF is processed directly in your browser. Only the extracted text is sent to the AI — no file uploads to third-party servers.</p>
+              <h3>🔒 Text-Based AI Processing</h3>
+              <p>The selected PDF is parsed locally; extracted text is sent through the AI route and configured model provider.</p>
             </div>
           </div>
 
@@ -498,12 +499,12 @@ export default function PDFToExcelPage() {
       <input ref={fileRef} type="file" accept="application/pdf" style={{ display: 'none' }}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
       <ToolQuickFacts
-        definition="A PDF to Excel converter detects tables and structured numerical data embedded in a PDF and maps them into the rows and columns of an .xlsx spreadsheet — instead of manually retyping dozens of rows of figures, you get an editable, sortable spreadsheet in seconds."
-        price="Free — 5 AI conversions/day; Pro removes the daily limit"
+        definition="This PDF to Excel tool sends up to 60,000 extracted text characters to AI to propose spreadsheet sheets, rows, and columns. The XLSX is editable, but table structure and values require review."
+        price={AI_ACCESS_SUMMARY}
         account="Free account required (AI feature)"
-        processing="Text extracted locally; only that text is sent to AI to build the spreadsheet"
+        processing={`Text is extracted locally and sent through the AI route to build spreadsheet data. ${AI_ACCURACY_DISCLAIMER}`}
         formats="PDF in, XLSX out"
-        fileLimit="No fixed limit stated"
+        fileLimit="Up to 60,000 extracted text characters per conversion for Free and Pro"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['pdf-to-excel']} />

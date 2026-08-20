@@ -214,7 +214,7 @@ export default function ExtractPDFLinksPage() {
       definition="A PDF link extractor reads interactive Link annotations stored on document pages — links that open websites or email addresses, jump to another page, reference another PDF, or submit a form. Visible URL text without an actual annotation is not clickable and is therefore not reported."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF in, CSV/JSON out"
       fileLimit="Up to 100 MB and 2,000 pages"
       browserSupport="Chrome, Firefox, Safari, Edge"

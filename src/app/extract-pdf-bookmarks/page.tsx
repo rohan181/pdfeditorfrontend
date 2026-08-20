@@ -519,7 +519,7 @@ export default function ExtractPDFBookmarksPage() {
       definition="PDF bookmarks are entries in a document outline that help readers jump to chapters, sections, appendices, or other locations. Unlike a printed table of contents, bookmarks are stored as a separate hierarchy with parent and child relationships, which this tool reads and exports."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="PDF in, CSV/JSON out"
       fileLimit="Up to 100 MB and 2,000 pages"
       browserSupport="Chrome, Firefox, Safari, Edge"

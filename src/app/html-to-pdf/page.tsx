@@ -55,7 +55,7 @@ const SAMPLE_HTML = `<!DOCTYPE html>
     <tr><td>Carol</td><td>Manager</td><td>On leave</td></tr>
   </table>
   <h2>Second Section</h2>
-  <p>HTML to PDF supports all standard CSS including flexbox, grid, fonts, colors, and images loaded from URLs.</p>
+  <p>This converter captures browser-rendered HTML. Unsupported CSS, remote assets, fonts, and pagination can differ in the PDF.</p>
 </body>
 </html>`
 
@@ -472,12 +472,12 @@ export default function HtmlToPdf() {
       />
     </div>
     <ToolQuickFacts
-      definition="An HTML to PDF converter takes a webpage — either a live URL or a local .html file — and renders it as a PDF document. The output looks exactly like the page does in a browser: styles, images, fonts, and layout are all captured."
+      definition="An HTML to PDF converter turns pasted markup or a local .html or .htm file into an image-based PDF in your browser. This implementation uses html2canvas and jsPDF, so unsupported CSS, remote assets, fonts, pagination, and script-generated content may differ or be omitted. Review the downloaded PDF against the preview."
       price="Free — no account needed"
       account="Not required"
-      processing="Entirely in your browser — file never uploaded"
+      processing="Processed locally in your browser without an application document-processing request"
       formats="HTML in, PDF out"
-      fileLimit="No fixed limit — capped only by device memory"
+      fileLimit="No fixed application limit; practical capacity depends on HTML complexity and browser memory"
       browserSupport="Chrome, Firefox, Safari, Edge"
     />
     <ToolSEOSection {...toolSeoData['html-to-pdf']} />

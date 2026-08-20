@@ -7,6 +7,7 @@ import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
+import { AI_ACCESS_SUMMARY, AI_ACCURACY_DISCLAIMER } from '@/lib/productMessaging'
 
 type PageStatus = 'idle' | 'processing' | 'done' | 'error' | 'native'
 
@@ -637,7 +638,7 @@ export default function PDFOCRPage() {
         const pgW    = vp1.width
         const pgH    = vp1.height
 
-        // 4. Create PDF page, fill with original page image — pixel-perfect layout & fonts
+        // 4. Create a PDF page using the original rendered page image as its background
         const newPg  = newDoc.addPage([pgW, pgH])
         const img    = await newDoc.embedJpg(jpgBytes)
         newPg.drawImage(img, { x: 0, y: 0, width: pgW, height: pgH })
@@ -721,10 +722,10 @@ export default function PDFOCRPage() {
                 🔍 AI OCR Scanner
               </div>
               <h1 style={{fontSize:'clamp(26px,5vw,44px)',fontWeight:800,letterSpacing:'-.05em',color:'#1d1d1f',marginBottom:10,lineHeight:1.1}}>
-                Extract text from<br/><span style={{color:'#0891b2'}}>any PDF</span>
+                PDF OCR for<br/><span style={{color:'#0891b2'}}>scanned documents</span>
               </h1>
-              <p style={{fontSize:14,color:'rgba(0,0,0,.42)',lineHeight:1.7,maxWidth:440,margin:'0 auto'}}>
-                Upload a scanned or image-based PDF. Claude AI reads each page and extracts the text — editable, copyable, downloadable.
+              <p className="tool-hero-definition" style={{fontSize:14,color:'rgba(0,0,0,.42)',lineHeight:1.7,maxWidth:520,margin:'0 auto'}}>
+                PDF OCR uses optical character recognition to extract text from scanned or image-based PDF pages. EditPDF AI renders each page in your browser, sends the rendered page image through its AI OCR route, and can produce reviewed text or a searchable PDF. Recognition accuracy varies, so check the output against the page image.
               </p>
             </div>
 
@@ -737,8 +738,8 @@ export default function PDFOCRPage() {
 
             <div className="feat-grid">
               {[
-                {icon:'🤖',t:'AI-powered OCR',b:'Claude reads each page image with high accuracy'},
-                {icon:'⚡',t:'Native text skip',b:'Text-based pages extracted instantly — no AI cost'},
+                {icon:'🤖',t:'AI-powered OCR',b:'AI analyzes each rendered page image'},
+                {icon:'⚡',t:'Native text skip',b:'Text-based pages are extracted without an OCR AI action'},
                 {icon:'✏️',t:'Editable results',b:'Correct OCR mistakes before downloading'},
               ].map(f=>(
                 <div key={f.t} className="feat">
@@ -754,15 +755,14 @@ export default function PDFOCRPage() {
             onChange={e=>{const f=e.target.files?.[0];if(f)loadFile(f);e.target.value=''}} />
         </div>
         <ToolQuickFacts
-          definition="PDF OCR (Optical Character Recognition) analyses a scanned PDF — which is really just an image, with no selectable or searchable text — and reads the characters in it to produce a fully searchable, selectable text layer. It supports over 100 languages and works on both scanned documents and photos."
-          price="Free — 5 OCR scans/day; Pro is unlimited"
-          account="Free account required (AI feature)"
-          processing="File sent securely over HTTPS to the AI backend, deleted immediately after"
-          formats="PDF"
-          fileLimit="Not stated — no fixed size cap published"
-          browserSupport="Chrome, Firefox, Safari, Edge"
+          price={AI_ACCESS_SUMMARY}
+          account="Sign-in is required for AI OCR"
+          processing={`Pages are rendered locally, then page images are sent through the AI OCR route. ${AI_ACCURACY_DISCLAIMER}`}
+          formats="Input: PDF · Output: searchable PDF or TXT"
+          fileLimit="No fixed PDF-size cap in the interface; each processed page uses an AI action, and request/output limits apply"
+          browserSupport="Modern desktop and mobile browsers with JavaScript, canvas, and required file APIs"
         />
-        <ToolSEOSection {...toolSeoData['pdf-ocr']} />
+        <ToolSEOSection {...toolSeoData['pdf-ocr']} showDirectAnswer={false} />
       </>
     )
   }

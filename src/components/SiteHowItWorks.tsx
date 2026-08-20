@@ -11,25 +11,25 @@ export default function SiteHowItWorks() {
       n: '01', color: '#6366f1', bg: 'rgba(99,102,241,.08)',
       Icon: Upload,
       title: 'Upload your document',
-      desc: 'Drag and drop any PDF or click to browse. No account needed — your file opens instantly in the browser.',
+      desc: 'Choose a supported PDF. Core tools open it locally; AI-assisted actions require a signed-in account.',
     },
     {
       n: '02', color: '#7c3aed', bg: 'rgba(124,58,237,.08)',
       Icon: Sparkles,
       title: 'Choose a PDF or AI tool',
-      desc: `Pick from ${TOOL_COUNT}+ tools — edit text, compress, merge, OCR scan, translate, summarise, or auto-fill a form with AI.`,
+      desc: `Pick from ${TOOL_COUNT} active tools — edit, compress, merge, OCR scan, translate, summarise, or use AI-assisted form filling.`,
     },
     {
       n: '03', color: RED, bg: 'rgba(226,75,74,.08)',
       Icon: PenTool,
       title: 'Edit, fill, sign or convert',
-      desc: 'Make changes directly in your browser. Add text, annotations, or a digital signature. Convert to Word, Excel and more.',
+      desc: 'Make changes directly in your browser. Add text, annotations, or a visual signature. AI-assisted conversions use the shared daily allowance.',
     },
     {
       n: '04', color: '#16a34a', bg: 'rgba(22,163,74,.08)',
       Icon: Download,
       title: 'Download securely',
-      desc: 'Your finished PDF is ready in seconds. Download it, share a link, or continue editing — all for free.',
+      desc: 'Download the result when processing finishes. Core workflows need no account; AI actions use Free or Pro access.',
     },
   ]
 
@@ -45,7 +45,7 @@ export default function SiteHowItWorks() {
             Four simple steps
           </h2>
           <p style={{...FI, fontSize:15, color:'#6b7280', margin:'0 auto', maxWidth:420, lineHeight:1.65}}>
-            From upload to download — everything runs in your browser, no install required.
+            Core workflows run in your browser. AI-assisted steps send the required content through server routes.
           </p>
         </div>
 

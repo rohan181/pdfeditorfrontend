@@ -6,6 +6,7 @@ import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
+import { AI_ACCESS_SUMMARY, AI_ACCURACY_DISCLAIMER } from '@/lib/productMessaging'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Slide  { title: string; bullets: string[]; notes?: string }
@@ -466,7 +467,7 @@ export default function PDFToPPTPage() {
               <div className="hero">
                 <div className="hero-badge">✦ AI-Powered</div>
                 <h1 className="hero-h1">PDF to <em>PowerPoint</em></h1>
-                <p className="hero-sub">Upload any PDF and Claude will extract the key ideas and build a polished, ready-to-present slide deck.</p>
+                <p className="hero-sub">AI extracts text from a PDF and drafts a slide outline and deck. Review the content and formatting before presenting.</p>
                 <div className="feat-grid">
                   <div className="feat"><div className="feat-icon">🎯</div><div className="feat-t">Smart Structuring</div><div className="feat-d">AI picks the best slide content</div></div>
                   <div className="feat"><div className="feat-icon">🎨</div><div className="feat-t">4 Themes</div><div className="feat-d">Blue, Dark, White, Vibrant</div></div>
@@ -549,11 +550,11 @@ export default function PDFToPPTPage() {
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value = '' }}/>
       <ToolQuickFacts
         definition="A PDF to PowerPoint converter transforms each page of a PDF into a slide in a .pptx file. The visual layout of every page is preserved as a high-quality image on its corresponding slide, giving you a presentation that opens directly in PowerPoint, Google Slides, or Keynote."
-        price="Free — 5 AI conversions/day; Pro removes the daily limit"
+        price={AI_ACCESS_SUMMARY}
         account="Free account required (AI feature)"
-        processing="Text extracted locally; only that text is sent to AI to rebuild the slides"
+        processing={`Extracted text is sent through the AI route to generate a new slide outline. ${AI_ACCURACY_DISCLAIMER}`}
         formats="PDF in, PPTX out"
-        fileLimit="No hard limit — PDFs with dozens of pages convert without issue"
+        fileLimit="The AI route uses up to 55,000 extracted text characters and the selected slide count"
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['pdf-to-ppt']} />
