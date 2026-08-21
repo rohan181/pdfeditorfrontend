@@ -97,7 +97,8 @@ export default function AboutPage() {
         })}
       />
       {/* ── Nav ── */}
-      <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
+      <header>
+      <nav aria-label="About page navigation" style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
           <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 60, width: 'auto', display: 'block' }} priority />
         </Link>
@@ -108,6 +109,9 @@ export default function AboutPage() {
           </Link>
         </div>
       </nav>
+      </header>
+
+      <main id="main-content">
 
       {/* ── Hero ── */}
       <section style={{ maxWidth: 760, margin: '0 auto', padding: '80px 24px 64px', textAlign: 'center' }}>
@@ -239,11 +243,11 @@ export default function AboutPage() {
         <h2 style={{ fontSize: 'clamp(24px,4vw,40px)', fontWeight: 800, color: '#fff', margin: '0 0 14px', letterSpacing: '-.04em' }}>
           Have a question or idea?
         </h2>
-        <p style={{ fontSize: 16, color: '#6b7280', margin: '0 0 10px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 16, color: '#d1d5db', margin: '0 0 10px', lineHeight: 1.6 }}>
           Email is the published support channel for product questions, bug reports, feature requests, and feedback.
         </p>
-        <p style={{ fontSize: 14, color: '#4b5563', margin: '0 0 32px' }}>
-          For security disclosures: <span style={{ color: '#6b7280' }}>{SUPPORT_EMAIL}</span> (mark the subject &ldquo;Security&rdquo;)
+        <p style={{ fontSize: 14, color: '#d1d5db', margin: '0 0 32px' }}>
+          For security disclosures: <span style={{ color: '#fff' }}>{SUPPORT_EMAIL}</span> (mark the subject &ldquo;Security&rdquo;)
         </p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
           <Link href={supportMailto()}
@@ -256,16 +260,17 @@ export default function AboutPage() {
           </Link>
         </div>
       </section>
+      </main>
 
       {/* ── Footer ── */}
-      <div style={{ background: '#1d1d1f', borderTop: '1px solid rgba(255,255,255,.07)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <span style={{ fontSize: 12, color: '#4b5563' }}>© {new Date().getFullYear()} EditPDF AI. All rights reserved.</span>
+      <footer style={{ background: '#1d1d1f', borderTop: '1px solid rgba(255,255,255,.2)', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <span style={{ fontSize: 12, color: '#d1d5db' }}>© {new Date().getFullYear()} EditPDF AI. All rights reserved.</span>
         <div style={{ display: 'flex', gap: 20 }}>
           {[['Privacy', '/privacy'], ['Terms', '/terms'], ['Contact', '/contact']].map(([l, h]) => (
-            <Link key={l} href={h} style={{ fontSize: 12, color: '#4b5563', textDecoration: 'none', fontWeight: 500 }}>{l}</Link>
+            <Link key={l} href={h} style={{ fontSize: 12, color: '#fff', textDecoration: 'none', fontWeight: 500 }}>{l}</Link>
           ))}
         </div>
-      </div>
+      </footer>
 
     </div>
   )

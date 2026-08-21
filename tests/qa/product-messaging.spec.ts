@@ -9,6 +9,7 @@ import {
   FREE_AI_DAILY_LIMIT,
   PRODUCT_ACCESS_SUMMARY,
 } from '../../src/lib/productMessaging'
+import { AI_CONVERSION_ACCESS_SUMMARY } from '../../src/lib/pricing'
 
 const PUBLIC_MESSAGING_ROUTES = [
   '/',
@@ -55,9 +56,9 @@ test.describe('product messaging regression', () => {
 
   test('pricing states the actual Free and Pro distinction', async ({ page }) => {
     await page.goto('/pricing')
-    await expect(page.getByText('No tool is currently restricted to Pro; Pro changes the daily AI allowance')).toBeVisible()
+    await expect(page.getByText(AI_CONVERSION_ACCESS_SUMMARY)).toBeVisible()
     await expect(page.getByText(new RegExp(`${FREE_AI_DAILY_LIMIT} metered AI actions per UTC day`)).first()).toBeVisible()
-    expect(await page.locator('main').innerText()).toContain('Tool-specific input and processing limits still apply')
+    expect(await page.locator('main').innerText()).toContain('The same documented input and processing limits still apply')
   })
 
   test('privacy and AI accuracy disclosures describe implemented data flows', async ({ page }) => {

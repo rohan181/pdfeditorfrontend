@@ -48,13 +48,7 @@ export default function SiteUseCases() {
         { name: 'PDF Merger',        href: '/pdf-merger'        },
         { name: 'PDF Compressor',    href: '/pdf-compressor'    },
         { name: 'PDF Password Lock', href: '/pdf-password-lock' },
-        { name: 'Unlock PDF', href: '/pdf-unlock' },
-        { name: 'Repair PDF', href: '/pdf-repair' },
-        { name: 'Flatten PDF', href: '/pdf-flatten' },
         { name: 'Compare PDF', href: '/pdf-compare' },
-        { name: 'Remove PDF Metadata', href: '/remove-pdf-metadata' },
-        { name: 'Extract PDF Attachments', href: '/extract-pdf-attachments' },
-        { name: 'Export PDF Form Data', href: '/export-pdf-form-data' },
       ],
     },
     {
@@ -66,13 +60,6 @@ export default function SiteUseCases() {
         { name: 'PDF Translator', href: '/pdf-translator' },
         { name: 'PDF OCR Scanner',href: '/pdf-ocr'        },
         { name: 'PDF Mind Map',   href: '/mind-map'       },
-        { name: 'Extract PDF Images', href: '/extract-pdf-images' },
-        { name: 'Extract PDF Bookmarks', href: '/extract-pdf-bookmarks' },
-        { name: 'PDF Bookmarks Manager', href: '/pdf-bookmarks-manager' },
-        { name: 'PDF Page Labels', href: '/pdf-page-labels' },
-        { name: 'Extract PDF Links', href: '/extract-pdf-links' },
-        { name: 'Remove PDF Links', href: '/remove-pdf-links' },
-        { name: 'Export PDF Comments', href: '/export-pdf-comments' },
       ],
     },
   ]
@@ -91,7 +78,7 @@ export default function SiteUseCases() {
             Built for every PDF task
           </h2>
           <p style={{...FI,fontSize:15,color:'#6b7280',maxWidth:480,lineHeight:1.65,margin:0}}>
-            Whether you are a student, professional or business — EditPDF AI has the right tool for you.
+            Pick a common workflow to see the most relevant tools without searching the full catalogue.
           </p>
         </div>
 
@@ -106,7 +93,7 @@ export default function SiteUseCases() {
                 setActive(next)
                 document.getElementById(`use-case-tab-${next}`)?.focus()
               }}
-              style={{...FI,display:'inline-flex',alignItems:'center',gap:7,padding:'10px 15px',borderRadius:99,border:`1px solid ${active===i?color:'#E2E8F0'}`,background:active===i?`${color}10`:'#fff',color:active===i?color:'#64748B',fontSize:13,fontWeight:700,whiteSpace:'nowrap',cursor:'pointer'}}>
+              style={{...FI,display:'inline-flex',alignItems:'center',gap:7,height:44,padding:'10px 15px',borderRadius:99,border:`1px solid ${active===i?color:'#E2E8F0'}`,background:active===i?`${color}10`:'#fff',color:active===i?color:'#64748B',fontSize:13,fontWeight:700,whiteSpace:'nowrap',cursor:'pointer'}}>
               <Icon size={15} strokeWidth={2}/>{title}
             </button>
           ))}
@@ -121,7 +108,7 @@ export default function SiteUseCases() {
             <p style={{...FI,fontSize:15,color:'#64748B',lineHeight:1.7,maxWidth:660,margin:'0 0 18px'}}>{selected.desc}</p>
             <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
               {selected.tools.map(t=>(
-                <Link key={t.name} href={t.href} className="use-case-tool" style={{...MONO,fontSize:10,fontWeight:700,padding:'7px 10px',borderRadius:9,background:selected.bg,color:selected.color,textDecoration:'none',letterSpacing:'0.03em'}}>
+                <Link key={t.name} href={t.href} className="use-case-tool" style={{...MONO,minHeight:44,display:'inline-flex',alignItems:'center',fontSize:10,fontWeight:700,padding:'7px 10px',borderRadius:9,background:selected.bg,color:selected.color,textDecoration:'none',letterSpacing:'0.03em'}}>
                   {t.name}
                 </Link>
               ))}

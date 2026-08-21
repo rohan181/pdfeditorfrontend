@@ -254,8 +254,11 @@ export default function ToolSEOSection({ steps, faqs, whatIs, users, related, fo
         <section style={{ background: '#fff', borderTop: '1px solid #ebebeb', padding: '56px 24px 72px' }}>
           <div style={{ maxWidth: 960, margin: '0 auto' }}>
             <h2 style={{ fontSize: 'clamp(20px,2.5vw,28px)', fontWeight: 800, letterSpacing: '-.03em', margin: '0 0 28px', textAlign: 'center' }}>
-              Related tools
+              Continue with a related tool
             </h2>
+            <p style={{ maxWidth: 620, margin: '-14px auto 26px', color: '#64748b', fontSize: 14, lineHeight: 1.65, textAlign: 'center' }}>
+              After you preview and download this result, use one of these tools for the next document task.
+            </p>
             <nav aria-label="Related PDF tools" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 14 }}>
               {relatedTools.map(r => {
                 const meta = toolMetaMap[r.slug]

@@ -1,11 +1,19 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getUserSubscription } from '@/lib/subscription'
 
 export async function POST() {
   try {
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+    if (await getUserSubscription(userId) === 'pro') {
+      return Response.json(
+        { error: 'This account already has Pro.', code: 'already_pro' },
+        { status: 409 },
+      )
+    }
 
     const stripeKey = process.env.STRIPE_SECRET_KEY
     if (!stripeKey) return Response.json({ error: 'Stripe not configured' }, { status: 500 })
@@ -50,6 +58,9 @@ export async function POST() {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('[create-setup-intent]', message)
-    return Response.json({ error: message }, { status: 500 })
+    return Response.json(
+      { error: 'Checkout could not be prepared. Please try again.', code: 'checkout_setup_failed' },
+      { status: 500 },
+    )
   }
 }

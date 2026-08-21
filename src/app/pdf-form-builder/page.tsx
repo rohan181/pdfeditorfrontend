@@ -7,6 +7,8 @@ import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import { AI_ACCESS_SUMMARY, CORE_ACCESS_SUMMARY } from '@/lib/productMessaging'
+import * as fileStorage from '@/lib/fileStorage'
+import { relativeTime, type StoredSession } from '@/lib/fileStorage'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -312,6 +314,15 @@ export default function PDFFormBuilderPage() {
   const [docElements, setDocElements] = useState<DocElement[]>([])
   const [selectedId,  setSelectedId]  = useState<string|null>(null)
 
+  // Local work recovery (IndexedDB) — never sent to a server
+  const FORM_BUILDER_TOOL_ID = 'pdf-form-builder'
+  const sessionIdRef = useRef<string | null>(null)
+  const unsavedChangesRef = useRef(false)
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [recoveryPrompt, setRecoveryPrompt] = useState<StoredSession | null>(null)
+  const [showRecentFiles, setShowRecentFiles] = useState(false)
+  const [recentSessions, setRecentSessions] = useState<StoredSession[]>([])
+
   const pageCanvasRefs = useRef<(HTMLCanvasElement|null)[]>([])
   const pageWrapRefs   = useRef<(HTMLDivElement|null)[]>([])
   const canvasAreaRef  = useRef<HTMLDivElement>(null)
@@ -381,8 +392,10 @@ export default function PDFFormBuilderPage() {
   }
 
   // ── Load PDF ──────────────────────────────────────────────────────────────
-  const loadFile = useCallback(async (f: File) => {
+  const loadFile = useCallback(async (f: File, existingSessionId?: string) => {
     if (!f.name.toLowerCase().endsWith('.pdf')) { setError('Please upload a PDF file.'); return }
+    sessionIdRef.current = existingSessionId ?? crypto.randomUUID()
+    unsavedChangesRef.current = false
     setError(''); setFile(f); setThumbs([]); setCurPage(0); setFields([]); setSelectedId(null); setLoading(true)
     try {
       const pdfjs = await import('pdfjs-dist')
@@ -408,6 +421,85 @@ export default function PDFFormBuilderPage() {
       setLoading(false)
     }
   }, [])
+
+  // ── Local work recovery (IndexedDB) ─────────────────────────────────────
+  // On mount, before a file/blank form is started: check for an unfinished
+  // session from a previous visit. Everything here stays local — no session
+  // data is ever sent to a server.
+  useEffect(() => {
+    fileStorage.getAllSessions()
+      .then(sessions => {
+        const match = sessions.find(s => s.tool === FORM_BUILDER_TOOL_ID)
+        if (match) setRecoveryPrompt(match)
+      })
+      .catch(() => { /* IndexedDB unavailable (private browsing, etc.) — recovery is a nice-to-have, fail silently */ })
+  }, [])
+
+  // Debounced autosave: fires 3s after the last edit to `fields` or
+  // `docElements` — covers both continuous edits (dragging/resizing/typing)
+  // and discrete actions (add field, delete field), since both mutate one
+  // of these arrays.
+  useEffect(() => {
+    if (mode === 'idle' || !sessionIdRef.current) return
+    unsavedChangesRef.current = true
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+    autosaveTimerRef.current = setTimeout(async () => {
+      const id = sessionIdRef.current
+      if (!id) return
+      try {
+        const blob = await buildPdfBlob()
+        await fileStorage.saveSession({
+          id,
+          filename: mode === 'blank' ? 'blank_form.pdf' : (file?.name || 'document.pdf'),
+          tool: FORM_BUILDER_TOOL_ID,
+          lastModified: Date.now(),
+          fileBlob: blob,
+        })
+        unsavedChangesRef.current = false
+      } catch { /* autosave is best-effort — never interrupt editing on failure */ }
+    }, 3000)
+    return () => { if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fields, docElements])
+
+  // Warn on tab close/reload only if an edit hasn't been autosaved yet.
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (unsavedChangesRef.current) { e.preventDefault(); e.returnValue = '' }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [])
+
+  const restoreSession = async (session: StoredSession) => {
+    const restoredFile = new File([session.fileBlob], session.filename, { type: 'application/pdf' })
+    setRecoveryPrompt(null)
+    setShowRecentFiles(false)
+    await loadFile(restoredFile, session.id)
+  }
+
+  const discardRecovery = async () => {
+    if (recoveryPrompt) await fileStorage.deleteSession(recoveryPrompt.id).catch(() => {})
+    setRecoveryPrompt(null)
+  }
+
+  const openRecentFiles = async () => {
+    try {
+      const sessions = await fileStorage.getAllSessions()
+      setRecentSessions(sessions.filter(s => s.tool === FORM_BUILDER_TOOL_ID))
+    } catch { setRecentSessions([]) }
+    setShowRecentFiles(true)
+  }
+
+  const deleteRecentSession = async (id: string) => {
+    await fileStorage.deleteSession(id).catch(() => {})
+    setRecentSessions(prev => prev.filter(s => s.id !== id))
+  }
+
+  const clearAllRecentSessions = async () => {
+    await fileStorage.clearAllSessions().catch(() => {})
+    setRecentSessions([])
+  }
 
   // ── Render all page canvases ──────────────────────────────────────────────
   useEffect(() => {
@@ -788,10 +880,11 @@ export default function PDFFormBuilderPage() {
   }
 
   // ── Download ──────────────────────────────────────────────────────────────
-  const onDownload = async () => {
-    setApplying(true); setError('')
-    try {
-      const { PDFDocument, StandardFonts, rgb, PDFName, PDFString } = await import('pdf-lib')
+  // Builds the current editor state (fields/docElements/mode) into a PDF
+  // Blob. Shared by onDownload (user-triggered) and the local-recovery
+  // autosave, so both stay identical instead of drifting apart.
+  const buildPdfBlob = async (): Promise<Blob> => {
+    const { PDFDocument, StandardFonts, rgb, PDFName, PDFString } = await import('pdf-lib')
       const hexToRgb = (hex: string) => {
         const h = hex.replace('#','')
         return rgb(parseInt(h.slice(0,2),16)/255, parseInt(h.slice(2,4),16)/255, parseInt(h.slice(4,6),16)/255)
@@ -1030,8 +1123,15 @@ export default function PDFFormBuilderPage() {
         }
       }
 
-      const out  = await pdfDoc.save()
-      const url  = URL.createObjectURL(new Blob([out], { type: 'application/pdf' }))
+      const out = await pdfDoc.save()
+      return new Blob([out], { type: 'application/pdf' })
+  }
+
+  const onDownload = async () => {
+    setApplying(true); setError('')
+    try {
+      const blob = await buildPdfBlob()
+      const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
       const name = mode === 'blank' ? 'blank_form' : file!.name.replace(/\.pdf$/i, '')
       a.href = url; a.download = `${name}_form.pdf`; a.click()
@@ -1068,6 +1168,28 @@ export default function PDFFormBuilderPage() {
           </div>
         </div>
         <div className="wrap" style={{ flex:1 }}>
+          {recoveryPrompt && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+              background: '#fff', borderRadius: 14, padding: '12px 16px', margin: '0 0 20px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0',
+            }}>
+              <span style={{ fontSize: 20, flexShrink: 0 }}>💾</span>
+              <span style={{ flex: 1, minWidth: 180, fontSize: 13, color: '#334155' }}>
+                Unsaved work from {relativeTime(recoveryPrompt.lastModified)} found — restore it?
+              </span>
+              <button onClick={() => restoreSession(recoveryPrompt)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#6366f1', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Restore</button>
+              <button onClick={discardRecovery} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Discard</button>
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <button
+              onClick={openRecentFiles}
+              style={{ padding: '7px 16px', borderRadius: 99, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}
+            >
+              🕘 Recent files
+            </button>
+          </div>
           <div className="choice-grid">
 
             {/* ── Option 1: Blank canvas ── */}
@@ -1088,7 +1210,7 @@ export default function PDFFormBuilderPage() {
                     ))}
                   </div>
                 </div>
-                <button className="create-btn" onClick={() => { setBlankPages(1); setMode('blank') }}>
+                <button className="create-btn" onClick={() => { sessionIdRef.current = crypto.randomUUID(); unsavedChangesRef.current = false; setBlankPages(1); setMode('blank') }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>
                   Create Blank Form
                 </button>
@@ -1150,6 +1272,55 @@ export default function PDFFormBuilderPage() {
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['pdf-form-builder']} />
+
+      {/* Recent Files panel — locally saved sessions, IndexedDB only */}
+      {showRecentFiles && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          onClick={() => setShowRecentFiles(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 460, maxHeight: '70vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(0,0,0,0.24)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid #e2e8f0' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Recent files</h3>
+              <button onClick={() => setShowRecentFiles(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#94a3b8' }}>✕</button>
+            </div>
+            <div style={{ overflowY: 'auto', flex: 1, padding: recentSessions.length ? '8px 12px' : 0 }}>
+              {recentSessions.length === 0 ? (
+                <div style={{ padding: '48px 24px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                  No saved sessions yet — your work is autosaved locally as you edit.
+                </div>
+              ) : (
+                recentSessions.map(session => (
+                  <div key={session.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderRadius: 10, cursor: 'pointer' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    onClick={() => restoreSession(session)}
+                  >
+                    <span style={{ fontSize: 20, flexShrink: 0 }}>📋</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.filename}</div>
+                      <div style={{ fontSize: 11.5, color: '#94a3b8' }}>{relativeTime(session.lastModified)}</div>
+                    </div>
+                    <button
+                      onClick={e => { e.stopPropagation(); deleteRecentSession(session.id) }}
+                      title="Delete"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', fontSize: 15, flexShrink: 0, padding: 4 }}
+                    >✕</button>
+                  </div>
+                ))
+              )}
+            </div>
+            {recentSessions.length > 0 && (
+              <div style={{ padding: '10px 16px', borderTop: '1px solid #e2e8f0' }}>
+                <button onClick={clearAllRecentSessions} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 12, fontWeight: 700 }}>Clear all</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 

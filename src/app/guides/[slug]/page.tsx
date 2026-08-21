@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import JsonLd from '@/components/JsonLd'
 import guides, { guideMap, type Guide, type ContentBlock } from '@/lib/guidesData'
 import SiteFooter from '@/components/SiteFooter'
@@ -9,6 +8,7 @@ import { buildPageMetadata } from '@/lib/seo/metadata'
 import { buildGuideStructuredData } from '@/lib/seo/structuredData'
 import { AI_ACCESS_SUMMARY } from '@/lib/productMessaging'
 import { toolMetaMap } from '@/lib/toolMeta'
+import PublicPageHeader from '@/components/PublicPageHeader'
 
 export function generateStaticParams() {
   return guides.map(g => ({ slug: g.slug }))
@@ -101,18 +101,7 @@ function GuideContent({ guide }: { guide: Guide }) {
         data={buildGuideStructuredData(guide)}
       />
 
-      {/* Nav */}
-      <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
-        <Link prefetch={false} href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
-          <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} priority />
-        </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <Link prefetch={false} href="/guides" style={{ fontSize: 14, color: '#4b5563', textDecoration: 'none', fontWeight: 500 }}>← All guides</Link>
-          <Link prefetch={false} href={`/${guide.toolSlug}`} style={{ fontSize: 14, fontWeight: 700, color: '#fff', textDecoration: 'none', padding: '8px 18px', borderRadius: 99, background: PURPLE }}>
-            {guide.ctaLabel}
-          </Link>
-        </div>
-      </nav>
+      <PublicPageHeader />
 
       {/* Breadcrumb */}
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '16px 24px 0' }}>

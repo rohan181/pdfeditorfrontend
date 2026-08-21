@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { useModalFocusTrap } from '@/hooks/useModalFocusTrap'
 
 const FORMATS = [
   { id: 'long',      label: 'Long',         fn: (d: Date) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) },
@@ -24,6 +25,10 @@ export default function DatePickerPanel({ onInsert, onClose, isMobile, panelStyl
   const todayStr = new Date().toISOString().slice(0, 10)
   const [dateStr, setDateStr] = useState(todayStr)
   const [selectedFmt, setSelectedFmt] = useState('long')
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+  useModalFocusTrap(true, dialogRef, onClose, closeButtonRef)
 
   // Use noon to avoid timezone-off-by-one on date string parsing
   const parsed = new Date(dateStr + 'T12:00:00')
@@ -38,11 +43,12 @@ export default function DatePickerPanel({ onInsert, onClose, isMobile, panelStyl
     <>
       {/* Backdrop */}
       <div
+        aria-hidden="true"
         onClick={onClose}
         style={{ position: 'fixed', inset: 0, zIndex: 190 }}
       />
 
-      <div style={{
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="date-picker-title" tabIndex={-1} style={{
         ...posStyle,
         zIndex: 200,
         background: '#fff',
@@ -56,11 +62,14 @@ export default function DatePickerPanel({ onInsert, onClose, isMobile, panelStyl
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 11 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 16, lineHeight: 1 }}>📅</span>
-            <span style={{ fontSize: 12.5, fontWeight: 800, color: '#1e293b', fontFamily: 'Manrope, sans-serif' }}>
+            <span id="date-picker-title" style={{ fontSize: 12.5, fontWeight: 800, color: '#1e293b', fontFamily: 'Manrope, sans-serif' }}>
               Insert Date
             </span>
           </div>
           <button
+            ref={closeButtonRef}
+            type="button"
+            aria-label="Close date picker"
             onClick={onClose}
             style={{
               width: 22, height: 38, borderRadius: 6, border: '1px solid #e2e8f0',
@@ -72,10 +81,11 @@ export default function DatePickerPanel({ onInsert, onClose, isMobile, panelStyl
 
         {/* Date input */}
         <div style={{ marginBottom: 10 }}>
-          <label style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.07em', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
+          <label htmlFor="date-picker-value" style={{ fontSize: 10, fontWeight: 700, color: '#5b6472', letterSpacing: '0.07em', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
             Pick a date
           </label>
           <input
+            id="date-picker-value"
             type="date"
             value={dateStr}
             onChange={e => setDateStr(e.target.value)}
@@ -89,15 +99,17 @@ export default function DatePickerPanel({ onInsert, onClose, isMobile, panelStyl
 
         {/* Format list */}
         <div style={{ marginBottom: 10 }}>
-          <label style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.07em', textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>
+          <div id="date-format-label" style={{ fontSize: 10, fontWeight: 700, color: '#5b6472', letterSpacing: '0.07em', textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>
             Format
-          </label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          </div>
+          <div role="group" aria-labelledby="date-format-label" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {FORMATS.map(f => {
               const active = selectedFmt === f.id
               return (
                 <button
                   key={f.id}
+                  type="button"
+                  aria-pressed={active}
                   onClick={() => setSelectedFmt(f.id)}
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -138,6 +150,7 @@ export default function DatePickerPanel({ onInsert, onClose, isMobile, panelStyl
 
         {/* Insert */}
         <button
+          type="button"
           onClick={() => { onInsert(preview); onClose() }}
           style={{
             width: '100%', padding: '9px 0', borderRadius: 9, border: 'none',

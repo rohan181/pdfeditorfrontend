@@ -5,7 +5,8 @@ import Image from 'next/image'
 
 export default function SignUpPage() {
   return (
-    <div style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#f5f5f7', padding:20, fontFamily:'system-ui,sans-serif' }}>
+    <main id="main-content" className="auth-page-shell" style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#f5f5f7', padding:20, fontFamily:'system-ui,sans-serif' }}>
+      <h1 className="sr-only">Create an EditPDF AI account</h1>
       {/* App logo above the card */}
       <Link href="/" style={{ display:'inline-flex', alignItems:'center', gap:8, textDecoration:'none', marginBottom:24 }}>
         <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} priority />
@@ -23,18 +24,18 @@ export default function SignUpPage() {
           elements: {
             card:           { boxShadow:'0 4px 40px rgba(0,0,0,.08)', border:'1px solid #e8e8e8', borderRadius:'20px', padding:'32px 28px' },
             headerTitle:    { fontSize:'22px', fontWeight:'800', letterSpacing:'-.04em' },
-            headerSubtitle: { color:'rgba(0,0,0,.4)' },
+            headerSubtitle: { color:'#5b6472' },
             footer:         { display:'none' },
             footerAction:   { display:'none' },
             footerPages:    { display:'none' },
             socialButtonsBlockButton: { border:'1.5px solid #e0e0e0', borderRadius:'10px', fontWeight:'600' },
             formButtonPrimary: { backgroundColor:'#1d1d1f', borderRadius:'10px', fontWeight:'700', fontSize:'14px' },
-            formFieldInput: { borderRadius:'9px', border:'1.5px solid #e0e0e0', backgroundColor:'#fafafa', fontSize:'14px' },
+            formFieldInput: { borderRadius:'9px', border:'1.5px solid #cbd5e1', backgroundColor:'#fafafa', fontSize:'16px', minHeight:'44px' },
             dividerLine:    { backgroundColor:'#e8e8e8' },
-            dividerText:    { color:'rgba(0,0,0,.3)' },
+            dividerText:    { color:'#5b6472' },
           },
         }}
       />
-    </div>
+    </main>
   )
 }

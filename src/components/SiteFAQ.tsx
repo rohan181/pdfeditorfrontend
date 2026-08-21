@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import {
   AI_ACCURACY_DISCLAIMER,
-  FREE_AI_DAILY_LIMIT,
   PROCESSING_PRIVACY_SUMMARY,
   PRODUCT_ACCESS_SUMMARY,
 } from '@/lib/productMessaging'
+import { AI_CONVERSION_ACCESS_SUMMARY, AI_USE_DEFINITION } from '@/lib/pricing'
 
 const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
@@ -16,7 +16,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: 'Do I need to create an account?',
-    a: 'Core browser workflows do not require an account. AI-assisted actions, including PDF-to-Word, PDF-to-Excel and PDF-to-PowerPoint, require sign-in and share the free daily AI-action allowance. Pro removes the daily cap.',
+    a: `Core browser workflows do not require an account. ${AI_CONVERSION_ACCESS_SUMMARY}`,
   },
   {
     q: 'Are my PDF files uploaded to a server?',
@@ -28,7 +28,7 @@ export const FAQ_ITEMS = [
   },
   {
     q: 'What counts as an AI use?',
-    a: `One metered AI action is a server-backed operation such as a form fill, summary, OCR page scan, translation, mind map, quiz, or AI-assisted conversion. Signed-in free accounts can make ${FREE_AI_DAILY_LIMIT} per UTC day; Pro has no daily action cap, while tool-specific limits remain.`,
+    a: AI_USE_DEFINITION,
   },
   {
     q: 'Can I edit scanned PDFs?',

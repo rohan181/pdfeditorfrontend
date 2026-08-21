@@ -1,11 +1,13 @@
 'use client'
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
+import ToolWorkflowStatus from '@/components/ToolWorkflowStatus'
 import toolSeoData from '@/lib/toolSeoData'
+import { classifyToolWorkflowError, safeWorkflowErrorDetail } from '@/lib/toolWorkflowState'
 
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -56,9 +58,10 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .level-label{font-size:10px;font-weight:600;letter-spacing:.08em;color:rgba(0,0,0,.4);text-transform:uppercase;margin-bottom:10px}
 .levels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
 @media(max-width:560px){.levels{grid-template-columns:repeat(2,1fr)}}
-.level{border:1.5px solid #e0e0e0;border-radius:10px;padding:12px 10px;cursor:pointer;transition:all .15s;background:#fff;text-align:center}
+.level{min-height:88px;border:1.5px solid var(--color-border-strong);border-radius:var(--radius-md);padding:12px 10px;cursor:pointer;transition:border-color var(--motion-fast),background var(--motion-fast);background:var(--color-surface);text-align:center;font:inherit}
 .level:hover{border-color:#bbb;background:#fafafa}
-.level.active{border-color:#1d1d1f;background:#f5f5f7}
+.level.active{border-color:var(--color-primary);background:var(--color-primary-soft)}
+.level:focus-visible{outline:3px solid var(--color-focus);outline-offset:3px}
 .level-name{font-size:13px;font-weight:700;color:#1d1d1f;margin-bottom:3px}
 .level-desc{font-size:10px;color:rgba(0,0,0,.4);line-height:1.4}
 .level-tag{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 6px;border-radius:4px;margin-top:5px;text-transform:uppercase}
@@ -77,6 +80,9 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .prog-bar{height:3px;background:#e8e8e8;border-radius:99px;overflow:hidden}
 .prog-fill{height:100%;background:#1d1d1f;border-radius:99px;transition:width .4s ease}
 .prog-label{font-size:10px;color:rgba(0,0,0,.4);margin-top:6px;text-align:center;letter-spacing:.06em;text-transform:uppercase}
+.prog-actions{display:flex;justify-content:center;margin-top:10px}
+.cancel-btn{min-height:44px;padding:9px 16px;border:1px solid #d8d8dd;border-radius:9px;background:#fff;color:#4b5563;font-size:13px;font-weight:700;cursor:pointer}
+.cancel-btn:hover{border-color:#E24B4A;color:#b4233c;background:#fff5f5}
 
 /* result */
 .result{text-align:center;padding:8px 0 16px}
@@ -103,6 +109,16 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 
 .error-box{padding:11px 14px;background:#fff5f5;border:1px solid rgba(226,75,74,.25);border-radius:9px;font-size:13px;color:#E24B4A;margin-top:10px}
 .note{margin:4px 0 20px;padding:11px 14px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 9px 9px 0;font-size:11.5px;line-height:1.6;color:#854d0e}
+@media(max-width:600px){
+  .hero{padding:48px 0 28px}
+  .card{margin-top:20px}
+  .drop{padding-top:34px;padding-bottom:34px}
+  .file-row{padding:10px;gap:9px}
+  .file-rm{width:44px;min-width:44px;height:44px}
+  .levels{gap:10px}
+  .level{min-height:104px;padding:13px 9px}
+  .result-btns>*{width:100%;justify-content:center}
+}
 `
 
 const LEVELS = [
@@ -138,6 +154,16 @@ function canvasToJpegBytes(canvas: HTMLCanvasElement, quality: number): Promise<
   })
 }
 
+function compressionAbortError() {
+  const error = new Error('Compression canceled')
+  error.name = 'AbortError'
+  return error
+}
+
+function throwIfCompressionCanceled(signal: AbortSignal) {
+  if (signal.aborted) throw compressionAbortError()
+}
+
 // Rebuilds the PDF by rendering each page to a canvas and re-embedding it as
 // a JPEG at a lower DPI/quality — runs entirely in the browser, no server
 // round-trip. Text and vector content become part of the page image, so the
@@ -146,7 +172,9 @@ async function compressPdf(
   file: File,
   level: string,
   onProgress: (pct: number, label: string) => void,
+  signal: AbortSignal,
 ): Promise<Uint8Array> {
+  throwIfCompressionCanceled(signal)
   const { dpi, quality } = COMPRESS_SETTINGS[level] ?? COMPRESS_SETTINGS.medium
   const scale = dpi / 72
 
@@ -156,11 +184,14 @@ async function compressPdf(
   const { PDFDocument } = await import('pdf-lib')
 
   const sourceBuffer = await file.arrayBuffer()
+  throwIfCompressionCanceled(signal)
   const sourceDoc = await pdfjsLib.getDocument({ data: sourceBuffer }).promise
   const outDoc = await PDFDocument.create()
+  onProgress(0, `0 of ${sourceDoc.numPages} pages compressed`)
 
   for (let i = 1; i <= sourceDoc.numPages; i++) {
-    onProgress(Math.round(((i - 1) / sourceDoc.numPages) * 90) + 5, `Compressing page ${i} of ${sourceDoc.numPages}…`)
+    throwIfCompressionCanceled(signal)
+    onProgress(Math.round(((i - 1) / sourceDoc.numPages) * 100), `Compressing page ${i} of ${sourceDoc.numPages}`)
 
     const page = await sourceDoc.getPage(i)
     const renderViewport = page.getViewport({ scale })
@@ -172,16 +203,29 @@ async function compressPdf(
     const ctx = canvas.getContext('2d')!
     ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    await page.render({ canvasContext: ctx, viewport: renderViewport }).promise
+    const renderTask = page.render({ canvasContext: ctx, viewport: renderViewport })
+    const cancelRender = () => { try { renderTask.cancel() } catch {} }
+    signal.addEventListener('abort', cancelRender, { once: true })
+    try {
+      await renderTask.promise
+    } catch (error: any) {
+      if (signal.aborted || error?.name === 'RenderingCancelledException') throw compressionAbortError()
+      throw error
+    } finally {
+      signal.removeEventListener('abort', cancelRender)
+    }
+    throwIfCompressionCanceled(signal)
 
     const jpegBytes = await canvasToJpegBytes(canvas, quality)
+    throwIfCompressionCanceled(signal)
     const embeddedImage = await outDoc.embedJpg(jpegBytes)
 
     const outPage = outDoc.addPage([pageViewport.width, pageViewport.height])
     outPage.drawImage(embeddedImage, { x: 0, y: 0, width: pageViewport.width, height: pageViewport.height })
+    onProgress(Math.round((i / sourceDoc.numPages) * 100), `${i} of ${sourceDoc.numPages} pages compressed`)
   }
 
-  onProgress(97, 'Finalizing…')
+  throwIfCompressionCanceled(signal)
   return outDoc.save()
 }
 
@@ -195,6 +239,9 @@ export default function PDFCompressorPage() {
   const [result, setResult]   = useState<Result | null>(null)
   const [error, setError]     = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const compressionControllerRef = useRef<AbortController | null>(null)
+
+  useEffect(() => () => compressionControllerRef.current?.abort(), [])
 
   const handleFile = (f: File) => {
     if (!f.name.toLowerCase().endsWith('.pdf')) { setError('Please upload a PDF file.'); return }
@@ -209,13 +256,16 @@ export default function PDFCompressorPage() {
 
   const onCompress = async () => {
     if (!file) return
-    setError(''); setProcessing(true); setProgress(5); setProgressLabel('Reading PDF…'); setResult(null)
+    const controller = new AbortController()
+    compressionControllerRef.current = controller
+    setError(''); setProcessing(true); setProgress(0); setProgressLabel('Reading PDF'); setResult(null)
 
     try {
       const origSize = file.size
       const compressed = await compressPdf(file, level, (pct, label) => {
         setProgress(pct); setProgressLabel(label)
-      })
+      }, controller.signal)
+      throwIfCompressionCanceled(controller.signal)
 
       // If the rebuilt version somehow came out larger (e.g. a small,
       // already-tight vector-only PDF), just ship the original bytes back.
@@ -233,10 +283,22 @@ export default function PDFCompressorPage() {
       setProgress(100)
       setResult({ blob, name, origSize, newSize: finalBytes.byteLength })
     } catch (e: any) {
-      setError('Compression failed: ' + (e?.message ?? 'Unknown error'))
+      if (e?.name === 'AbortError') {
+        setProgress(0)
+        setProgressLabel('')
+        setError('Compression canceled. Your selected PDF is still ready to use.')
+      } else {
+        setError(e?.message ?? 'The PDF could not be compressed.')
+      }
     } finally {
+      compressionControllerRef.current = null
       setProcessing(false)
     }
+  }
+
+  const cancelCompression = () => {
+    setProgressLabel('Canceling…')
+    compressionControllerRef.current?.abort()
   }
 
   const onDownload = () => {
@@ -249,17 +311,44 @@ export default function PDFCompressorPage() {
     setTimeout(() => URL.revokeObjectURL(url), 5000)
   }
 
-  const reset = () => { setFile(null); setResult(null); setError(''); setProgress(0) }
+  const reset = () => {
+    compressionControllerRef.current?.abort()
+    setFile(null); setResult(null); setError(''); setProgress(0); setProgressLabel('')
+  }
+
+  const chooseAnother = () => {
+    compressionControllerRef.current?.abort()
+    setFile(null); setResult(null); setError(''); setProgress(0); setProgressLabel('')
+    requestAnimationFrame(() => fileRef.current?.click())
+  }
 
   const savings = result ? Math.max(0, Math.round((1 - result.newSize / result.origSize) * 100)) : 0
+  const errorState = error ? classifyToolWorkflowError(new Error(error)) : null
+  const retryError = () => {
+    if (errorState === 'password-protected') {
+      window.open('/pdf-unlock', '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (errorState === 'corrupted-pdf') {
+      window.open('/pdf-repair', '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (errorState === 'unsupported-file' || !file) {
+      fileRef.current?.click()
+      return
+    }
+    void onCompress()
+  }
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="pg" id="main-content">
+      <div className="pg">
 
         {/* Nav */}
         <SiteNav />
+
+        <main id="main-content">
 
         {/* Hero */}
         <div className="hero">
@@ -273,15 +362,21 @@ export default function PDFCompressorPage() {
         {/* Main */}
         <div className="wrap">
           <div className="card">
+            <input ref={fileRef} id="compressor-pdf-input" type="file" aria-label="Choose a PDF to compress" accept=".pdf,application/pdf" style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.currentTarget.value = '' }} />
             {result ? (
               <div className="result">
-                <span className="result-icon">{savings > 0 ? '🎉' : '✅'}</span>
-                <h2>{savings > 0 ? `Reduced by ${savings}%` : 'Compression complete'}</h2>
-                <p>
-                  {savings > 0
+                <ToolWorkflowStatus
+                  state="success"
+                  heading={savings > 0 ? `Reduced by ${savings}%` : 'Compression complete'}
+                  message={savings > 0
                     ? `Your PDF shrank from ${fmt(result.origSize)} to ${fmt(result.newSize)}.`
-                    : `File is already well-optimised (${fmt(result.newSize)}).`}
-                </p>
+                    : `The file is already well optimised at ${fmt(result.newSize)}.`}
+                  primaryLabel="Download compressed PDF"
+                  onPrimary={onDownload}
+                  secondaryLabel="Compress another PDF"
+                  onSecondary={reset}
+                />
                 <div className="stats">
                   <div className="stat">
                     <div className="stat-val">{fmt(result.origSize)}</div>
@@ -294,30 +389,43 @@ export default function PDFCompressorPage() {
                   <div className="stat">
                     <div className="stat-val green">{savings}%</div>
                     <div className="stat-label">Saved</div>
-                  </div>
-                </div>
-                <div className="result-btns">
-                  <button className="dl-btn" onClick={onDownload}>⬇ Download</button>
-                  <button className="again-btn" onClick={reset}>Compress another</button>
-                </div>
+          </div>
+        </main>
+      </div>
               </div>
             ) : (
               <>
                 {!file ? (
-                  <div
-                    className={`drop${dragging ? ' over' : ''}`}
-                    onClick={() => fileRef.current?.click()}
-                    onDragOver={e => { e.preventDefault(); setDragging(true) }}
-                    onDragLeave={() => setDragging(false)}
-                    onDrop={onDrop}
-                  >
-                    <span className="drop-icon">📄</span>
-                    <h2>Drop your PDF here</h2>
-                    <p>Drag &amp; drop or click to browse · practical capacity depends on this device</p>
-                    <button className="drop-btn">Choose PDF</button>
-                    <input ref={fileRef} type="file" accept=".pdf" style={{ display: 'none' }}
-                      onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
-                  </div>
+                  <>
+                    <div
+                      className={`drop${dragging ? ' over' : ''}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Choose a PDF to compress"
+                      onClick={() => fileRef.current?.click()}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileRef.current?.click() }
+                      }}
+                      onDragOver={e => { e.preventDefault(); setDragging(true) }}
+                      onDragLeave={() => setDragging(false)}
+                      onDrop={onDrop}
+                    >
+                      <span className="drop-icon">📄</span>
+                      <h2>Drop your PDF here</h2>
+                      <p>Drag &amp; drop or click to browse · practical capacity depends on this device</p>
+                      <span className="drop-btn" aria-hidden="true">Choose PDF</span>
+                    </div>
+                    {errorState && (
+                      <div style={{ marginTop: 14 }}>
+                        <ToolWorkflowStatus
+                          state={errorState}
+                          detail={safeWorkflowErrorDetail(new Error(error))}
+                          primaryLabel="Choose another PDF"
+                          onPrimary={retryError}
+                        />
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <>
                     {/* File row */}
@@ -334,21 +442,32 @@ export default function PDFCompressorPage() {
                     <div className="level-label">Compression level</div>
                     <div className="levels">
                       {LEVELS.map(l => (
-                        <div
+                        <button
+                          type="button"
                           key={l.id}
                           className={`level${level === l.id ? ' active' : ''}`}
                           onClick={() => setLevel(l.id)}
+                          aria-pressed={level === l.id}
                         >
                           <div className="level-name">{l.name}</div>
                           <div className="level-desc">{l.desc}</div>
                           <span className={`level-tag ${l.cls}`}>{l.tag}</span>
-                        </div>
+                        </button>
                       ))}
                     </div>
 
                     <div className="note">Compression rebuilds each page from a flattened image — the output PDF is no longer searchable or has selectable text. Use a lower compression level to keep quality closer to the original.</div>
 
-                    {error && <div className="error-box">{error}</div>}
+                    {errorState && (
+                      <ToolWorkflowStatus
+                        state={errorState}
+                        detail={safeWorkflowErrorDetail(new Error(error))}
+                        preserveMessage="The selected PDF and compression level are still ready."
+                        onPrimary={retryError}
+                        secondaryLabel="Choose another PDF"
+                        onSecondary={chooseAnother}
+                      />
+                    )}
 
                     <button
                       className="compress-btn"
@@ -360,10 +479,13 @@ export default function PDFCompressorPage() {
 
                     {processing && (
                       <div className="prog-wrap">
-                        <div className="prog-bar">
-                          <div className="prog-fill" style={{ width: `${progress}%` }} />
-                        </div>
-                        <div className="prog-label">{progressLabel || 'Compressing…'}</div>
+                        <ToolWorkflowStatus
+                          state="processing"
+                          message="Each page is being rebuilt locally. The original PDF will not be changed."
+                          progress={{ value: progress, label: progressLabel || 'Compressing PDF' }}
+                          cancelLabel="Cancel compression"
+                          onCancel={cancelCompression}
+                        />
                       </div>
                     )}
                   </>

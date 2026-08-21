@@ -409,7 +409,7 @@ export default function AIPDFFormFillerPage() {
       {/* Fullscreen editor overlay */}
       {editorOpen && (
         <div role="dialog" aria-modal="true" aria-label="AI PDF form filler editor" style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', flexDirection: 'column', background: '#f8faff' }}>
-          <PDFEditor onRequestClose={closeEditor} />
+          <PDFEditor onRequestClose={closeEditor} toolId="ai-pdf-form-filler" />
         </div>
       )}
 

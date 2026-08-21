@@ -1,82 +1,70 @@
 'use client'
-import { useState, useEffect } from 'react'
+
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import Link from 'next/link'
 import Image from 'next/image'
+import { AlertCircle, Check, ShieldCheck } from 'lucide-react'
+import {
+  PRO_BILLING_SUMMARY,
+  PRO_CANCELLATION_SUMMARY,
+  PRO_PRICE_DISPLAY,
+  PRO_REFUND_SUMMARY,
+} from '@/lib/pricing'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '')
 
 const FEATURES = [
+  'Everything available on Free',
   'No daily AI-action cap',
-  'AI form autofill, summarizer & translator',
-  'PDF Mind Map & quiz creator',
-  'PDF → Word, Excel, PowerPoint',
-  'Tool-specific input and processing limits still apply',
+  'AI form fill, summaries, translation, OCR, chat, mind maps, and quizzes',
+  'AI-assisted PDF to Word, Excel, and PowerPoint',
+  'The same documented tool limits still apply',
 ]
 
 function CheckoutForm() {
   const stripe = useStripe()
   const elements = useElements()
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!stripe || !elements) return
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+    if (!stripe || !elements || loading) return
 
     setLoading(true)
     setError(null)
 
     const { error: stripeError } = await stripe.confirmSetup({
       elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout/confirm`,
-      },
+      confirmParams: { return_url: `${window.location.origin}/checkout/confirm` },
     })
 
-    // Only reaches here on error — success redirects automatically
     if (stripeError) {
-      setError(stripeError.message ?? 'Payment setup failed. Please try again.')
+      setError(stripeError.message ?? 'The payment details could not be confirmed. Review them and try again.')
       setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div style={{ marginBottom: 24 }}>
-        <PaymentElement options={{ layout: 'tabs' }} />
-      </div>
+    <form onSubmit={handleSubmit} aria-busy={loading}>
+      <div className="checkout-payment-element"><PaymentElement options={{ layout: 'tabs' }} /></div>
 
       {error && (
-        <div style={{
-          background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10,
-          padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#dc2626',
-        }}>
-          {error}
+        <div className="checkout-error" role="alert">
+          <AlertCircle size={19} aria-hidden="true" />
+          <div><strong>Payment could not be completed</strong><span>{error}</span></div>
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={!stripe || loading}
-        style={{
-          width: '100%', padding: '15px 0', borderRadius: 12, border: 'none',
-          background: loading ? '#6b7280' : 'linear-gradient(135deg,#0891b2,#0e7490)',
-          color: '#fff', fontSize: 15, fontWeight: 700,
-          cursor: loading ? 'not-allowed' : 'pointer',
-          transition: 'opacity .2s',
-        }}
-      >
-        {loading ? 'Processing…' : 'Subscribe — $1.00/month'}
+      <button type="submit" className="checkout-submit" disabled={!stripe || loading}>
+        {loading ? 'Confirming payment details…' : `Subscribe — ${PRO_PRICE_DISPLAY}/month`}
       </button>
-
-      <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', marginTop: 12 }}>
-        Recurring monthly billing · Cancel from account settings · Payment fields provided by Stripe
-      </p>
+      <p className="checkout-submit-note">{PRO_BILLING_SUMMARY} No payment is submitted until you press Subscribe.</p>
+      <Link href="/pricing?checkout=cancelled" className="checkout-cancel-link">Cancel checkout and return to pricing</Link>
     </form>
   )
 }
@@ -86,101 +74,96 @@ export default function CheckoutPage() {
   const router = useRouter()
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [alreadyPro, setAlreadyPro] = useState(false)
+  const [preparing, setPreparing] = useState(false)
+
+  const prepareCheckout = useCallback(async () => {
+    setPreparing(true)
+    setFetchError(null)
+    setAlreadyPro(false)
+    setClientSecret(null)
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 15_000)
+
+    try {
+      const response = await fetch('/api/subscription/create-setup-intent', { method: 'POST', signal: controller.signal })
+      const data = await response.json().catch(() => ({}))
+      if (response.status === 409 && data.code === 'already_pro') {
+        setAlreadyPro(true)
+        router.replace('/manage-subscription')
+      } else if (response.ok && data.clientSecret) {
+        setClientSecret(data.clientSecret)
+      } else {
+        setFetchError('Checkout could not be prepared. Your plan has not changed. Please try again.')
+      }
+    } catch (error) {
+      const timedOut = (error as Error)?.name === 'AbortError'
+      setFetchError(timedOut
+        ? 'Checkout preparation took too long. Your plan has not changed. Please retry.'
+        : 'The connection was interrupted. Your plan has not changed. Please retry.')
+    } finally {
+      window.clearTimeout(timeout)
+      setPreparing(false)
+    }
+  }, [router])
 
   useEffect(() => {
     if (!isLoaded) return
-    if (!isSignedIn) { router.push('/sign-in'); return }
-
-    fetch('/api/subscription/create-setup-intent', { method: 'POST' })
-      .then(async r => {
-        const text = await r.text()
-        try {
-          const data = JSON.parse(text)
-          if (data.clientSecret) setClientSecret(data.clientSecret)
-          else setFetchError(data.error ?? `Server error (${r.status})`)
-        } catch {
-          setFetchError(`Server error (${r.status}): ${text.slice(0, 120)}`)
-        }
-      })
-      .catch(err => setFetchError(`Network error: ${err?.message ?? 'unknown'}`))
-  }, [isLoaded, isSignedIn, router])
+    if (!isSignedIn) {
+      router.replace('/sign-in')
+      return
+    }
+    void prepareCheckout()
+  }, [isLoaded, isSignedIn, prepareCheckout, router])
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f5f7', fontFamily: 'var(--font-dm,system-ui,sans-serif)' }}>
-
-      {/* Nav */}
-      <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
-          <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 48, width: 'auto', display: 'block' }} priority />
-        </Link>
-        <Link href="/pricing" style={{ fontSize: 14, color: '#6b7280', textDecoration: 'none', fontWeight: 500 }}>
-          ← Back to pricing
-        </Link>
+    <div className="checkout-page">
+      <nav className="checkout-nav" aria-label="Checkout navigation">
+        <Link href="/" className="checkout-logo"><Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" priority /></Link>
+        <Link href="/pricing">← Back to pricing</Link>
       </nav>
 
-      {/* Main */}
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 24px 80px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(340px,1fr))', gap: 28, alignItems: 'start' }}>
+      <main className="checkout-layout">
+        <section className="checkout-summary" aria-labelledby="checkout-plan-heading">
+          <p className="checkout-eyebrow">EditPDF AI Pro</p>
+          <h1 id="checkout-plan-heading">Review your subscription</h1>
+          <div className="checkout-price"><strong>{PRO_PRICE_DISPLAY}</strong><span>per month</span></div>
+          <p>{PRO_BILLING_SUMMARY}</p>
 
-        {/* Left — Order summary */}
-        <div>
-          <div style={{ background: '#1d1d1f', borderRadius: 24, padding: '32px 28px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -80, right: -80, width: 220, height: 380, borderRadius: '50%', background: 'radial-gradient(circle,rgba(8,145,178,.4),transparent 70%)', pointerEvents: 'none' }} />
+          <ul>
+            {FEATURES.map(feature => <li key={feature}><Check size={16} aria-hidden="true" /><span>{feature}</span></li>)}
+          </ul>
 
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '.07em', margin: '0 0 8px' }}>EditPDF AI Pro</p>
+          <dl className="checkout-total">
+            <div><dt>EditPDF AI Pro</dt><dd>{PRO_PRICE_DISPLAY}</dd></div>
+            <div><dt>Total due today</dt><dd>{PRO_PRICE_DISPLAY} USD</dd></div>
+          </dl>
+        </section>
 
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, marginBottom: 4 }}>
-              <span style={{ fontSize: 52, fontWeight: 800, color: '#fff', letterSpacing: '-.04em', lineHeight: 1 }}>$1</span>
-              <span style={{ fontSize: 15, color: '#6b7280', paddingBottom: 8 }}>/month</span>
+        <section className="checkout-form-card" aria-labelledby="payment-details-heading">
+          <span className="checkout-secure-icon"><ShieldCheck size={20} aria-hidden="true" /></span>
+          <h2 id="payment-details-heading">Payment details</h2>
+          {user?.primaryEmailAddress?.emailAddress && <p className="checkout-account">Subscribing as <strong>{user.primaryEmailAddress.emailAddress}</strong></p>}
+
+          {alreadyPro ? (
+            <div className="checkout-state" role="status">
+              <h3>You already have Pro</h3>
+              <p>No second checkout was created. Opening your subscription settings…</p>
+              <Link href="/manage-subscription">Manage subscription</Link>
             </div>
-            <p style={{ fontSize: 13, color: '#9ca3af', margin: '0 0 28px' }}>Billed monthly · Cancel anytime</p>
-
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {FEATURES.map(f => (
-                <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 14, color: '#e5e7eb' }}>
-                  <span style={{ color: '#0891b2', fontWeight: 700, flexShrink: 0, marginTop: 1 }}>✓</span>{f}
-                </li>
-              ))}
-            </ul>
-
-            <div style={{ borderTop: '1px solid #374151', paddingTop: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <span style={{ fontSize: 14, color: '#9ca3af' }}>EditPDF AI Pro</span>
-                <span style={{ fontSize: 14, color: '#e5e7eb', fontWeight: 600 }}>$1.00</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>Total due today</span>
-                <span style={{ fontSize: 18, fontWeight: 800, color: '#fff' }}>$1.00</span>
-              </div>
+          ) : fetchError ? (
+            <div className="checkout-state is-error" role="alert">
+              <AlertCircle size={24} aria-hidden="true" />
+              <h3>Checkout is unavailable</h3>
+              <p>{fetchError}</p>
+              <button type="button" onClick={() => void prepareCheckout()}>Retry checkout preparation</button>
+              <Link href="/pricing?checkout=cancelled">Return to pricing</Link>
             </div>
-          </div>
-
-          <p style={{ textAlign: 'center', fontSize: 12, color: '#9ca3af', margin: '20px 0 0', lineHeight: 1.6 }}>
-            Monthly recurring billing. Payment fields are provided by Stripe. Cancellation is available from account settings.
-          </p>
-        </div>
-
-        {/* Right — Payment form */}
-        <div style={{ background: '#fff', borderRadius: 24, padding: '32px 28px', border: '1.5px solid #e5e7eb', boxShadow: '0 4px 24px rgba(0,0,0,.06)' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1d1d1f', margin: '0 0 6px', letterSpacing: '-.03em' }}>
-            Payment details
-          </h2>
-
-          {user?.primaryEmailAddress?.emailAddress && (
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 24px' }}>
-              Subscribing as <strong style={{ color: '#374151' }}>{user.primaryEmailAddress.emailAddress}</strong>
-            </p>
-          )}
-
-          {fetchError ? (
-            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '16px', fontSize: 14, color: '#dc2626' }}>
-              {fetchError}
-            </div>
-          ) : !clientSecret ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[80, 48, 48, 56].map((h, i) => (
-                <div key={i} style={{ height: h, background: '#f3f4f6', borderRadius: 8, animation: 'pulse 1.5s ease-in-out infinite' }} />
-              ))}
-              <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}`}</style>
+          ) : preparing || !clientSecret ? (
+            <div className="checkout-loading" role="status" aria-live="polite">
+              <span className="checkout-spinner" aria-hidden="true" />
+              <strong>Preparing secure checkout</strong>
+              <p>This should take only a moment. No payment has been made.</p>
             </div>
           ) : (
             <Elements
@@ -190,11 +173,8 @@ export default function CheckoutPage() {
                 appearance: {
                   theme: 'stripe',
                   variables: {
-                    colorPrimary: '#0891b2',
-                    colorBackground: '#ffffff',
-                    colorText: '#1d1d1f',
-                    borderRadius: '10px',
-                    fontFamily: 'system-ui, sans-serif',
+                    colorPrimary: '#315fce', colorBackground: '#ffffff', colorText: '#1d1d1f',
+                    borderRadius: '10px', fontFamily: 'system-ui, sans-serif', fontSizeBase: '16px',
                   },
                 },
               }}
@@ -202,8 +182,14 @@ export default function CheckoutPage() {
               <CheckoutForm />
             </Elements>
           )}
-        </div>
-      </div>
+
+          <div className="checkout-policy-summary">
+            <p><strong>Cancellation:</strong> {PRO_CANCELLATION_SUMMARY}</p>
+            <p><strong>Refunds:</strong> {PRO_REFUND_SUMMARY}</p>
+            <p>By subscribing, you agree to the <Link href="/terms">Terms of Service</Link>.</p>
+          </div>
+        </section>
+      </main>
     </div>
   )
 }

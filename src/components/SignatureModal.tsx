@@ -1,5 +1,6 @@
 'use client'
 import { useRef, useEffect, useState } from 'react'
+import { useModalFocusTrap } from '@/hooks/useModalFocusTrap'
 
 interface Props {
   onApply: (dataUrl: string) => void
@@ -14,7 +15,12 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
   const [isEmpty, setIsEmpty]   = useState(true)
   const [penColor, setPenColor] = useState('#1b1c1c')
   const [penSize, setPenSize]   = useState(2)
-  const [tab, setTab]           = useState<'draw' | 'saved'>(savedSignature ? 'saved' : 'draw')
+  const [tab, setTab]           = useState<'draw' | 'type' | 'saved'>(savedSignature ? 'saved' : 'draw')
+  const [typedSignature, setTypedSignature] = useState('')
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+
+  useModalFocusTrap(true, dialogRef, onClose, closeButtonRef)
 
   // ── Mutable refs so event handlers always read latest values ──────────────
   // (no useCallback deps needed → listeners registered exactly once)
@@ -101,12 +107,25 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
 
   const handleApply = () => {
     if (tab === 'saved' && savedSignature) { onApply(savedSignature); return }
+    if (tab === 'type' && typedSignature.trim()) {
+      const canvas = document.createElement('canvas')
+      canvas.width = 920
+      canvas.height = 240
+      const context = canvas.getContext('2d')!
+      context.fillStyle = penColor
+      context.font = 'italic 92px Georgia, serif'
+      context.textAlign = 'center'
+      context.textBaseline = 'middle'
+      context.fillText(typedSignature.trim(), canvas.width / 2, canvas.height / 2, canvas.width - 48)
+      onApply(canvas.toDataURL('image/png'))
+      return
+    }
     const canvas = canvasRef.current
     if (!canvas || isEmpty) return
     onApply(canvas.toDataURL('image/png'))
   }
 
-  const canApply = tab === 'saved' ? !!savedSignature : !isEmpty
+  const canApply = tab === 'saved' ? !!savedSignature : tab === 'type' ? Boolean(typedSignature.trim()) : !isEmpty
 
   // ── Shared small button style ─────────────────────────────────────────────
   const pill = (active: boolean, accent = '#6366f1'): React.CSSProperties => ({
@@ -120,6 +139,7 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
 
   return (
     <div
+      className="mobile-modal-backdrop"
       style={{
         position: 'fixed', inset: 0, zIndex: 300,
         background: 'rgba(0,0,0,0.55)',
@@ -130,7 +150,7 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
       onTouchStart={e => e.stopPropagation()}
       onTouchEnd={e => e.stopPropagation()}
     >
-      <div style={{
+      <div ref={dialogRef} className="mobile-modal-surface" role="dialog" aria-modal="true" aria-labelledby="signature-modal-title" tabIndex={-1} style={{
         background: '#fff', borderRadius: 20, padding: '24px 26px',
         width: '100%', maxWidth: 500,
         boxShadow: '0 24px 64px rgba(0,0,0,0.22)',
@@ -140,15 +160,15 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
         {/* ── Header ─────────────────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, fontFamily: 'Manrope,sans-serif', color: '#0f172a' }}>
+            <h2 id="signature-modal-title" style={{ margin: 0, fontSize: 16, fontWeight: 800, fontFamily: 'Manrope,sans-serif', color: '#0f172a' }}>
               Add Signature
             </h2>
             <p style={{ margin: '2px 0 0', fontSize: 11.5, color: '#64748b' }}>
               Draw your signature or reuse a saved one
             </p>
           </div>
-          <button onClick={onClose} style={{
-            width: 28, height: 28, borderRadius: 7, border: '1px solid #e2e8f0',
+          <button ref={closeButtonRef} type="button" onClick={onClose} aria-label="Close signature dialog" style={{
+            width: 44, height: 44, borderRadius: 9, border: '1px solid #e2e8f0',
             background: '#f8faff', cursor: 'pointer', fontSize: 15, color: '#64748b',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>×</button>
@@ -158,9 +178,10 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, background: '#f1f5f9', borderRadius: 11, padding: 4 }}>
           {([
             { id: 'draw', label: 'Draw New',       icon: '✏️' },
+            { id: 'type', label: 'Type',            icon: '⌨️' },
             { id: 'saved', label: savedSignature ? 'Use Previous' : 'No Saved', icon: '🔄' },
           ] as const).map(t => (
-            <button key={t.id}
+            <button key={t.id} type="button" aria-pressed={tab === t.id}
               disabled={t.id === 'saved' && !savedSignature}
               onClick={() => setTab(t.id)}
               style={{
@@ -188,7 +209,7 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>Ink</span>
                 <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                   {['#1b1c1c', '#1d4ed8', '#dc2626', '#7c3aed', '#047857'].map(c => (
-                    <button key={c} onClick={() => setPenColor(c)} style={{
+                    <button key={c} type="button" onClick={() => setPenColor(c)} aria-label={`Use ink colour ${c}`} aria-pressed={penColor === c} style={{
                       width: 22, height: 38, borderRadius: '50%', background: c,
                       border: 'none', cursor: 'pointer',
                       outline: penColor === c ? '2.5px solid #6366f1' : '2px solid transparent',
@@ -196,7 +217,7 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
                     }} />
                   ))}
                   <input type="color" value={penColor} onChange={e => setPenColor(e.target.value)}
-                    title="Custom colour"
+                    aria-label="Custom signature ink colour"
                     style={{ width: 22, height: 38, border: 'none', borderRadius: 5, cursor: 'pointer', padding: 1 }} />
                 </div>
               </div>
@@ -204,6 +225,7 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>Thickness {penSize}px</span>
                 <input
+                  aria-label="Signature pen thickness"
                   type="range" min={1} max={10} step={1} value={penSize}
                   onChange={e => setPenSize(parseInt(e.target.value))}
                   style={{ flex: 1, minWidth: 0, accentColor: '#6366f1', cursor: 'pointer' }}
@@ -226,6 +248,8 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
               }} />
               <canvas
                 ref={canvasRef}
+                role="img"
+                aria-label="Signature drawing area. Use the Type tab for a fully keyboard-accessible signature."
                 width={920}
                 height={400}
                 className="sig-canvas"
@@ -253,6 +277,25 @@ export default function SignatureModal({ onApply, onClose, savedSignature }: Pro
               }}>Clear</button>
             </div>
           </>
+        )}
+
+        {tab === 'type' && (
+          <div style={{ border:'2px solid #e2e8f0', borderRadius:12, background:'#fafbff', padding:18 }}>
+            <label htmlFor="typed-signature" style={{ display:'block', marginBottom:7, color:'#475569', fontSize:12, fontWeight:700 }}>
+              Type your signature
+            </label>
+            <input
+              id="typed-signature"
+              value={typedSignature}
+              onChange={event => setTypedSignature(event.target.value)}
+              autoComplete="name"
+              maxLength={80}
+              style={{ width:'100%', minHeight:44, padding:'10px 12px', border:'1.5px solid #cbd5e1', borderRadius:9, background:'#fff', color:'#0f172a', fontSize:16, fontFamily:'Georgia, serif', fontStyle:'italic' }}
+            />
+            <p style={{ margin:'8px 0 0', color:'#5b6472', fontSize:11.5, lineHeight:1.5 }}>
+              This keyboard-accessible option creates a text-style signature image. Review it after placing it on the page.
+            </p>
+          </div>
         )}
 
         {/* ── Saved tab ──────────────────────────────────────────── */}

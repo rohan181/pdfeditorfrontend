@@ -1,76 +1,113 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { AlertCircle, CheckCircle2, CircleX } from 'lucide-react'
+import { PRO_BILLING_SUMMARY, PRO_PRICE_DISPLAY } from '@/lib/pricing'
+
+type ConfirmationState = 'loading' | 'success' | 'cancelled' | 'failure'
 
 function ConfirmInner() {
-  const router = useRouter()
   const params = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'error'>('loading')
-  const [error, setError] = useState<string | null>(null)
+  const [state, setState] = useState<ConfirmationState>('loading')
+  const [message, setMessage] = useState('Confirming your subscription with Stripe. Do not close this page yet.')
 
   useEffect(() => {
     const setupIntentId = params.get('setup_intent')
     const redirectStatus = params.get('redirect_status')
 
+    if (redirectStatus === 'failed') {
+      setMessage('Stripe could not confirm the payment details. No Pro access was added. Review your payment method and try again.')
+      setState('failure')
+      return
+    }
     if (!setupIntentId || redirectStatus !== 'succeeded') {
-      setError('Payment setup was not completed. Please try again.')
-      setStatus('error')
+      setMessage('Checkout was not completed. No subscription was created and your existing plan is unchanged.')
+      setState('cancelled')
       return
     }
 
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 20_000)
     fetch('/api/subscription/activate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ setupIntentId }),
+      signal: controller.signal,
     })
-      .then(r => r.json())
-      .then(data => {
-        if (data.error) {
-          setError(data.error)
-          setStatus('error')
+      .then(async response => ({ response, data: await response.json().catch(() => ({})) }))
+      .then(({ response, data }) => {
+        if (response.ok && (data.status === 'active' || data.status === 'trialing')) {
+          setMessage(`Pro is active. ${PRO_BILLING_SUMMARY}`)
+          setState('success')
         } else {
-          router.replace('/dashboard?upgraded=1')
+          setMessage('Your payment details were received, but Pro could not be activated. Your account has not been marked as Pro. Retry or contact support if the problem continues.')
+          setState('failure')
         }
       })
-      .catch(() => {
-        setError('Network error. Please contact support.')
-        setStatus('error')
+      .catch(error => {
+        setMessage((error as Error)?.name === 'AbortError'
+          ? 'Subscription activation took too long. Check your dashboard before trying again so you do not create a duplicate subscription.'
+          : 'The connection was interrupted while activating Pro. Check your dashboard before trying again.')
+        setState('failure')
       })
-  }, [params, router])
+      .finally(() => window.clearTimeout(timeout))
+
+    return () => {
+      window.clearTimeout(timeout)
+      controller.abort()
+    }
+  }, [params])
+
+  const icon = state === 'success'
+    ? <CheckCircle2 size={34} aria-hidden="true" />
+    : state === 'cancelled'
+      ? <CircleX size={34} aria-hidden="true" />
+      : state === 'failure'
+        ? <AlertCircle size={34} aria-hidden="true" />
+        : <span className="checkout-spinner" aria-hidden="true" />
+
+  const heading = state === 'success'
+    ? 'Pro is active'
+    : state === 'cancelled'
+      ? 'Checkout cancelled'
+      : state === 'failure'
+        ? 'Subscription not activated'
+        : 'Activating Pro'
 
   return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#f5f5f7', fontFamily: 'var(--font-dm,system-ui,sans-serif)',
-    }}>
-      <div style={{ textAlign: 'center', maxWidth: 400, padding: '0 24px' }}>
-        {status === 'loading' ? (
-          <>
-            <div style={{ width: 48, height: 48, border: '3px solid #e5e7eb', borderTopColor: '#0891b2', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 20px' }} />
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-            <p style={{ fontSize: 16, color: '#6b7280', fontWeight: 500 }}>Activating your Pro subscription…</p>
-          </>
-        ) : (
-          <>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#1d1d1f', margin: '0 0 10px' }}>Something went wrong</h2>
-            <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px' }}>{error}</p>
-            <a href="/checkout" style={{
-              display: 'inline-block', padding: '12px 24px', borderRadius: 10,
-              background: '#1d1d1f', color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none',
-            }}>Try again</a>
-          </>
+    <main className="checkout-confirm-page">
+      <section className={`checkout-confirm-card is-${state}`} role={state === 'failure' ? 'alert' : 'status'} aria-live="polite" aria-busy={state === 'loading'}>
+        <div className="checkout-confirm-icon">{icon}</div>
+        <p className="checkout-eyebrow">EditPDF AI Pro · {PRO_PRICE_DISPLAY}/month</p>
+        <h1>{heading}</h1>
+        <p>{message}</p>
+
+        {state === 'success' && (
+          <div className="checkout-confirm-actions">
+            <Link href="/dashboard?upgraded=1" className="is-primary">View Pro dashboard</Link>
+            <Link href="/ai-pdf-form-filler">Open an AI tool</Link>
+          </div>
         )}
-      </div>
-    </div>
+        {state === 'cancelled' && (
+          <div className="checkout-confirm-actions">
+            <Link href="/pricing?checkout=cancelled" className="is-primary">Return to pricing</Link>
+            <Link href="/pdf-editor">Use a Free tool</Link>
+          </div>
+        )}
+        {state === 'failure' && (
+          <div className="checkout-confirm-actions">
+            <Link href="/dashboard" className="is-primary">Check current plan</Link>
+            <Link href="/checkout">Retry checkout</Link>
+            <Link href="/support">Contact support</Link>
+          </div>
+        )}
+      </section>
+    </main>
   )
 }
 
 export default function ConfirmPage() {
-  return (
-    <Suspense>
-      <ConfirmInner />
-    </Suspense>
-  )
+  return <Suspense><ConfirmInner /></Suspense>
 }

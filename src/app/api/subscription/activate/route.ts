@@ -1,11 +1,16 @@
 import { auth } from '@clerk/nextjs/server'
 import Stripe from 'stripe'
 import { supabaseAdmin } from '@/lib/supabase'
+import { getUserSubscription } from '@/lib/subscription'
 
 export async function POST(req: Request) {
   try {
     const { userId } = await auth()
     if (!userId) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+    if (await getUserSubscription(userId) === 'pro') {
+      return Response.json({ status: 'active', alreadyPro: true })
+    }
 
     const { setupIntentId } = await req.json()
     if (!setupIntentId) return Response.json({ error: 'setupIntentId required' }, { status: 400 })
@@ -38,6 +43,10 @@ export async function POST(req: Request) {
       customer: customerId,
       items: [{ price: priceId }],
       default_payment_method: paymentMethodId,
+    }, {
+      // The confirmation page can be reloaded or revisited. Reusing the same
+      // SetupIntent must never create a second subscription.
+      idempotencyKey: `editpdf-ai-pro-${userId}-${setupIntentId}`,
     })
 
     // Update Supabase
@@ -53,6 +62,9 @@ export async function POST(req: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('[activate]', message)
-    return Response.json({ error: message }, { status: 500 })
+    return Response.json(
+      { error: 'The subscription could not be activated. Please retry or contact support.', code: 'activation_failed' },
+      { status: 500 },
+    )
   }
 }

@@ -5,14 +5,14 @@ const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
 
 const CARDS = [
-  { Icon: Globe,      title: 'Core tools process locally', desc: 'Editing, compression, signing, conversion, and page-management workflows process selected files in your browser.' },
+  { Icon: Globe,      title: 'Core tools process locally', desc: 'Core editing, compression, signing, supported browser-only conversion, and page-management workflows process selected files in your browser.' },
   { Icon: Server,     title: 'No document database',       desc: 'The application does not write PDF, image, or extracted document content to its database or object storage.' },
   { Icon: Shield,     title: 'AI data depends on the feature', desc: 'AI tools may send extracted text, page images, uploaded images, or a PDF through server routes to configured processing providers.' },
 ]
 
 export default function SitePrivacyNote() {
   return (
-    <section className="home-responsive-section" style={{background:'#0F172A',padding:'80px 28px',borderTop:'1px solid #1E293B'}}>
+    <section id="privacy" className="home-responsive-section" style={{background:'#0F172A',padding:'80px 28px',borderTop:'1px solid #1E293B'}}>
       <div style={{maxWidth:1200,margin:'0 auto'}}>
         <div style={{marginBottom:40,textAlign:'center'}}>
           <div style={{...MONO,fontSize:10,color:'#94a3b8',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:14}}>

@@ -4,15 +4,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
+import { PRO_CANCELLATION_SUMMARY, PRO_REFUND_SUMMARY } from '@/lib/pricing'
 
-const LOSING = [
-  `No daily AI-action cap (returns to ${FREE_AI_DAILY_LIMIT}/UTC day)`,
-  'AI form autofill & chat fill',
-  'AI summarizer & translator',
-  'PDF Mind Map generator',
-  'PDF → Word, Excel, PowerPoint',
-  'AI OCR & quiz creator',
-  'Pro daily-cap exemption',
+const PLAN_CHANGES = [
+  `Your shared AI allowance returns to ${FREE_AI_DAILY_LIMIT} actions per UTC day`,
+  'AI tools and AI-assisted conversions remain available through the Free allowance',
+  'Core browser PDF workflows remain free without an account',
+  'Tool-specific input and processing limits do not change',
 ]
 
 type Stage = 'confirm' | 'cancelled'
@@ -28,8 +26,7 @@ export default function CancelPage() {
     setError(null)
     try {
       const res = await fetch('/api/subscription/cancel', { method: 'POST' })
-      const data = await res.json()
-      if (data.error) { setError(data.error); setLoading(false); return }
+      if (!res.ok) { setError('Cancellation could not be scheduled. Your subscription is still active. Please retry.'); setLoading(false); return }
       setStage('cancelled')
     } catch {
       setError('Network error. Please try again.')
@@ -55,25 +52,25 @@ export default function CancelPage() {
 
         {stage === 'cancelled' ? (
           /* ── Success state ── */
-          <div style={{ textAlign: 'center', maxWidth: 440 }}>
+          <div role="status" style={{ textAlign: 'center', maxWidth: 440 }}>
             <div style={{ width: 72, height: 72, background: '#f3f4f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px', fontSize: 32 }}>
               👋
             </div>
             <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1d1d1f', margin: '0 0 12px', letterSpacing: '-.03em' }}>
-              Subscription cancelled
+              Cancellation scheduled
             </h1>
             <p style={{ fontSize: 15, color: '#6b7280', margin: '0 0 8px', lineHeight: 1.6 }}>
               Your Pro access continues until the end of this billing period.
             </p>
             <p style={{ fontSize: 14, color: '#9ca3af', margin: '0 0 32px' }}>
-              After that your account reverts to the Free plan.
+              After that your account returns to Free. Cancellation does not create a partial refund for unused time.
             </p>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
                 onClick={() => router.push('/pricing')}
                 style={{ padding: '12px 24px', borderRadius: 10, border: '1.5px solid #d1d5db', background: '#fff', color: '#374151', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
               >
-                Resubscribe
+                Review plan options
               </button>
               <button
                 onClick={() => router.push('/dashboard')}
@@ -98,13 +95,13 @@ export default function CancelPage() {
                     Cancel your Pro subscription?
                   </h1>
                   <p style={{ fontSize: 13, color: '#6b7280', margin: '2px 0 0' }}>
-                    You'll lose access to these features at the end of your billing period:
+                    What changes at the end of your billing period:
                   </p>
                 </div>
               </div>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {LOSING.map(f => (
+                {PLAN_CHANGES.map(f => (
                   <li key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: '#374151', padding: '10px 14px', background: '#fafafa', borderRadius: 10, border: '1px solid #f3f4f6' }}>
                     <span style={{ color: '#ef4444', fontWeight: 700, flexShrink: 0 }}>✕</span>
                     {f}
@@ -112,8 +109,12 @@ export default function CancelPage() {
                 ))}
               </ul>
 
+              <p style={{ margin: '0 0 20px', padding: '12px 14px', borderRadius: 10, background: '#f8fafc', color: '#64748b', fontSize: 12.5, lineHeight: 1.55 }}>
+                {PRO_CANCELLATION_SUMMARY} {PRO_REFUND_SUMMARY}
+              </p>
+
               {error && (
-                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#dc2626' }}>
+                <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#dc2626' }}>
                   {error}
                 </div>
               )}

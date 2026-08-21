@@ -5,6 +5,8 @@ import { getUserSubscription } from '@/lib/subscription'
 import { supabaseAdmin } from '@/lib/supabase'
 import Link from 'next/link'
 import Image from 'next/image'
+import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
+import { PRO_PRICE_DISPLAY } from '@/lib/pricing'
 
 async function getTodayUsage(userId: string) {
   const today = new Date().toISOString().slice(0, 10)
@@ -17,9 +19,12 @@ async function getTodayUsage(userId: string) {
   return data?.count ?? 0
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams?: Promise<{ upgraded?: string }> }) {
   const { userId } = await auth()
   if (!userId) redirect('/sign-in')
+
+  const query = await searchParams
+  const showUpgradeSuccess = query?.upgraded === '1'
 
   const [tier, usage, user] = await Promise.all([
     getUserSubscription(userId),
@@ -28,7 +33,7 @@ export default async function DashboardPage() {
   ])
 
   const isPro  = tier !== 'free'
-  const limit  = 5
+  const limit  = FREE_AI_DAILY_LIMIT
   const pct    = Math.min(100, (usage / limit) * 100)
   const name   = user?.firstName ?? user?.emailAddresses?.[0]?.emailAddress?.split('@')[0] ?? 'there'
   const email  = user?.emailAddresses?.[0]?.emailAddress ?? ''
@@ -48,6 +53,16 @@ export default async function DashboardPage() {
       </nav>
 
       <div style={{ maxWidth: 900, margin: '0 auto', padding: '8px 24px 64px' }}>
+
+        {showUpgradeSuccess && isPro && (
+          <div role="status" style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 20, padding: '15px 18px', border: '1px solid #a7f3d0', borderRadius: 14, background: '#ecfdf5', color: '#065f46' }}>
+            <span aria-hidden="true" style={{ fontWeight: 900 }}>✓</span>
+            <div>
+              <strong style={{ display: 'block', fontSize: 14 }}>Pro is active</strong>
+              <span style={{ display: 'block', marginTop: 2, fontSize: 13, lineHeight: 1.5 }}>Your account now has no daily AI-action cap. Tool-specific input and processing limits still apply.</span>
+            </div>
+          </div>
+        )}
 
         {/* Profile header */}
         <div style={{ background: '#fff', borderRadius: 20, padding: '28px 28px', border: '1.5px solid #e5e7eb', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 20, boxShadow: '0 4px 20px rgba(0,0,0,.05)' }}>
@@ -114,7 +129,7 @@ export default async function DashboardPage() {
                   display: 'block', textAlign: 'center', padding: '12px 0', borderRadius: 12,
                   background: '#1d1d1f', color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none',
                 }}>
-                  Upgrade to Pro — $1.00/mo
+                  Upgrade to Pro — {PRO_PRICE_DISPLAY}/month
                 </Link>
               </>
             )}
@@ -169,23 +184,6 @@ export default async function DashboardPage() {
           </div>
 
         </div>
-
-        {/* Upgrade banner for free users */}
-        {!isPro && (
-          <div style={{ marginTop: 20, background: '#1d1d1f', borderRadius: 20, padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -40, right: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(8,145,178,.3),transparent 70%)', pointerEvents: 'none' }} />
-            <div>
-              <p style={{ fontSize: 18, fontWeight: 800, color: '#fff', margin: '0 0 6px', letterSpacing: '-.03em' }}>Remove the daily AI cap with Pro</p>
-              <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>No daily AI-action cap; documented tool limits still apply — $1.00/mo</p>
-            </div>
-            <Link href="/pricing" style={{
-              padding: '12px 28px', borderRadius: 12, background: 'linear-gradient(135deg,#0891b2,#0e7490)',
-              color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none', flexShrink: 0,
-            }}>
-              Upgrade now →
-            </Link>
-          </div>
-        )}
 
       </div>
     </div>

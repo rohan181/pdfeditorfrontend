@@ -6,6 +6,8 @@ import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
+import * as fileStorage from '@/lib/fileStorage'
+import { relativeTime, type StoredSession } from '@/lib/fileStorage'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -456,6 +458,15 @@ export default function PDFRedactorPage() {
   const wrapRef      = useRef<HTMLDivElement>(null)
   const fileRef      = useRef<HTMLInputElement>(null)
   const pickerBtnRef = useRef<HTMLButtonElement>(null)
+
+  // Local work recovery (IndexedDB) — never sent to a server
+  const REDACTOR_TOOL_ID = 'pdf-redactor'
+  const sessionIdRef = useRef<string | null>(null)
+  const unsavedChangesRef = useRef(false)
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [recoveryPrompt, setRecoveryPrompt] = useState<StoredSession | null>(null)
+  const [showRecentFiles, setShowRecentFiles] = useState(false)
+  const [recentSessions, setRecentSessions] = useState<StoredSession[]>([])
   const pdfDocRef    = useRef<any>(null)
   const SCALE        = 1.8
 
@@ -484,8 +495,10 @@ export default function PDFRedactorPage() {
   }, [showPicker])
 
   // ── Load PDF ────────────────────────────────────────────────────────────────
-  const loadFile = useCallback(async (f: File) => {
+  const loadFile = useCallback(async (f: File, existingSessionId?: string) => {
     if (!f.name.toLowerCase().endsWith('.pdf')) { setError('Please upload a PDF file.'); return }
+    sessionIdRef.current = existingSessionId ?? crypto.randomUUID()
+    unsavedChangesRef.current = false
     setError(''); setFile(f); setPages([]); setCurPage(0); setLoading(true)
     try {
       const pdfjs = await import('pdfjs-dist')
@@ -510,6 +523,86 @@ export default function PDFRedactorPage() {
       setLoading(false)
     }
   }, [])
+
+  // ── Local work recovery (IndexedDB) ─────────────────────────────────────
+  // On mount, before a file is open: check for an unfinished session from a
+  // previous visit. Everything here stays local — no session data is ever
+  // sent to a server.
+  useEffect(() => {
+    fileStorage.getAllSessions()
+      .then(sessions => {
+        const match = sessions.find(s => s.tool === REDACTOR_TOOL_ID)
+        if (match) setRecoveryPrompt(match)
+      })
+      .catch(() => { /* IndexedDB unavailable (private browsing, etc.) — recovery is a nice-to-have, fail silently */ })
+  }, [])
+
+  // Debounced autosave: fires 3s after the last redaction-mark change.
+  // Autosaved redactions are permanently baked in (same as a real Apply),
+  // consistent with this tool's "cannot be recovered" redaction model —
+  // restoring gives back the document with marks-so-far already applied,
+  // ready for more marks, not the pending boxes as separately movable shapes.
+  useEffect(() => {
+    if (!file || !sessionIdRef.current || totalRects === 0) return
+    unsavedChangesRef.current = true
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+    autosaveTimerRef.current = setTimeout(async () => {
+      const id = sessionIdRef.current
+      if (!id) return
+      try {
+        const blob = await buildPdfBlob()
+        await fileStorage.saveSession({
+          id,
+          filename: file.name,
+          tool: REDACTOR_TOOL_ID,
+          lastModified: Date.now(),
+          fileBlob: blob,
+        })
+        unsavedChangesRef.current = false
+      } catch { /* autosave is best-effort — never interrupt editing on failure */ }
+    }, 3000)
+    return () => { if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages])
+
+  // Warn on tab close/reload only if an edit hasn't been autosaved yet.
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (unsavedChangesRef.current) { e.preventDefault(); e.returnValue = '' }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [])
+
+  const restoreSession = async (session: StoredSession) => {
+    const restoredFile = new File([session.fileBlob], session.filename, { type: 'application/pdf' })
+    setRecoveryPrompt(null)
+    setShowRecentFiles(false)
+    await loadFile(restoredFile, session.id)
+  }
+
+  const discardRecovery = async () => {
+    if (recoveryPrompt) await fileStorage.deleteSession(recoveryPrompt.id).catch(() => {})
+    setRecoveryPrompt(null)
+  }
+
+  const openRecentFiles = async () => {
+    try {
+      const sessions = await fileStorage.getAllSessions()
+      setRecentSessions(sessions.filter(s => s.tool === REDACTOR_TOOL_ID))
+    } catch { setRecentSessions([]) }
+    setShowRecentFiles(true)
+  }
+
+  const deleteRecentSession = async (id: string) => {
+    await fileStorage.deleteSession(id).catch(() => {})
+    setRecentSessions(prev => prev.filter(s => s.id !== id))
+  }
+
+  const clearAllRecentSessions = async () => {
+    await fileStorage.clearAllSessions().catch(() => {})
+    setRecentSessions([])
+  }
 
   // ── Re-render page on canvas ────────────────────────────────────────────────
   useEffect(() => {
@@ -588,13 +681,22 @@ export default function PDFRedactorPage() {
   const totalRects = pages.reduce((s, p) => s + p.rects.length, 0)
   const curRects   = pages[curPage]?.rects ?? []
 
+  // Builds the current redaction marks onto the original file into a PDF
+  // Blob. Shared by onApply (user-triggered download) and the
+  // local-recovery autosave, so both stay identical instead of drifting apart.
+  const buildPdfBlob = async (onProgress?: (n: number) => void): Promise<Blob> => {
+    if (!file) throw new Error('No file loaded')
+    const bytes = await file.arrayBuffer()
+    const out   = await runRedactWorker(bytes, pages.map(p => ({ rects: p.rects })), onProgress ?? (() => {}))
+    return new Blob([out], { type: 'application/pdf' })
+  }
+
   const onApply = async () => {
     if (!file || totalRects === 0) return
     setApplying(true); setProgress(5); setError('')
     try {
-      const bytes = await file.arrayBuffer()
-      const out   = await runRedactWorker(bytes, pages.map(p => ({ rects: p.rects })), setProgress)
-      const url   = URL.createObjectURL(new Blob([out], { type:'application/pdf' }))
+      const blob = await buildPdfBlob(setProgress)
+      const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
       a.href = url; a.download = file.name.replace(/\.pdf$/i,'') + '_redacted.pdf'; a.click()
       setTimeout(() => URL.revokeObjectURL(url), 5000)
@@ -636,6 +738,20 @@ export default function PDFRedactorPage() {
           </div>
         </div>
         <div className="wrap" style={{ flex:1 }}>
+          {recoveryPrompt && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+              background: '#fff', borderRadius: 14, padding: '12px 16px', margin: '0 0 20px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0',
+            }}>
+              <span style={{ fontSize: 20, flexShrink: 0 }}>💾</span>
+              <span style={{ flex: 1, minWidth: 180, fontSize: 13, color: '#334155' }}>
+                Unsaved work from {relativeTime(recoveryPrompt.lastModified)} found — restore it?
+              </span>
+              <button onClick={() => restoreSession(recoveryPrompt)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#1d1d1f', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Restore</button>
+              <button onClick={discardRecovery} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Discard</button>
+            </div>
+          )}
           <div className="card">
             <div
               className={`drop${isDrop?' over':''}`}
@@ -652,6 +768,14 @@ export default function PDFRedactorPage() {
                 onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f) }} />
             </div>
             {error && <div className="error-box" style={{ marginTop:14 }}>{error}</div>}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
+            <button
+              onClick={openRecentFiles}
+              style={{ padding: '7px 16px', borderRadius: 99, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}
+            >
+              🕘 Recent files
+            </button>
           </div>
           <div className="info-grid">
             <div className="info-card"><h3>✏️ Draw to Redact</h3><p>Click and drag on any page to draw a redaction box. Remove it before applying if needed.</p></div>
@@ -670,6 +794,55 @@ export default function PDFRedactorPage() {
         browserSupport="Chrome, Firefox, Safari, Edge"
       />
       <ToolSEOSection {...toolSeoData['pdf-redactor']} />
+
+      {/* Recent Files panel — locally saved sessions, IndexedDB only */}
+      {showRecentFiles && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          onClick={() => setShowRecentFiles(false)}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 460, maxHeight: '70vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(0,0,0,0.24)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid #e2e8f0' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Recent files</h3>
+              <button onClick={() => setShowRecentFiles(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#94a3b8' }}>✕</button>
+            </div>
+            <div style={{ overflowY: 'auto', flex: 1, padding: recentSessions.length ? '8px 12px' : 0 }}>
+              {recentSessions.length === 0 ? (
+                <div style={{ padding: '48px 24px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                  No saved sessions yet — your work is autosaved locally as you edit.
+                </div>
+              ) : (
+                recentSessions.map(session => (
+                  <div key={session.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderRadius: 10, cursor: 'pointer' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    onClick={() => restoreSession(session)}
+                  >
+                    <span style={{ fontSize: 20, flexShrink: 0 }}>🔒</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.filename}</div>
+                      <div style={{ fontSize: 11.5, color: '#94a3b8' }}>{relativeTime(session.lastModified)}</div>
+                    </div>
+                    <button
+                      onClick={e => { e.stopPropagation(); deleteRecentSession(session.id) }}
+                      title="Delete"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', fontSize: 15, flexShrink: 0, padding: 4 }}
+                    >✕</button>
+                  </div>
+                ))
+              )}
+            </div>
+            {recentSessions.length > 0 && (
+              <div style={{ padding: '10px 16px', borderTop: '1px solid #e2e8f0' }}>
+                <button onClick={clearAllRecentSessions} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 12, fontWeight: 700 }}>Clear all</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 

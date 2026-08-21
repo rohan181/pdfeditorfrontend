@@ -2,14 +2,15 @@ import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 import {
   FREE_AI_DAILY_LIMIT,
-  PRODUCT_ACCESS_SUMMARY,
 } from '@/lib/productMessaging'
+import { PRO_BILLING_SUMMARY, PRO_PRICE_DISPLAY } from '@/lib/pricing'
+import { ButtonLink, Card, Container, Eyebrow, Heading, Text } from '@/components/ui'
 
 const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
 
 const FREE_ITEMS = ['Core browser workflows need no account','Edit, merge, split, compress','Sign & watermark PDFs',`${FREE_AI_DAILY_LIMIT} metered AI actions per UTC day`,'AI conversions share the daily allowance']
-const PRO_ITEMS  = ['Everything in Free','No daily AI-action cap','PDF → Word / Excel / PPT','AI form autofill & chat fill','Tool-specific limits still apply']
+const PRO_ITEMS  = ['Everything in Free','No daily AI-action cap','AI-assisted conversions share the same tools','AI form autofill & chat fill','Tool-specific limits still apply']
 
 // "All PDF tools" / "No account needed" used to be marked ✓ for both tiers,
 // which directly contradicted the fact that Pro itself obviously requires an
@@ -27,24 +28,24 @@ const COMPARE = [
 
 export default function SitePricingPreview() {
   return (
-    <section className="home-responsive-section" style={{background:'#F8FAFC',padding:'72px 28px',borderTop:'1px solid #E2E8F0'}}>
-      <div style={{maxWidth:860,margin:'0 auto'}}>
-        <div style={{marginBottom:36,textAlign:'center'}}>
-          <div style={{...MONO,fontSize:10,color:'#64748B',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:12}}>
+    <section className="home-responsive-section ds-pricing-preview">
+      <Container size="narrow">
+        <div className="ds-centered-intro ds-pricing-intro">
+          <Eyebrow>
             Pricing
-          </div>
-          <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(24px,3vw,36px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',lineHeight:1,margin:'0 0 8px'}}>
+          </Eyebrow>
+          <Heading as="h2">
             Free core workflows. Pro removes the daily AI cap.
-          </h2>
-          <p style={{...FI,fontSize:15,color:'#6b7280',margin:0}}>
-            {PRODUCT_ACCESS_SUMMARY}
-          </p>
+          </Heading>
+          <Text size="small">
+            Use core PDF workflows without an account. Sign in for the daily Free AI allowance, or choose Pro to remove that daily cap.
+          </Text>
         </div>
 
         {/* Cards */}
         <div className="pricing-card-grid" style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:16,marginBottom:20}}>
           {/* Free */}
-          <div style={{background:'#fff',borderRadius:20,padding:'28px 28px 24px',border:'1.5px solid #e5e7eb'}}>
+          <Card variant="pricing">
             <div style={{marginBottom:20}}>
               <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#166534',background:'rgba(22,163,74,.1)',padding:'3px 8px',borderRadius:99}}>FREE</span>
               <div style={{...FI,fontSize:28,fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>
@@ -60,26 +61,19 @@ export default function SitePricingPreview() {
                 </div>
               ))}
             </div>
-            <Link href="/pdf-editor"
-              style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:7,
-                padding:'11px 0',borderRadius:12,background:'#2563EB',
-                color:'#fff',fontSize:13.5,fontWeight:700,textDecoration:'none',letterSpacing:'-0.01em'}}>
+            <ButtonLink href="/pdf-editor" fullWidth>
               Start free — no signup
-            </Link>
-          </div>
+            </ButtonLink>
+          </Card>
 
           {/* Pro */}
-          <div style={{background:'#F5F3FF',borderRadius:20,padding:'28px 28px 24px',border:'1.5px solid #8B5CF6',position:'relative',overflow:'hidden'}}>
-            <div style={{position:'absolute',top:-40,right:-40,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle,rgba(139,92,246,.15),transparent)',pointerEvents:'none'}}/>
-            <div style={{position:'absolute',top:16,right:16}}>
-              <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'.06em',color:'#6d28d9',background:'rgba(124,58,237,.12)',border:'1px solid rgba(124,58,237,.25)',padding:'3px 8px',borderRadius:99}}>FOUNDING OFFER</span>
-            </div>
+          <Card variant="pro" style={{position:'relative',overflow:'hidden'}}>
             <div style={{marginBottom:20}}>
               <span style={{...MONO,fontSize:9,fontWeight:700,letterSpacing:'0.1em',color:'#6d28d9',background:'rgba(124,58,237,.12)',padding:'3px 8px',borderRadius:99}}>PRO</span>
               <div style={{...FI,fontSize:28,fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.04em',marginTop:12,marginBottom:2}}>
-                US$1<span style={{fontSize:14,fontWeight:500,color:'#5b6472'}}>/month</span>
+                {PRO_PRICE_DISPLAY}<span style={{fontSize:14,fontWeight:500,color:'#5b6472'}}>/month</span>
               </div>
-              <div style={{...FI,fontSize:12,color:'#6d28d9',fontWeight:600,lineHeight:1.55}}>Founding-member rate · cancel anytime</div>
+              <div style={{...FI,fontSize:12,color:'#6d28d9',fontWeight:600,lineHeight:1.55}}>{PRO_BILLING_SUMMARY}</div>
             </div>
             <div style={{display:'flex',flexDirection:'column',gap:9,marginBottom:24}}>
               {PRO_ITEMS.map(item=>(
@@ -89,47 +83,49 @@ export default function SitePricingPreview() {
                 </div>
               ))}
             </div>
-            <Link href="/pricing"
-              style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:7,
-                padding:'11px 0',borderRadius:12,background:'#6d28d9',
-                color:'#fff',fontSize:13.5,fontWeight:700,textDecoration:'none',letterSpacing:'-0.01em'}}>
-              Get Pro — $1/month
-            </Link>
-          </div>
+            <ButtonLink href="/pricing" variant="pro" fullWidth>
+              Compare Pro — {PRO_PRICE_DISPLAY}/month
+            </ButtonLink>
+          </Card>
         </div>
 
         {/* Comparison table — no negative-margin hacks */}
-        <div className="pricing-compare" style={{background:'#fff',borderRadius:16,border:'1.5px solid #e5e7eb',overflow:'hidden',marginBottom:16}}>
+        <table className="pricing-compare" style={{display:'table',width:'100%',borderCollapse:'separate',borderSpacing:0,background:'#fff',borderRadius:16,border:'1.5px solid #e5e7eb',overflow:'hidden',marginBottom:16}}>
+          <caption className="sr-only">Free and Pro plan feature comparison</caption>
           {/* Header row */}
-          <div className="pricing-compare-row" style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',background:'#f9fafb',borderBottom:'1.5px solid #e5e7eb'}}>
-            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#64748B',padding:'10px 20px'}}>Feature</span>
-            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#64748B',textAlign:'center',padding:'10px 8px'}}>Free</span>
-            <span style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#6d28d9',textAlign:'center',padding:'10px 20px',background:'rgba(124,58,237,.05)',borderLeft:'1px solid rgba(124,58,237,.12)'}}>Pro ✦</span>
-          </div>
+          <thead>
+            <tr className="pricing-compare-row pricing-compare-header" style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',background:'#f9fafb',borderBottom:'1.5px solid #e5e7eb'}}>
+              <th scope="col" style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#64748B',padding:'10px 20px',textAlign:'left'}}>Feature</th>
+              <th scope="col" style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#64748B',textAlign:'center',padding:'10px 8px'}}>Free</th>
+              <th scope="col" style={{...MONO,fontSize:9.5,fontWeight:700,textTransform:'uppercase',letterSpacing:'.08em',color:'#6d28d9',textAlign:'center',padding:'10px 20px',background:'rgba(124,58,237,.05)',borderLeft:'1px solid rgba(124,58,237,.12)'}}>Pro ✦</th>
+            </tr>
+          </thead>
+          <tbody>
           {COMPARE.map(({label,free,pro},i)=>(
-            <div className="pricing-compare-row" key={label} style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',
+            <tr className="pricing-compare-row pricing-compare-feature" key={label} style={{display:'grid',gridTemplateColumns:'1fr 90px 110px',
               borderBottom: i < COMPARE.length-1 ? '1px solid #f3f4f6' : 'none',alignItems:'stretch'}}>
-              <span style={{...FI,fontSize:13,color:'#374151',fontWeight:500,padding:'11px 20px',display:'flex',alignItems:'center'}}>{label}</span>
-              <span style={{textAlign:'center',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',padding:'11px 8px'}}>
-                {free===true   ? <span style={{color:'#16a34a',fontWeight:700}}>✓</span>
-                : free===false ? <span style={{color:'#d1d5db',fontSize:16,lineHeight:1}}>—</span>
+              <th scope="row" className="pricing-compare-label" style={{...FI,fontSize:13,color:'#374151',fontWeight:500,padding:'11px 20px',display:'flex',alignItems:'center',textAlign:'left'}}>{label}</th>
+              <td className="pricing-compare-value" data-plan="Free" style={{textAlign:'center',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',padding:'11px 8px'}}>
+                {free===true   ? <><span aria-hidden="true" style={{color:'#166534',fontWeight:700}}>✓</span><span className="sr-only">Included</span></>
+                : free===false ? <><span aria-hidden="true" style={{color:'#6b7280',fontSize:16,lineHeight:1}}>—</span><span className="sr-only">Not included</span></>
                 : <span style={{...FI,fontSize:11.5,color:'#6b7280',fontWeight:600}}>{free as string}</span>}
-              </span>
-              <span style={{textAlign:'center',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',padding:'11px 20px',background:'rgba(124,58,237,.04)',borderLeft:'1px solid rgba(124,58,237,.1)'}}>
+              </td>
+              <td className="pricing-compare-value pricing-compare-pro" data-plan="Pro" style={{textAlign:'center',fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',padding:'11px 20px',background:'rgba(124,58,237,.04)',borderLeft:'1px solid rgba(124,58,237,.1)'}}>
                 {pro===true
-                  ? <span style={{color:'#6d28d9',fontWeight:800,fontSize:15}}>✓</span>
+                  ? <><span aria-hidden="true" style={{color:'#6d28d9',fontWeight:800,fontSize:15}}>✓</span><span className="sr-only">Included</span></>
                   : <span style={{...FI,fontSize:11.5,color:'#6d28d9',fontWeight:700}}>{pro as string}</span>}
-              </span>
-            </div>
+              </td>
+            </tr>
           ))}
-        </div>
+          </tbody>
+        </table>
 
         <div style={{textAlign:'center'}}>
           <Link href="/pricing" style={{...FI,fontSize:13,color:'#64748B',textDecoration:'none',fontWeight:500}}>
             See full pricing & feature comparison →
           </Link>
         </div>
-      </div>
+      </Container>
     </section>
   )
 }

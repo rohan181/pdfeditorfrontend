@@ -17,10 +17,14 @@ worker.onmessage = async (event: MessageEvent<MergeRequest>) => {
       const srcDoc = await PDFDocument.load(buffers[i])
       const copied = await out.copyPages(srcDoc, srcDoc.getPageIndices())
       copied.forEach(p => out.addPage(p))
-      worker.postMessage({ type: 'progress', value: 5 + Math.round(((i + 1) / buffers.length) * 88) })
+      worker.postMessage({
+        type: 'progress',
+        value: i + 1,
+        max: buffers.length,
+        label: `${i + 1} of ${buffers.length} PDF files copied`,
+      })
     }
 
-    worker.postMessage({ type: 'progress', value: 97 })
     const bytes = await out.save()
     const transferable = bytes.buffer.slice(
       bytes.byteOffset,

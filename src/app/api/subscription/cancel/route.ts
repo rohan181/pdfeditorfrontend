@@ -33,6 +33,6 @@ export async function POST() {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('[cancel]', message)
-    return Response.json({ error: message }, { status: 500 })
+    return Response.json({ error: 'Cancellation could not be scheduled. Please try again.' }, { status: 500 })
   }
 }

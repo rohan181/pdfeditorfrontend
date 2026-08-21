@@ -38,6 +38,9 @@ function getCanonicalRedirect(req: NextRequest) {
 // Pages that require a signed-in session (redirect to sign-in if not authed)
 const isProtectedPage = createRouteMatcher([
   '/dashboard(.*)',
+  '/checkout',
+  '/cancel(.*)',
+  '/manage-subscription(.*)',
 ])
 
 // API routes that require auth — return 401 JSON instead of redirecting
@@ -64,7 +67,14 @@ export default clerkMiddleware(async (auth, req) => {
   if (canonicalRedirect) return canonicalRedirect
 
   if (isProtectedPage(req)) {
-    await auth.protect()
+    // APIRequestContext and some link checkers do not send a browser-style
+    // Accept header. Clerk intentionally answers those signed-out requests
+    // with a 404 unless an unauthenticated destination is explicit. Keep the
+    // route protected while making every signed-out entry path converge on
+    // the real sign-in page instead of looking like a broken internal link.
+    await auth.protect({
+      unauthenticatedUrl: new URL('/sign-in', req.url).toString(),
+    })
     return
   }
   if (isProtectedApi(req)) {

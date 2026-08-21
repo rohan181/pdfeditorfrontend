@@ -372,6 +372,8 @@ function Nav() {
   const openTimer = useRef<ReturnType<typeof setTimeout>|null>(null)
   const toolsTriggerRef = useRef<HTMLButtonElement>(null)
   const toolsMenuRef = useRef<HTMLDivElement>(null)
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
+  const mobileDrawerRef = useRef<HTMLDivElement>(null)
 
   const openMenu  = () => {
     clearTimeout(closeTimer.current!)
@@ -392,11 +394,51 @@ function Nav() {
     setToolsOpen(false)
     if (restoreFocus) toolsTriggerRef.current?.focus()
   }
+  const closeMobileMenu = useCallback((restoreFocus = false) => {
+    setMobOpen(false)
+    setMobToolsExp(false)
+    setMobCatOpen(null)
+    if (restoreFocus) requestAnimationFrame(()=>mobileMenuButtonRef.current?.focus())
+  }, [])
 
   useEffect(() => () => {
     clearTimeout(closeTimer.current!)
     clearTimeout(openTimer.current!)
   }, [])
+
+  useEffect(() => {
+    if (!mobOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const focusTimer = window.setTimeout(() => {
+      mobileDrawerRef.current?.querySelector<HTMLElement>('button, a[href]')?.focus()
+    }, 0)
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeMobileMenu(true)
+        return
+      }
+      if (event.key !== 'Tab') return
+      const focusable = Array.from(mobileDrawerRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href]') ?? [])
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [closeMobileMenu, mobOpen])
 
   const handleMenuKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
@@ -426,7 +468,7 @@ function Nav() {
       <motion.header style={{position:'fixed',inset:'0 0 auto',zIndex:300,height:56,
         background:navBg,backdropFilter:'blur(20px)',WebkitBackdropFilter:'blur(20px)',
         borderBottom:'1px solid rgba(0,0,0,.07)'}}>
-        <div className="home-nav-inner" style={{maxWidth:1280,margin:'0 auto',padding:'0 20px',height:'100%',
+        <div className="home-nav-inner" style={{maxWidth:'var(--container-max)',margin:'0 auto',padding:'0 var(--container-gutter)',height:'100%',
           display:'flex',alignItems:'center'}}>
 
           {/* Logo */}
@@ -435,7 +477,7 @@ function Nav() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="desk" style={{alignItems:'center',gap:2,flex:1}}>
+          <nav className="desk" aria-label="Primary navigation" style={{alignItems:'center',gap:2,flex:1}}>
 
             {/* Tools dropdown trigger */}
             <div onMouseEnter={openMenu} onMouseLeave={closeMenu} style={{position:'relative'}}>
@@ -514,8 +556,10 @@ function Nav() {
                 textDecoration:'none',letterSpacing:'-0.02em',flexShrink:0}}>
               <Upload size={12} strokeWidth={2.5}/> <span><span className="nav-editor-open-word">Open </span>Editor</span>
             </Link>
-            <button className="mob" onClick={()=>{ setMobOpen(o=>!o); if(mobOpen){ setMobToolsExp(false); setMobCatOpen(null); } }}
+            <button ref={mobileMenuButtonRef} className="mob" onClick={()=>mobOpen ? closeMobileMenu() : setMobOpen(true)}
               aria-label={mobOpen?'Close menu':'Open menu'}
+              aria-expanded={mobOpen}
+              aria-controls="home-mobile-navigation"
               style={{width:44,height:44,borderRadius:10,border:'1.5px solid rgba(0,0,0,.12)',
                 background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',
                 cursor:'pointer',flexShrink:0,
@@ -555,7 +599,7 @@ function Nav() {
               style={{position:'fixed',top:56,left:0,right:0,zIndex:299,
                 background:'#fff',borderBottom:'1px solid rgba(0,0,0,.07)',
                 boxShadow:'0 16px 48px rgba(0,0,0,.1)'}}>
-              <div style={{maxWidth:1280,margin:'0 auto',padding:'20px 24px 20px'}}>
+              <div style={{maxWidth:'var(--container-max)',margin:'0 auto',padding:'20px var(--container-gutter)'}}>
                 <div style={{display:'grid',gridTemplateColumns:'repeat(6,1fr)',gap:4}}>
                   {NAV_CATS.map(cat=>(
                     <div key={cat.label}>
@@ -618,13 +662,18 @@ function Nav() {
             {/* Backdrop */}
             <motion.div
               initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
-              onClick={()=>{ setMobOpen(false); setMobToolsExp(false); setMobCatOpen(null) }}
+              onClick={()=>closeMobileMenu(true)}
               style={{position:'fixed',inset:'56px 0 0',zIndex:280,background:'rgba(0,0,0,.3)'}}
             />
 
             {/* Panel */}
             <motion.div
+              ref={mobileDrawerRef}
+              id="home-mobile-navigation"
               className="mobile-nav-drawer"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Site navigation"
               initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}}
               transition={{duration:.25,ease:E}}
               style={{position:'fixed',top:56,right:0,bottom:0,width:'100%',maxWidth:360,
@@ -635,6 +684,8 @@ function Nav() {
               <div style={{borderBottom:'1px solid #f0f0f0'}}>
                 <button
                   onClick={()=>setMobToolsExp(v=>!v)}
+                  aria-expanded={mobToolsExp}
+                  aria-controls="home-mobile-tool-categories"
                   style={{width:'100%',display:'flex',alignItems:'center',height:52,
                     padding:'0 20px',background:'transparent',border:'none',cursor:'pointer',
                     WebkitTapHighlightColor:'transparent',touchAction:'manipulation'}}>
@@ -645,13 +696,15 @@ function Nav() {
                 </button>
 
                 {/* Animated tools panel */}
-                <div style={{overflow:'hidden',maxHeight:mobToolsExp?2000:0,transition:'max-height .3s ease'}}>
+                <div id="home-mobile-tool-categories" style={{overflow:'hidden',maxHeight:mobToolsExp?2000:0,transition:'max-height .3s ease'}}>
                   <div style={{background:'#f9fafb',borderTop:'1px solid #f0f0f0'}}>
                     {NAV_CATS.map(cat=>(
                       <div key={cat.label} style={{borderBottom:'1px solid #f0f0f0'}}>
                         {/* Category row */}
                         <button
                           onClick={()=>setMobCatOpen(v=>v===cat.label?null:cat.label)}
+                          aria-expanded={mobCatOpen===cat.label}
+                          aria-controls={`home-mobile-category-${cat.label.toLowerCase().replace(/\s+/g,'-')}`}
                           style={{width:'100%',display:'flex',alignItems:'center',gap:12,
                             height:52,padding:'0 20px',background:'transparent',border:'none',
                             cursor:'pointer',WebkitTapHighlightColor:'transparent',touchAction:'manipulation'}}>
@@ -666,11 +719,11 @@ function Nav() {
                         </button>
 
                         {/* Tools list */}
-                        <div style={{overflow:'hidden',maxHeight:mobCatOpen===cat.label?1000:0,transition:'max-height .25s ease',background:'#fff'}}>
+                        <div id={`home-mobile-category-${cat.label.toLowerCase().replace(/\s+/g,'-')}`} style={{overflow:'hidden',maxHeight:mobCatOpen===cat.label?1000:0,transition:'max-height .25s ease',background:'#fff'}}>
                           {cat.tools.map(tool=>{
                             const badge = NAV_TIER_LABEL[tool.tier]
                             return (
-                              <Link prefetch={false} key={tool.name} href={tool.href} onClick={()=>{ setMobOpen(false); setMobToolsExp(false); setMobCatOpen(null) }} style={{textDecoration:'none',display:'block'}}>
+                              <Link prefetch={false} key={tool.name} href={tool.href} onClick={()=>closeMobileMenu()} style={{textDecoration:'none',display:'block'}}>
                                 <div style={{display:'flex',alignItems:'center',gap:12,
                                   height:52,padding:'0 20px 0 24px',
                                   borderTop:'1px solid #f5f6f8',
@@ -695,7 +748,7 @@ function Nav() {
                     ))}
 
                     {/* See all */}
-                    <Link prefetch={false} href="/#tools" onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
+                    <Link prefetch={false} href="/#tools" onClick={()=>closeMobileMenu()} style={{textDecoration:'none',display:'block'}}>
                       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,
                         height:48,...FI,fontSize:13,fontWeight:700,color:'#2563eb'}}>
                         See all {TOOL_COUNT}+ tools <ArrowRight size={13} strokeWidth={2.5}/>
@@ -707,7 +760,7 @@ function Nav() {
 
               {/* Plain links */}
               {NAV_LINKS.map(({label,href})=>(
-                <Link prefetch={false} key={label} href={href} onClick={()=>setMobOpen(false)} style={{textDecoration:'none',display:'block'}}>
+                <Link prefetch={false} key={label} href={href} onClick={()=>closeMobileMenu()} style={{textDecoration:'none',display:'block'}}>
                   <div style={{display:'flex',alignItems:'center',gap:8,height:52,padding:'0 20px',
                     borderBottom:'1px solid #f0f0f0',...FI,fontSize:15,fontWeight:600,
                     color:'#1d1d1f',WebkitTapHighlightColor:'transparent'}}>
@@ -720,7 +773,7 @@ function Nav() {
               {isLoaded && (
                 <div style={{padding:'16px 20px',borderBottom:'1px solid #f0f0f0'}}>
                   {isSignedIn ? (
-                    <Link prefetch={false} href="/dashboard" onClick={()=>setMobOpen(false)}
+                    <Link prefetch={false} href="/dashboard" onClick={()=>closeMobileMenu()}
                       style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:6,
                         fontSize:15,fontWeight:700,color:'#1d1d1f',textDecoration:'none',
                         padding:'13px',borderRadius:12,border:'1.5px solid #e5e7eb',background:'#fff'}}>
@@ -741,7 +794,7 @@ function Nav() {
 
               {/* Open Editor CTA */}
               <div style={{padding:'16px 20px',marginTop:'auto'}}>
-                <Link prefetch={false} href="/pdf-editor" onClick={()=>setMobOpen(false)}
+                <Link prefetch={false} href="/pdf-editor" onClick={()=>closeMobileMenu()}
                   style={{...FI,display:'flex',alignItems:'center',justifyContent:'center',gap:8,
                     padding:'16px',background:'#2563EB',color:'#fff',borderRadius:14,
                     fontSize:15,fontWeight:700,textDecoration:'none',letterSpacing:'-0.02em'}}>
@@ -760,12 +813,13 @@ function Nav() {
 //  HERO — one document at the centre of a constellation of real tools
 // ══════════════════════════════════════════════════════════════════════════════
 function Hero() {
+  const [orbitPaused, setOrbitPaused] = useState(false)
   const orbitTools = [
     { code:'01', label:'Edit', detail:'Text & images', href:'/pdf-editor', Icon:FilePen, pos:'node-edit' },
     { code:'02', label:'AI Fill', detail:'Forms, finished', href:'/ai-pdf-form-filler', Icon:WandSparkles, pos:'node-fill' },
     { code:'03', label:'Sign', detail:'Add approval', href:'/pdf-signer', Icon:PenLine, pos:'node-sign' },
-    { code:'04', label:'OCR', detail:'Make it searchable', href:'/pdf-ocr', Icon:ScanLine, pos:'node-ocr' },
-    { code:'05', label:'Compress', detail:'Make it sendable', href:'/pdf-compressor', Icon:Minimize2, pos:'node-compress' },
+    { code:'04', label:'Compress', detail:'Make it sendable', href:'/pdf-compressor', Icon:Minimize2, pos:'node-ocr' },
+    { code:'05', label:'OCR', detail:'Make it searchable', href:'/pdf-ocr', Icon:ScanLine, pos:'node-compress' },
     { code:'06', label:'Translate', detail:'Any language', href:'/pdf-translator', Icon:Languages, pos:'node-translate' },
     { code:'07', label:'Convert', detail:'Word, Excel, PPT', href:'/pdf-to-word', Icon:FileType, pos:'node-convert' },
     { code:'08', label:'Protect', detail:'Lock & redact', href:'/pdf-password-lock', Icon:KeyRound, pos:'node-protect' },
@@ -785,38 +839,45 @@ function Hero() {
               CSS @keyframes fade (defined inline in globals.css, no JS needed)
               keeps the same visual entrance without gating first paint on hydration. */}
           <div className="constellation-copy">
-            <div className="constellation-kicker"><Sparkles size={12}/> One file. Every possibility.</div>
-            {/* The brand name belongs in the actual H1 — Google was reading the
-                page's identity from the flashy tagline below, which never once
-                said "EditPDF AI", and started treating searches for the brand
-                as the generic phrase "edit PDF AI" instead. The tagline keeps
-                its full visual treatment, just demoted to a <p> below the H1. */}
-            <h1 className="constellation-brand-h1">EditPDF AI — Free, Private Online PDF Tools</h1>
-            <p className="home-hero-title constellation-title constellation-tagline">
-              <span className="constellation-title-plain">One PDF.</span>{' '}
-              <span className="constellation-title-gradient">{TOOL_COUNT} ways forward.</span>
-            </p>
-            <p className="constellation-desc">Start with one document and choose what happens next—edit, sign, scan, translate, compress or protect it, all in your browser.</p>
+            <div className="constellation-kicker"><Sparkles size={12}/> EditPDF AI · One PDF, every possibility</div>
+            <h1 className="home-hero-title constellation-title constellation-brand-h1">
+              <span className="constellation-title-plain">Edit, sign and transform</span>{' '}
+              <span className="constellation-title-gradient">PDFs in your browser.</span>
+            </h1>
+            <p className="constellation-desc">Upload one PDF, then edit, fill, compress, convert or protect it—without installing software.</p>
           </div>
 
           <div className="constellation-actions hero-fade-in hero-fade-in-delay-1">
-            <Link prefetch={false} href="/pdf-editor" className="constellation-primary" data-editor-cta><Upload size={16}/> Open a PDF <ArrowRight size={15}/></Link>
+            <Link prefetch={false} href="/pdf-editor" className="constellation-primary" data-editor-cta><Upload size={17}/> Upload PDF <ArrowRight size={15}/></Link>
             <a href="#tools" className="constellation-secondary">Browse all tools <ArrowUpRight size={14}/></a>
-            <div className="constellation-proof"><Shield size={13}/> Core browser processing <i/> Core tools need no account <i/> Signed-in Free: {FREE_AI_DAILY_LIMIT} AI actions/UTC day</div>
+            <ul className="constellation-proof" aria-label="EditPDF AI product facts">
+              <li><Shield size={14}/> Browser-based core processing</li>
+              <li><CheckCircle2 size={14}/> No account for core tools</li>
+              <li><Layers size={14}/> {TOOL_COUNT} verified active tools</li>
+              <li><Sparkles size={14}/> Signed-in Free: {FREE_AI_DAILY_LIMIT} AI actions/UTC day</li>
+            </ul>
           </div>
         </div>
 
         <div
-          className="constellation-stage hero-fade-in-scale hero-fade-in-delay-2"
-          aria-label="A central PDF surrounded by eight available tools"
+          className={`constellation-stage hero-fade-in-scale hero-fade-in-delay-2${orbitPaused ? ' is-paused' : ''}`}
+          aria-labelledby="constellation-tool-choice"
+          onPointerEnter={() => setOrbitPaused(true)}
+          onPointerLeave={() => setOrbitPaused(false)}
+          onPointerDown={() => setOrbitPaused(true)}
+          onFocusCapture={() => setOrbitPaused(true)}
+          onBlurCapture={event => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOrbitPaused(false)
+          }}
         >
+          <p id="constellation-tool-choice" className="constellation-stage-label">Choose a tool for your PDF</p>
           <div className="constellation-orbit orbit-one" aria-hidden="true" />
           <div className="constellation-orbit orbit-two" aria-hidden="true" />
           <div className="constellation-orbit orbit-three" aria-hidden="true" />
           <div className="constellation-axis axis-x" aria-hidden="true" />
           <div className="constellation-axis axis-y" aria-hidden="true" />
 
-          <Link prefetch={false} href="/pdf-editor" className="constellation-core" data-editor-cta>
+          <Link prefetch={false} href="/pdf-editor" className="constellation-core" data-editor-cta aria-label="Upload a PDF and open the PDF editor">
             <div className="constellation-page-fold"><span/></div>
             <div className="constellation-core-meta"><span>PDF / INPUT</span><i>READY</i></div>
             <div className="constellation-core-icon"><FileText size={25} strokeWidth={1.7}/><i/></div>
@@ -830,7 +891,7 @@ function Hero() {
             {orbitTools.map(({code,label,detail,href,Icon,pos},index)=>(
               <div key={label} className={`constellation-node ${pos} hero-fade-in-scale`}
                 style={{animationDelay:`${.32+index*.045}s`}}>
-                <Link prefetch={false} href={href}>
+                <Link prefetch={false} href={href} aria-label={`${label}: ${detail}`}>
                   <small>{code}</small>
                   <span><Icon size={15} strokeWidth={1.8}/></span>
                   <div><strong>{label}</strong><em>{detail}</em></div>
@@ -1129,7 +1190,6 @@ export function ProductDemo() {
 export default function AppleHome() {
   return (
     <div style={{background:'#fff'}}>
-      <Nav />
       <Hero />
     </div>
   )

@@ -1,84 +1,35 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Upload, Lock, Sparkles, FilePen, Layers, FileType, KeyRound, Merge } from 'lucide-react'
+import { Upload, Lock, Sparkles, FilePen, Layers, FileType, KeyRound, Minimize2, FileSearch } from 'lucide-react'
 import {
   PROCESSING_PRIVACY_SUMMARY,
   PRODUCT_ACCESS_SUMMARY,
   TOOL_CATALOGUE_SUMMARY,
 } from '@/lib/productMessaging'
 import { TRUSTPILOT_PROFILE_URL } from '@/lib/entity'
+import { ButtonLink, Container } from '@/components/ui'
+import { toolMetaMap } from '@/lib/toolMeta'
+import { PRODUCT_PRIORITY_TOOL_SLUGS, TOOL_CATEGORIES, getCategoryHref } from '@/lib/toolDiscovery'
 
 const FI  = { fontFamily: 'var(--font-dm,system-ui,sans-serif)' }
 const MONO: React.CSSProperties = { fontFamily: 'ui-monospace,SFMono-Regular,Menlo,"Cascadia Code","Courier New",monospace' }
 
-const CATS = [
-  { id: 'AI',       color: '#6d28d9', Icon: Sparkles },
-  { id: 'Edit',     color: '#1d4ed8', Icon: FilePen  },
-  { id: 'Pages',    color: '#9a3412', Icon: Layers   },
-  { id: 'Convert',  color: '#166534', Icon: FileType },
-  { id: 'Protect',  color: '#b91c1c', Icon: KeyRound },
-  { id: 'Organize', color: '#92400e', Icon: Merge    },
-]
+const CATEGORY_ICONS = {
+  ai: Sparkles,
+  edit: FilePen,
+  convert: FileType,
+  organize: Layers,
+  compress: Minimize2,
+  protect: KeyRound,
+  extract: FileSearch,
+}
 
 const toolCols = [
-  { title: 'AI Tools',  color: '#6d28d9', links: [
-    ['AI PDF Form Filler',  '/ai-pdf-form-filler'],
-    ['Chat with PDF',   '/chat-with-pdf'],
-    ['PDF OCR Scanner', '/pdf-ocr'],
-    ['PDF Summarizer',  '/pdf-summarizer'],
-    ['PDF Mind Map',    '/mind-map'],
-    ['Quiz Creator',    '/quiz-creator'],
-    ['PDF Translator',  '/pdf-translator'],
+  { title: 'Priority tools', color: '#1d4ed8', links: [
+    ...PRODUCT_PRIORITY_TOOL_SLUGS.map(slug => [toolMetaMap[slug]?.name ?? slug, `/${slug}`]),
+    ['Browse all PDF tools', '/#tools'],
   ]},
-  { title: 'Edit & Pages', color: '#1d4ed8', links: [
-    ['PDF Editor',      '/pdf-editor'],
-    ['PDF Viewer',      '/pdf-viewer'],
-    ['PDF E-Signer',    '/pdf-signer'],
-    ['PDF Annotator',   '/pdf-annotate'],
-    ['Page Manager',    '/pdf-page-manager'],
-    ['PDF Cropper',     '/pdf-cropper'],
-    ['Rotate Pages',    '/rotate-pdf'],
-    ['Extract Pages',   '/extract-pages'],
-    ['Delete Pages',    '/delete-pages'],
-    ['Add Page Numbers','/add-page-numbers'],
-    ['PDF Page Labels', '/pdf-page-labels'],
-  ]},
-  { title: 'Convert',   color: '#166534', links: [
-    ['PDF to Word',     '/pdf-to-word'],
-    ['PDF to Excel',    '/pdf-to-excel'],
-    ['PDF to PowerPoint','/pdf-to-ppt'],
-    ['PDF to Images',   '/pdf-to-images'],
-    ['Word to PDF',     '/word-to-pdf'],
-    ['Excel to PDF',    '/excel-to-pdf'],
-    ['PowerPoint to PDF','/ppt-to-pdf'],
-    ['Image to PDF',    '/image-to-pdf'],
-    ['Text to PDF',     '/txt-to-pdf'],
-    ['RTF to PDF',      '/rtf-to-pdf'],
-    ['ODT to PDF',      '/odt-to-pdf'],
-    ['HTML to PDF',     '/html-to-pdf'],
-  ]},
-  { title: 'Protect & Organize', color: '#b91c1c', links: [
-    ['PDF Password Lock','/pdf-password-lock'],
-    ['Unlock PDF',       '/pdf-unlock'],
-    ['PDF Watermark',   '/pdf-watermark'],
-    ['PDF Redactor',    '/pdf-redactor'],
-    ['PDF Merger',      '/pdf-merger'],
-    ['PDF Compressor',  '/pdf-compressor'],
-    ['PDF Splitter',    '/pdf-splitter'],
-    ['PDF Form Builder','/pdf-form-builder'],
-    ['Repair PDF',      '/pdf-repair'],
-    ['Flatten PDF',     '/pdf-flatten'],
-    ['Compare PDF',     '/pdf-compare'],
-    ['Remove PDF Metadata','/remove-pdf-metadata'],
-    ['Extract PDF Attachments','/extract-pdf-attachments'],
-    ['Extract PDF Images','/extract-pdf-images'],
-    ['Export PDF Form Data','/export-pdf-form-data'],
-    ['Extract PDF Bookmarks','/extract-pdf-bookmarks'],
-    ['PDF Bookmarks Manager','/pdf-bookmarks-manager'],
-    ['Extract PDF Links', '/extract-pdf-links'],
-    ['Remove PDF Links', '/remove-pdf-links'],
-    ['Export PDF Comments', '/export-pdf-comments'],
-  ]},
+  { title: 'Categories', color: '#6d28d9', links: TOOL_CATEGORIES.map(category => [category.label, getCategoryHref(category)]) },
   { title: 'Guides',    color: '#155e75', links: [
     ['Edit PDF Without Adobe',   '/guides/how-to-edit-a-pdf-without-adobe'],
     ['Reduce PDF File Size',     '/guides/how-to-reduce-pdf-file-size'],
@@ -87,7 +38,7 @@ const toolCols = [
     ['Make a PDF Searchable',    '/guides/how-to-make-a-scanned-pdf-searchable'],
     ['Merge PDF Files',          '/guides/how-to-merge-pdf-files'],
   ]},
-  { title: 'Company',   color: '#374151', links: [
+  { title: 'Company', color: '#374151', links: [
     ['Pricing',         '/pricing'],
     ['About Us',        '/about'],
     ['Privacy Policy',  '/privacy'],
@@ -101,16 +52,32 @@ export default function SiteFooter() {
   return (
     <footer className="home-footer" style={{ background: '#f5f5f7', borderTop: '1px solid #e5e5ea', padding: '56px 28px 0' }}>
       <style>{`
-        .sf-footer-grid { display:grid; grid-template-columns:1.45fr repeat(6,minmax(0,1fr)); gap:24px; align-items:start; margin-bottom:48px; }
+        .sf-footer-grid { display:grid; grid-template-columns:1.45fr repeat(4,minmax(0,1fr)); gap:28px; align-items:start; margin-bottom:48px; }
         @media(max-width:900px){ .sf-footer-grid{ grid-template-columns:1fr 1fr !important; gap:32px !important; } }
-        @media(max-width:600px){ .sf-footer-grid{ grid-template-columns:1fr !important; gap:24px !important; } }
+        .sf-mobile-cols { display:none; }
+        @media(max-width:600px){
+          .sf-footer-grid{ grid-template-columns:1fr !important; gap:20px !important; }
+          .sf-desktop-cols { display:none !important; }
+          .sf-mobile-cols { display:grid; gap:8px; }
+          .sf-mobile-col { border:1px solid #dedee3; border-radius:12px; background:#fff; overflow:hidden; }
+          .sf-mobile-col summary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:52px; padding:0 16px; cursor:pointer; list-style:none; }
+          .sf-mobile-col summary::-webkit-details-marker { display:none; }
+          .sf-mobile-col summary span:last-child { font-size:20px; color:#6b7280; transition:transform .15s ease; }
+          .sf-mobile-col[open] summary span:last-child { transform:rotate(45deg); }
+          .sf-mobile-links { padding:0 12px 10px; border-top:1px solid #ececf0; }
+          .sf-mobile-links .sf-link { padding:0 4px; }
+          .sf-categories { display:none !important; }
+          .sf-bottom-bar { align-items:stretch !important; }
+          .sf-bottom-copy { width:100%; }
+          .sf-bottom-cta { width:100%; min-height:48px; }
+        }
         .sf-link { display:block; font-size:13px; color:#5b6472; text-decoration:none; font-weight:500; margin-bottom:10px; letter-spacing:-0.01em; transition:color .12s, transform .12s; }
         .sf-link:hover { color:#1d1d1f; transform:translateX(3px); }
         .sf-bot-link { font-size:11px; color:#5b6472; text-decoration:none; font-weight:500; transition:color .12s; }
         .sf-bot-link:hover { color:#374151; }
       `}</style>
 
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <Container flush>
         <div className="sf-footer-grid">
 
           {/* Brand */}
@@ -130,18 +97,21 @@ export default function SiteFooter() {
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
-              {CATS.map(c => (
-                <span key={c.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, ...MONO, fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 99, background: `${c.color}12`, color: c.color, letterSpacing: '.06em' }}>
-                  <c.Icon size={9} strokeWidth={2.5} />{c.id.toUpperCase()}
-                </span>
-              ))}
+            <div className="sf-categories" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
+              {TOOL_CATEGORIES.map(category => {
+                const Icon = CATEGORY_ICONS[category.id]
+                return (
+                  <span key={category.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, ...MONO, fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 99, background: `${category.color}12`, color: category.color, letterSpacing: '.06em' }}>
+                    <Icon size={9} strokeWidth={2.5} />{category.shortLabel.toUpperCase()}
+                  </span>
+                )
+              })}
             </div>
             <a
               href={TRUSTPILOT_PROFILE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 18, color: '#0F172A', fontSize: 12.5, fontWeight: 700, textDecoration: 'none' }}
+              style={{ ...FI, minHeight: 44, display: 'inline-flex', alignItems: 'center', gap: 7, marginBottom: 18, color: 'var(--color-text)', fontSize: 12.5, fontWeight: 700, textDecoration: 'none' }}
             >
               View the EditPDF AI profile on Trustpilot <span aria-hidden="true">↗</span>
             </a>
@@ -152,7 +122,7 @@ export default function SiteFooter() {
 
           {/* Link columns */}
           {toolCols.map(({ title, color, links }) => (
-            <div key={title}>
+            <div className="sf-desktop-cols" key={title}>
               <div style={{ ...MONO, fontSize: 10, fontWeight: 700, color, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
                 {title}
               </div>
@@ -161,11 +131,29 @@ export default function SiteFooter() {
               ))}
             </div>
           ))}
+
+          <div className="sf-mobile-cols">
+            {toolCols.map(({ title, color, links }) => (
+              <details className="sf-mobile-col" key={title}>
+                <summary>
+                  <span style={{ ...MONO, fontSize: 11, fontWeight: 700, color, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    {title}
+                  </span>
+                  <span aria-hidden="true">+</span>
+                </summary>
+                <div className="sf-mobile-links">
+                  {links.map(([l, h]) => (
+                    <Link prefetch={false} key={l} href={h} className="sf-link" style={FI}>{l}</Link>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
         </div>
 
         {/* Bottom bar */}
-        <div style={{ borderTop: '1px solid #e5e5ea', padding: '16px 0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <div className="sf-bottom-bar" style={{ borderTop: '1px solid #e5e5ea', padding: '16px 0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div className="sf-bottom-copy" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <span style={{ ...MONO, fontSize: 10, color: '#5b6472', letterSpacing: '0.04em' }}>
               {TOOL_CATALOGUE_SUMMARY.toUpperCase()}
             </span>
@@ -175,12 +163,11 @@ export default function SiteFooter() {
               ))}
             </div>
           </div>
-          <Link prefetch={false} href="/pdf-editor"
-            style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: '#fff', textDecoration: 'none', padding: '7px 16px', borderRadius: 99, background: '#1d1d1f', letterSpacing: '-0.02em' }}>
+          <ButtonLink prefetch={false} href="/pdf-editor" size="small" className="sf-bottom-cta">
             <Upload size={11} strokeWidth={2.5} /> Upload PDF
-          </Link>
+          </ButtonLink>
         </div>
-      </div>
+      </Container>
     </footer>
   )
 }

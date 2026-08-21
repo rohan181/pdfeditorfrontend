@@ -6,6 +6,8 @@ import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
 import toolSeoData from '@/lib/toolSeoData'
 import SiteFooter from '@/components/SiteFooter'
+import * as fileStorage from '@/lib/fileStorage'
+import { relativeTime, type StoredSession } from '@/lib/fileStorage'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Tool = 'select' | 'highlight' | 'underline' | 'strikethrough' | 'comment' | 'rect' | 'arrow' | 'pen' | 'text'
@@ -282,6 +284,15 @@ export default function PDFAnnotate() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [editingId,  setEditingId]  = useState<string | null>(null)
 
+  // Local work recovery (IndexedDB) — never sent to a server
+  const ANNOTATE_TOOL_ID = 'pdf-annotate'
+  const sessionIdRef = useRef<string | null>(null)
+  const unsavedChangesRef = useRef(false)
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [recoveryPrompt, setRecoveryPrompt] = useState<StoredSession | null>(null)
+  const [showRecentFiles, setShowRecentFiles] = useState(false)
+  const [recentSessions, setRecentSessions] = useState<StoredSession[]>([])
+
   const fileRef   = useRef<HTMLInputElement>(null)
   const mainRef   = useRef<HTMLDivElement>(null)
 
@@ -299,8 +310,10 @@ export default function PDFAnnotate() {
   const undo = () => { if (histIdx > 0) setHistIdx(i => i - 1) }
   const redo = () => { if (histIdx < history.length - 1) setHistIdx(i => i + 1) }
 
-  const loadFile = async (f: File) => {
+  const loadFile = async (f: File, existingSessionId?: string) => {
     if (!f.name.toLowerCase().endsWith('.pdf')) { setError('Please upload a PDF.'); return }
+    sessionIdRef.current = existingSessionId ?? crypto.randomUUID()
+    unsavedChangesRef.current = false
     setError(''); setLoading(true); setHistory([[]]); setHistIdx(0); setSelectedId(null); setEditingId(null)
     try {
       const lib = await import('pdfjs-dist')
@@ -314,6 +327,83 @@ export default function PDFAnnotate() {
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault(); setIsDrop(false)
     const f = e.dataTransfer.files[0]; if (f) loadFile(f)
+  }
+
+  // ── Local work recovery (IndexedDB) ─────────────────────────────────────
+  // On mount, before a file is open: check for an unfinished session from a
+  // previous visit. Everything here stays local — no session data is ever
+  // sent to a server.
+  useEffect(() => {
+    fileStorage.getAllSessions()
+      .then(sessions => {
+        const match = sessions.find(s => s.tool === ANNOTATE_TOOL_ID)
+        if (match) setRecoveryPrompt(match)
+      })
+      .catch(() => { /* IndexedDB unavailable (private browsing, etc.) — recovery is a nice-to-have, fail silently */ })
+  }, [])
+
+  // Debounced autosave: fires 3s after the last annotation change (add,
+  // edit, delete, undo/redo all move `history[histIdx]`).
+  useEffect(() => {
+    if (!file || !sessionIdRef.current) return
+    unsavedChangesRef.current = true
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+    autosaveTimerRef.current = setTimeout(async () => {
+      const id = sessionIdRef.current
+      if (!id) return
+      try {
+        const blob = await buildPdfBlob()
+        await fileStorage.saveSession({
+          id,
+          filename: file.name,
+          tool: ANNOTATE_TOOL_ID,
+          lastModified: Date.now(),
+          fileBlob: blob,
+        })
+        unsavedChangesRef.current = false
+      } catch { /* autosave is best-effort — never interrupt editing on failure */ }
+    }, 3000)
+    return () => { if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [annotations])
+
+  // Warn on tab close/reload only if an edit hasn't been autosaved yet.
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (unsavedChangesRef.current) { e.preventDefault(); e.returnValue = '' }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [])
+
+  const restoreSession = async (session: StoredSession) => {
+    const restoredFile = new File([session.fileBlob], session.filename, { type: 'application/pdf' })
+    setRecoveryPrompt(null)
+    setShowRecentFiles(false)
+    await loadFile(restoredFile, session.id)
+  }
+
+  const discardRecovery = async () => {
+    if (recoveryPrompt) await fileStorage.deleteSession(recoveryPrompt.id).catch(() => {})
+    setRecoveryPrompt(null)
+  }
+
+  const openRecentFiles = async () => {
+    try {
+      const sessions = await fileStorage.getAllSessions()
+      setRecentSessions(sessions.filter(s => s.tool === ANNOTATE_TOOL_ID))
+    } catch { setRecentSessions([]) }
+    setShowRecentFiles(true)
+  }
+
+  const deleteRecentSession = async (id: string) => {
+    await fileStorage.deleteSession(id).catch(() => {})
+    setRecentSessions(prev => prev.filter(s => s.id !== id))
+  }
+
+  const clearAllRecentSessions = async () => {
+    await fileStorage.clearAllSessions().catch(() => {})
+    setRecentSessions([])
   }
 
   // On small screens, fit the page to the available width instead of the fixed 1.3x default.
@@ -359,14 +449,22 @@ export default function PDFAnnotate() {
   }, [selectedId, deleteSelected, histIdx, history.length])
 
   // Export PDF with baked-in annotations
+  // Builds the current annotations onto the original file into a PDF Blob.
+  // Shared by exportPDF (user-triggered download) and the local-recovery
+  // autosave, so both stay identical instead of drifting apart.
+  const buildPdfBlob = async (): Promise<Blob> => {
+    if (!file) throw new Error('No file loaded')
+    const bytes = await file.arrayBuffer()
+    const out   = await runAnnotateWorker(bytes, annotations)
+    return new Blob([out], { type: 'application/pdf' })
+  }
+
   const exportPDF = async () => {
     if (!file || !pdfDoc) return
     setSaving(true); setError('')
     try {
-      const bytes = await file.arrayBuffer()
-      const out   = await runAnnotateWorker(bytes, annotations)
-      const blob  = new Blob([out], { type: 'application/pdf' })
-      const url   = URL.createObjectURL(blob)
+      const blob = await buildPdfBlob()
+      const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
       a.href = url; a.download = file.name.replace(/\.pdf$/i, '_annotated.pdf'); a.click()
       URL.revokeObjectURL(url)
@@ -508,18 +606,40 @@ export default function PDFAnnotate() {
         {/* ── Main PDF view ── */}
         <main ref={mainRef} className="responsive-tool-main" style={S.main}>
           {!file && !loading && (
-            <div
-              onClick={() => fileRef.current?.click()}
-              onDrop={onDrop}
-              onDragOver={e => { e.preventDefault(); setIsDrop(true) }}
-              onDragLeave={() => setIsDrop(false)}
-              style={{ border:`2px dashed ${isDrop?'#7c3aed':'rgba(255,255,255,.2)'}`, borderRadius:16, padding:'60px 40px', textAlign:'center', cursor:'pointer', background: isDrop?'rgba(124,58,237,.1)':'rgba(255,255,255,.03)', maxWidth:400 }}
-            >
-              <div style={{ fontSize:48, marginBottom:12 }}>📄</div>
-              <div style={{ fontSize:18, fontWeight:800, color:'#fff', marginBottom:8 }}>Drop a PDF to annotate</div>
-              <div style={{ fontSize:13, color:'rgba(255,255,255,.4)', lineHeight:1.7, marginBottom:20 }}>Highlight, comment, underline, draw — then save with annotations baked in.</div>
-              <button style={{ padding:'10px 24px', background:'#7c3aed', color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:800, cursor:'pointer' }}>Choose PDF</button>
-            </div>
+            <>
+              {recoveryPrompt && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', maxWidth: 400,
+                  background: '#2c2c2e', borderRadius: 14, padding: '12px 16px',
+                  border: '1px solid rgba(255,255,255,.1)',
+                }}>
+                  <span style={{ fontSize: 20, flexShrink: 0 }}>💾</span>
+                  <span style={{ flex: 1, minWidth: 160, fontSize: 13, color: 'rgba(255,255,255,.7)' }}>
+                    Unsaved work from {relativeTime(recoveryPrompt.lastModified)} found — restore it?
+                  </span>
+                  <button onClick={() => restoreSession(recoveryPrompt)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#7c3aed', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Restore</button>
+                  <button onClick={discardRecovery} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,.15)', background: 'transparent', color: 'rgba(255,255,255,.6)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Discard</button>
+                </div>
+              )}
+              <div
+                onClick={() => fileRef.current?.click()}
+                onDrop={onDrop}
+                onDragOver={e => { e.preventDefault(); setIsDrop(true) }}
+                onDragLeave={() => setIsDrop(false)}
+                style={{ border:`2px dashed ${isDrop?'#7c3aed':'rgba(255,255,255,.2)'}`, borderRadius:16, padding:'60px 40px', textAlign:'center', cursor:'pointer', background: isDrop?'rgba(124,58,237,.1)':'rgba(255,255,255,.03)', maxWidth:400 }}
+              >
+                <div style={{ fontSize:48, marginBottom:12 }}>📄</div>
+                <div style={{ fontSize:18, fontWeight:800, color:'#fff', marginBottom:8 }}>Drop a PDF to annotate</div>
+                <div style={{ fontSize:13, color:'rgba(255,255,255,.4)', lineHeight:1.7, marginBottom:20 }}>Highlight, comment, underline, draw — then save with annotations baked in.</div>
+                <button style={{ padding:'10px 24px', background:'#7c3aed', color:'#fff', border:'none', borderRadius:9, fontSize:13, fontWeight:800, cursor:'pointer' }}>Choose PDF</button>
+              </div>
+              <button
+                onClick={openRecentFiles}
+                style={{ padding: '7px 16px', borderRadius: 99, border: '1px solid rgba(255,255,255,.15)', background: 'transparent', color: 'rgba(255,255,255,.6)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+              >
+                🕘 Recent files
+              </button>
+            </>
           )}
           {loading && (
             <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12, paddingTop:60 }}>
@@ -637,6 +757,55 @@ export default function PDFAnnotate() {
     />
     <ToolSEOSection {...toolSeoData['pdf-annotate']} />
     <SiteFooter />
+
+    {/* Recent Files panel — locally saved sessions, IndexedDB only */}
+    {showRecentFiles && (
+      <div
+        style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        onClick={() => setShowRecentFiles(false)}
+      >
+        <div
+          onClick={e => e.stopPropagation()}
+          style={{ background: '#2c2c2e', borderRadius: 20, width: '100%', maxWidth: 460, maxHeight: '70vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,.08)' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#fff' }}>Recent files</h3>
+            <button onClick={() => setShowRecentFiles(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'rgba(255,255,255,.4)' }}>✕</button>
+          </div>
+          <div style={{ overflowY: 'auto', flex: 1, padding: recentSessions.length ? '8px 12px' : 0 }}>
+            {recentSessions.length === 0 ? (
+              <div style={{ padding: '48px 24px', textAlign: 'center', color: 'rgba(255,255,255,.4)', fontSize: 13 }}>
+                No saved sessions yet — your work is autosaved locally as you edit.
+              </div>
+            ) : (
+              recentSessions.map(session => (
+                <div key={session.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderRadius: 10, cursor: 'pointer' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.05)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  onClick={() => restoreSession(session)}
+                >
+                  <span style={{ fontSize: 20, flexShrink: 0 }}>📄</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.filename}</div>
+                    <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,.4)' }}>{relativeTime(session.lastModified)}</div>
+                  </div>
+                  <button
+                    onClick={e => { e.stopPropagation(); deleteRecentSession(session.id) }}
+                    title="Delete"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,.3)', fontSize: 15, flexShrink: 0, padding: 4 }}
+                  >✕</button>
+                </div>
+              ))
+            )}
+          </div>
+          {recentSessions.length > 0 && (
+            <div style={{ padding: '10px 16px', borderTop: '1px solid rgba(255,255,255,.08)' }}>
+              <button onClick={clearAllRecentSessions} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontSize: 12, fontWeight: 700 }}>Clear all</button>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
     </>
   )
 }

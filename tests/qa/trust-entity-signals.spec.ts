@@ -5,6 +5,7 @@ import {
   SUPPORT_EMAIL,
   TRUSTPILOT_PROFILE_URL,
 } from '../../src/lib/entity'
+import { PRO_BILLING_SUMMARY } from '../../src/lib/pricing'
 
 test.describe('verified trust and entity signals', () => {
   test('about publishes only the known product identity and support channel', async ({ page }) => {
@@ -33,9 +34,10 @@ test.describe('verified trust and entity signals', () => {
   test('pricing matches the implemented monthly checkout', async ({ page }) => {
     await page.goto('/pricing')
 
-    await expect(page.getByText('Monthly billing', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText(PRO_BILLING_SUMMARY).first()).toBeVisible()
     await expect(page.getByText('Annual', { exact: true })).toHaveCount(0)
     await expect(page.getByText(/Join users who use EditPDF AI every day/i)).toHaveCount(0)
+    await expect(page.getByText(/Founding offer|Founding-member|limited time|countdown/i)).toHaveCount(0)
     await expect(page.getByText(/Secured by Stripe|256-bit SSL/i)).toHaveCount(0)
   })
 

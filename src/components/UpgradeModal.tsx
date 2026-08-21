@@ -1,11 +1,15 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AI_TOOL_COUNT } from '@/lib/toolMeta'
 import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
+import ToolWorkflowStatus from '@/components/ToolWorkflowStatus'
+import { useModalFocusTrap } from '@/hooks/useModalFocusTrap'
 
 export default function UpgradeModal() {
   const [open, setOpen] = useState(false)
+  const upgradeButtonRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -14,10 +18,13 @@ export default function UpgradeModal() {
     return () => window.removeEventListener('upgrade-needed', show)
   }, [])
 
+  useModalFocusTrap(open, dialogRef, () => setOpen(false), upgradeButtonRef)
+
   if (!open) return null
 
   return (
     <div
+      className="mobile-modal-backdrop"
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
         background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(4px)',
@@ -27,6 +34,12 @@ export default function UpgradeModal() {
       onClick={() => setOpen(false)}
     >
       <div
+        ref={dialogRef}
+        className="mobile-modal-surface"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upgrade-modal-title"
+        tabIndex={-1}
         onClick={e => e.stopPropagation()}
         style={{
           background: '#fff', borderRadius: 20, padding: '36px 32px',
@@ -34,28 +47,16 @@ export default function UpgradeModal() {
           boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
         }}
       >
-        {/* Icon */}
-        <div style={{
-          width: 56, height: 56, borderRadius: 16,
-          background: 'linear-gradient(135deg,#0891b2,#0e7490)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 20px',
-        }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white" strokeLinejoin="round"/>
-          </svg>
-        </div>
-
-        <h2 style={{ fontSize: 22, fontWeight: 800, color: '#1d1d1f', margin: '0 0 8px', letterSpacing: '-.03em' }}>
-          Daily limit reached
-        </h2>
-        <p style={{ fontSize: 14, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.6 }}>
-          You have used the {FREE_AI_DAILY_LIMIT} AI actions included with Free for this UTC day.<br/>
-          Upgrade to <strong style={{ color: '#0891b2' }}>Pro</strong> to remove the daily AI-action cap. Tool-specific limits still apply.
-        </p>
+        <ToolWorkflowStatus
+          state="usage-limit-reached"
+          heading="Daily limit reached"
+          headingId="upgrade-modal-title"
+          message={`You have used the ${FREE_AI_DAILY_LIMIT} AI actions included with Free for this UTC day. Pro removes the daily AI-action cap; tool-specific limits still apply.`}
+          preserveMessage="Your selected document and settings remain in this tab."
+        />
 
         {/* Feature list */}
-        <div style={{ background: '#f8fafc', borderRadius: 12, padding: '14px 18px', marginBottom: 24, textAlign: 'left' }}>
+        <div style={{ background: '#f8fafc', borderRadius: 12, padding: '14px 18px', marginTop: 18, marginBottom: 24, textAlign: 'left' }}>
           {['No daily AI-action cap', `AI actions across ${AI_TOOL_COUNT} tools`, 'Same documented tool limits', 'No daily quota reset required'].map(f => (
             <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', fontSize: 13, color: '#374151' }}>
               <span style={{ color: '#0891b2', fontWeight: 700, fontSize: 15 }}>✓</span> {f}
@@ -64,6 +65,8 @@ export default function UpgradeModal() {
         </div>
 
         <button
+          ref={upgradeButtonRef}
+          type="button"
           onClick={() => { setOpen(false); router.push('/pricing') }}
           style={{
             width: '100%', padding: '13px 0', borderRadius: 12,
@@ -74,6 +77,7 @@ export default function UpgradeModal() {
           Upgrade to Pro
         </button>
         <button
+          type="button"
           onClick={() => setOpen(false)}
           style={{
             width: '100%', padding: '11px 0', borderRadius: 12,
@@ -81,7 +85,7 @@ export default function UpgradeModal() {
             fontSize: 14, fontWeight: 600, cursor: 'pointer',
           }}
         >
-          Maybe later
+          Continue with Free tools
         </button>
       </div>
     </div>

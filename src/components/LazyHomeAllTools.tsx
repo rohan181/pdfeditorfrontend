@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import toolMeta from '@/lib/toolMeta'
+import { TOOL_CATEGORIES, getCategoryTools, getToolAccessPresentation } from '@/lib/toolDiscovery'
 
 const HomeAllTools = dynamic(() => import('./HomeAllTools'), {
   ssr: false,
@@ -10,119 +12,42 @@ const HomeAllTools = dynamic(() => import('./HomeAllTools'), {
 })
 
 function ToolsPlaceholder() {
-  const tools = [
-    ['PDF Editor', '/pdf-editor'],
-    ['PDF Viewer', '/pdf-viewer'],
-    ['PDF Annotator', '/pdf-annotate'],
-    ['AI PDF Form Filler', '/ai-pdf-form-filler'],
-    ['Chat with PDF', '/chat-with-pdf'],
-    ['PDF OCR Scanner', '/pdf-ocr'],
-    ['PDF Summarizer', '/pdf-summarizer'],
-    ['PDF Translator', '/pdf-translator'],
-    ['PDF Mind Map', '/mind-map'],
-    ['Quiz Creator', '/quiz-creator'],
-    ['PDF Compressor', '/pdf-compressor'],
-    ['PDF Merger', '/pdf-merger'],
-    ['PDF Splitter', '/pdf-splitter'],
-    ['PDF Page Manager', '/pdf-page-manager'],
-    ['PDF Cropper', '/pdf-cropper'],
-    ['Rotate PDF Pages', '/rotate-pdf'],
-    ['Extract PDF Pages', '/extract-pages'],
-    ['Delete PDF Pages', '/delete-pages'],
-    ['Add PDF Page Numbers', '/add-page-numbers'],
-    ['PDF Page Labels', '/pdf-page-labels'],
-    ['PDF E-Signer', '/pdf-signer'],
-    ['PDF Watermark', '/pdf-watermark'],
-    ['PDF Redactor', '/pdf-redactor'],
-    ['PDF Password Lock', '/pdf-password-lock'],
-    ['Unlock PDF', '/pdf-unlock'],
-    ['Repair PDF', '/pdf-repair'],
-    ['Flatten PDF', '/pdf-flatten'],
-    ['Compare PDF', '/pdf-compare'],
-    ['Remove PDF Metadata', '/remove-pdf-metadata'],
-    ['Extract PDF Attachments', '/extract-pdf-attachments'],
-    ['Extract PDF Images', '/extract-pdf-images'],
-    ['Export PDF Form Data', '/export-pdf-form-data'],
-    ['Extract PDF Bookmarks', '/extract-pdf-bookmarks'],
-    ['PDF Bookmarks Manager', '/pdf-bookmarks-manager'],
-    ['Extract PDF Links', '/extract-pdf-links'],
-    ['Remove PDF Links', '/remove-pdf-links'],
-    ['Export PDF Comments', '/export-pdf-comments'],
-    ['PDF Form Builder', '/pdf-form-builder'],
-    ['PDF to Word', '/pdf-to-word'],
-    ['PDF to Excel', '/pdf-to-excel'],
-    ['PDF to PowerPoint', '/pdf-to-ppt'],
-    ['PDF to Images', '/pdf-to-images'],
-    ['Word to PDF', '/word-to-pdf'],
-    ['Excel to PDF', '/excel-to-pdf'],
-    ['PowerPoint to PDF', '/ppt-to-pdf'],
-    ['Image to PDF', '/image-to-pdf'],
-    ['Text to PDF', '/txt-to-pdf'],
-    ['RTF to PDF', '/rtf-to-pdf'],
-    ['ODT to PDF', '/odt-to-pdf'],
-    ['HTML to PDF', '/html-to-pdf'],
-  ] as const
-
-  const groups = [
-    {
-      title: 'AI PDF Tools',
-      description: 'Extract, understand and transform document content with OCR, summaries, translation, quizzes and automated form filling.',
-      paths: ['/ai-pdf-form-filler', '/chat-with-pdf', '/pdf-ocr', '/pdf-summarizer', '/pdf-translator', '/mind-map', '/quiz-creator'],
-    },
-    {
-      title: 'Edit and Annotate PDFs',
-      description: 'Open PDFs in your browser to edit content, review documents, add annotations and create fillable forms.',
-      paths: ['/pdf-editor', '/pdf-viewer', '/pdf-annotate', '/pdf-form-builder'],
-    },
-    {
-      title: 'Manage PDF Pages',
-      description: 'Reorder, crop, rotate, extract, delete and number PDF pages without installing desktop software.',
-      paths: ['/pdf-page-manager', '/pdf-cropper', '/rotate-pdf', '/extract-pages', '/delete-pages', '/add-page-numbers', '/pdf-page-labels'],
-    },
-    {
-      title: 'Convert PDF Files',
-      description: 'Create editable AI-assisted Word, Excel, or PowerPoint drafts from extracted PDF text, export page images, or rebuild supported source content as PDFs.',
-      paths: ['/pdf-to-word', '/pdf-to-excel', '/pdf-to-ppt', '/pdf-to-images', '/word-to-pdf', '/excel-to-pdf', '/ppt-to-pdf', '/image-to-pdf', '/txt-to-pdf', '/rtf-to-pdf', '/odt-to-pdf', '/html-to-pdf'],
-    },
-    {
-      title: 'Protect and Sign PDFs',
-      description: 'Sign documents, add watermarks, redact confidential information and protect PDF files with passwords.',
-      paths: ['/pdf-signer', '/pdf-watermark', '/pdf-redactor', '/pdf-password-lock', '/pdf-unlock'],
-    },
-    {
-      title: 'Organize and Compress PDFs',
-      description: 'Reduce file size or combine and separate documents for easier storage, email and sharing.',
-      paths: ['/pdf-compressor', '/pdf-merger', '/pdf-splitter', '/pdf-repair', '/pdf-flatten', '/pdf-compare', '/remove-pdf-metadata', '/extract-pdf-attachments', '/extract-pdf-images', '/export-pdf-form-data', '/extract-pdf-bookmarks', '/pdf-bookmarks-manager', '/extract-pdf-links', '/remove-pdf-links', '/export-pdf-comments'],
-    },
-  ] as const
-
   return (
     <section
       className="home-responsive-section tools-fallback-section"
       id="tools"
+      aria-labelledby="tools-fallback-heading"
       style={{ minHeight: 900, padding: '88px 28px', background: '#f8f8fa', borderTop: '1px solid #f0f0f0' }}
     >
-      <div style={{ maxWidth: 1240, margin: '0 auto' }}>
+      <div style={{ maxWidth: 'var(--container-max)', margin: '0 auto' }}>
         <p style={{ margin: '0 0 12px', color: '#5b6472', fontSize: 12, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
-          All tools
+          All PDF tools
         </p>
-        <h2 style={{ margin: '0 0 16px', color: '#1d1d1f', fontSize: 'clamp(28px,3.5vw,46px)', lineHeight: .96, letterSpacing: '-.05em' }}>
-          Edit, Convert and Organize PDFs
+        <h2 id="tools-fallback-heading" style={{ margin: '0 0 16px', color: '#1d1d1f', fontSize: 'clamp(28px,3.5vw,46px)', lineHeight: .96, letterSpacing: '-.05em' }}>
+          Find the right PDF tool by task
         </h2>
         <p style={{margin:'0 0 40px',maxWidth:760,color:'#5b6472',fontSize:15,lineHeight:1.7}}>
-          Choose from browser-based tools for editing, signing, converting, securing and understanding PDF documents.
+          Browse all {toolMeta.length} active tools in seven clear categories. Interactive task search loads as this section enters view.
         </p>
         <nav className="tools-fallback-grid" aria-label="PDF tool categories" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(330px,1fr))', gap: 18 }}>
-          {groups.map(group => (
-            <section key={group.title} style={{padding:22,background:'#fff',border:'1px solid #E2E8F0',borderRadius:16}}>
-              <h3 style={{margin:'0 0 8px',color:'#0F172A',fontSize:18}}>{group.title}</h3>
-              <p style={{margin:'0 0 16px',color:'#5b6472',fontSize:13,lineHeight:1.6}}>{group.description}</p>
+          {TOOL_CATEGORIES.map(category => (
+            <section id={`tools-${category.id}`} key={category.id} style={{padding:22,background:'#fff',border:'1px solid #E2E8F0',borderRadius:16}}>
+              <h3 style={{margin:'0 0 8px',color:category.color,fontSize:18}}>{category.label}</h3>
+              <p style={{margin:'0 0 16px',color:'#5b6472',fontSize:13,lineHeight:1.6}}>{category.description}</p>
               <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
-                {tools.filter(([, href]) => (group.paths as readonly string[]).includes(href)).map(([label, href]) => (
-                  <Link key={href} href={href} style={{padding:'7px 10px',color:'#2563EB',background:'#EFF6FF',borderRadius:8,textDecoration:'none',fontSize:12,fontWeight:600}}>
-                    {label}
-                  </Link>
-                ))}
+                {getCategoryTools(category).map(tool => {
+                  const access = getToolAccessPresentation(tool.access)
+                  return (
+                    <Link
+                      key={tool.slug}
+                      href={`/${tool.slug}`}
+                      aria-label={`${tool.name}: ${tool.desc}. ${access.summary}`}
+                      style={{minHeight:44,display:'inline-flex',alignItems:'center',padding:'7px 10px',color:category.color,background:`${category.color}0d`,borderRadius:8,textDecoration:'none',fontSize:12,fontWeight:650}}
+                    >
+                      {tool.name} · {access.badges.map(badge => badge.label).join(' + ')}
+                    </Link>
+                  )
+                })}
               </div>
             </section>
           ))}
@@ -153,9 +78,5 @@ export default function LazyHomeAllTools() {
     return () => observer.disconnect()
   }, [])
 
-  return (
-    <div ref={boundaryRef}>
-      {shouldLoad ? <HomeAllTools /> : <ToolsPlaceholder />}
-    </div>
-  )
+  return <div ref={boundaryRef}>{shouldLoad ? <HomeAllTools /> : <ToolsPlaceholder />}</div>
 }

@@ -14,6 +14,7 @@ import {
   MousePointer2, FileText, Layers,
   PenLine, FileType, FileSpreadsheet, Minimize2, Merge,
 } from 'lucide-react'
+import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
 
 const E   = [0.25, 0.46, 0.45, 0.94] as [number,number,number,number]
 const FI  = { fontFamily:'var(--font-dm,system-ui,sans-serif)' }
@@ -175,10 +176,10 @@ function ScreenExport() {
 }
 
 const GSTEPS = [
-  { n:'01', color:'#818cf8', label:'Upload',      headline:'Upload your PDF',         body:'Upload most PDFs instantly. Drag it in or click to browse — no account needed.', href:'/pdf-editor',         cta:'Open PDF Editor', Screen:ScreenDrop     },
-  { n:'02', color:'#a78bfa', label:'AI Tools',    headline:'Use AI tools instantly',  body:'Summarize, fill forms, OCR scan, translate, and more — all AI-powered.',          href:'/ai-pdf-form-filler', cta:'Try AI Form Filler', Screen:ScreenAI       },
+  { n:'01', color:'#818cf8', label:'Upload',      headline:'Upload your PDF',         body:'Choose a supported PDF. Core workflows can begin without an account.', href:'/pdf-editor',         cta:'Open PDF Editor', Screen:ScreenDrop     },
+  { n:'02', color:'#a78bfa', label:'AI Tools',    headline:'Choose an AI action',      body:`Signed-in Free includes ${FREE_AI_DAILY_LIMIT} AI actions per UTC day. Review every result before use.`, href:'/ai-pdf-form-filler', cta:'Try AI Form Filler', Screen:ScreenAI       },
   { n:'03', color:RED,       label:'Edit & Sign', headline:'Edit, annotate, or sign', body:'Add text, highlights, comments, and your e-signature in seconds.',                 href:'/pdf-signer',         cta:'Sign a PDF', Screen:ScreenEditSign },
-  { n:'04', color:'#22c55e', label:'Export',      headline:'Download your file',       body:'Convert to Word, Excel, or compress. Your finished file is ready to download.',   href:'/pdf-to-word',        cta:'Explore conversion', Screen:ScreenExport   },
+  { n:'04', color:'#22c55e', label:'Export',      headline:'Review and download',      body:'Check the finished result, choose the available output, and download your file.', href:'/pdf-to-word',        cta:'Explore conversion', Screen:ScreenExport   },
 ]
 
 export default function HomeScroll() {
@@ -224,15 +225,15 @@ export default function HomeScroll() {
     <>
       <div id="how-it-works-detail" className="sec-pad" style={{maxWidth:1200,margin:'0 auto'}}>
         <motion.div initial={{opacity:0,y:16}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'80px'}} transition={{duration:.55,ease:E}}>
-          <div style={{...MONO,fontSize:10,color:'#5b6472',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>See it in action</div>
+          <div style={{...MONO,fontSize:10,color:'#5b6472',letterSpacing:'0.14em',textTransform:'uppercase',marginBottom:16}}>How it works</div>
           <h2 style={{fontFamily:'var(--font-jakarta,system-ui)',fontSize:'clamp(28px,4vw,56px)',fontWeight:800,color:'#1d1d1f',letterSpacing:'-0.05em',lineHeight:.96,margin:0}}>
-            Everything in your browser
+            From PDF to finished file
           </h2>
         </motion.div>
       </div>
 
       <div ref={pin} className="scr-pin" data-mobile-shortcut-occluder style={{height:reduceMotion?'auto':'400vh',position:'relative',overscrollBehavior:'none'}}>
-      <div className="scr-sticky" tabIndex={0} aria-label="How EditPDF AI works"
+      <div className="scr-sticky" tabIndex={0} role="region" aria-label="How EditPDF AI works"
         onKeyDown={e=>{ if(e.key==='ArrowRight') goToStep(step+1); if(e.key==='ArrowLeft') goToStep(step-1) }}
         style={{top:0,height:reduceMotion?'auto':'100vh',minHeight:reduceMotion?620:undefined,position:reduceMotion?'relative':undefined,background:'#F5F5F7',overflow:'hidden',display:'flex',flexDirection:'column'}}>
 
@@ -263,7 +264,7 @@ export default function HomeScroll() {
               {GSTEPS.map((s,i)=>(
                 <button key={i} type="button" onClick={()=>goToStep(i)}
                   role="tab" aria-selected={i===step} aria-label={`Step ${s.n}: ${s.label}`}
-                  style={{display:'flex',alignItems:'center',justifyContent:'center',minWidth:24,minHeight:24,padding:0,border:0,background:'transparent',cursor:'pointer'}}>
+                  style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,padding:0,border:0,background:'transparent',cursor:'pointer'}}>
                   <motion.span
                     animate={{width:i===step?28:7,background:i===step?s.color:'rgba(0,0,0,.12)'}}
                     style={{height:7,borderRadius:99,display:'block'}}
@@ -299,14 +300,14 @@ export default function HomeScroll() {
             </AnimatePresence>
             <div className="scr-controls" style={{display:'flex',alignItems:'center',gap:8,marginTop:18}}>
               <button type="button" onClick={()=>goToStep(step-1)} disabled={step===0} aria-label="Previous walkthrough step"
-                style={{width:34,height:34,borderRadius:'50%',border:'1px solid #D1D5DB',background:'#fff',display:'grid',placeItems:'center',cursor:step===0?'default':'pointer',opacity:step===0 ? .4 : 1}}>
+                style={{width:44,height:44,borderRadius:'50%',border:'1px solid #D1D5DB',background:'#fff',display:'grid',placeItems:'center',cursor:step===0?'default':'pointer',opacity:step===0 ? .4 : 1}}>
                 <ChevronLeft size={15}/>
               </button>
               <button type="button" onClick={()=>goToStep(step+1)} disabled={step===GSTEPS.length-1} aria-label="Next walkthrough step"
-                style={{width:34,height:34,borderRadius:'50%',border:'1px solid #D1D5DB',background:'#fff',display:'grid',placeItems:'center',cursor:step===GSTEPS.length-1?'default':'pointer',opacity:step===GSTEPS.length-1 ? .4 : 1}}>
+                style={{width:44,height:44,borderRadius:'50%',border:'1px solid #D1D5DB',background:'#fff',display:'grid',placeItems:'center',cursor:step===GSTEPS.length-1?'default':'pointer',opacity:step===GSTEPS.length-1 ? .4 : 1}}>
                 <ChevronRight size={15}/>
               </button>
-              <a href="#tools" style={{...FI,fontSize:12,color:'#5b6472',marginLeft:4,textDecoration:'none'}}>Skip walkthrough</a>
+              <a href="#privacy" style={{...FI,minHeight:44,display:'inline-flex',alignItems:'center',fontSize:12,color:'#5b6472',marginLeft:4,textDecoration:'none'}}>Skip walkthrough</a>
             </div>
             </div>
           </div>

@@ -12,6 +12,9 @@ import OrganisePages from './OrganisePages'
 import AutoFillModal, { type DetectedField, type FilledField } from './AutoFillModal'
 import ChatFillPanel from './ChatFillPanel'
 import { useScannedDetection } from '@/hooks/useScannedDetection'
+import { useModalFocusTrap } from '@/hooks/useModalFocusTrap'
+import * as fileStorage from '@/lib/fileStorage'
+import { relativeTime, type StoredSession } from '@/lib/fileStorage'
 import type {
   PDFElement, PDFSource, PageSlot, ToolMode,
   TextElement, ImageElement, SignatureElement, StampElement, HighlightElement,
@@ -285,7 +288,7 @@ function AnnotationDisplay({ el, isEditing, onChange, onDblClick }: {
     }}>
       <div style={{ fontSize: 8, fontWeight: 800, color: 'rgba(0,0,0,0.28)', marginBottom: 3, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Note</div>
       {isEditing ? (
-        <textarea autoFocus value={el.text} onChange={e => onChange(e.target.value)}
+        <textarea autoFocus aria-label="Sticky note text" value={el.text} onChange={e => onChange(e.target.value)}
           onClick={e => e.stopPropagation()}
           placeholder="Add a note…"
           style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', resize: 'none',
@@ -461,7 +464,7 @@ function TextDisplay({ el, scale, isEditing, onChange, onDblClick }: {
   }
   if (isEditing)
     return (
-      <textarea autoFocus value={el.text} onChange={e => onChange(e.target.value)}
+      <textarea autoFocus aria-label="PDF text" value={el.text} onChange={e => onChange(e.target.value)}
         onClick={e => e.stopPropagation()}
         placeholder="Type here…"
         style={{ ...base, textAlign: el.align, padding: `${1 * scale}px ${3 * scale}px`, lineHeight: lh,
@@ -526,6 +529,7 @@ function TableDisplay({ el, scale, onUpdate }: {
                   }}>
                   {isEditing ? (
                     <input
+                      aria-label={`Table row ${r + 1}, column ${c + 1}`}
                       autoFocus value={val}
                       onChange={e => setCellText(r, c, e.target.value)}
                       onClick={e => e.stopPropagation()}
@@ -555,7 +559,7 @@ function TableDisplay({ el, scale, onUpdate }: {
 // (Date formatting handled in DatePickerPanel)
 
 // ── Main ─────────────────────────────────────────────────────────────────────
-export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, onRequestClose }: { hideChatFill?: boolean; hideAutoFill?: boolean; onRequestClose?: () => void } = {}) {
+export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, onRequestClose, toolId = 'pdf-editor' }: { hideChatFill?: boolean; hideAutoFill?: boolean; onRequestClose?: () => void; toolId?: string } = {}) {
   const { isLoaded: isAuthLoaded, isSignedIn } = useUser()
   const { loadOpenCV, detectRectangles, drawBoxesOnCanvas } = useScannedDetection()
   const canvasRef = useRef<HTMLCanvasElement>(null)  // kept for compat; primary: canvasRefsMap
@@ -573,6 +577,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
   const [rendering, setRendering] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadError, setUploadError] = useState('')
+  const uploadTaskRef = useRef<any>(null)
+  const uploadTokenRef = useRef(0)
 
   // Annotation elements
   const [elements, setElements]   = useState<PDFElement[]>([])
@@ -596,6 +603,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
   const [isDetecting, setIsDetecting] = useState(false)
   const [showChatFill, setShowChatFill] = useState(false)
   const [vw, setVw]                   = useState(1280)
+  const [mobileKeyboardOpen, setMobileKeyboardOpen] = useState(false)
   // New tool options
   const [activeMarkType, setActiveMarkType] = useState<'tick'|'cross'|'circle'|'square'|'filledbox'>('tick')
   // fieldName → { ids: element IDs, value: last placed value } for AI fill deduplication
@@ -612,6 +620,21 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
   const [customStampText, setCustomStampText] = useState('')
   const [pdfName, setPdfName]         = useState('')
   const [editingName, setEditingName] = useState(false)
+
+  // Local work recovery (IndexedDB) — never sent to a server. Scoped by
+  // `toolId` so a session started from /ai-pdf-form-filler (which also
+  // renders this component) never shows up as a recovery prompt on the
+  // plain /pdf-editor page, or vice versa.
+  const sessionIdRef = useRef<string | null>(null)
+  const unsavedChangesRef = useRef(false)
+  const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [recoveryPrompt, setRecoveryPrompt] = useState<StoredSession | null>(null)
+  const [showRecentFiles, setShowRecentFiles] = useState(false)
+  const [recentSessions, setRecentSessions] = useState<StoredSession[]>([])
+  const recentDialogRef = useRef<HTMLDivElement>(null)
+  const recentCloseButtonRef = useRef<HTMLButtonElement>(null)
+
+  useModalFocusTrap(showRecentFiles, recentDialogRef, () => setShowRecentFiles(false), recentCloseButtonRef)
 
   // Undo / redo
   const historyRef = useRef<PDFElement[][]>([[]])
@@ -784,6 +807,25 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
     return () => window.removeEventListener('resize', update)
   }, [])
 
+  useEffect(() => {
+    const isTextEntry = (target: EventTarget | null) => {
+      const element = target instanceof HTMLElement ? target : null
+      return !!element?.matches("textarea, select, [contenteditable='true'], input:not([type='range']):not([type='color']):not([type='checkbox']):not([type='radio']):not([type='file'])")
+    }
+    const onFocusIn = (event: FocusEvent) => {
+      if (isTextEntry(event.target)) setMobileKeyboardOpen(true)
+    }
+    const onFocusOut = () => {
+      window.setTimeout(() => setMobileKeyboardOpen(isTextEntry(document.activeElement)), 0)
+    }
+    document.addEventListener('focusin', onFocusIn)
+    document.addEventListener('focusout', onFocusOut)
+    return () => {
+      document.removeEventListener('focusin', onFocusIn)
+      document.removeEventListener('focusout', onFocusOut)
+    }
+  }, [])
+
   const isMobile = vw < 640
   const isTablet = vw < 1024
 
@@ -912,30 +954,123 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
     setSelectedId(null); setEditingId(null)
   }, [slotIdx])
 
+  // ── Local work recovery (IndexedDB) ─────────────────────────────────────
+  // On mount, before any file is open: check for an unfinished session from
+  // a previous visit and offer to restore it. Everything here stays local —
+  // no session data is ever sent to a server.
+  useEffect(() => {
+    fileStorage.getAllSessions()
+      .then(sessions => {
+        const match = sessions.find(s => s.tool === toolId)
+        if (match) setRecoveryPrompt(match)
+      })
+      .catch(() => { /* IndexedDB unavailable (private browsing, etc.) — recovery is a nice-to-have, fail silently */ })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolId])
+
+  // Debounced autosave: fires 3s after the last edit to `elements` or `slots`
+  // (covers both continuous edits like typing and discrete actions like
+  // rotate/delete-page/reorder, since both ultimately mutate one of these).
+  useEffect(() => {
+    if (!slots.length || !sessionIdRef.current) return
+    unsavedChangesRef.current = true
+    if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current)
+    autosaveTimerRef.current = setTimeout(async () => {
+      const id = sessionIdRef.current
+      if (!id) return
+      try {
+        const blob = await buildPdfBlob()
+        await fileStorage.saveSession({
+          id,
+          filename: pdfName ? `${pdfName}.pdf` : (sources[0]?.name || 'document.pdf'),
+          tool: toolId,
+          lastModified: Date.now(),
+          fileBlob: blob,
+        })
+        unsavedChangesRef.current = false
+      } catch { /* autosave is best-effort — never interrupt editing on failure */ }
+    }, 3000)
+    return () => { if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [elements, slots])
+
+  // Warn on tab close/reload only if an edit hasn't been autosaved yet.
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (unsavedChangesRef.current) { e.preventDefault(); e.returnValue = '' }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [])
+
+  const restoreSession = async (session: StoredSession) => {
+    const file = new File([session.fileBlob], session.filename, { type: 'application/pdf' })
+    setRecoveryPrompt(null)
+    setShowRecentFiles(false)
+    await loadInitialPDF(file, session.id)
+  }
+
+  const discardRecovery = async () => {
+    if (recoveryPrompt) await fileStorage.deleteSession(recoveryPrompt.id).catch(() => {})
+    setRecoveryPrompt(null)
+  }
+
+  const openRecentFiles = async () => {
+    try {
+      const sessions = await fileStorage.getAllSessions()
+      setRecentSessions(sessions.filter(s => s.tool === toolId))
+    } catch { setRecentSessions([]) }
+    setShowRecentFiles(true)
+  }
+
+  const deleteRecentSession = async (id: string) => {
+    await fileStorage.deleteSession(id).catch(() => {})
+    setRecentSessions(prev => prev.filter(s => s.id !== id))
+  }
+
+  const clearAllRecentSessions = async () => {
+    await fileStorage.clearAllSessions().catch(() => {})
+    setRecentSessions([])
+  }
+
   // ── Load PDF ─────────────────────────────────────────────────────────────
-  const loadInitialPDF = async (file: File) => {
+  const loadInitialPDF = async (file: File, existingSessionId?: string) => {
+    const uploadToken = ++uploadTokenRef.current
+    sessionIdRef.current = existingSessionId ?? uuidv4()
+    unsavedChangesRef.current = false
+    setUploadError('')
     setUploading(true); setUploadProgress(5)
     try {
       const lib = await getPdfjs()
+      if (uploadToken !== uploadTokenRef.current) return
       setUploadProgress(15)
 
       const ab = await file.arrayBuffer()
+      if (uploadToken !== uploadTokenRef.current) return
       setUploadProgress(28)
       const bytes = ab.slice(0)
 
       const loadingTask = lib.getDocument({ data: ab })
+      uploadTaskRef.current = loadingTask
       loadingTask.onProgress = ({ loaded, total }: { loaded: number; total: number }) => {
-        if (total) setUploadProgress(28 + Math.round((loaded / total) * 32)) // 28→60
+        if (total && uploadToken === uploadTokenRef.current) setUploadProgress(28 + Math.round((loaded / total) * 32)) // 28→60
       }
       const doc = await loadingTask.promise
+      if (uploadToken !== uploadTokenRef.current) {
+        try { await doc.destroy() } catch {}
+        return
+      }
       setUploadProgress(62)
 
       const srcId = uuidv4()
       const newSrcs: PDFSource[] = [{ id: srcId, doc, bytes, name: file.name }]
-      setSources(newSrcs)
 
       const newSlots: PageSlot[] = []
       for (let i = 1; i <= doc.numPages; i++) {
+        if (uploadToken !== uploadTokenRef.current) {
+          try { await doc.destroy() } catch {}
+          return
+        }
         const pg = await doc.getPage(i)
         const vp = pg.getViewport({ scale: 1 })
         const s: PageSlot = {
@@ -948,10 +1083,18 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
       }
       setUploadProgress(100)
       await new Promise(r => setTimeout(r, 350))
+      if (uploadToken !== uploadTokenRef.current) {
+        try { await doc.destroy() } catch {}
+        return
+      }
 
       // ── Extract existing AcroForm field values so they're editable ──────────
       const prefilledElements: PDFElement[] = []
       for (const slot of newSlots) {
+        if (uploadToken !== uploadTokenRef.current) {
+          try { await doc.destroy() } catch {}
+          return
+        }
         try {
           const pg   = await doc.getPage(slot.pageNum!)
           const vp   = pg.getViewport({ scale: 1 })
@@ -1008,12 +1151,31 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
         } catch { /* page may not support annotations */ }
       }
 
-      setSlots(newSlots); setSlotIdx(0); setElements(prefilledElements)
+      setSources(newSrcs); setSlots(newSlots); setSlotIdx(0); setElements(prefilledElements)
       setPdfName(file.name.replace(/\.pdf$/i, ''))
+    } catch (error: any) {
+      if (uploadToken === uploadTokenRef.current) setUploadError(error?.message ? `Could not open this PDF: ${error.message}` : 'Could not open this PDF. Please try another file.')
     } finally {
-      setUploading(false); setUploadProgress(0)
+      if (uploadToken === uploadTokenRef.current) {
+        uploadTaskRef.current = null
+        setUploading(false); setUploadProgress(0)
+      }
     }
   }
+
+  const cancelInitialUpload = () => {
+    uploadTokenRef.current += 1
+    try { uploadTaskRef.current?.destroy() } catch {}
+    uploadTaskRef.current = null
+    setUploading(false)
+    setUploadProgress(0)
+    setUploadError('Opening canceled. Your PDF was not changed or uploaded.')
+  }
+
+  useEffect(() => () => {
+    uploadTokenRef.current += 1
+    try { uploadTaskRef.current?.destroy() } catch {}
+  }, [])
 
   const mergePDF = async (file: File) => {
     const insertBefore = insertAtRef.current >= 0 ? insertAtRef.current : -1
@@ -2702,8 +2864,10 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
   }, [toolMode, scale])
 
   // ── Export ────────────────────────────────────────────────────────────────
-  const handleExport = async () => {
-    if (!slots.length) return
+  // Builds the current editor state (sources/slots/elements) into a PDF Blob.
+  // Shared by handleExport (user-triggered download) and the local-recovery
+  // autosave, so both stay byte-for-byte identical instead of drifting apart.
+  const buildPdfBlob = async (): Promise<Blob> => {
     const { PDFDocument, rgb, StandardFonts, LineCapStyle, degrees } = await import('pdf-lib')
     const out = await PDFDocument.create()
     const libDocs = await Promise.all(sources.map(s => PDFDocument.load(s.bytes)))
@@ -2995,7 +3159,12 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
     }
 
     const bytes = await out.save()
-    const blob = new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' })
+    return new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' })
+  }
+
+  const handleExport = async () => {
+    if (!slots.length) return
+    const blob = await buildPdfBlob()
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url; a.download = `${pdfName || sources[0]?.name?.replace(/\.pdf$/i,'') || 'document'}.pdf`; a.click()
@@ -3019,17 +3188,17 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div style={{
+    <div className={`pdf-editor-root${mobileKeyboardOpen ? ' is-keyboard-open' : ''}`} style={{
       display: 'flex', flexDirection: 'column', height: '100dvh',
       background: '#f8faff', color: '#1e293b',
       fontFamily: 'Inter, system-ui, sans-serif', overflow: 'hidden',
     }}>
       {/* Hidden file inputs */}
-      <input ref={pdfInput}      type="file" accept=".pdf"    onChange={handlePDFFile}    style={{ display: 'none' }} />
-      <input ref={imgInput}      type="file" accept="image/*" onChange={handleImageFile}  style={{ display: 'none' }} />
-      <input ref={mergeInput}    type="file" accept=".pdf"    onChange={handleMergeFile}  style={{ display: 'none' }} />
-      <input ref={imgPageInput}  type="file" accept="image/*" onChange={handleImagePage}  style={{ display: 'none' }} />
-      <input ref={wmImageInput}  type="file" accept="image/*" onChange={handleWmImageFile} style={{ display: 'none' }} />
+      <input ref={pdfInput}      type="file" aria-label="Choose a PDF to edit" accept=".pdf"    onChange={handlePDFFile}    style={{ display: 'none' }} />
+      <input ref={imgInput}      type="file" aria-label="Choose an image to place on the PDF" accept="image/*" onChange={handleImageFile}  style={{ display: 'none' }} />
+      <input ref={mergeInput}    type="file" aria-label="Choose a PDF to insert" accept=".pdf"    onChange={handleMergeFile}  style={{ display: 'none' }} />
+      <input ref={imgPageInput}  type="file" aria-label="Choose an image to insert as a page" accept="image/*" onChange={handleImagePage}  style={{ display: 'none' }} />
+      <input ref={wmImageInput}  type="file" aria-label="Choose a watermark image" accept="image/*" onChange={handleWmImageFile} style={{ display: 'none' }} />
 
       {/* ── HEADER ───────────────────────────────────────────────── */}
       <header style={{
@@ -3043,7 +3212,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           {/* Mobile sidebar toggle */}
           {isMobile && (
-            <button onClick={() => setShowSidebar(v => !v)}
+            <button onClick={() => setShowSidebar(v => !v)} aria-label={showSidebar ? 'Hide page thumbnails' : 'Show page thumbnails'} aria-expanded={showSidebar}
               style={mobileIconBtn}>☰</button>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none' }}>
@@ -3078,6 +3247,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
             editingName ? (
               <input
                 autoFocus
+                aria-label="PDF file name"
                 value={pdfName}
                 onChange={e => setPdfName(e.target.value)}
                 onBlur={() => setEditingName(false)}
@@ -3158,7 +3328,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
           {/* Mobile properties toggle */}
           {isMobile && (
             <button onClick={() => setShowPanel(v => !v)} style={{
-              width: 34, height: 34, borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
+              width: 44, height: 44, borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
               background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.8)',
               cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>⚙</button>
@@ -3179,7 +3349,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
           {onRequestClose && (
             <button onClick={onRequestClose} title="Close editor" aria-label="Close editor" style={{
               display: 'flex', alignItems: 'center', gap: 5, padding: isMobile ? 0 : '6px 12px',
-              width: isMobile ? 34 : undefined, height: isMobile ? 34 : undefined,
+              width: isMobile ? 44 : undefined, height: isMobile ? 44 : undefined,
               borderRadius: 8, border: '1px solid rgba(255,255,255,0.15)',
               background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.8)',
               fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s',
@@ -3433,7 +3603,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                         {mt:'square'    as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>},
                         {mt:'filledbox' as const, icon:<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>},
                       ]).map(({mt,icon})=>(
-                        <button key={mt} onClick={()=>setActiveMarkType(mt)} style={{width:44,height:36,borderRadius:9,border:`1.5px solid ${activeMarkType===mt?'#6366f1':'#e2e8f0'}`,background:activeMarkType===mt?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:activeMarkType===mt?'#fff':'#475569',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.15s'}}>
+                        <button key={mt} aria-label={`Use ${mt} mark`} aria-pressed={activeMarkType===mt} onClick={()=>setActiveMarkType(mt)} style={{width:44,height:36,borderRadius:9,border:`1.5px solid ${activeMarkType===mt?'#6366f1':'#e2e8f0'}`,background:activeMarkType===mt?'linear-gradient(135deg,#6366f1,#818cf8)':'#f8faff',color:activeMarkType===mt?'#fff':'#475569',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.15s'}}>
                           {icon}
                         </button>
                       ))}
@@ -3443,14 +3613,14 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                     <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
                     <div style={{display:'flex',gap:5,flexWrap:'wrap',maxWidth:180}}>
                       {['#16a34a','#dc2626','#1d4ed8','#7c3aed','#ea580c','#0e7490','#1e293b','#f59e0b'].map(c=>(
-                        <button key={c} onClick={()=>setMarkColor(c)} style={{width:22,height:38,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
+                        <button key={c} aria-label={`Use mark colour ${c}`} aria-pressed={markColor===c} onClick={()=>setMarkColor(c)} style={{width:22,height:38,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
                       ))}
-                      <input type="color" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:22,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1}}/>
+                      <input type="color" aria-label="Custom mark colour" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:22,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1}}/>
                     </div>
                   </div>
                   <div style={{minWidth:160}}>
                     <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Thickness {markStrokeWidth}px</p>
-                    <input type="range" min={0.5} max={20} step={0.5} value={markStrokeWidth}
+                    <input type="range" aria-label="Mark thickness" min={0.5} max={20} step={0.5} value={markStrokeWidth}
                       onChange={e=>setMarkStrokeWidth(parseFloat(e.target.value))}
                       style={{width:'100%',minWidth:0,accentColor:'#6366f1',cursor:'pointer'}}/>
                   </div>
@@ -3470,12 +3640,12 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                   <div style={{display:'flex',gap:12,alignItems:'flex-end'}}>
                     <div>
                       <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.06em',textTransform:'uppercase'}}>Stroke</p>
-                      <input type="color" value={shapeStroke} onChange={e=>setShapeStroke(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
+                      <input type="color" aria-label="Shape stroke colour" value={shapeStroke} onChange={e=>setShapeStroke(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
                     </div>
                     <div>
                       <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.06em',textTransform:'uppercase'}}>Fill</p>
                       <div style={{display:'flex',alignItems:'center',gap:5}}>
-                        <input type="color" value={shapeFill||'#ffffff'} onChange={e=>setShapeFill(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
+                        <input type="color" aria-label="Shape fill colour" value={shapeFill||'#ffffff'} onChange={e=>setShapeFill(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
                         <button onClick={()=>setShapeFill('')} style={{fontSize:10,color:shapeFill?'#475569':'#6366f1',border:'none',background:'transparent',cursor:'pointer',fontWeight:shapeFill?400:700,padding:'2px 4px'}}>None</button>
                       </div>
                     </div>
@@ -3493,7 +3663,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                 <div style={{position:'absolute',top:'100%',left:0,zIndex:200,background:'#fff',borderRadius:'0 0 14px 14px',padding:'14px',boxShadow:'0 8px 32px rgba(0,0,0,0.15)',border:'1px solid #e8ecf5',display:'flex',gap:14,alignItems:'flex-end',flexWrap:'wrap'}}>
                   <div>
                     <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
-                    <input type="color" value={drawColor} onChange={e=>setDrawColor(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
+                    <input type="color" aria-label="Drawing colour" value={drawColor} onChange={e=>setDrawColor(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
                   </div>
                   <div>
                     <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Width</p>
@@ -3503,7 +3673,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                   </div>
                   <div style={{minWidth:110}}>
                     <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Opacity {Math.round(drawOpacity*100)}%</p>
-                    <input type="range" min={0.1} max={1} step={0.05} value={drawOpacity} onChange={e=>setDrawOpacity(parseFloat(e.target.value))} style={{width:'100%'}}/>
+                    <input type="range" aria-label="Drawing opacity" min={0.1} max={1} step={0.05} value={drawOpacity} onChange={e=>setDrawOpacity(parseFloat(e.target.value))} style={{width:'100%'}}/>
                   </div>
                 </div>
               )}
@@ -3516,7 +3686,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                     ))}
                   </div>
                   <div style={{display:'flex',gap:6}}>
-                    <input value={customStampText} onChange={e=>setCustomStampText(e.target.value.toUpperCase())} placeholder="CUSTOM STAMP" maxLength={20} style={{flex:1,padding:'5px 8px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:11,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em'}}/>
+                    <input aria-label="Custom stamp text" value={customStampText} onChange={e=>setCustomStampText(e.target.value.toUpperCase())} placeholder="CUSTOM STAMP" maxLength={20} style={{flex:1,padding:'5px 8px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:11,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em'}}/>
                     <button onClick={()=>{if(customStampText.trim()){handleAddStamp(customStampText.trim(),'#475569');setShowStampMenu(false);setCustomStampText('')}}} style={{padding:'5px 12px',borderRadius:7,border:'none',background:'linear-gradient(135deg,#6366f1,#818cf8)',color:'#fff',fontSize:11,fontWeight:700,cursor:'pointer'}}>Add</button>
                   </div>
                 </div>
@@ -3539,29 +3709,29 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                   </div>
                   {/* Preview */}
                   {wmImageSrc && <div style={{width:'100%',height:48,display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
-                    <img src={wmImageSrc} alt="wm" style={{height:44,maxWidth:120,objectFit:'contain',borderRadius:4,border:'1px solid #e2e8f0',opacity:wmOpacity}} />
+                    <img src={wmImageSrc} alt="Watermark preview" style={{height:44,maxWidth:120,objectFit:'contain',borderRadius:4,border:'1px solid #e2e8f0',opacity:wmOpacity}} />
                     <span style={{fontSize:10,color:'#94a3b8'}}>Image preview (opacity applied)</span>
                   </div>}
                   {/* Text (only if no image) */}
                   {!wmImageSrc && <div>
                     <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Text</p>
-                    <input value={wmText} onChange={e=>setWmText(e.target.value.toUpperCase())} placeholder="WATERMARK TEXT" maxLength={30} style={{padding:'5px 10px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:12,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em',width:160}}/>
+                    <input aria-label="Watermark text" value={wmText} onChange={e=>setWmText(e.target.value.toUpperCase())} placeholder="WATERMARK TEXT" maxLength={30} style={{padding:'5px 10px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:12,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em',width:160}}/>
                   </div>}
                   {!wmImageSrc && <div>
                     <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
-                    <input type="color" value={wmColor} onChange={e=>setWmColor(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
+                    <input type="color" aria-label="Watermark colour" value={wmColor} onChange={e=>setWmColor(e.target.value)} style={{width:36,height:28,border:'none',borderRadius:5,cursor:'pointer',padding:2}}/>
                   </div>}
                   <div style={{minWidth:100}}>
                     <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Opacity {Math.round(wmOpacity*100)}%</p>
-                    <input type="range" min={0.05} max={0.8} step={0.05} value={wmOpacity} onChange={e=>setWmOpacity(parseFloat(e.target.value))} style={{width:'100%'}}/>
+                    <input type="range" aria-label="Watermark opacity" min={0.05} max={0.8} step={0.05} value={wmOpacity} onChange={e=>setWmOpacity(parseFloat(e.target.value))} style={{width:'100%'}}/>
                   </div>
                   {!wmImageSrc && <div style={{minWidth:90}}>
                     <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Size {wmFontSize}pt</p>
-                    <input type="range" min={20} max={120} step={4} value={wmFontSize} onChange={e=>setWmFontSize(parseInt(e.target.value))} style={{width:'100%'}}/>
+                    <input type="range" aria-label="Watermark text size" min={20} max={120} step={4} value={wmFontSize} onChange={e=>setWmFontSize(parseInt(e.target.value))} style={{width:'100%'}}/>
                   </div>}
                   <div style={{minWidth:90}}>
                     <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Angle {wmRotation}°</p>
-                    <input type="range" min={-90} max={90} step={5} value={wmRotation} onChange={e=>setWmRotation(parseInt(e.target.value))} style={{width:'100%'}}/>
+                    <input type="range" aria-label="Watermark angle" min={-90} max={90} step={5} value={wmRotation} onChange={e=>setWmRotation(parseInt(e.target.value))} style={{width:'100%'}}/>
                   </div>
                   <button onClick={applyWatermark} style={{padding:'7px 16px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#6366f1,#818cf8)',color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap'}}>Apply to All Pages</button>
                 </div>
@@ -3588,6 +3758,34 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
               onDragLeave={() => setIsDragOver(false)}
               onDrop={handleDrop}
             >
+              {!uploading && recoveryPrompt && (
+                <div role="status" aria-live="polite" style={{
+                  position: 'absolute', top: 16, left: 16, right: 16, zIndex: 5,
+                  display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+                  background: '#fff', borderRadius: 14, padding: '12px 16px',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #e2e8f0',
+                }}>
+                  <span style={{ fontSize: 20, flexShrink: 0 }}>💾</span>
+                  <span style={{ flex: 1, minWidth: 180, fontSize: 13, color: '#334155' }}>
+                    Unsaved work from {relativeTime(recoveryPrompt.lastModified)} found — restore it?
+                  </span>
+                  <button onClick={() => restoreSession(recoveryPrompt)} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#6366f1', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Restore</button>
+                  <button onClick={discardRecovery} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Discard</button>
+                </div>
+              )}
+              {!uploading && (
+                <button
+                  onClick={e => { e.stopPropagation(); openRecentFiles() }}
+                  style={{
+                    position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 5,
+                    padding: '7px 16px', borderRadius: 99, border: '1px solid #e2e8f0', background: '#fff',
+                    color: '#64748b', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  🕘 Recent files
+                </button>
+              )}
               {uploading ? (
                 /* ── Loading state ── */
                 <div style={{
@@ -3598,7 +3796,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                 }}>
                   {/* Circular progress ring */}
                   <div style={{ position: 'relative', width: 108, height: 108 }}>
-                    <svg width="108" height="108" viewBox="0 0 108 108" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
+                    <svg role="progressbar" aria-label="PDF opening progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={uploadProgress} width="108" height="108" viewBox="0 0 108 108" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
                       <circle cx="54" cy="54" r="46" stroke="#e2e8f0" strokeWidth="7" fill="none"/>
                       <circle cx="54" cy="54" r="46" stroke="url(#uploadGrad)" strokeWidth="7" fill="none"
                         strokeLinecap="round"
@@ -3644,12 +3842,21 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                     <p style={{ margin: '8px 0 0', fontSize: 11, color: '#94a3b8', textAlign: 'center' }}>
                       Please wait while we process your PDF
                     </p>
+                    <button type="button" onClick={cancelInitialUpload} style={{ width: '100%', minHeight: 44, marginTop: 14, borderRadius: 10, border: '1px solid #d7dce5', background: '#fff', color: '#475569', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                      Cancel opening
+                    </button>
                   </div>
                 </div>
               ) : (
                 /* ── Drop zone UI ── */
                 <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Choose a PDF to open in the editor"
                   onClick={() => pdfInput.current?.click()}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pdfInput.current?.click() }
+                  }}
                   style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22,
                     padding: isMobile ? '32px 24px' : '56px 64px',
@@ -3666,6 +3873,11 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
                     transform: isDragOver ? 'scale(1.02)' : 'scale(1)',
                   }}
                 >
+                  {uploadError && (
+                    <div role="alert" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #fecaca', background: '#fff5f5', color: '#b4233c', fontSize: 13, lineHeight: 1.45 }}>
+                      {uploadError}
+                    </div>
+                  )}
                   {/* Icon */}
                   <div style={{ position: 'relative' }}>
                     <div style={{
@@ -4294,7 +4506,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
 
       {/* ── MOBILE BOTTOM TOOLBAR ────────────────────────────────── */}
       {isMobile && slots.length > 0 && (
-        <nav style={{
+        <nav className="mobile-editor-toolbar" style={{
           display: 'flex', alignItems: 'center',
           height: 72, flexShrink: 0, paddingBottom: 4,
           background: 'linear-gradient(180deg,#0d1526 0%,#090e1a 100%)',
@@ -4411,7 +4623,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
 
       {/* Mobile rotate panel */}
       {isMobile && showRotateMenu && (
-        <div style={{
+        <div className="mobile-editor-sheet" style={{
           position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
           background: '#fff', borderTop: '1px solid #e8ecf5',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
@@ -4465,7 +4677,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
 
       {/* Mobile shape picker */}
       {isMobile && toolMode === 'shape' && showShapeMenu && (
-        <div style={{
+        <div className="mobile-editor-sheet" style={{
           position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
           background: '#fff', borderTop: '1px solid #e8ecf5',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
@@ -4490,12 +4702,12 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
           <div style={{display:'flex',gap:12,alignItems:'flex-end',flexWrap:'wrap'}}>
             <div>
               <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.06em',textTransform:'uppercase'}}>Stroke</p>
-              <input type="color" value={shapeStroke} onChange={e=>setShapeStroke(e.target.value)} style={{width:44,height:36,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
+              <input type="color" aria-label="Shape stroke colour" value={shapeStroke} onChange={e=>setShapeStroke(e.target.value)} style={{width:44,height:36,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
             </div>
             <div>
               <p style={{margin:'0 0 5px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.06em',textTransform:'uppercase'}}>Fill</p>
               <div style={{display:'flex',alignItems:'center',gap:5}}>
-                <input type="color" value={shapeFill||'#ffffff'} onChange={e=>setShapeFill(e.target.value)} style={{width:44,height:36,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
+                <input type="color" aria-label="Shape fill colour" value={shapeFill||'#ffffff'} onChange={e=>setShapeFill(e.target.value)} style={{width:44,height:36,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
                 <button onClick={()=>setShapeFill('')} style={{fontSize:10,color:shapeFill?'#475569':'#6366f1',border:'none',background:'transparent',cursor:'pointer',fontWeight:shapeFill?400:700,padding:'4px 6px'}}>None</button>
               </div>
             </div>
@@ -4511,7 +4723,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
 
       {/* Mobile mark options panel */}
       {isMobile && toolMode === 'mark' && showMarkMenu && (
-        <div style={{
+        <div className="mobile-editor-sheet" style={{
           position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
           background: '#fff', borderTop: '1px solid #e8ecf5',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
@@ -4539,7 +4751,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
           {/* Thickness */}
           <div style={{flex:1,minWidth:140}}>
             <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Thickness {markStrokeWidth}px</p>
-            <input type="range" min={0.5} max={20} step={0.5} value={markStrokeWidth}
+            <input type="range" aria-label="Mark thickness" min={0.5} max={20} step={0.5} value={markStrokeWidth}
               onChange={e=>setMarkStrokeWidth(parseFloat(e.target.value))}
               style={{width:'100%',minWidth:0,accentColor:'#6366f1',cursor:'pointer'}}/>
           </div>
@@ -4548,9 +4760,9 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
             <p style={{margin:'0 0 7px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
             <div style={{display:'flex',gap:6,flexWrap:'wrap',maxWidth:220}}>
               {['#16a34a','#dc2626','#1d4ed8','#7c3aed','#ea580c','#0e7490','#1e293b','#f59e0b'].map(c=>(
-                <button key={c} onClick={()=>setMarkColor(c)} style={{width:26,height:38,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
+                <button key={c} aria-label={`Use mark colour ${c}`} aria-pressed={markColor===c} onClick={()=>setMarkColor(c)} style={{width:26,height:38,borderRadius:'50%',background:c,border:'none',cursor:'pointer',outline:markColor===c?'2.5px solid #6366f1':'2px solid transparent',outlineOffset:2}}/>
               ))}
-              <input type="color" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:26,height:38,border:'none',borderRadius:6,cursor:'pointer',padding:1}}/>
+              <input type="color" aria-label="Custom mark colour" value={markColor} onChange={e=>setMarkColor(e.target.value)} style={{width:26,height:38,border:'none',borderRadius:6,cursor:'pointer',padding:1}}/>
             </div>
           </div>
         </div>
@@ -4558,7 +4770,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
 
       {/* Mobile stamp panel */}
       {isMobile && showStampMenu && (
-        <div style={{
+        <div className="mobile-editor-sheet" style={{
           position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
           background: '#fff', borderTop: '1px solid #e8ecf5',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
@@ -4572,7 +4784,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
             ))}
           </div>
           <div style={{display:'flex',gap:6}}>
-            <input value={customStampText} onChange={e=>setCustomStampText(e.target.value.toUpperCase())} placeholder="CUSTOM STAMP" maxLength={20} style={{flex:1,padding:'6px 10px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:12,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em'}}/>
+            <input aria-label="Custom stamp text" value={customStampText} onChange={e=>setCustomStampText(e.target.value.toUpperCase())} placeholder="CUSTOM STAMP" maxLength={20} style={{flex:1,padding:'6px 10px',borderRadius:8,border:'1px solid #e2e8f0',fontSize:12,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em'}}/>
             <button onClick={()=>{if(customStampText.trim()){handleAddStamp(customStampText.trim(),'#475569');setShowStampMenu(false);setCustomStampText('')}}} style={{padding:'6px 14px',borderRadius:8,border:'none',background:'linear-gradient(135deg,#6366f1,#818cf8)',color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}}>Add</button>
           </div>
         </div>
@@ -4580,7 +4792,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
 
       {/* Mobile draw options panel */}
       {isMobile && toolMode === 'draw' && showDrawMenu && (
-        <div style={{
+        <div className="mobile-editor-sheet" style={{
           position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
           background: '#fff', borderTop: '1px solid #e8ecf5',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
@@ -4590,7 +4802,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
         }}>
           <div>
             <p style={{margin:'0 0 6px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Color</p>
-            <input type="color" value={drawColor} onChange={e=>setDrawColor(e.target.value)} style={{width:48,height:38,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
+            <input type="color" aria-label="Drawing colour" value={drawColor} onChange={e=>setDrawColor(e.target.value)} style={{width:48,height:38,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
           </div>
           <div>
             <p style={{margin:'0 0 6px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Width</p>
@@ -4600,14 +4812,14 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
           </div>
           <div style={{flex:1,minWidth:140}}>
             <p style={{margin:'0 0 6px',fontSize:10,fontWeight:700,color:'#94a3b8',letterSpacing:'0.08em',textTransform:'uppercase'}}>Opacity {Math.round(drawOpacity*100)}%</p>
-            <input type="range" min={0.1} max={1} step={0.05} value={drawOpacity} onChange={e=>setDrawOpacity(parseFloat(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
+            <input type="range" aria-label="Drawing opacity" min={0.1} max={1} step={0.05} value={drawOpacity} onChange={e=>setDrawOpacity(parseFloat(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
           </div>
         </div>
       )}
 
       {/* Mobile watermark panel */}
       {isMobile && showWmPanel && (
-        <div style={{
+        <div className="mobile-editor-sheet" style={{
           position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
           background: '#fff', borderTop: '1px solid #e8ecf5',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
@@ -4622,31 +4834,31 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
             <button onClick={()=>wmImageInput.current?.click()} style={{padding:'5px 12px',borderRadius:6,border:'none',fontSize:12,fontWeight:700,cursor:'pointer',background:wmImageSrc?'linear-gradient(135deg,#6366f1,#818cf8)':'#f1f5f9',color:wmImageSrc?'#fff':'#64748b'}}>Image{wmImageSrc?' ✓':''}</button>
             {wmImageSrc && <button onClick={()=>setWmImageSrc('')} style={{padding:'5px 8px',borderRadius:6,border:'1px solid #fca5a5',background:'#fff1f2',color:'#dc2626',fontSize:11,fontWeight:700,cursor:'pointer'}}>Remove</button>}
           </div>
-          {wmImageSrc && <img src={wmImageSrc} alt="wm" style={{height:44,maxWidth:120,objectFit:'contain',borderRadius:4,border:'1px solid #e2e8f0',opacity:wmOpacity}} />}
+          {wmImageSrc && <img src={wmImageSrc} alt="Watermark preview" style={{height:44,maxWidth:120,objectFit:'contain',borderRadius:4,border:'1px solid #e2e8f0',opacity:wmOpacity}} />}
           {!wmImageSrc && (
             <div style={{display:'flex',gap:10,flexWrap:'wrap',alignItems:'flex-end'}}>
               <div style={{flex:1,minWidth:140}}>
                 <p style={{margin:'0 0 4px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase'}}>Text</p>
-                <input value={wmText} onChange={e=>setWmText(e.target.value.toUpperCase())} placeholder="WATERMARK" maxLength={30} style={{width:'100%',padding:'6px 10px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em'}}/>
+                <input aria-label="Watermark text" value={wmText} onChange={e=>setWmText(e.target.value.toUpperCase())} placeholder="WATERMARK" maxLength={30} style={{width:'100%',padding:'6px 10px',borderRadius:7,border:'1px solid #e2e8f0',fontSize:13,fontWeight:700,fontFamily:'Manrope,sans-serif',outline:'none',letterSpacing:'0.05em'}}/>
               </div>
               <div>
                 <p style={{margin:'0 0 4px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase'}}>Color</p>
-                <input type="color" value={wmColor} onChange={e=>setWmColor(e.target.value)} style={{width:44,height:36,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
+                <input type="color" aria-label="Watermark colour" value={wmColor} onChange={e=>setWmColor(e.target.value)} style={{width:44,height:36,border:'none',borderRadius:7,cursor:'pointer',padding:2}}/>
               </div>
             </div>
           )}
           <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
             <div style={{flex:1,minWidth:120}}>
               <p style={{margin:'0 0 4px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase'}}>Opacity {Math.round(wmOpacity*100)}%</p>
-              <input type="range" min={0.05} max={0.8} step={0.05} value={wmOpacity} onChange={e=>setWmOpacity(parseFloat(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
+              <input type="range" aria-label="Watermark opacity" min={0.05} max={0.8} step={0.05} value={wmOpacity} onChange={e=>setWmOpacity(parseFloat(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
             </div>
             {!wmImageSrc && <div style={{flex:1,minWidth:120}}>
               <p style={{margin:'0 0 4px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase'}}>Size {wmFontSize}pt</p>
-              <input type="range" min={20} max={120} step={4} value={wmFontSize} onChange={e=>setWmFontSize(parseInt(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
+              <input type="range" aria-label="Watermark text size" min={20} max={120} step={4} value={wmFontSize} onChange={e=>setWmFontSize(parseInt(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
             </div>}
             <div style={{flex:1,minWidth:120}}>
               <p style={{margin:'0 0 4px',fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase'}}>Angle {wmRotation}°</p>
-              <input type="range" min={-90} max={90} step={5} value={wmRotation} onChange={e=>setWmRotation(parseInt(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
+              <input type="range" aria-label="Watermark angle" min={-90} max={90} step={5} value={wmRotation} onChange={e=>setWmRotation(parseInt(e.target.value))} style={{width:'100%',accentColor:'#6366f1'}}/>
             </div>
           </div>
           <button onClick={()=>{applyWatermark();setShowWmPanel(false)}} style={{padding:'9px 16px',borderRadius:9,border:'none',background:'linear-gradient(135deg,#6366f1,#818cf8)',color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}}>Apply to All Pages</button>
@@ -4655,7 +4867,7 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
 
       {/* Mobile image / signature opacity bottom sheet */}
       {isMobile && selectedEl && (selectedEl.type === 'image' || selectedEl.type === 'signature') && toolMode === 'select' && (
-        <div style={{
+        <div className="mobile-editor-sheet" style={{
           position: 'fixed', bottom: 76, left: 0, right: 0, zIndex: 200,
           background: '#fff', borderTop: '1px solid #e8ecf5',
           boxShadow: '0 -8px 32px rgba(0,0,0,0.18)',
@@ -4666,13 +4878,14 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
             <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               {selectedEl.type === 'signature' ? 'Signature' : 'Image'} · {Math.round(selectedEl.width)}×{Math.round(selectedEl.height)} px
             </p>
-            <button onClick={() => setSelectedId(null)} style={{ border: 'none', background: 'transparent', color: '#94a3b8', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 4px' }}>×</button>
+            <button onClick={() => setSelectedId(null)} aria-label={`Close ${selectedEl.type} properties`} style={{ border: 'none', background: 'transparent', color: '#64748b', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 4px' }}>×</button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ fontSize: 12, color: '#475569', fontWeight: 600, whiteSpace: 'nowrap' }}>
               Opacity {Math.round((selectedEl.opacity ?? 1) * 100)}%
             </span>
             <input
+              aria-label={`${selectedEl.type} opacity`}
               type="range" min={10} max={100} step={5}
               value={Math.round((selectedEl.opacity ?? 1) * 100)}
               onChange={e => updateEl(selectedEl.id, { opacity: parseInt(e.target.value) / 100 } as Partial<PDFElement>)}
@@ -4727,6 +4940,68 @@ export default function PDFEditor({ hideChatFill = false, hideAutoFill = false, 
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 90 }}
           onClick={() => { setShowSidebar(false); setShowPanel(false) }}
         />
+      )}
+
+      {/* Recent Files panel — locally saved sessions, IndexedDB only */}
+      {showRecentFiles && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          onClick={() => setShowRecentFiles(false)}
+        >
+          <div
+            ref={recentDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="recent-files-title"
+            tabIndex={-1}
+            onClick={e => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 460, maxHeight: '70vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(0,0,0,0.24)' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: '1px solid #e2e8f0' }}>
+              <h2 id="recent-files-title" style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#0f172a' }}>Recent files</h2>
+              <button ref={recentCloseButtonRef} type="button" aria-label="Close recent files" onClick={() => setShowRecentFiles(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#64748b' }}>✕</button>
+            </div>
+            <div style={{ overflowY: 'auto', flex: 1, padding: recentSessions.length ? '8px 12px' : 0 }}>
+              {recentSessions.length === 0 ? (
+                <div style={{ padding: '48px 24px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+                  No saved sessions yet — your work is autosaved locally as you edit.
+                </div>
+              ) : (
+                recentSessions.map(session => (
+                  <div key={session.id} role="button" tabIndex={0} aria-label={`Restore ${session.filename}`} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 8px', borderRadius: 10, cursor: 'pointer' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    onClick={() => restoreSession(session)}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        restoreSession(session)
+                      }
+                    }}
+                  >
+                    <span style={{ fontSize: 20, flexShrink: 0 }}>📄</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.filename}</div>
+                      <div style={{ fontSize: 11.5, color: '#94a3b8' }}>{relativeTime(session.lastModified)}</div>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Delete saved session ${session.filename}`}
+                      onClick={e => { e.stopPropagation(); deleteRecentSession(session.id) }}
+                      title="Delete"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#cbd5e1', fontSize: 15, flexShrink: 0, padding: 4 }}
+                    >✕</button>
+                  </div>
+                ))
+              )}
+            </div>
+            {recentSessions.length > 0 && (
+              <div style={{ padding: '10px 16px', borderTop: '1px solid #e2e8f0' }}>
+                <button onClick={clearAllRecentSessions} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 12, fontWeight: 700 }}>Clear all</button>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )
@@ -4832,6 +5107,6 @@ function FBtn({ onClick, children, title }: { onClick: () => void; children: Rea
 
 const mobileIconBtn: React.CSSProperties = {
   background: 'rgba(255,255,255,0.15)', border: 'none', borderRadius: 7,
-  color: '#fff', cursor: 'pointer', width: 34, height: 34,
+  color: '#fff', cursor: 'pointer', width: 44, height: 44,
   fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
 }

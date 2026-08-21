@@ -79,6 +79,7 @@ export default function PropertiesPanel({
           <>
             <Card title="Typography">
               <select
+                aria-label="Text font family"
                 value={txt.fontFamily}
                 onChange={e => onUpdate(txt.id, { fontFamily: e.target.value } as Partial<PDFElement>)}
                 style={selectStyle}
@@ -93,29 +94,29 @@ export default function PropertiesPanel({
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0' }}>
                 <span style={{ fontSize: 11.5, color: '#475569' }}>Size</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Btn onClick={() => onUpdate(txt.id, { fontSize: Math.max(6, txt.fontSize - 1) } as Partial<PDFElement>)}>−</Btn>
+                  <Btn label="Decrease text size" onClick={() => onUpdate(txt.id, { fontSize: Math.max(6, txt.fontSize - 1) } as Partial<PDFElement>)}>−</Btn>
                   <span style={{ fontSize: 12.5, fontWeight: 700, minWidth: 26, textAlign: 'center' }}>{txt.fontSize}</span>
-                  <Btn onClick={() => onUpdate(txt.id, { fontSize: Math.min(120, txt.fontSize + 1) } as Partial<PDFElement>)}>+</Btn>
+                  <Btn label="Increase text size" onClick={() => onUpdate(txt.id, { fontSize: Math.min(120, txt.fontSize + 1) } as Partial<PDFElement>)}>+</Btn>
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0' }}>
                 <span style={{ fontSize: 11.5, color: '#475569' }}>Line spacing</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Btn onClick={() => onUpdate(txt.id, { lineHeight: Math.max(1, +((txt.lineHeight ?? 1.4) - 0.1).toFixed(1)) } as Partial<PDFElement>)}>−</Btn>
+                  <Btn label="Decrease line spacing" onClick={() => onUpdate(txt.id, { lineHeight: Math.max(1, +((txt.lineHeight ?? 1.4) - 0.1).toFixed(1)) } as Partial<PDFElement>)}>−</Btn>
                   <span style={{ fontSize: 12.5, fontWeight: 700, minWidth: 26, textAlign: 'center' }}>{(txt.lineHeight ?? 1.4).toFixed(1)}</span>
-                  <Btn onClick={() => onUpdate(txt.id, { lineHeight: Math.min(3, +((txt.lineHeight ?? 1.4) + 0.1).toFixed(1)) } as Partial<PDFElement>)}>+</Btn>
+                  <Btn label="Increase line spacing" onClick={() => onUpdate(txt.id, { lineHeight: Math.min(3, +((txt.lineHeight ?? 1.4) + 0.1).toFixed(1)) } as Partial<PDFElement>)}>+</Btn>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                 {([['B', 'bold', { fontWeight: 700 }], ['I', 'italic', { fontStyle: 'italic' }], ['U', 'underline', { textDecoration: 'underline' }]] as const).map(([label, key, sty]) => (
-                  <Toggle key={key} active={!!txt[key]} style={sty}
+                  <Toggle key={key} active={!!txt[key]} label={`${key} text`} style={sty}
                     onClick={() => onUpdate(txt.id, { [key]: !txt[key] } as Partial<PDFElement>)}>{label}</Toggle>
                 ))}
                 <div style={{ flex: 1 }} />
                 {(['left', 'center', 'right'] as const).map(align => (
-                  <Toggle key={align} active={txt.align === align}
+                  <Toggle key={align} active={txt.align === align} label={`Align text ${align}`}
                     onClick={() => onUpdate(txt.id, { align } as Partial<PDFElement>)}
                     style={{ fontSize: 10 }}>
                     {align === 'left' ? '⇤' : align === 'center' ? '⇔' : '⇥'}
@@ -127,7 +128,7 @@ export default function PropertiesPanel({
             <Card title="Text Color">
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
                 {PRESET_COLORS.map(c => (
-                  <button key={c} onClick={() => onUpdate(txt.id, { color: c } as Partial<PDFElement>)}
+                  <button key={c} aria-label={`Use text colour ${c}`} aria-pressed={txt.color === c} onClick={() => onUpdate(txt.id, { color: c } as Partial<PDFElement>)}
                     style={{
                       width: 20, height: 20, borderRadius: '50%', background: c, border: 'none', cursor: 'pointer',
                       outline: txt.color === c ? '2px solid #4f6ef7' : '2px solid transparent', outlineOffset: 2,
@@ -136,7 +137,7 @@ export default function PropertiesPanel({
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 11, color: '#64748b' }}>Custom</span>
-                <input type="color" value={txt.color}
+                <input type="color" aria-label="Custom text colour" value={txt.color}
                   onChange={e => onUpdate(txt.id, { color: e.target.value } as Partial<PDFElement>)}
                   style={{ width: 28, height: 38, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 1 }} />
                 <span style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{txt.color}</span>
@@ -145,9 +146,9 @@ export default function PropertiesPanel({
 
             <Card title="Background">
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Toggle active={txt.bgColor === ''} onClick={() => onUpdate(txt.id, { bgColor: '' } as Partial<PDFElement>)}
+                <Toggle active={txt.bgColor === ''} label="Use no text background" onClick={() => onUpdate(txt.id, { bgColor: '' } as Partial<PDFElement>)}
                   style={{ fontSize: 11, padding: '2px 8px' }}>None</Toggle>
-                <input type="color" value={txt.bgColor || '#ffffff'}
+                <input type="color" aria-label="Text background colour" value={txt.bgColor || '#ffffff'}
                   onChange={e => onUpdate(txt.id, { bgColor: e.target.value } as Partial<PDFElement>)}
                   style={{ width: 28, height: 38, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 1 }} />
               </div>
@@ -160,7 +161,7 @@ export default function PropertiesPanel({
           <Card title="Highlight">
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
               {HIGHLIGHT_PRESETS.map(c => (
-                <button key={c} onClick={() => onUpdate(hl.id, { color: c } as Partial<PDFElement>)}
+                <button key={c} aria-label={`Use highlight colour ${c}`} aria-pressed={hl.color === c} onClick={() => onUpdate(hl.id, { color: c } as Partial<PDFElement>)}
                   style={{
                     width: 22, height: 38, borderRadius: 4, background: c, border: 'none', cursor: 'pointer',
                     outline: hl.color === c ? '2px solid #4f6ef7' : '2px solid transparent', outlineOffset: 2,
@@ -169,7 +170,7 @@ export default function PropertiesPanel({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
               <span style={{ fontSize: 11, color: '#64748b' }}>Custom</span>
-              <input type="color" value={hl.color}
+              <input type="color" aria-label="Custom highlight colour" value={hl.color}
                 onChange={e => onUpdate(hl.id, { color: e.target.value } as Partial<PDFElement>)}
                 style={{ width: 28, height: 38, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 1 }} />
             </div>
@@ -177,7 +178,7 @@ export default function PropertiesPanel({
               <span style={{ fontSize: 11, color: '#64748b' }}>Opacity</span>
               <span style={{ fontSize: 11, fontWeight: 700 }}>{Math.round(hl.opacity * 100)}%</span>
             </div>
-            <input type="range" min={10} max={90} step={5} value={Math.round(hl.opacity * 100)}
+            <input type="range" aria-label="Highlight opacity" min={10} max={90} step={5} value={Math.round(hl.opacity * 100)}
               onChange={e => onUpdate(hl.id, { opacity: parseInt(e.target.value) / 100 } as Partial<PDFElement>)}
               style={{ width: '100%', accentColor: '#4f6ef7' }} />
           </Card>
@@ -194,7 +195,7 @@ export default function PropertiesPanel({
                 { mt: 'square'    as const, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> },
                 { mt: 'filledbox' as const, icon: <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> },
               ]).map(({ mt, icon }) => (
-                <button key={mt} onClick={() => onUpdate(mk.id, { markType: mt } as Partial<PDFElement>)} style={{
+                <button key={mt} aria-label={`Use ${mt} mark`} aria-pressed={mk.markType === mt} onClick={() => onUpdate(mk.id, { markType: mt } as Partial<PDFElement>)} style={{
                   width: 36, height: 32, borderRadius: 8, padding: 0,
                   border: `1.5px solid ${mk.markType === mt ? '#4f6ef7' : '#e2e8f0'}`,
                   background: mk.markType === mt ? '#4f6ef7' : '#f8faff',
@@ -208,15 +209,15 @@ export default function PropertiesPanel({
             <p style={{ margin:'0 0 6px', fontSize:10, fontWeight:700, color:'#94a3b8', letterSpacing:'0.06em', textTransform:'uppercase' }}>Color</p>
             <div style={{ display:'flex', flexWrap:'wrap', gap:5, marginBottom:7 }}>
               {['#16a34a','#dc2626','#1d4ed8','#7c3aed','#ea580c','#0e7490','#1e293b','#f59e0b'].map(c => (
-                <button key={c} onClick={() => onUpdate(mk.id, { color: c } as Partial<PDFElement>)} style={{ width:20, height:20, borderRadius:'50%', background:c, border:'none', cursor:'pointer', outline:mk.color===c?'2px solid #4f6ef7':'2px solid transparent', outlineOffset:2 }}/>
+                <button key={c} aria-label={`Use mark colour ${c}`} aria-pressed={mk.color === c} onClick={() => onUpdate(mk.id, { color: c } as Partial<PDFElement>)} style={{ width:20, height:20, borderRadius:'50%', background:c, border:'none', cursor:'pointer', outline:mk.color===c?'2px solid #4f6ef7':'2px solid transparent', outlineOffset:2 }}/>
               ))}
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:9 }}>
               <span style={{ fontSize:11, color:'#64748b' }}>Custom</span>
-              <input type="color" value={mk.color} onChange={e => onUpdate(mk.id, { color: e.target.value } as Partial<PDFElement>)} style={{ width:28, height:38, border:'none', borderRadius:4, cursor:'pointer', padding:1 }}/>
+              <input type="color" aria-label="Custom mark colour" value={mk.color} onChange={e => onUpdate(mk.id, { color: e.target.value } as Partial<PDFElement>)} style={{ width:28, height:38, border:'none', borderRadius:4, cursor:'pointer', padding:1 }}/>
             </div>
             <p style={{ margin:'0 0 5px', fontSize:10, fontWeight:700, color:'#94a3b8', letterSpacing:'0.06em', textTransform:'uppercase' }}>Thickness {mk.strokeWidth}px</p>
-            <input type="range" min={0.5} max={20} step={0.5} value={mk.strokeWidth}
+            <input type="range" aria-label="Mark thickness" min={0.5} max={20} step={0.5} value={mk.strokeWidth}
               onChange={e => onUpdate(mk.id, { strokeWidth: parseFloat(e.target.value) } as Partial<PDFElement>)}
               style={{ width:'100%', minWidth:0, accentColor:'#4f6ef7', cursor:'pointer' }}/>
           </Card>
@@ -228,12 +229,12 @@ export default function PropertiesPanel({
             <p style={{ margin:'0 0 6px', fontSize:10, fontWeight:700, color:'#94a3b8', letterSpacing:'0.06em', textTransform:'uppercase' }}>Background</p>
             <div style={{ display:'flex', flexWrap:'wrap', gap:5, marginBottom:7 }}>
               {['#fef9c3','#dcfce7','#dbeafe','#fce7f3','#ede9fe','#fff7ed'].map(c => (
-                <button key={c} onClick={() => onUpdate(ann.id, { color: c } as Partial<PDFElement>)} style={{ width:22, height:38, borderRadius:4, background:c, border:`2px solid ${ann.color===c?'#4f6ef7':'#e2e8f0'}`, cursor:'pointer' }}/>
+                <button key={c} aria-label={`Use note background ${c}`} aria-pressed={ann.color === c} onClick={() => onUpdate(ann.id, { color: c } as Partial<PDFElement>)} style={{ width:22, height:38, borderRadius:4, background:c, border:`2px solid ${ann.color===c?'#4f6ef7':'#e2e8f0'}`, cursor:'pointer' }}/>
               ))}
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:6 }}>
               <span style={{ fontSize:11, color:'#64748b' }}>Custom</span>
-              <input type="color" value={ann.color||'#fef9c3'} onChange={e => onUpdate(ann.id, { color: e.target.value } as Partial<PDFElement>)} style={{ width:28, height:38, border:'none', borderRadius:4, cursor:'pointer', padding:1 }}/>
+              <input type="color" aria-label="Custom note background" value={ann.color||'#fef9c3'} onChange={e => onUpdate(ann.id, { color: e.target.value } as Partial<PDFElement>)} style={{ width:28, height:38, border:'none', borderRadius:4, cursor:'pointer', padding:1 }}/>
             </div>
           </Card>
         )}
@@ -256,14 +257,14 @@ export default function PropertiesPanel({
               <div>
                 <p style={{ margin:'0 0 4px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Stroke</p>
                 <div style={{ display:'flex', gap:5, alignItems:'center' }}>
-                  <input type="color" value={shp.strokeColor||'#1d4ed8'} onChange={e => onUpdate(shp.id, { strokeColor: e.target.value } as Partial<PDFElement>)} style={{ width:26, height:38, border:'none', borderRadius:4, cursor:'pointer', padding:1 }}/>
+                  <input type="color" aria-label="Shape stroke colour" value={shp.strokeColor||'#1d4ed8'} onChange={e => onUpdate(shp.id, { strokeColor: e.target.value } as Partial<PDFElement>)} style={{ width:26, height:38, border:'none', borderRadius:4, cursor:'pointer', padding:1 }}/>
                   <span style={{ fontSize:9.5, color:'#94a3b8', fontFamily:'monospace' }}>{shp.strokeColor}</span>
                 </div>
               </div>
               <div>
                 <p style={{ margin:'0 0 4px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Fill</p>
                 <div style={{ display:'flex', gap:5, alignItems:'center' }}>
-                  <input type="color" value={shp.fillColor||'#ffffff'} onChange={e => onUpdate(shp.id, { fillColor: e.target.value } as Partial<PDFElement>)} style={{ width:26, height:38, border:'none', borderRadius:4, cursor:'pointer', padding:1 }}/>
+                  <input type="color" aria-label="Shape fill colour" value={shp.fillColor||'#ffffff'} onChange={e => onUpdate(shp.id, { fillColor: e.target.value } as Partial<PDFElement>)} style={{ width:26, height:38, border:'none', borderRadius:4, cursor:'pointer', padding:1 }}/>
                   <button onClick={() => onUpdate(shp.id, { fillColor: '' } as Partial<PDFElement>)} style={{ fontSize:9.5, color:shp.fillColor?'#64748b':'#4f6ef7', border:'none', background:'transparent', cursor:'pointer', fontWeight:shp.fillColor?400:700 }}>None</button>
                 </div>
               </div>
@@ -287,7 +288,7 @@ export default function PropertiesPanel({
               <span style={{ fontSize: 11, color: '#64748b' }}>Opacity</span>
               <span style={{ fontSize: 11, fontWeight: 700 }}>{Math.round((selected.opacity ?? 1) * 100)}%</span>
             </div>
-            <input type="range" min={10} max={100} step={5}
+            <input type="range" aria-label={`${selected.type} opacity`} min={10} max={100} step={5}
               value={Math.round((selected.opacity ?? 1) * 100)}
               onChange={e => onUpdate(selected.id, { opacity: parseInt(e.target.value) / 100 } as Partial<PDFElement>)}
               style={{ width: '100%', accentColor: '#4f6ef7' }} />
@@ -299,11 +300,11 @@ export default function PropertiesPanel({
           <Card title="Stamp">
             <p style={{ margin:'0 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Color</p>
             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
-              <input type="color" value={stmp.color.startsWith('#')?stmp.color:'#1d4ed8'} onChange={e=>onUpdate(stmp.id,{color:e.target.value} as Partial<PDFElement>)} style={{ width:28,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1 }}/>
+              <input type="color" aria-label="Stamp colour" value={stmp.color.startsWith('#')?stmp.color:'#1d4ed8'} onChange={e=>onUpdate(stmp.id,{color:e.target.value} as Partial<PDFElement>)} style={{ width:28,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1 }}/>
               <span style={{ fontSize:9.5,color:'#94a3b8',fontFamily:'monospace' }}>{stmp.color}</span>
             </div>
             <p style={{ margin:'0 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Opacity {Math.round(stmp.opacity*100)}%</p>
-            <input type="range" min={10} max={100} step={5} value={Math.round(stmp.opacity*100)}
+            <input type="range" aria-label="Stamp opacity" min={10} max={100} step={5} value={Math.round(stmp.opacity*100)}
               onChange={e=>onUpdate(stmp.id,{opacity:parseInt(e.target.value)/100} as Partial<PDFElement>)}
               style={{ width:'100%', accentColor:'#4f6ef7' }}/>
           </Card>
@@ -314,14 +315,14 @@ export default function PropertiesPanel({
           <Card title="Drawing">
             <p style={{ margin:'0 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Color</p>
             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
-              <input type="color" value={drw.color} onChange={e=>onUpdate(drw.id,{color:e.target.value} as Partial<PDFElement>)} style={{ width:28,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1 }}/>
+              <input type="color" aria-label="Drawing colour" value={drw.color} onChange={e=>onUpdate(drw.id,{color:e.target.value} as Partial<PDFElement>)} style={{ width:28,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1 }}/>
             </div>
             <p style={{ margin:'0 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Stroke Width</p>
             <div style={{ display:'flex', gap:4, marginBottom:10 }}>
               {[2,4,8].map(w=><button key={w} onClick={()=>onUpdate(drw.id,{strokeWidth:w} as Partial<PDFElement>)} style={{ flex:1,padding:'4px 0',borderRadius:6,fontSize:11,fontWeight:700,border:`1.5px solid ${drw.strokeWidth===w?'#4f6ef7':'#e2e8f0'}`,background:drw.strokeWidth===w?'#4f6ef7':'#f8faff',color:drw.strokeWidth===w?'#fff':'#475569',cursor:'pointer' }}>{w}px</button>)}
             </div>
             <p style={{ margin:'0 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Opacity {Math.round(drw.opacity*100)}%</p>
-            <input type="range" min={10} max={100} step={5} value={Math.round(drw.opacity*100)}
+            <input type="range" aria-label="Drawing opacity" min={10} max={100} step={5} value={Math.round(drw.opacity*100)}
               onChange={e=>onUpdate(drw.id,{opacity:parseInt(e.target.value)/100} as Partial<PDFElement>)}
               style={{ width:'100%', accentColor:'#4f6ef7' }}/>
           </Card>
@@ -335,13 +336,13 @@ export default function PropertiesPanel({
               <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', border:'1.5px solid #e2e8f0', borderRadius:8, padding:'4px 8px' }}>
                 <span style={{ fontSize:11, color:'#475569' }}>Rows</span>
                 <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                  <Btn onClick={() => {
+                  <Btn label="Remove table row" onClick={() => {
                     if (tbl.rows <= 1) return
                     const rowHeights = tbl.rowHeights.slice(0, -1)
                     onUpdate(tbl.id, { rows: tbl.rows - 1, cells: tbl.cells.slice(0, -1), rowHeights, height: rowHeights.reduce((a,b)=>a+b,0) } as Partial<PDFElement>)
                   }}>−</Btn>
                   <span style={{ fontSize:12.5, fontWeight:700, minWidth:16, textAlign:'center' }}>{tbl.rows}</span>
-                  <Btn onClick={() => {
+                  <Btn label="Add table row" onClick={() => {
                     const newRowH = tbl.rowHeights.length ? tbl.rowHeights[tbl.rowHeights.length-1] : 30
                     const rowHeights = [...tbl.rowHeights, newRowH]
                     onUpdate(tbl.id, { rows: tbl.rows + 1, cells: [...tbl.cells, Array.from({length:tbl.cols},()=>'')], rowHeights, height: rowHeights.reduce((a,b)=>a+b,0) } as Partial<PDFElement>)
@@ -351,13 +352,13 @@ export default function PropertiesPanel({
               <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', border:'1.5px solid #e2e8f0', borderRadius:8, padding:'4px 8px' }}>
                 <span style={{ fontSize:11, color:'#475569' }}>Cols</span>
                 <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                  <Btn onClick={() => {
+                  <Btn label="Remove table column" onClick={() => {
                     if (tbl.cols <= 1) return
                     const colWidths = tbl.colWidths.slice(0, -1)
                     onUpdate(tbl.id, { cols: tbl.cols - 1, cells: tbl.cells.map(row => row.slice(0, -1)), colWidths, width: colWidths.reduce((a,b)=>a+b,0) } as Partial<PDFElement>)
                   }}>−</Btn>
                   <span style={{ fontSize:12.5, fontWeight:700, minWidth:16, textAlign:'center' }}>{tbl.cols}</span>
-                  <Btn onClick={() => {
+                  <Btn label="Add table column" onClick={() => {
                     const newColW = tbl.colWidths.length ? tbl.colWidths[tbl.colWidths.length-1] : 80
                     const colWidths = [...tbl.colWidths, newColW]
                     onUpdate(tbl.id, { cols: tbl.cols + 1, cells: tbl.cells.map(row => [...row, '']), colWidths, width: colWidths.reduce((a,b)=>a+b,0) } as Partial<PDFElement>)
@@ -369,22 +370,22 @@ export default function PropertiesPanel({
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '8px 0' }}>
               <span style={{ fontSize: 11.5, color: '#475569' }}>Font size</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Btn onClick={() => onUpdate(tbl.id, { fontSize: Math.max(6, tbl.fontSize - 1) } as Partial<PDFElement>)}>−</Btn>
+                <Btn label="Decrease table text size" onClick={() => onUpdate(tbl.id, { fontSize: Math.max(6, tbl.fontSize - 1) } as Partial<PDFElement>)}>−</Btn>
                 <span style={{ fontSize: 12.5, fontWeight: 700, minWidth: 26, textAlign: 'center' }}>{tbl.fontSize}</span>
-                <Btn onClick={() => onUpdate(tbl.id, { fontSize: Math.min(48, tbl.fontSize + 1) } as Partial<PDFElement>)}>+</Btn>
+                <Btn label="Increase table text size" onClick={() => onUpdate(tbl.id, { fontSize: Math.min(48, tbl.fontSize + 1) } as Partial<PDFElement>)}>+</Btn>
               </div>
             </div>
 
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', margin:'8px 0' }}>
               <span style={{ fontSize: 11.5, color: '#475569' }}>Header row</span>
-              <Toggle active={tbl.headerRow} onClick={() => onUpdate(tbl.id, { headerRow: !tbl.headerRow } as Partial<PDFElement>)} style={{ fontSize: 10, padding: '2px 10px' }}>
+              <Toggle active={tbl.headerRow} label="Use first row as table header" onClick={() => onUpdate(tbl.id, { headerRow: !tbl.headerRow } as Partial<PDFElement>)} style={{ fontSize: 10, padding: '2px 10px' }}>
                 {tbl.headerRow ? 'On' : 'Off'}
               </Toggle>
             </div>
 
             <p style={{ margin:'10px 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Border</p>
             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8 }}>
-              <input type="color" value={tbl.borderColor} onChange={e=>onUpdate(tbl.id,{borderColor:e.target.value} as Partial<PDFElement>)} style={{ width:28,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1 }}/>
+              <input type="color" aria-label="Table border colour" value={tbl.borderColor} onChange={e=>onUpdate(tbl.id,{borderColor:e.target.value} as Partial<PDFElement>)} style={{ width:28,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1 }}/>
               <span style={{ fontSize:9.5,color:'#94a3b8',fontFamily:'monospace' }}>{tbl.borderColor}</span>
             </div>
             <div style={{ display:'flex', gap:4 }}>
@@ -399,18 +400,18 @@ export default function PropertiesPanel({
           <Card title="Watermark">
             <p style={{ margin:'0 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Color</p>
             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
-              <input type="color" value={wm.color} onChange={e=>onUpdate(wm.id,{color:e.target.value} as Partial<PDFElement>)} style={{ width:28,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1 }}/>
+              <input type="color" aria-label="Watermark colour" value={wm.color} onChange={e=>onUpdate(wm.id,{color:e.target.value} as Partial<PDFElement>)} style={{ width:28,height:38,border:'none',borderRadius:4,cursor:'pointer',padding:1 }}/>
             </div>
             <p style={{ margin:'0 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Opacity {Math.round(wm.opacity*100)}%</p>
-            <input type="range" min={5} max={80} step={5} value={Math.round(wm.opacity*100)}
+            <input type="range" aria-label="Watermark opacity" min={5} max={80} step={5} value={Math.round(wm.opacity*100)}
               onChange={e=>onUpdate(wm.id,{opacity:parseInt(e.target.value)/100} as Partial<PDFElement>)}
               style={{ width:'100%', accentColor:'#4f6ef7', marginBottom:8 }}/>
             <p style={{ margin:'0 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Size {wm.fontSize}pt</p>
-            <input type="range" min={20} max={120} step={4} value={wm.fontSize}
+            <input type="range" aria-label="Watermark text size" min={20} max={120} step={4} value={wm.fontSize}
               onChange={e=>onUpdate(wm.id,{fontSize:parseInt(e.target.value)} as Partial<PDFElement>)}
               style={{ width:'100%', accentColor:'#4f6ef7', marginBottom:8 }}/>
             <p style={{ margin:'0 0 5px', fontSize:9.5, fontWeight:700, color:'#94a3b8', textTransform:'uppercase', letterSpacing:'0.05em' }}>Angle {wm.rotation}°</p>
-            <input type="range" min={-90} max={90} step={5} value={wm.rotation}
+            <input type="range" aria-label="Watermark angle" min={-90} max={90} step={5} value={wm.rotation}
               onChange={e=>onUpdate(wm.id,{rotation:parseInt(e.target.value)} as Partial<PDFElement>)}
               style={{ width:'100%', accentColor:'#4f6ef7' }}/>
           </Card>
@@ -423,7 +424,7 @@ export default function PropertiesPanel({
               <span style={{ fontSize:11, color:'#64748b' }}>Opacity</span>
               <span style={{ fontSize:11, fontWeight:700 }}>{Math.round((selected.opacity??1)*100)}%</span>
             </div>
-            <input type="range" min={10} max={100} step={5} value={Math.round((selected.opacity??1)*100)}
+            <input type="range" aria-label={`${selected.type} opacity`} min={10} max={100} step={5} value={Math.round((selected.opacity??1)*100)}
               onChange={e=>onUpdate(selected.id,{opacity:parseInt(e.target.value)/100} as Partial<PDFElement>)}
               style={{ width:'100%', accentColor:'#4f6ef7' }}/>
           </Card>
@@ -488,9 +489,9 @@ export default function PropertiesPanel({
 }
 
 // ── Mini helpers ──────────────────────────────────────────────────────────────
-function Btn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+function Btn({ onClick, children, label }: { onClick: () => void; children: React.ReactNode; label?: string }) {
   return (
-    <button onClick={onClick} style={{
+    <button onClick={onClick} aria-label={label} style={{
       width: 22, height: 38, borderRadius: 5, border: '1px solid #e2e8f0',
       background: '#fff', cursor: 'pointer', fontSize: 14, color: '#475569',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -498,11 +499,11 @@ function Btn({ onClick, children }: { onClick: () => void; children: React.React
   )
 }
 
-function Toggle({ active, onClick, children, style }: {
-  active: boolean; onClick: () => void; children: React.ReactNode; style?: React.CSSProperties
+function Toggle({ active, onClick, children, style, label }: {
+  active: boolean; onClick: () => void; children: React.ReactNode; style?: React.CSSProperties; label?: string
 }) {
   return (
-    <button onClick={onClick} style={{
+    <button onClick={onClick} aria-label={label} aria-pressed={active} style={{
       width: 26, height: 38, borderRadius: 5, border: 'none',
       background: active ? '#4f6ef7' : '#f1f5f9',
       color: active ? '#fff' : '#475569',

@@ -1,11 +1,15 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SignInButton, SignUpButton } from '@clerk/nextjs'
-import { X, Sparkles, Lock } from 'lucide-react'
+import { X, Lock } from 'lucide-react'
 import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
+import ToolWorkflowStatus from '@/components/ToolWorkflowStatus'
+import { useModalFocusTrap } from '@/hooks/useModalFocusTrap'
 
 export default function SignInModal() {
   const [open, setOpen] = useState(false)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const show = () => setOpen(true)
@@ -13,16 +17,7 @@ export default function SignInModal() {
     return () => window.removeEventListener('signin-needed', show)
   }, [])
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
-    document.body.style.overflow = 'hidden'
-    window.addEventListener('keydown', onKey)
-    return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', onKey)
-    }
-  }, [open])
+  useModalFocusTrap(open, dialogRef, () => setOpen(false), closeButtonRef)
 
   if (!open) return null
 
@@ -30,6 +25,7 @@ export default function SignInModal() {
 
   return (
     <div
+      className="mobile-modal-backdrop"
       onClick={close}
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
@@ -39,60 +35,45 @@ export default function SignInModal() {
       }}
     >
       <div
+        ref={dialogRef}
+        className="mobile-modal-surface"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sign-in-modal-title"
+        tabIndex={-1}
         onClick={e => e.stopPropagation()}
         style={{
           background: '#fff', borderRadius: 24, padding: '40px 36px',
           maxWidth: 420, width: '100%', textAlign: 'center', position: 'relative',
           boxShadow: '0 32px 80px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06)',
-          animation: 'simo-in .22s cubic-bezier(.22,1,.36,1)',
         }}
       >
-        <style>{`
-          @keyframes simo-in { from { opacity:0; transform:scale(.92) translateY(10px) } to { opacity:1; transform:none } }
-        `}</style>
-
         {/* Close */}
         <button
+          ref={closeButtonRef}
+          type="button"
           onClick={close}
           aria-label="Close"
           style={{
             position: 'absolute', top: 14, right: 14,
-            width: 30, height: 30, borderRadius: '50%',
+            width: 44, height: 44, borderRadius: '50%',
             background: '#f3f4f6', border: 'none', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#9ca3af',
           }}
         >
-          <X size={14} strokeWidth={2.5} />
+          <X size={14} strokeWidth={2.5} aria-hidden="true" />
         </button>
 
-        {/* Icon */}
-        <div style={{
-          width: 64, height: 64, borderRadius: 20,
-          background: 'linear-gradient(135deg,#7c3aed,#a855f7)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 22px',
-          boxShadow: '0 8px 28px rgba(124,58,237,.32)',
-        }}>
-          <Sparkles size={28} color="#fff" strokeWidth={1.8} />
-        </div>
+        <ToolWorkflowStatus
+          state="authentication-required"
+          heading="Sign in to use AI tools"
+          headingId="sign-in-modal-title"
+          message={`A signed-in free account includes ${FREE_AI_DAILY_LIMIT} metered AI actions per UTC day. No credit card is required.`}
+          preserveMessage="Your selected document and settings remain in this tab."
+        />
 
-        {/* Headline */}
-        <h2 style={{
-          fontSize: 23, fontWeight: 800, color: '#1d1d1f',
-          letterSpacing: '-0.04em', lineHeight: 1.15, margin: '0 0 10px',
-          fontFamily: 'var(--font-jakarta,system-ui,sans-serif)',
-        }}>
-          Sign in to use AI tools
-        </h2>
-
-        <p style={{
-          fontSize: 14, color: '#6b7280', lineHeight: 1.65, margin: '0 0 28px',
-          fontFamily: 'var(--font-dm,system-ui,sans-serif)',
-        }}>
-          A signed-in free account includes <strong style={{ color: '#1d1d1f', fontWeight: 700 }}>{FREE_AI_DAILY_LIMIT} metered AI actions per UTC day</strong>.
-          No credit card required.
-        </p>
+        <div style={{ height: 18 }} aria-hidden="true" />
 
         {/* Sign In */}
         <SignInButton mode="modal">
@@ -135,7 +116,7 @@ export default function SignInModal() {
           fontSize: 11.5, color: '#9ca3af',
           fontFamily: 'var(--font-dm,system-ui,sans-serif)',
         }}>
-          <Lock size={11} strokeWidth={2} />
+          <Lock size={11} strokeWidth={2} aria-hidden="true" />
           Free account · No card needed · {FREE_AI_DAILY_LIMIT} AI actions per UTC day
         </div>
       </div>

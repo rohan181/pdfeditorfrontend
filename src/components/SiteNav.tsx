@@ -1,480 +1,308 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/nextjs'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { SignInButton, UserButton, useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import Image from 'next/image'
-import { TOOL_COUNT } from '@/lib/toolMeta'
-import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
+import { usePathname } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import {
-  Upload, FilePen, Minimize2, Merge, Split, PenTool,
-  FileType, FileSpreadsheet, Presentation, Sparkles, KeyRound, Layers, UnlockKeyhole,
-  WandSparkles, ScanText, Languages, BrainCircuit, ClipboardList,
-  ImagePlus, Images, Stamp, Scissors, EyeOff, Trash2,
-  MessageSquareText, MonitorPlay, RotateCw,
-  ListOrdered, Table, Code, FormInput, Wrench, GitCompareArrows, Fingerprint, Paperclip, ImageDown, Link2, Unlink2,
-  ChevronDown, X, Menu, ArrowRight, Camera,
+  ArrowRight,
+  ChevronDown,
+  FilePenLine,
+  FileSearch,
+  FileType2,
+  Layers3,
+  Menu,
+  Minimize2,
+  ShieldCheck,
+  Sparkles,
+  Upload,
+  X,
 } from 'lucide-react'
+import { FREE_AI_DAILY_LIMIT } from '@/lib/productMessaging'
+import { toolMetaMap, type ToolMeta } from '@/lib/toolMeta'
+import {
+  PRODUCT_PRIORITY_TOOL_SLUGS,
+  TOOL_CATEGORIES,
+  getCategoryHref,
+  getCategoryTools,
+  getToolAccessPresentation,
+  getToolCategory,
+  type ToolCategory,
+  type ToolCategoryId,
+} from '@/lib/toolDiscovery'
 
-const SP  = { type: 'spring', stiffness: 400, damping: 30 } as const
-const FI  = { fontFamily: 'var(--font-inter,system-ui,sans-serif)' }
-const RED = '#E24B4A'
-const E   = [0.25, 0.46, 0.45, 0.94] as [number, number, number, number]
-
-type Tier    = 'free' | 'ai' | 'pro'
-type NavTool = { name: string; href: string; tier: Tier; Icon: LucideIcon; bg: string }
-type NavCat  = { label: string; href: string; color: string; Icon: LucideIcon; tools: NavTool[] }
-
-const NAV_CATS: NavCat[] = [
-  {
-    label: 'AI Tools', href: '/ai-pdf-form-filler', color: '#7c3aed', Icon: Sparkles,
-    tools: [
-      { name: 'AI Form Filler', href: '/ai-pdf-form-filler', tier: 'ai',   Icon: WandSparkles,  bg: '#7c3aed' },
-      { name: 'Chat with PDF',  href: '/chat-with-pdf',      tier: 'ai',   Icon: MessageSquareText, bg: '#6d28d9' },
-      { name: 'PDF Summarizer', href: '/pdf-summarizer',     tier: 'ai',   Icon: Sparkles,      bg: '#8b5cf6' },
-      { name: 'OCR Scanner',    href: '/pdf-ocr',            tier: 'ai',   Icon: ScanText,      bg: '#6366f1' },
-      { name: 'PDF Translator', href: '/pdf-translator',     tier: 'ai',   Icon: Languages,     bg: '#0891b2' },
-      { name: 'PDF Mind Map',   href: '/mind-map',           tier: 'ai',   Icon: BrainCircuit,  bg: '#a855f7' },
-      { name: 'Quiz Creator',   href: '/quiz-creator',       tier: 'ai',   Icon: ClipboardList, bg: '#7c3aed' },
-    ],
-  },
-  {
-    label: 'Edit', href: '/pdf-editor', color: '#2563eb', Icon: FilePen,
-    tools: [
-      { name: 'PDF Editor',    href: '/pdf-editor',   tier: 'free', Icon: FilePen,           bg: '#2563eb' },
-      { name: 'PDF Annotator', href: '/pdf-annotate', tier: 'free', Icon: MessageSquareText, bg: '#0ea5e9' },
-      { name: 'PDF Viewer',    href: '/pdf-viewer',   tier: 'free', Icon: MonitorPlay,       bg: '#0a84ff' },
-    ],
-  },
-  {
-    label: 'Page Tools', href: '/#tools', color: '#f97316', Icon: Layers,
-    tools: [
-      { name: 'Page Manager',     href: '/pdf-page-manager', tier: 'free', Icon: Layers,      bg: '#f59e0b' },
-      { name: 'PDF Cropper',      href: '/pdf-cropper',      tier: 'free', Icon: Scissors,    bg: '#0d9488' },
-      { name: 'Add Page Numbers', href: '/add-page-numbers', tier: 'free', Icon: ListOrdered, bg: '#f97316' },
-      { name: 'Page Labels',      href: '/pdf-page-labels',   tier: 'free', Icon: ListOrdered, bg: '#c2410c' },
-      { name: 'Rotate PDF',       href: '/rotate-pdf',       tier: 'free', Icon: RotateCw,    bg: '#ea580c' },
-      { name: 'Extract Pages',    href: '/extract-pages',    tier: 'free', Icon: Scissors,    bg: '#0891b2' },
-      { name: 'Delete Pages',     href: '/delete-pages',     tier: 'free', Icon: Trash2,      bg: '#dc2626' },
-    ],
-  },
-  {
-    label: 'Convert', href: '/#tools', color: '#16a34a', Icon: FileType,
-    tools: [
-      { name: 'PDF → Word',    href: '/pdf-to-word',   tier: 'ai',  Icon: FileType,        bg: '#16a34a' },
-      { name: 'PDF → Excel',   href: '/pdf-to-excel',  tier: 'ai',  Icon: FileSpreadsheet, bg: '#15803d' },
-      { name: 'PDF → PPT',     href: '/pdf-to-ppt',    tier: 'ai',  Icon: Presentation,    bg: '#d97706' },
-      { name: 'Word → PDF',    href: '/word-to-pdf',   tier: 'free', Icon: FileType,        bg: '#2563eb' },
-      { name: 'Excel → PDF',   href: '/excel-to-pdf',  tier: 'free', Icon: Table,           bg: '#059669' },
-      { name: 'PPT → PDF',     href: '/ppt-to-pdf',    tier: 'free', Icon: Presentation,    bg: '#b45309' },
-      { name: 'Image to PDF',  href: '/image-to-pdf',  tier: 'free', Icon: ImagePlus,       bg: '#7c3aed' },
-      { name: 'Scan to PDF',   href: '/scan-to-pdf',   tier: 'free', Icon: Camera,          bg: '#0d9488' },
-      { name: 'PDF to Images', href: '/pdf-to-images', tier: 'free', Icon: Images,          bg: '#db2777' },
-      { name: 'TXT → PDF',     href: '/txt-to-pdf',    tier: 'free', Icon: FileType,        bg: '#6366f1' },
-      { name: 'HTML → PDF',    href: '/html-to-pdf',   tier: 'free', Icon: Code,            bg: '#0891b2' },
-    ],
-  },
-  {
-    label: 'Protect', href: '/pdf-signer', color: '#dc2626', Icon: KeyRound,
-    tools: [
-      { name: 'PDF E-Signer',  href: '/pdf-signer',        tier: 'free', Icon: PenTool,  bg: '#0d9488' },
-      { name: 'Password Lock', href: '/pdf-password-lock', tier: 'free', Icon: KeyRound, bg: '#dc2626' },
-      { name: 'Unlock PDF', href: '/pdf-unlock', tier: 'free', Icon: UnlockKeyhole, bg: '#2563eb' },
-      { name: 'Watermark',     href: '/pdf-watermark',     tier: 'free', Icon: Stamp,    bg: '#2563eb' },
-      { name: 'PDF Redactor',  href: '/pdf-redactor',      tier: 'free', Icon: EyeOff,   bg: '#374151' },
-    ],
-  },
-  {
-    label: 'Organize', href: '/#tools', color: '#d97706', Icon: Layers,
-    tools: [
-      { name: 'PDF Merger',   href: '/pdf-merger',       tier: 'free', Icon: Merge,      bg: '#7c3aed' },
-      { name: 'PDF Splitter', href: '/pdf-splitter',     tier: 'free', Icon: Split,      bg: '#e11d48' },
-      { name: 'Compress PDF', href: '/pdf-compressor',   tier: 'free', Icon: Minimize2,  bg: '#d97706' },
-      { name: 'Form Builder', href: '/pdf-form-builder', tier: 'free', Icon: FormInput,  bg: '#0369a1' },
-      { name: 'Repair PDF',   href: '/pdf-repair',       tier: 'free', Icon: Wrench,     bg: '#ea580c' },
-      { name: 'Flatten PDF',  href: '/pdf-flatten',      tier: 'free', Icon: Layers,     bg: '#0d9488' },
-      { name: 'Compare PDF',  href: '/pdf-compare',      tier: 'free', Icon: GitCompareArrows, bg: '#4f46e5' },
-      { name: 'Remove Metadata', href: '/remove-pdf-metadata', tier: 'free', Icon: Fingerprint, bg: '#0284c7' },
-      { name: 'Extract Attachments', href: '/extract-pdf-attachments', tier: 'free', Icon: Paperclip, bg: '#0d9488' },
-      { name: 'Extract Images', href: '/extract-pdf-images', tier: 'free', Icon: ImageDown, bg: '#9333ea' },
-      { name: 'Export Form Data', href: '/export-pdf-form-data', tier: 'free', Icon: FileSpreadsheet, bg: '#0891b2' },
-      { name: 'Extract Bookmarks', href: '/extract-pdf-bookmarks', tier: 'free', Icon: ListOrdered, bg: '#2563eb' },
-      { name: 'Manage Bookmarks', href: '/pdf-bookmarks-manager', tier: 'free', Icon: ListOrdered, bg: '#4f46e5' },
-      { name: 'Extract Links', href: '/extract-pdf-links', tier: 'free', Icon: Link2, bg: '#0d9488' },
-      { name: 'Remove Links', href: '/remove-pdf-links', tier: 'free', Icon: Unlink2, bg: '#e11d48' },
-      { name: 'Export Comments', href: '/export-pdf-comments', tier: 'free', Icon: MessageSquareText, bg: '#7c3aed' },
-    ],
-  },
-]
-
-const TIER_BADGE = {
-  free: { label: 'Free',       bg: 'rgba(22,163,74,.1)',  color: '#15803d' },
-  ai:   { label: `${FREE_AI_DAILY_LIMIT}/UTC day`, bg: 'rgba(124,58,237,.1)', color: '#7c3aed' },
-  pro:  { label: 'Pro',        bg: 'rgba(8,145,178,.1)',  color: '#0e7490' },
+const CATEGORY_ICONS: Record<ToolCategoryId, LucideIcon> = {
+  ai: Sparkles,
+  edit: FilePenLine,
+  convert: FileType2,
+  organize: Layers3,
+  compress: Minimize2,
+  protect: ShieldCheck,
+  extract: FileSearch,
 }
 
 const NAV_LINKS = [
-  { label: 'Guides',  href: '/guides'  },
+  { label: 'Guides', href: '/guides' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'About',   href: '/about'   },
-]
+  { label: 'About', href: '/about' },
+] as const
 
-// ── shared touch-button style ─────────────────────────────────────────────────
-const TAP: React.CSSProperties = {
-  WebkitTapHighlightColor: 'transparent',
-  touchAction: 'manipulation',
-  userSelect: 'none',
-  cursor: 'pointer',
+function isPathCurrent(pathname: string, href: string) {
+  return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`))
+}
+
+function menuTools(category: ToolCategory, currentTool?: ToolMeta) {
+  const categoryTools = getCategoryTools(category)
+  const priorities = PRODUCT_PRIORITY_TOOL_SLUGS
+    .map(slug => toolMetaMap[slug])
+    .filter((tool): tool is ToolMeta => Boolean(tool) && category.slugs.includes(tool.slug))
+  const candidates = currentTool && category.slugs.includes(currentTool.slug)
+    ? [currentTool, ...priorities, ...categoryTools]
+    : [...priorities, ...categoryTools]
+  return candidates.filter((tool, index, items) => items.findIndex(item => item.slug === tool.slug) === index).slice(0, 3)
 }
 
 export default function SiteNav() {
+  const pathname = usePathname()
   const { isSignedIn, isLoaded } = useUser()
+  const currentSlug = pathname.split('/').filter(Boolean)[0] ?? ''
+  const currentTool = toolMetaMap[currentSlug]
+  const currentCategory = currentTool ? getToolCategory(currentTool.slug) : undefined
 
-  // subscription tier badge ("Free"/"Pro" shown in the corner near the account controls)
   const [subTier, setSubTier] = useState<'free' | 'pro' | null>(null)
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [mobileCategory, setMobileCategory] = useState<ToolCategoryId | null>(currentCategory?.id ?? null)
+  const toolsButtonRef = useRef<HTMLButtonElement>(null)
+  const toolsMenuRef = useRef<HTMLDivElement>(null)
+  const mobileButtonRef = useRef<HTMLButtonElement>(null)
+  const mobileDrawerRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (!isSignedIn) { setSubTier(null); return }
     let cancelled = false
     fetch('/api/subscription/status')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => { if (!cancelled && data?.tier) setSubTier(data.tier) })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => { if (!cancelled && (data?.tier === 'free' || data?.tier === 'pro')) setSubTier(data.tier) })
       .catch(() => {})
     return () => { cancelled = true }
   }, [isSignedIn])
 
-  // desktop dropdown
-  const [toolsOpen, setToolsOpen] = useState(false)
-  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const openMenu  = () => { clearTimeout(closeTimer.current!); setToolsOpen(true) }
-  const closeMenu = () => { closeTimer.current = setTimeout(() => setToolsOpen(false), 120) }
-  const keepMenu  = () => { clearTimeout(closeTimer.current!) }
-
-  // mobile drawer
-  const [mobOpen,  setMobOpen]  = useState(false)
-  const [toolsExp, setToolsExp] = useState(false)
-  const menuButtonRef = useRef<HTMLButtonElement>(null)
-
-  const closeMob = () => { setMobOpen(false); setToolsExp(false) }
+  useEffect(() => {
+    setToolsOpen(false)
+    setMobileOpen(false)
+    setMobileCategory(currentCategory?.id ?? null)
+  }, [pathname, currentCategory?.id])
 
   useEffect(() => {
-    if (!mobOpen) return
+    if (!toolsOpen) return
+    const focusTimer = window.setTimeout(() => toolsMenuRef.current?.querySelector<HTMLElement>('a[href], button')?.focus(), 0)
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      setToolsOpen(false)
+      toolsButtonRef.current?.focus()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [toolsOpen])
+
+  useEffect(() => {
+    if (!mobileOpen) return
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    const focusTimer = window.setTimeout(() => mobileDrawerRef.current?.querySelector<HTMLElement>('button, a[href]')?.focus(), 0)
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        closeMob()
-        requestAnimationFrame(() => menuButtonRef.current?.focus())
+        event.preventDefault()
+        setMobileOpen(false)
+        requestAnimationFrame(() => mobileButtonRef.current?.focus())
+        return
+      }
+      if (event.key !== 'Tab') return
+      const focusable = Array.from(mobileDrawerRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href]') ?? [])
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus()
       }
     }
     document.addEventListener('keydown', onKeyDown)
     return () => {
+      window.clearTimeout(focusTimer)
       document.body.style.overflow = previousOverflow
       document.removeEventListener('keydown', onKeyDown)
     }
-  }, [mobOpen])
+  }, [mobileOpen])
 
-  const { scrollY } = useScroll()
-  const navBg = useTransform(scrollY, [0, 80], ['rgba(255,255,255,0)', 'rgba(255,255,255,0.97)'])
+  const toolSectionCurrent = Boolean(currentTool)
+  const currentContext = useMemo(() => currentTool ? `${currentTool.name}, ${currentCategory?.label}` : 'PDF tools', [currentTool, currentCategory])
 
   return (
     <>
-      {/* ── Fixed bar ─────────────────────────────────────────────────────── */}
-      <motion.header style={{
-        position: 'fixed', inset: '0 0 auto', zIndex: 300, height: 56,
-        background: navBg, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(0,0,0,.07)',
-      }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 16px', height: '100%', display: 'flex', alignItems: 'center', gap: 4 }}>
-
-          {/* Logo */}
-          <Link prefetch={false} href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', marginRight: 20, flexShrink: 0 }}>
-            <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" style={{ height: 42, width: 'auto', display: 'block' }} priority />
+      <header className="site-nav-shell">
+        <div className="site-nav-inner">
+          <Link prefetch={false} href="/" className="site-nav-logo" aria-label="EditPDF AI home">
+            <Image src="/logo-v2.svg" alt="EditPDF AI" width={600} height={200} sizes="144px" priority />
           </Link>
 
-          {/* Desktop nav links — hidden on ≤900px via CSS */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
-            {/* Tools dropdown trigger */}
-            <div onMouseEnter={openMenu} onMouseLeave={closeMenu} style={{ position: 'relative' }}
-              className="sn-desk-only">
-              <button onClick={() => setToolsOpen(v => !v)} className="sn-tools-trigger"
-                style={{ ...FI, ...TAP, display: 'flex', alignItems: 'center', gap: 4, padding: '6px 11px', background: toolsOpen ? 'rgba(0,0,0,.05)' : 'transparent', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: toolsOpen ? 600 : 500, color: toolsOpen ? '#1d1d1f' : 'rgba(0,0,0,.62)' }}>
-                Tools
-                <motion.span style={{ display: 'flex', opacity: .55 }} animate={{ rotate: toolsOpen ? 180 : 0 }} transition={{ duration: .14 }}>
-                  <ChevronDown size={12} strokeWidth={2.5} />
-                </motion.span>
-              </button>
-            </div>
-
-            {NAV_LINKS.map(({ label, href }) => (
-              <Link prefetch={false} key={label} href={href} className="sn-desk-only" style={{ textDecoration: 'none' }}>
-                <motion.span whileHover={{ color: '#1d1d1f' }}
-                  style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 11px', fontSize: 13, fontWeight: 500, borderRadius: 8, color: 'rgba(0,0,0,.62)' }}>
-                  {label}
-                </motion.span>
-              </Link>
-            ))}
+          <nav className="site-nav-desktop" aria-label="Primary navigation">
+            <Link prefetch={false} href="/#tools" className="site-nav-link">All tools</Link>
+            <button
+              ref={toolsButtonRef}
+              type="button"
+              className={`site-nav-link site-nav-tools-button${toolSectionCurrent || toolsOpen ? ' is-current' : ''}`}
+              onClick={() => setToolsOpen(open => !open)}
+              onKeyDown={event => {
+                if (event.key !== 'ArrowDown') return
+                event.preventDefault(); setToolsOpen(true)
+              }}
+              aria-expanded={toolsOpen}
+              aria-controls="site-tools-menu"
+              aria-label={`Browse tool categories. Current context: ${currentContext}`}
+            >
+              Categories <ChevronDown size={13} aria-hidden="true" />
+            </button>
+            {NAV_LINKS.map(link => {
+              const current = isPathCurrent(pathname, link.href)
+              return (
+                <Link key={link.href} prefetch={false} href={link.href} className={`site-nav-link${current ? ' is-current' : ''}`} aria-current={current ? 'page' : undefined}>
+                  {link.label}
+                </Link>
+              )
+            })}
           </nav>
 
-          {/* Right section */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexShrink: 0 }}>
+          <div className="site-nav-actions">
             {isLoaded && isSignedIn ? (
               <>
-                <Link prefetch={false} href="/dashboard" className="sn-desk-only"
-                  style={{ ...FI, fontSize: 12.5, fontWeight: 700, color: '#1d1d1f', textDecoration: 'none',
-                    padding: '6px 14px', borderRadius: 99, border: '1.5px solid rgba(0,0,0,.16)', background: '#fff' }}>
-                  Dashboard
-                </Link>
+                <Link prefetch={false} href="/dashboard" className={`site-nav-account${pathname === '/dashboard' ? ' is-current' : ''}`} aria-current={pathname === '/dashboard' ? 'page' : undefined}>Dashboard</Link>
                 {subTier && (
-                  <Link prefetch={false} href={subTier === 'pro' ? '/manage-subscription' : '/pricing'}
-                    className="sn-desk-only" style={{ textDecoration: 'none' }}
-                    title={subTier === 'pro' ? 'Pro plan — no daily AI-action cap' : `Free plan — ${FREE_AI_DAILY_LIMIT} AI actions per UTC day`}>
-                    <span style={{ ...FI, display: 'inline-flex', alignItems: 'center', gap: 4,
-                      fontSize: 10.5, fontWeight: 800, letterSpacing: '.04em', padding: '4px 9px', borderRadius: 99,
-                      ...(subTier === 'pro'
-                        ? { color: '#7c3aed', background: 'rgba(124,58,237,.1)', border: '1px solid rgba(124,58,237,.24)' }
-                        : { color: '#4b5563', background: 'rgba(0,0,0,.045)', border: '1px solid rgba(0,0,0,.1)' }) }}>
-                      {subTier === 'pro' ? 'PRO' : 'FREE'}
-                    </span>
+                  <Link prefetch={false} href={subTier === 'pro' ? '/manage-subscription' : '/pricing'} className={`site-nav-plan is-${subTier}`} aria-label={subTier === 'pro' ? 'Pro plan, manage subscription' : `Free plan, ${FREE_AI_DAILY_LIMIT} AI actions per UTC day`}>
+                    {subTier === 'pro' ? 'Pro' : 'Free'}
                   </Link>
                 )}
                 <UserButton />
               </>
             ) : isLoaded ? (
-              <SignInButton mode="modal">
-                <button className="sn-desk-only" style={{ ...FI, ...TAP, fontSize: 13, fontWeight: 700,
-                  color: '#1d1d1f', background: '#fff', border: '1.5px solid rgba(0,0,0,.16)',
-                  padding: '6px 14px', borderRadius: 99, cursor: 'pointer', letterSpacing: '-0.02em' }}>
-                  Sign in
-                </button>
-              </SignInButton>
+              <SignInButton mode="modal"><button type="button" className="site-nav-account">Sign in</button></SignInButton>
             ) : null}
 
-            {/* Open Editor — desktop only */}
-            <Link prefetch={false} href="/pdf-editor" className="sn-desk-only"
-              style={{ ...FI, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 16px', background: '#1d1d1f', color: '#fff', borderRadius: 99, fontSize: 12.5, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.02em' }}>
-              <Upload size={12} strokeWidth={2.5} /> Open Editor
+            <Link prefetch={false} href="/pdf-editor" className={`site-nav-editor${pathname === '/pdf-editor' ? ' is-current' : ''}`} aria-current={pathname === '/pdf-editor' ? 'page' : undefined}>
+              <Upload size={13} aria-hidden="true" /> Open PDF Editor
             </Link>
 
-            {/* Hamburger — mobile only */}
-            <button ref={menuButtonRef} className="sn-mob-only" onClick={() => { setMobOpen(o => !o); if (mobOpen) setToolsExp(false); }}
-              aria-label={mobOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={mobOpen}
+            <button
+              ref={mobileButtonRef}
+              type="button"
+              className="site-nav-mobile-button"
+              onClick={() => {
+                setMobileOpen(open => !open)
+                if (!mobileOpen) setMobileCategory(currentCategory?.id ?? null)
+              }}
+              aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={mobileOpen}
               aria-controls="site-mobile-navigation"
-              style={{ ...TAP, width: 44, height: 44, borderRadius: 10, border: '1.5px solid rgba(0,0,0,.12)', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.span key={mobOpen ? 'x' : 'm'}
-                  initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }} transition={{ duration: .15 }}>
-                  {mobOpen
-                    ? <X    size={20} color="#1d1d1f" strokeWidth={2} />
-                    : <Menu size={20} color="#1d1d1f" strokeWidth={2} />}
-                </motion.span>
-              </AnimatePresence>
+            >
+              {mobileOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
             </button>
           </div>
         </div>
-      </motion.header>
+      </header>
 
-      {/* ── Desktop tools dropdown ─────────────────────────────────────────── */}
-      <AnimatePresence>
-        {toolsOpen && (
-          <>
-            <motion.div
-              aria-hidden="true"
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: .15 }}
-              onClick={() => setToolsOpen(false)}
-              style={{ position: 'fixed', inset: '56px 0 0', zIndex: 298, background: 'rgba(0,0,0,.2)', backdropFilter: 'blur(2px)' }}
-            />
-            <motion.div
-              id="site-mobile-navigation"
-              className="mobile-nav-drawer"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Site navigation"
-              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: .18, ease: [.22, 1, .36, 1] }}
-              onMouseEnter={keepMenu} onMouseLeave={closeMenu}
-              style={{ position: 'fixed', top: 56, left: 0, right: 0, zIndex: 299, background: '#fff', borderBottom: '1px solid rgba(0,0,0,.07)', boxShadow: '0 20px 60px rgba(0,0,0,.1)' }}>
-              <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 24px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 4 }}>
-                  {NAV_CATS.map(cat => (
-                    <div key={cat.label}>
-                      <Link prefetch={false} href={cat.href} onClick={() => setToolsOpen(false)} style={{ textDecoration: 'none' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 8px 8px', marginBottom: 4, borderBottom: `2px solid ${cat.color}22` }}>
-                          <div style={{ width: 24, height: 24, borderRadius: 7, background: `${cat.color}14`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <cat.Icon size={12} color={cat.color} strokeWidth={2} />
-                          </div>
-                          <span style={{ ...FI, fontSize: 11.5, fontWeight: 800, color: cat.color, letterSpacing: '-0.01em' }}>{cat.label}</span>
-                        </div>
-                      </Link>
-                      {cat.tools.map(tool => {
-                        const badge = TIER_BADGE[tool.tier]
+      {toolsOpen && (
+        <>
+          <button className="site-nav-backdrop" type="button" onClick={() => setToolsOpen(false)} aria-label="Close tool categories" />
+          <div id="site-tools-menu" ref={toolsMenuRef} className="site-tools-menu" role="navigation" aria-label="Tool categories">
+            <div className="site-tools-menu-head">
+              <div><strong>Browse PDF tools by task</strong><span>Seven categories, with the current tool highlighted.</span></div>
+              <Link href="/#tools" prefetch={false} onClick={() => setToolsOpen(false)}>Search all tools <ArrowRight size={14} aria-hidden="true" /></Link>
+            </div>
+            <div className="site-tools-menu-grid">
+              {TOOL_CATEGORIES.map(category => {
+                const Icon = CATEGORY_ICONS[category.id]
+                const tools = menuTools(category, currentTool)
+                return (
+                  <section key={category.id} className="site-tools-category" style={{ '--category-color': category.color } as React.CSSProperties}>
+                    <Link href={getCategoryHref(category)} prefetch={false} className="site-tools-category-heading" onClick={() => setToolsOpen(false)}>
+                      <Icon size={16} aria-hidden="true" /><span>{category.label}</span><small>{category.slugs.length}</small>
+                    </Link>
+                    {tools.map(tool => {
+                      const current = pathname === `/${tool.slug}`
+                      const access = getToolAccessPresentation(tool.access)
+                      return (
+                        <Link key={tool.slug} href={`/${tool.slug}`} prefetch={false} className={`site-tools-link${current ? ' is-current' : ''}`} aria-current={current ? 'page' : undefined} onClick={() => setToolsOpen(false)}>
+                          <span>{tool.name}</span><small>{access.badges.map(badge => badge.label).join(' + ')}</small>
+                        </Link>
+                      )
+                    })}
+                  </section>
+                )
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
+      {mobileOpen && (
+        <>
+          <button className="site-mobile-backdrop" type="button" onClick={() => setMobileOpen(false)} aria-label="Close navigation menu" />
+          <div id="site-mobile-navigation" ref={mobileDrawerRef} className="site-mobile-navigation" role="dialog" aria-modal="true" aria-labelledby="site-mobile-navigation-title">
+            <div className="site-mobile-navigation-head">
+              <strong id="site-mobile-navigation-title">Menu</strong>
+              <button type="button" onClick={() => { setMobileOpen(false); requestAnimationFrame(() => mobileButtonRef.current?.focus()) }} aria-label="Close navigation menu"><X size={20} aria-hidden="true" /></button>
+            </div>
+            <nav aria-label="Mobile primary navigation">
+              <Link href="/#tools" prefetch={false} onClick={() => setMobileOpen(false)}>Browse and search all tools</Link>
+              {NAV_LINKS.map(link => {
+                const current = isPathCurrent(pathname, link.href)
+                return <Link key={link.href} href={link.href} prefetch={false} onClick={() => setMobileOpen(false)} className={current ? 'is-current' : ''} aria-current={current ? 'page' : undefined}>{link.label}</Link>
+              })}
+            </nav>
+
+            <div className="site-mobile-categories" aria-label="Tool categories">
+              <h2>Browse by category</h2>
+              {TOOL_CATEGORIES.map(category => {
+                const Icon = CATEGORY_ICONS[category.id]
+                const expanded = mobileCategory === category.id
+                return (
+                  <section key={category.id} style={{ '--category-color': category.color } as React.CSSProperties}>
+                    <button type="button" onClick={() => setMobileCategory(value => value === category.id ? null : category.id)} aria-expanded={expanded} aria-controls={`mobile-tools-${category.id}`}>
+                      <Icon size={17} aria-hidden="true" /><span>{category.label}</span><small>{category.slugs.length}</small><ChevronDown size={17} aria-hidden="true" />
+                    </button>
+                    <div id={`mobile-tools-${category.id}`} hidden={!expanded}>
+                      <Link href={getCategoryHref(category)} prefetch={false} onClick={() => setMobileOpen(false)}>View all {category.label.toLowerCase()}</Link>
+                      {getCategoryTools(category).map(tool => {
+                        const current = pathname === `/${tool.slug}`
+                        const access = getToolAccessPresentation(tool.access)
                         return (
-                          <Link prefetch={false} key={tool.name} href={tool.href} onClick={() => setToolsOpen(false)} style={{ textDecoration: 'none' }}>
-                            <motion.div whileHover={{ background: '#f5f5f7' }} transition={{ duration: .08 }}
-                              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: 8 }}>
-                              <div style={{ width: 26, height: 38, borderRadius: 7, background: tool.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                <tool.Icon size={13} color="#fff" strokeWidth={1.8} />
-                              </div>
-                              <span style={{ ...FI, fontSize: 12, fontWeight: 600, color: '#1d1d1f', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tool.name}</span>
-                              {tool.tier !== 'free' && (
-                                <span style={{ fontSize: 8.5, fontWeight: 700, padding: '1.5px 5px', borderRadius: 99, background: badge.bg, color: badge.color, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                                  {badge.label}
-                                </span>
-                              )}
-                            </motion.div>
+                          <Link key={tool.slug} href={`/${tool.slug}`} prefetch={false} onClick={() => setMobileOpen(false)} className={current ? 'is-current' : ''} aria-current={current ? 'page' : undefined}>
+                            <span>{tool.name}</span><small>{access.badges.map(badge => badge.label).join(' + ')}</small>
                           </Link>
                         )
                       })}
                     </div>
-                  ))}
-                </div>
-                <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #f0f0f0', display: 'flex', justifyContent: 'flex-end' }}>
-                  <Link prefetch={false} href="/#tools" onClick={() => setToolsOpen(false)}
-                    style={{ ...FI, display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 600, color: '#6b7280', textDecoration: 'none' }}>
-                    See all {TOOL_COUNT}+ tools <ArrowRight size={11} strokeWidth={2.5} />
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                  </section>
+                )
+              })}
+            </div>
 
-      {/* ── Mobile full-screen drawer ──────────────────────────────────────── */}
-      <AnimatePresence>
-        {mobOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={closeMob}
-              style={{ position: 'fixed', inset: '56px 0 0', zIndex: 280, background: 'rgba(0,0,0,.3)' }}
-            />
-
-            {/* Drawer panel — slides in from right */}
-            <motion.div
-              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-              transition={{ duration: .25, ease: E }}
-              style={{ position: 'fixed', top: 56, right: 0, bottom: 0, width: '100%', maxWidth: 360, zIndex: 290, background: '#fff', display: 'flex', flexDirection: 'column', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
-
-              {/* ── Tools section — flat list, all tools always visible ── */}
-              <div style={{ borderBottom: '1px solid #f0f0f0' }}>
-                {/* "Tools" header row */}
-                <button
-                  onClick={() => setToolsExp(v => !v)}
-                  aria-expanded={toolsExp}
-                  aria-controls="site-mobile-tools"
-                  style={{ ...TAP, width: '100%', display: 'flex', alignItems: 'center', padding: '0 20px', height: 52, background: 'transparent', border: 'none', outline: 'none' }}>
-                  <span style={{ ...FI, fontSize: 15, fontWeight: 700, color: '#1d1d1f', flex: 1, textAlign: 'left' }}>All Tools</span>
-                  <span style={{ display: 'flex', transition: 'transform .2s', transform: toolsExp ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                    <ChevronDown size={18} color="rgba(0,0,0,.4)" strokeWidth={2} />
-                  </span>
-                </button>
-
-                {/* Flat tools panel — all tools visible, grouped by category header */}
-                <div id="site-mobile-tools" style={{ overflow: 'hidden', maxHeight: toolsExp ? 4000 : 0, transition: 'max-height .35s ease' }}>
-                  <div style={{ background: '#f9fafb', borderTop: '1px solid #f0f0f0' }}>
-                    {NAV_CATS.map(cat => (
-                      <div key={cat.label}>
-                        {/* Category header — not a button, just a label */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px 6px', borderBottom: `2px solid ${cat.color}22` }}>
-                          <div style={{ width: 26, height: 38, borderRadius: 8, background: `${cat.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <cat.Icon size={13} color={cat.color} strokeWidth={2} />
-                          </div>
-                          <span style={{ ...FI, fontSize: 11, fontWeight: 800, color: cat.color, textTransform: 'uppercase', letterSpacing: '.06em' }}>{cat.label}</span>
-                        </div>
-                        {/* All tools in this category — always visible */}
-                        {cat.tools.map(tool => {
-                          const badge = TIER_BADGE[tool.tier]
-                          return (
-                            <Link prefetch={false} key={tool.name} href={tool.href} onClick={closeMob} style={{ textDecoration: 'none', display: 'block' }}>
-                              <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 11, padding: '0 20px 0 20px', height: 46, borderBottom: '1px solid #f0f1f3', background: '#fff' }}>
-                                <div style={{ width: 28, height: 28, borderRadius: 8, background: tool.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                  <tool.Icon size={13} color="#fff" strokeWidth={1.8} />
-                                </div>
-                                <span style={{ ...FI, fontSize: 13.5, fontWeight: 600, color: '#1d1d1f', flex: 1 }}>{tool.name}</span>
-                                {tool.tier !== 'free' && (
-                                  <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 99, background: badge.bg, color: badge.color, flexShrink: 0 }}>
-                                    {badge.label}
-                                  </span>
-                                )}
-                                <ArrowRight size={13} color="rgba(0,0,0,.18)" strokeWidth={2} />
-                              </div>
-                            </Link>
-                          )
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Plain nav links ── */}
-              {NAV_LINKS.map(({ label, href }) => (
-                <Link prefetch={false} key={label} href={href} onClick={closeMob} style={{ textDecoration:'none', display:'block' }}>
-                  <div style={{ ...TAP, display: 'flex', alignItems: 'center', gap: 8, height: 52, padding: '0 20px', borderBottom: '1px solid #f0f0f0', ...FI, fontSize: 15, fontWeight: 600, color: '#1d1d1f' }}>
-                    {label}
-                  </div>
-                </Link>
-              ))}
-
-              {/* ── Auth ── */}
-              {isLoaded && (
-                <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0' }}>
-                  {isSignedIn ? (
-                    <Link prefetch={false} href="/dashboard" onClick={closeMob}
-                      style={{ ...FI, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        fontSize: 15, fontWeight: 700, color: '#1d1d1f', textDecoration: 'none',
-                        padding: '13px', borderRadius: 12, border: '1.5px solid #e5e7eb', background: '#fff' }}>
-                      Dashboard
-                      {subTier && (
-                        <span style={{ ...FI, display: 'inline-flex', alignItems: 'center',
-                          fontSize: 10.5, fontWeight: 800, letterSpacing: '.04em', padding: '3px 9px', borderRadius: 99,
-                          ...(subTier === 'pro'
-                            ? { color: '#7c3aed', background: 'rgba(124,58,237,.1)', border: '1px solid rgba(124,58,237,.24)' }
-                            : { color: '#4b5563', background: 'rgba(0,0,0,.045)', border: '1px solid rgba(0,0,0,.1)' }) }}>
-                          {subTier === 'pro' ? 'PRO' : 'FREE'}
-                        </span>
-                      )}
-                    </Link>
-                  ) : (
-                    <SignInButton mode="modal">
-                      <button style={{ ...FI, ...TAP, width: '100%', padding: '13px', borderRadius: 12,
-                        border: '1.5px solid #e5e7eb', background: '#fff',
-                        fontSize: 15, fontWeight: 700, color: '#1d1d1f' }}>
-                        Sign in
-                      </button>
-                    </SignInButton>
-                  )}
-                </div>
-              )}
-
-              {/* ── Open Editor CTA ── */}
-              <div style={{ padding: '16px 20px', marginTop: 'auto' }}>
-                <Link prefetch={false} href="/pdf-editor" onClick={closeMob}
-                  style={{ ...FI, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px', background: '#1d1d1f', color: '#fff', borderRadius: 14, fontSize: 15, fontWeight: 700, textDecoration: 'none', letterSpacing: '-0.02em' }}>
-                  <Upload size={16} strokeWidth={2.5} /> Open Editor
-                </Link>
-              </div>
-
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* ── Responsive visibility CSS (minimal, no accordion tricks) ─────── */}
-      <style>{`
-        .sn-desk-only { display: flex !important; }
-        .sn-mob-only  { display: none  !important; }
-        @media (max-width: 900px) {
-          .sn-desk-only { display: none  !important; }
-          .sn-mob-only  { display: flex  !important; }
-        }
-        .sn-tools-trigger:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
-      `}</style>
+            <div className="site-mobile-navigation-actions">
+              {isLoaded && !isSignedIn && <SignInButton mode="modal"><button type="button">Sign in to EditPDF AI</button></SignInButton>}
+              {isLoaded && isSignedIn && <Link href="/dashboard" prefetch={false} onClick={() => setMobileOpen(false)}>Open account dashboard</Link>}
+              <Link href="/pdf-editor" prefetch={false} className="is-primary" onClick={() => setMobileOpen(false)}><Upload size={16} aria-hidden="true" /> Open PDF Editor</Link>
+            </div>
+          </div>
+        </>
+      )}
     </>
   )
 }

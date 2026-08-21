@@ -1,5 +1,8 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import ToolWorkflowStatus from '@/components/ToolWorkflowStatus'
+import { classifyToolWorkflowError, safeWorkflowErrorDetail } from '@/lib/toolWorkflowState'
+import { useModalFocusTrap } from '@/hooks/useModalFocusTrap'
 
 export interface DetectedField {
   name: string
@@ -24,7 +27,7 @@ interface UploadedDoc {
   mimeType: string
   description: string    // user's prompt: "my passport", "my wife's ID"
   extracted: string      // AI-extracted text
-  status: 'extracting' | 'done' | 'error'
+  status: 'idle' | 'extracting' | 'done' | 'error'
   error?: string
 }
 
@@ -74,9 +77,22 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
   const [docs, setDocs]           = useState<UploadedDoc[]>([])
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const fileInputRef              = useRef<HTMLInputElement>(null)
+  const dialogRef                 = useRef<HTMLDivElement>(null)
+  const closeButtonRef            = useRef<HTMLButtonElement>(null)
   const pendingDocId              = useRef<string | null>(null)
   // Stable ref so extractDoc can read latest docs without stale closure
   const docsRef                   = useRef<UploadedDoc[]>([])
+  const docControllersRef         = useRef(new Map<string, AbortController>())
+  const aiControllerRef           = useRef<AbortController | null>(null)
+  const lastAIActionRef           = useRef<(() => void) | null>(null)
+
+  useModalFocusTrap(true, dialogRef, onClose, closeButtonRef)
+
+  useEffect(() => () => {
+    docControllersRef.current.forEach(controller => controller.abort())
+    docControllersRef.current.clear()
+    aiControllerRef.current?.abort()
+  }, [])
 
   // Improvise states
   const [phase, setPhase]                   = useState<Phase>('fill')
@@ -112,6 +128,10 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
 
   const callFillAPI = async (combined: string) => {
     if (!combined.trim() || fields.length === 0) return
+    aiControllerRef.current?.abort()
+    const controller = new AbortController()
+    aiControllerRef.current = controller
+    lastAIActionRef.current = () => { void callFillAPI(combined) }
     setError(''); setLoading(true); setPreview(null)
     setPhase('fill'); setImprovedValues({}); setVersionChoice({}); setImproviseSelected(new Set())
     try {
@@ -120,16 +140,23 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
       const res  = await fetch('/api/autofill', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
+        signal: controller.signal,
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Request failed')
       setPreview(data.filled.filter((f: FilledField) => f.value.trim()))
     } catch (e: any) {
-      setError(e.message)
-    } finally { setLoading(false) }
+      setError(e?.name === 'AbortError' ? 'AI processing cancelled. Your documents and instructions are still available.' : e?.message ?? 'AI could not complete this request.')
+    } finally {
+      if (aiControllerRef.current === controller) aiControllerRef.current = null
+      setLoading(false)
+    }
   }
 
   const extractDoc = async (docId: string, base64: string, mimeType: string) => {
+    docControllersRef.current.get(docId)?.abort()
+    const controller = new AbortController()
+    docControllersRef.current.set(docId, controller)
     setDocs(prev => {
       const next = prev.map(d => d.id === docId ? { ...d, status: 'extracting' as const } : d)
       docsRef.current = next
@@ -140,6 +167,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileBase64: base64, mimeType, fieldNames: fields.map(f => f.name) }),
+        signal: controller.signal,
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Extraction failed')
@@ -160,11 +188,16 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
         if (combined.trim()) callFillAPI(combined)
       }
     } catch (e: any) {
+      const message = e?.name === 'AbortError'
+        ? 'Upload cancelled. This document is still ready to retry.'
+        : e?.message ?? 'The document could not be analyzed.'
       setDocs(prev => {
-        const next = prev.map(d => d.id === docId ? { ...d, status: 'error' as const, error: e.message } : d)
+        const next = prev.map(d => d.id === docId ? { ...d, status: 'error' as const, error: message } : d)
         docsRef.current = next
         return next
       })
+    } finally {
+      if (docControllersRef.current.get(docId) === controller) docControllersRef.current.delete(docId)
     }
   }
 
@@ -200,7 +233,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
 
   const addDocSlot = () => {
     const id = nextDocId()
-    const blank: UploadedDoc = { id, fileName: '', base64: '', mimeType: '', description: '', extracted: '', status: 'extracting' }
+    const blank: UploadedDoc = { id, fileName: '', base64: '', mimeType: '', description: '', extracted: '', status: 'idle' }
     setDocs(prev => {
       const next = [...prev, blank]
       docsRef.current = next
@@ -235,6 +268,8 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
   }
 
   const removeDoc = (id: string) => setDocs(prev => {
+    docControllersRef.current.get(id)?.abort()
+    docControllersRef.current.delete(id)
     const next = prev.filter(d => d.id !== id)
     docsRef.current = next
     return next
@@ -260,7 +295,11 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
   // ── Prompt Fill & Improve ─────────────────────────────────────────────────
 
   const handlePromptFillAndImprove = async () => {
-    if (!promptText.trim()) { setError('Please enter some information in the prompt box.'); return }
+    if (!promptText.trim()) { setError('Information to fill: enter the details AI should match to the form fields, then try again.'); return }
+    aiControllerRef.current?.abort()
+    const controller = new AbortController()
+    aiControllerRef.current = controller
+    lastAIActionRef.current = () => { void handlePromptFillAndImprove() }
     setError(''); setPromptLoading(true); setPreview(null)
     setPhase('fill'); setImprovedValues({}); setVersionChoice({}); setImproviseSelected(new Set())
     try {
@@ -270,6 +309,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
       const fillRes  = await fetch('/api/autofill', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fillBody),
+        signal: controller.signal,
       })
       const fillData = await fillRes.json()
       if (!fillRes.ok) throw new Error(fillData.error || 'Fill failed')
@@ -286,6 +326,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
         const improveRes = await fetch('/api/improvise', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fields: toImprove, userContext: promptText, wordLimit }),
+          signal: controller.signal,
         })
         const improveData = await improveRes.json()
         if (!improveRes.ok) throw new Error(improveData.error || 'Improve failed')
@@ -300,14 +341,21 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
         setPhase('compare')
       }
     } catch (e: any) {
-      setError(e.message)
-    } finally { setPromptLoading(false) }
+      setError(e?.name === 'AbortError' ? 'AI processing cancelled. Your prompt and detected fields are still available.' : e?.message ?? 'AI could not complete this request.')
+    } finally {
+      if (aiControllerRef.current === controller) aiControllerRef.current = null
+      setPromptLoading(false)
+    }
   }
 
   // ── Improvise ─────────────────────────────────────────────────────────────
 
   const handleImprovise = async () => {
     if (improviseSelected.size === 0) return
+    aiControllerRef.current?.abort()
+    const controller = new AbortController()
+    aiControllerRef.current = controller
+    lastAIActionRef.current = () => { void handleImprovise() }
     setImproving(true); setError('')
     try {
       const toImprove = (preview ?? [])
@@ -317,6 +365,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fields: toImprove, userContext: buildContextFromDocs(docsRef.current), wordLimit }),
+        signal: controller.signal,
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Improvise failed')
@@ -330,8 +379,11 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
       setVersionChoice(choices)
       setPhase('compare')
     } catch (e: any) {
-      setError(e.message)
-    } finally { setImproving(false) }
+      setError(e?.name === 'AbortError' ? 'AI processing cancelled. Your selected fields are still available.' : e?.message ?? 'AI could not complete this request.')
+    } finally {
+      if (aiControllerRef.current === controller) aiControllerRef.current = null
+      setImproving(false)
+    }
   }
 
   const toggleImprovise = (name: string) => {
@@ -354,16 +406,28 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
 
   const hasFields     = fields.length > 0
   const anyExtracting = docs.some(d => d.status === 'extracting')
+  const cancelDocumentUploads = () => {
+    docControllersRef.current.forEach(controller => controller.abort())
+  }
+  const cancelAIProcessing = () => aiControllerRef.current?.abort()
+  const retryDocument = (doc: UploadedDoc) => {
+    if (doc.base64 && doc.mimeType) {
+      void extractDoc(doc.id, doc.base64, doc.mimeType)
+      return
+    }
+    openFilePicker(doc.id)
+  }
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div
+      className="mobile-modal-backdrop"
       style={{ position:'fixed', inset:0, zIndex:400, background:'rgba(0,0,0,0.55)',
         display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{
+      <div ref={dialogRef} className="mobile-modal-surface" role="dialog" aria-modal="true" aria-labelledby="ai-auto-fill-title" tabIndex={-1} style={{
         background:'#fff', borderRadius:20, padding:'26px 28px',
         width:'100%', maxWidth:580,
         boxShadow:'0 24px 64px rgba(0,0,0,0.22)',
@@ -381,7 +445,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
                   <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/><path d="M18 2v6"/><path d="M21 5h-6"/>
                 </svg>
               </div>
-              <h2 style={{ margin:0, fontSize:16, fontWeight:800, color:'#0f172a', fontFamily:'Manrope, sans-serif', display:'flex', alignItems:'center', flexWrap:'wrap', gap:6 }}>
+              <h2 id="ai-auto-fill-title" style={{ margin:0, fontSize:16, fontWeight:800, color:'#0f172a', fontFamily:'Manrope, sans-serif', display:'flex', alignItems:'center', flexWrap:'wrap', gap:6 }}>
                 AI Auto Fill
                 {pageLabel && (
                   <span style={{ fontSize:11, fontWeight:700, color:'#6366f1',
@@ -405,8 +469,8 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
               {phase === 'compare'   && 'Choose original or improved value for each field'}
             </p>
           </div>
-          <button onClick={onClose} style={{
-            width:28, height:28, borderRadius:7, border:'1px solid #e2e8f0',
+          <button ref={closeButtonRef} type="button" onClick={onClose} aria-label="Close AI auto fill" style={{
+            width:44, height:44, borderRadius:9, border:'1px solid #e2e8f0',
             background:'#f8faff', cursor:'pointer', fontSize:16, color:'#64748b',
             display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
           }}>×</button>
@@ -464,6 +528,19 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
             </div>
 
             {/* Uploaded doc cards */}
+            {anyExtracting && (
+              <div style={{ marginBottom: 8 }}>
+                <ToolWorkflowStatus
+                  compact
+                  state="uploading"
+                  heading="Sending document for AI analysis"
+                  message="The selected document is being sent securely, then analyzed for matching information."
+                  preserveMessage="The document and your instructions remain in this panel if you cancel."
+                  cancelLabel="Cancel upload"
+                  onCancel={cancelDocumentUploads}
+                />
+              </div>
+            )}
             {docs.map(doc => (
               <div key={doc.id} style={{ marginBottom:8, borderRadius:12, border:'1px solid #e2e8f0',
                 background:'#fafbff', overflow:'hidden' }}>
@@ -515,10 +592,10 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
                     ) : (
                       <div style={{ fontSize:12, color:'#94a3b8', fontStyle:'italic' }}>
                         Drop a file here or{' '}
-                        <span style={{ color:'#6366f1', cursor:'pointer', fontWeight:600, fontStyle:'normal' }}
+                        <button type="button" style={{ color:'#6366f1', cursor:'pointer', fontWeight:600, fontStyle:'normal', border:0, padding:0, background:'transparent', fontSize:'inherit' }}
                           onClick={() => openFilePicker(doc.id)}>
                           click to upload
-                        </span>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -532,17 +609,36 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
                         Replace
                       </button>
                     )}
-                    <button onClick={() => removeDoc(doc.id)}
+                    <button type="button" onClick={() => removeDoc(doc.id)} aria-label={`Remove ${doc.fileName || 'document slot'}`}
                       style={{ border:'none', background:'none', cursor:'pointer',
                         fontSize:17, color:'#94a3b8', lineHeight:1, padding:'2px 4px' }}
                       title="Remove">×</button>
                   </div>
                 </div>
 
+                {doc.status === 'error' && (() => {
+                  const state = classifyToolWorkflowError(new Error(doc.error ?? ''))
+                  const canReuse = Boolean(doc.base64 && doc.mimeType)
+                  return (
+                    <div style={{ padding: '8px 12px 0' }}>
+                      <ToolWorkflowStatus
+                        compact
+                        state={state}
+                        detail={safeWorkflowErrorDetail(new Error(doc.error ?? ''))}
+                        preserveMessage={canReuse ? 'This selected document is still available.' : undefined}
+                        primaryLabel={canReuse && !['unsupported-file', 'oversized-file'].includes(state) ? 'Retry analysis' : 'Choose another file'}
+                        onPrimary={() => retryDocument(doc)}
+                      />
+                    </div>
+                  )
+                })()}
+
                 {/* Description / prompt row */}
                 <div style={{ padding:'8px 12px' }}>
                   <input
+                    id={`document-description-${doc.id}`}
                     type="text"
+                    aria-label={`Describe ${doc.fileName || 'this document'}`}
                     value={doc.description}
                     onChange={e => updateDocDesc(doc.id, e.target.value)}
                     placeholder={`Describe this document — e.g. "My passport", "Wife's driving licence", "Son's ID card"`}
@@ -558,10 +654,19 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
 
             {/* Drop zone to add first / new doc */}
             <div
+              role="button"
+              tabIndex={0}
+              aria-label="Choose a document for AI form filling"
               onDragOver={e => { e.preventDefault(); setDragOverId('new') }}
               onDragLeave={() => setDragOverId(null)}
               onDrop={handleDropOnNew}
               onClick={() => { const id = addDocSlot(); setTimeout(() => openFilePicker(id), 50) }}
+              onKeyDown={event => {
+                if (event.key !== 'Enter' && event.key !== ' ') return
+                event.preventDefault()
+                const id = addDocSlot()
+                setTimeout(() => openFilePicker(id), 50)
+              }}
               style={{ border:`2px dashed ${dragOverId === 'new' ? '#6366f1' : '#cbd5e1'}`,
                 borderRadius:10, padding:'12px 16px', cursor:'pointer',
                 background: dragOverId === 'new' ? 'rgba(99,102,241,0.04)' : '#fafbff',
@@ -586,6 +691,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
             </div>
 
             <input ref={fileInputRef} type="file"
+              aria-label="Choose a PDF or image document for AI form filling"
               accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
               onChange={handleFileInput} style={{ display:'none' }} />
           </div>
@@ -614,10 +720,16 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
             </div>
 
             {/* Prompt textarea */}
+            <label htmlFor="ai-fill-information" style={{ display:'block', fontSize:11, fontWeight:700, color:'#3730a3', marginBottom:6 }}>
+              Information to fill
+            </label>
             <textarea
+              id="ai-fill-information"
               value={promptText}
               onChange={e => setPromptText(e.target.value)}
               placeholder={"e.g. \"I'm John Smith, 32, software engineer at Acme Corp, living at 12 Baker St London. Married with 2 kids.\""}
+              aria-describedby={error ? 'ai-auto-fill-error' : undefined}
+              aria-invalid={Boolean(error && !promptText.trim()) || undefined}
               rows={3}
               style={{ width:'100%', borderRadius:9, border:'1.5px solid rgba(99,102,241,0.25)',
                 padding:'9px 11px', fontSize:12.5, fontFamily:'inherit', lineHeight:1.6,
@@ -644,7 +756,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
                   {opt === null ? 'Auto' : `${opt}w`}
                 </button>
               ))}
-              <input type="number" min={10} max={2000} placeholder="Custom…" value={customWords}
+              <input type="number" min={10} max={2000} placeholder="Custom…" aria-label="Custom word limit" value={customWords}
                 onChange={e => {
                   setCustomWords(e.target.value)
                   const n = parseInt(e.target.value)
@@ -680,13 +792,14 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
         {/* ── Additional instructions textarea (fill phase only) ── */}
         {phase === 'fill' && (
           <div>
-            <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#64748b',
+            <label htmlFor="ai-fill-additional-instructions" style={{ display:'block', fontSize:11, fontWeight:700, color:'#64748b',
               marginBottom:6, textTransform:'uppercase', letterSpacing:'0.06em' }}>
               Additional Instructions
               <span style={{ marginLeft:6, fontSize:10, fontWeight:400, color:'#94a3b8',
                 textTransform:'none', letterSpacing:0 }}>optional</span>
             </label>
             <textarea
+              id="ai-fill-additional-instructions"
               value={instructions}
               onChange={e => setInstructions(e.target.value)}
               placeholder={buildPlaceholder(fields)}
@@ -704,13 +817,33 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
           </div>
         )}
 
-        {/* ── Error ── */}
-        {error && (
-          <div style={{ padding:'8px 12px', borderRadius:8,
-            background:'#fef2f2', border:'1px solid #fca5a5', color:'#dc2626', fontSize:12, fontWeight:600 }}>
-            {error}
-          </div>
+        {(loading || promptLoading || improving) && (
+          <ToolWorkflowStatus
+            compact
+            state="processing"
+            heading="AI is processing your form"
+            message="Keep this panel open while AI analyzes the supplied information. A reliable percentage is not available."
+            preserveMessage="Your documents, instructions, detected fields, and existing values remain available if you cancel."
+            cancelLabel="Cancel AI processing"
+            onCancel={cancelAIProcessing}
+          />
         )}
+
+        {/* ── Error ── */}
+        {error && (() => {
+          const state = classifyToolWorkflowError(new Error(error))
+          return (
+            <div id="ai-auto-fill-error">
+            <ToolWorkflowStatus
+              compact
+              state={state}
+              detail={safeWorkflowErrorDetail(new Error(error))}
+              preserveMessage="Your documents, instructions, detected fields, and existing values remain in this panel."
+              onPrimary={lastAIActionRef.current ? () => lastAIActionRef.current?.() : undefined}
+            />
+            </div>
+          )
+        })()}
 
         {/* ── FILL PHASE: Preview ── */}
         {phase === 'fill' && preview && preview.length > 0 && (
@@ -757,7 +890,7 @@ export default function AutoFillModal({ fields, existingFilled = {}, onApply, on
                   </button>
                 ))}
                 <div style={{ display:'flex', alignItems:'center', gap:5 }}>
-                  <input type="number" min={10} max={2000} placeholder="Custom…" value={customWords}
+                  <input type="number" min={10} max={2000} placeholder="Custom…" aria-label="Custom word limit per field" value={customWords}
                     onChange={e => {
                       setCustomWords(e.target.value)
                       const n = parseInt(e.target.value)

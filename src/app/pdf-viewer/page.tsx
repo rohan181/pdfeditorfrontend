@@ -5,7 +5,9 @@ import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
+import ToolWorkflowStatus from '@/components/ToolWorkflowStatus'
 import toolSeoData from '@/lib/toolSeoData'
+import { classifyToolWorkflowError, safeWorkflowErrorDetail } from '@/lib/toolWorkflowState'
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -17,6 +19,7 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 
 .pg{min-height:100vh;background:#f5f5f7;display:flex;flex-direction:column;padding-top:56px;}
+.viewer-main{flex:1;min-height:0;display:flex;flex-direction:column}
 
 /* ── Nav ── */
 
@@ -59,6 +62,8 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .big-spin{width:36px;height:36px;border:3px solid rgba(10,132,255,.15);border-top-color:#0a84ff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 18px}
 .loading-title{font-size:15px;font-weight:700;color:#1d1d1f;margin-bottom:5px;letter-spacing:-.01em}
 .loading-sub{font-size:12px;color:rgba(0,0,0,.38)}
+.loading-cancel{min-height:44px;margin-top:18px;padding:9px 16px;border:1px solid #d8d8dd;border-radius:9px;background:#fff;color:#4b5563;font-size:13px;font-weight:700;cursor:pointer}
+.loading-cancel:hover{border-color:#0a84ff;color:#075da8;background:#f0f8ff}
 
 /* ── Viewer ── */
 .viewer{flex:1;display:flex;flex-direction:column;background:#1c1c1e;overflow:hidden;min-height:0;max-width:100vw}
@@ -83,7 +88,7 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 .page-input:focus{border-color:#0a84ff;background:rgba(10,132,255,.12)}
 .page-total{font-size:12px;color:rgba(255,255,255,.45);white-space:nowrap;letter-spacing:-.01em}
 
-.zoom-display{font-size:12px;font-weight:600;color:rgba(255,255,255,.6);min-width:40px;text-align:center;letter-spacing:-.01em;cursor:pointer;padding:4px 6px;border-radius:6px;transition:background .15s}
+.zoom-display{font-size:12px;font-weight:600;color:rgba(255,255,255,.82);min-width:40px;text-align:center;letter-spacing:-.01em;cursor:pointer;padding:4px 6px;border:0;background:transparent;border-radius:6px;transition:background .15s}
 .zoom-display:hover{background:rgba(255,255,255,.08);color:#fff}
 
 .tb-filename{font-size:12px;color:rgba(255,255,255,.45);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.01em}
@@ -119,6 +124,13 @@ body{color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display'
 
 @media(max-width:600px){
   .pg{min-height:100dvh}
+  .upload-wrap{justify-content:flex-start;padding:32px 16px max(32px,env(safe-area-inset-bottom))}
+  .hero{margin-bottom:24px}
+  .upload-card{padding:18px;border-radius:16px}
+  .drop{padding:34px 16px}
+  .drop-icon-wrap{width:60px;height:60px;border-radius:16px;margin-bottom:16px;box-shadow:none}
+  .browse-btn{width:100%;min-height:48px;justify-content:center}
+  .kb-hint{display:none}
   .viewer{height:calc(100dvh - 56px);flex:none;width:100%}
   .toolbar{height:auto;min-height:100px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:'left center' 'right right';align-content:center;gap:6px 8px;padding:6px max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left));overflow:visible}
   .tb-left{grid-area:left;min-width:0}
@@ -184,19 +196,32 @@ export default function PDFViewerPage() {
   const [pageInput,   setPageInput]   = useState('1')
   const [isDrop,      setIsDrop]      = useState(false)
   const [loading,     setLoading]     = useState(false)
+  const [loadingLabel,setLoadingLabel]= useState('Preparing viewer…')
   const [rendering,   setRendering]   = useState(false)
   const [isFullscreen,setIsFullscreen]= useState(false)
   const [showBadge,   setShowBadge]   = useState(false)
   const [error,       setError]       = useState('')
   const [viewerWidth, setViewerWidth] = useState(0)
+  const [downloadStarted, setDownloadStarted] = useState(false)
 
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const viewerRef    = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const renderTaskRef = useRef<any>(null)
+  const loadTaskRef   = useRef<any>(null)
+  const loadTokenRef  = useRef(0)
   const badgeTimerRef = useRef<any>(null)
+  const downloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+
+  useEffect(() => () => {
+    loadTokenRef.current += 1
+    try { loadTaskRef.current?.destroy() } catch {}
+    if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current)
+    if (downloadTimerRef.current) clearTimeout(downloadTimerRef.current)
+    if (renderTaskRef.current) { try { renderTaskRef.current.cancel() } catch {} }
+  }, [])
 
   // Re-fit the page when a phone rotates or the browser controls resize the viewport.
   useEffect(() => {
@@ -319,23 +344,46 @@ export default function PDFViewerPage() {
     if (f.type !== 'application/pdf' && !f.name.toLowerCase().endsWith('.pdf')) {
       setError('Please upload a PDF file.'); return
     }
-    setError(''); setLoading(true); setPdfDoc(null)
+    const token = ++loadTokenRef.current
+    setFile(f)
+    setError(''); setLoading(true); setLoadingLabel('Loading PDF viewer…'); setPdfDoc(null)
     try {
       const lib  = await loadPDFJS()
+      if (token !== loadTokenRef.current) return
+      setLoadingLabel('Reading selected PDF…')
       const buf  = await f.arrayBuffer()
-      const doc  = await lib.getDocument({ data: buf }).promise
-      setFile(f)
+      if (token !== loadTokenRef.current) return
+      setLoadingLabel('Opening PDF pages…')
+      const loadingTask = lib.getDocument({ data: buf })
+      loadTaskRef.current = loadingTask
+      const doc  = await loadingTask.promise
+      if (token !== loadTokenRef.current) {
+        try { await doc.destroy() } catch {}
+        return
+      }
       setPdfDoc(doc)
       setTotalPages(doc.numPages)
       setCurrentPage(1)
       setPageInput('1')
       setZoom(1)
     } catch (e: any) {
-      setError(e?.message ?? 'Could not open the PDF file.')
+      if (token === loadTokenRef.current) setError(e?.message ?? 'Could not open the PDF file.')
     } finally {
-      setLoading(false)
+      if (token === loadTokenRef.current) {
+        loadTaskRef.current = null
+        setLoading(false)
+      }
     }
   }, [])
+
+  const cancelLoading = () => {
+    loadTokenRef.current += 1
+    try { loadTaskRef.current?.destroy() } catch {}
+    loadTaskRef.current = null
+    setLoading(false)
+    setLoadingLabel('Preparing viewer…')
+    setError('Opening canceled. Choose the PDF again when you are ready.')
+  }
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); setIsDrop(false)
@@ -372,30 +420,62 @@ export default function PDFViewerPage() {
   }
 
   const reset = () => {
+    loadTokenRef.current += 1
+    try { loadTaskRef.current?.destroy() } catch {}
     if (renderTaskRef.current) { try { renderTaskRef.current.cancel() } catch {} }
     setFile(null); setPdfDoc(null); setCurrentPage(1)
-    setTotalPages(0); setZoom(1); setPageInput('1'); setError('')
+    setTotalPages(0); setZoom(1); setPageInput('1'); setError(''); setDownloadStarted(false)
+  }
+
+  const downloadOriginal = () => {
+    if (!file || downloadStarted) return
+    setDownloadStarted(true)
+    triggerDownload(file)
+    downloadTimerRef.current = setTimeout(() => setDownloadStarted(false), 1800)
   }
 
   const hasPDF  = !!pdfDoc
   const zoomPct = Math.round(zoom * 100)
+  const errorState = error ? classifyToolWorkflowError(new Error(error)) : null
+  const recoverFromError = () => {
+    if (errorState === 'password-protected') {
+      window.open('/pdf-unlock', '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (errorState === 'corrupted-pdf') {
+      window.open('/pdf-repair', '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (file && errorState !== 'unsupported-file') {
+      void loadFile(file)
+      return
+    }
+    fileInputRef.current?.click()
+  }
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="pg" id="main-content">
+      <div className="pg">
 
         {/* Nav */}
         <SiteNav />
+
+        <main id="main-content" className="viewer-main">
 
         {loading ? (
           /* ── Loading ── */
           <div className="upload-wrap">
             <div className="upload-card">
               <div className="loading-state">
-                <div className="big-spin"/>
-                <div className="loading-title">Opening PDF…</div>
-                <div className="loading-sub">Loading PDF.js renderer</div>
+                <ToolWorkflowStatus
+                  state="processing"
+                  heading="Opening your PDF"
+                  message={loadingLabel}
+                  preserveMessage="The selected PDF remains in this tab if you cancel."
+                  cancelLabel="Cancel opening"
+                  onCancel={cancelLoading}
+                />
               </div>
             </div>
           </div>
@@ -413,10 +493,25 @@ export default function PDFViewerPage() {
             </div>
 
             <div className="upload-card">
-              {error && <div className="err"><span>⚠</span><span>{error}</span></div>}
+              {errorState && (
+                <ToolWorkflowStatus
+                  state={errorState}
+                  detail={safeWorkflowErrorDetail(new Error(error))}
+                  preserveMessage={file ? 'The selected PDF remains in this tab.' : undefined}
+                  onPrimary={recoverFromError}
+                  secondaryLabel={file ? 'Choose another PDF' : undefined}
+                  onSecondary={file ? () => fileInputRef.current?.click() : undefined}
+                />
+              )}
               <div
                 className={`drop${isDrop?' over':''}`}
+                role="button"
+                tabIndex={0}
+                aria-label="Choose a PDF to open in the viewer"
                 onClick={() => fileInputRef.current?.click()}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click() }
+                }}
                 onDrop={onDrop}
                 onDragOver={e => { e.preventDefault(); setIsDrop(true) }}
                 onDragLeave={() => setIsDrop(false)}
@@ -425,10 +520,10 @@ export default function PDFViewerPage() {
                   <div className="drop-icon-wrap"><PDFIcon/></div>
                   <h2>Drop a PDF here to open it</h2>
                   <p>PDF documents, ebooks, reports, and forms</p>
-                  <button className="browse-btn">
+                  <span className="browse-btn" aria-hidden="true">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     Choose PDF
-                  </button>
+                  </span>
                 </div>
               </div>
 
@@ -443,9 +538,10 @@ export default function PDFViewerPage() {
         ) : (
           /* ── Viewer ── */
           <div className="viewer pdf-mobile-workspace" ref={viewerRef}>
+            <p className="sr-only" role="status" aria-live="polite">PDF opened successfully. Preview and download actions are available.</p>
 
             {/* Toolbar */}
-            <div className="toolbar">
+            <div className="toolbar" role="toolbar" aria-label="PDF viewer controls">
               {/* Left */}
               <div className="tb-left">
                 <button className="tb-btn" onClick={reset} title="Close PDF" aria-label="Close PDF">
@@ -497,19 +593,20 @@ export default function PDFViewerPage() {
                 <button className="tb-btn" onClick={zoomOut} title="Zoom out (−)" aria-label="Zoom out" disabled={zoom <= 0.1}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
                 </button>
-                <span className="zoom-display" onClick={fitWidth} title="Click to fit width (0)">{zoomPct}%</span>
+                <button type="button" className="zoom-display" onClick={fitWidth} title="Fit PDF to available width (0)" aria-label={`Zoom ${zoomPct} percent. Fit PDF to available width`}>{zoomPct}%</button>
                 <button className="tb-btn" onClick={zoomIn} title="Zoom in (+)" aria-label="Zoom in" disabled={zoom >= 8}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
                 </button>
                 <div className="tb-sep"/>
                 <button
                   className="tb-btn"
-                  onClick={() => file && triggerDownload(file)}
+                  onClick={downloadOriginal}
+                  disabled={downloadStarted}
                   title="Download PDF"
                   aria-label="Download PDF"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  Download
+                  {downloadStarted ? 'Download started' : 'Download'}
                 </button>
                 <button
                   className="tb-btn"
@@ -539,7 +636,7 @@ export default function PDFViewerPage() {
                 </div>
               )}
               <div className="page-shadow">
-                <canvas ref={canvasRef} className="pdf-canvas"/>
+                <canvas ref={canvasRef} className="pdf-canvas" role="img" aria-label={`Rendered PDF page ${currentPage} of ${totalPages}`}/>
               </div>
             </div>
 
@@ -549,10 +646,11 @@ export default function PDFViewerPage() {
             </div>
           </div>
         )}
+        </main>
       </div>
 
       <input
-        ref={fileInputRef} type="file" accept=".pdf,application/pdf"
+        ref={fileInputRef} type="file" aria-label="Choose a PDF to open in the viewer" accept=".pdf,application/pdf"
         style={{display:'none'}}
         onChange={e => { if (e.target.files?.[0]) loadFile(e.target.files[0]); e.target.value='' }}
       />

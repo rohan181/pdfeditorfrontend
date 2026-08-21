@@ -15,6 +15,12 @@ import {
   OCR_PROCESSING_SUMMARY,
   PRODUCT_ACCESS_SUMMARY,
 } from '@/lib/productMessaging'
+import {
+  AI_CONVERSION_ACCESS_SUMMARY,
+  PRO_BILLING_SUMMARY,
+  PRO_CANCELLATION_SUMMARY,
+  PRO_REFUND_SUMMARY,
+} from '@/lib/pricing'
 
 const FI = 'var(--font-dm,system-ui,sans-serif)'
 const MONO = 'var(--font-mono,monospace)'
@@ -74,7 +80,7 @@ export default function TermsPage() {
           <P>EditPDF AI provides browser-based PDF editing, conversion, and AI-powered document tools. The Service includes:</P>
           <Ul items={[
             PRODUCT_ACCESS_SUMMARY,
-            'AI-assisted conversions, including PDF to Word, Excel, and PowerPoint, use the same signed-in daily AI allowance; they are not exclusively available to Pro subscribers',
+            AI_CONVERSION_ACCESS_SUMMARY,
           ]} />
           <P><strong>Browser-based tools.</strong> {BROWSER_PROCESSING_SUMMARY}</P>
           <P><strong>Conversion tools.</strong> {CONVERSION_PROCESSING_SUMMARY}</P>
@@ -99,13 +105,13 @@ export default function TermsPage() {
         </Section>
 
         <Section title="5. Pro subscription and billing">
-          <P>Pro subscriptions are billed monthly at the price shown at checkout. Stripe provides the payment fields and processes the subscription. By subscribing, you authorise recurring monthly charges to your payment method.</P>
-          <P>You may cancel at any time from your account settings. Cancellation takes effect at the end of the current billing period — no partial refunds are issued for unused time.</P>
+          <P>{PRO_BILLING_SUMMARY} Stripe provides the payment fields and processes the subscription. By subscribing, you authorise recurring monthly charges to your payment method.</P>
+          <P>{PRO_CANCELLATION_SUMMARY}</P>
           <P>We reserve the right to change pricing with at least 30 days' notice to current subscribers.</P>
         </Section>
 
         <Section title="6. Refunds">
-          <P>We offer refunds within 7 days of your first subscription payment if you are unsatisfied. Please contact <a href={supportMailto()} style={{ color: '#0891b2', fontWeight: 600 }}>{SUPPORT_EMAIL}</a> with your request. Refunds are not available for renewals.</P>
+          <P>{PRO_REFUND_SUMMARY} Please contact <a href={supportMailto()} style={{ color: '#0891b2', fontWeight: 600 }}>{SUPPORT_EMAIL}</a> with your request.</P>
         </Section>
 
         <Section title="7. Intellectual property">

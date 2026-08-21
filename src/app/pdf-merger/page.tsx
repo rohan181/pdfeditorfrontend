@@ -1,11 +1,13 @@
 'use client'
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import SiteNav from '@/components/SiteNav'
 import SiteFooter from '@/components/SiteFooter'
 import ToolSEOSection from '@/components/ToolSEOSection'
 import ToolQuickFacts from '@/components/ToolQuickFacts'
+import ToolWorkflowStatus from '@/components/ToolWorkflowStatus'
 import toolSeoData from '@/lib/toolSeoData'
+import { classifyToolWorkflowError, safeWorkflowErrorDetail } from '@/lib/toolWorkflowState'
 
 // ─── CSS ──────────────────────────────────────────────────────────────────────
 const CSS = `
@@ -66,6 +68,12 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .move-btn:disabled{opacity:.25;cursor:not-allowed}
 .rm-btn{width:26px;height:38px;border-radius:6px;background:transparent;border:1px solid #e0e0e0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,.35);font-size:11px;transition:all .15s}
 .rm-btn:hover{border-color:#E24B4A;color:#E24B4A;background:#fff5f5}
+@media(max-width:600px){
+  .file-item{gap:6px;padding:10px 8px}
+  .drag-handle,.file-icon{display:none}
+  .file-actions{gap:2px}
+  .move-btn,.rm-btn{width:44px;min-width:44px;height:44px}
+}
 
 /* add more */
 .add-row{display:flex;align-items:center;justify-content:center;padding:11px 16px;border:1.5px dashed #d8d8d8;border-radius:10px;gap:10px;cursor:pointer;transition:all .16s;margin-bottom:20px;background:#fafafa}
@@ -92,8 +100,8 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 /* output name */
 .name-row{display:flex;align-items:center;gap:10px;margin-bottom:20px}
 .name-label{font-size:10px;font-weight:600;letter-spacing:.08em;color:rgba(0,0,0,.4);text-transform:uppercase;white-space:nowrap}
-.name-input{flex:1;padding:9px 13px;border:1px solid #d8d8d8;border-radius:8px;font-size:13px;color:#1d1d1f;font-family:inherit;outline:none;transition:border-color .15s}
-.name-input:focus{border-color:#1d1d1f;box-shadow:0 0 0 3px rgba(29,29,31,.06)}
+.name-input{flex:1;min-height:var(--input-height);padding:9px 13px;border:1px solid var(--color-border-strong);border-radius:var(--radius-md);font-size:16px;color:var(--color-text);font-family:inherit;transition:border-color var(--motion-fast),box-shadow var(--motion-fast)}
+.name-input:focus-visible{border-color:var(--color-primary);outline:3px solid var(--color-focus);outline-offset:2px;box-shadow:var(--shadow-focus)}
 .name-ext{font-size:12px;font-weight:500;color:rgba(0,0,0,.35)}
 
 /* progress */
@@ -101,6 +109,9 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .prog-bar{height:3px;background:#e8e8e8;border-radius:99px;overflow:hidden}
 .prog-fill{height:100%;background:#1d1d1f;border-radius:99px;transition:width .3s ease}
 .prog-label{font-size:10px;color:rgba(0,0,0,.4);margin-top:5px;text-align:center;letter-spacing:.06em;text-transform:uppercase}
+.prog-actions{display:flex;justify-content:center;margin-top:10px}
+.cancel-btn{min-height:44px;padding:9px 16px;border:1px solid #d8d8dd;border-radius:9px;background:#fff;color:#4b5563;font-size:13px;font-weight:700;cursor:pointer}
+.cancel-btn:hover{border-color:#E24B4A;color:#b4233c;background:#fff5f5}
 
 /* result */
 .result{text-align:center;padding:16px 0 8px}
@@ -121,6 +132,20 @@ body{background:#fff;color:#1d1d1f;font-family:var(--font-inter,system-ui,sans-s
 .info-card p{font-size:12px;color:rgba(0,0,0,.45);line-height:1.6}
 
 .error-box{padding:11px 14px;background:#fff5f5;border:1px solid rgba(226,75,74,.25);border-radius:9px;font-size:13px;color:#E24B4A;margin-bottom:14px}
+@media(max-width:600px){
+  .hero{padding:48px 0 28px}
+  .card{margin-top:20px}
+  .drop{padding-top:34px;padding-bottom:34px}
+  .add-row{align-items:stretch;flex-direction:column;text-align:center;padding:14px}
+  .add-row-btn{display:flex;align-items:center;justify-content:center;min-height:48px;width:100%;font-size:13px}
+  .summary{gap:10px;justify-content:space-around}
+  .sum-divider{display:none}
+  .name-row{align-items:stretch;display:grid;grid-template-columns:1fr auto;gap:7px}
+  .name-label{grid-column:1 / -1}
+  .action-bar{flex-direction:column}
+  .merge-btn,.reset-btn{width:100%;min-width:0;justify-content:center}
+  .result-btns>*{width:100%;justify-content:center}
+}
 `
 
 // ─── Colour dots per file ─────────────────────────────────────────────────────
@@ -154,31 +179,51 @@ async function countPages(file: File): Promise<number> {
 }
 
 type MergeWorkerResponse =
-  | { type: 'progress'; value: number }
+  | { type: 'progress'; value: number; max: number; label: string }
   | { type: 'success'; buffer: ArrayBuffer; pageCount: number }
   | { type: 'error'; message: string }
 
 function runMergeWorker(
   buffers: ArrayBuffer[],
-  onProgress: (value: number) => void,
+  onProgress: (value: number, max: number, label: string) => void,
+  signal: AbortSignal,
 ): Promise<{ buffer: ArrayBuffer; pageCount: number }> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL('../../workers/pdf-merge.worker.ts', import.meta.url))
+    let settled = false
+    const cleanup = () => signal.removeEventListener('abort', onAbort)
+    const onAbort = () => {
+      if (settled) return
+      settled = true
+      worker.terminate()
+      cleanup()
+      const error = new Error('Merge canceled')
+      error.name = 'AbortError'
+      reject(error)
+    }
+    signal.addEventListener('abort', onAbort, { once: true })
 
     worker.onmessage = (event: MessageEvent<MergeWorkerResponse>) => {
       const message = event.data
-      if (message.type === 'progress') { onProgress(message.value); return }
+      if (message.type === 'progress') { onProgress(message.value, message.max, message.label); return }
 
+      if (settled) return
+      settled = true
       worker.terminate()
+      cleanup()
       if (message.type === 'success') resolve({ buffer: message.buffer, pageCount: message.pageCount })
       else reject(new Error(message.message))
     }
 
     worker.onerror = () => {
+      if (settled) return
+      settled = true
       worker.terminate()
+      cleanup()
       reject(new Error('The local PDF engine failed to start. Please reload and try again.'))
     }
 
+    if (signal.aborted) { onAbort(); return }
     worker.postMessage({ buffers }, buffers)
   })
 }
@@ -189,6 +234,8 @@ export default function PDFMergerPage() {
   const [outputName, setOutputName] = useState('merged')
   const [processing, setProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [progressMax, setProgressMax] = useState(1)
+  const [progressLabel, setProgressLabel] = useState('Preparing PDF files')
   const [result, setResult]     = useState<Result | null>(null)
   const [error, setError]       = useState('')
   const [isDrop, setIsDrop]     = useState(false)
@@ -199,12 +246,18 @@ export default function PDFMergerPage() {
 
   const fileRef    = useRef<HTMLInputElement>(null)
   const addFileRef = useRef<HTMLInputElement>(null)
+  const mergeControllerRef = useRef<AbortController | null>(null)
+  const addGenerationRef = useRef(0)
+
+  useEffect(() => () => mergeControllerRef.current?.abort(), [])
 
   // ── Add files ───────────────────────────────────────────────────────────────
   const addFiles = useCallback(async (incoming: FileList | File[]) => {
-    const arr = Array.from(incoming).filter(f => f.name.toLowerCase().endsWith('.pdf'))
+    const received = Array.from(incoming)
+    const arr = received.filter(f => f.name.toLowerCase().endsWith('.pdf'))
     if (arr.length === 0) { setError('Please add PDF files only.'); return }
-    setError('')
+    const generation = addGenerationRef.current
+    setError(received.length === arr.length ? '' : 'One or more files were skipped because this tool accepts PDF files only.')
     setLoadingCount(c => c + arr.length)
 
     const entries: PdfFile[] = []
@@ -212,12 +265,15 @@ export default function PDFMergerPage() {
       try {
         const pages = await countPages(f)
         entries.push({ id: uid(), file: f, pages, color: COLORS[(_uid - 1) % COLORS.length] })
-      } catch {
-        setError(`Could not read "${f.name}" — skipped.`)
+      } catch (caught) {
+        const message = caught instanceof Error ? caught.message : `Could not read "${f.name}".`
+        setError(message)
       }
     }
-    setFiles(prev => [...prev, ...entries])
-    setLoadingCount(c => c - arr.length)
+    if (generation === addGenerationRef.current) {
+      setFiles(prev => [...prev, ...entries])
+      setLoadingCount(c => Math.max(0, c - arr.length))
+    }
   }, [])
 
   // ── Drag-to-reorder (file list rows) ───────────────────────────────────────
@@ -245,21 +301,36 @@ export default function PDFMergerPage() {
   // ── Merge ───────────────────────────────────────────────────────────────────
   const onMerge = async () => {
     if (files.length < 2) return
-    setProcessing(true); setProgress(5); setError('')
+    const controller = new AbortController()
+    mergeControllerRef.current = controller
+    setProcessing(true); setProgress(0); setProgressMax(files.length); setProgressLabel('Preparing PDF files'); setError('')
     try {
       const buffers = await Promise.all(files.map(entry => entry.file.arrayBuffer()))
-      const { buffer, pageCount } = await runMergeWorker(buffers, setProgress)
+      if (controller.signal.aborted) {
+        const abortError = new Error('Merge canceled'); abortError.name = 'AbortError'; throw abortError
+      }
+      const { buffer, pageCount } = await runMergeWorker(buffers, (value, max, label) => {
+        setProgress(value); setProgressMax(max); setProgressLabel(label)
+      }, controller.signal)
 
       const blob  = new Blob([buffer], { type: 'application/pdf' })
       const name  = (outputName.trim() || 'merged') + '.pdf'
       setProgress(100)
       setResult({ blob, name, totalPages: pageCount })
     } catch (e: any) {
-      setError('Merge failed: ' + (e?.message ?? 'unknown error'))
+      if (e?.name === 'AbortError') {
+        setProgress(0)
+        setError('Merge canceled. Your selected files and order are still ready.')
+      } else {
+        setError(e?.message ?? 'The PDFs could not be merged.')
+      }
     } finally {
+      mergeControllerRef.current = null
       setProcessing(false)
     }
   }
+
+  const cancelMerge = () => mergeControllerRef.current?.abort()
 
   const onDownload = () => {
     if (!result) return
@@ -270,20 +341,40 @@ export default function PDFMergerPage() {
   }
 
   const reset = () => {
-    setFiles([]); setResult(null); setError(''); setProgress(0); setOutputName('merged')
+    mergeControllerRef.current?.abort()
+    addGenerationRef.current += 1
+    setFiles([]); setResult(null); setError(''); setProgress(0); setProgressMax(1); setProgressLabel('Preparing PDF files'); setOutputName('merged'); setLoadingCount(0)
   }
 
   const totalPages = files.reduce((s, f) => s + f.pages, 0)
   const totalSize  = files.reduce((s, f) => s + f.file.size, 0)
   const isLoading  = loadingCount > 0
+  const errorState = error ? classifyToolWorkflowError(new Error(error)) : null
+  const recoverFromError = () => {
+    if (errorState === 'password-protected') {
+      window.open('/pdf-unlock', '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (errorState === 'corrupted-pdf') {
+      window.open('/pdf-repair', '_blank', 'noopener,noreferrer')
+      return
+    }
+    if (files.length >= 2) {
+      void onMerge()
+      return
+    }
+    ;(files.length === 0 ? fileRef : addFileRef).current?.click()
+  }
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <div className="pg" id="main-content">
+      <div className="pg">
 
         {/* Nav */}
         <SiteNav />
+
+        <main id="main-content">
 
         {/* Hero */}
         <div className="hero">
@@ -297,27 +388,36 @@ export default function PDFMergerPage() {
         {/* Main */}
         <div className="wrap">
           <div className="card">
+            <input ref={fileRef} type="file" aria-label="Choose the PDF files to merge" accept=".pdf,application/pdf" multiple style={{ display:'none' }}
+              onChange={e => { if (e.target.files) void addFiles(e.target.files); e.currentTarget.value = '' }} />
+            <input ref={addFileRef} type="file" aria-label="Choose more PDF files to add" accept=".pdf,application/pdf" multiple style={{ display:'none' }}
+              onChange={e => { if (e.target.files) void addFiles(e.target.files); e.currentTarget.value = '' }} />
 
             {result ? (
               /* ── Success state ── */
               <div className="result">
-                <span className="result-icon">🎉</span>
-                <h2>PDF Merged!</h2>
-                <p>
-                  {files.length} files combined into <strong>{result.name}</strong><br/>
-                  {result.totalPages} pages · {fmt(result.blob.size)}
-                </p>
-                <div className="result-btns">
-                  <button className="dl-btn" onClick={onDownload}>⬇ Download</button>
-                  <button className="again-btn" onClick={reset}>Merge another</button>
-                </div>
+                <ToolWorkflowStatus
+                  state="success"
+                  heading="PDFs merged successfully"
+                  message={`${files.length} files were combined into ${result.name}. The result has ${result.totalPages} pages and is ${fmt(result.blob.size)}.`}
+                  primaryLabel="Download merged PDF"
+                  onPrimary={onDownload}
+                  secondaryLabel="Merge another set"
+                  onSecondary={reset}
+                />
               </div>
             ) : files.length === 0 ? (
               /* ── Empty drop zone ── */
               <>
                 <div
                   className={`drop${isDrop ? ' over' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Choose two or more PDF files to merge"
                   onClick={() => fileRef.current?.click()}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileRef.current?.click() }
+                  }}
                   onDragOver={e => { e.preventDefault(); setIsDrop(true) }}
                   onDragLeave={() => setIsDrop(false)}
                   onDrop={e => { e.preventDefault(); setIsDrop(false); addFiles(e.dataTransfer.files) }}
@@ -325,12 +425,19 @@ export default function PDFMergerPage() {
                   <span className="drop-icon">📂</span>
                   <h2>Drop your PDFs here</h2>
                   <p>Select two or more PDF files to combine them into one</p>
-                  <button className="drop-btn">Choose PDF files</button>
+                  <span className="drop-btn" aria-hidden="true">Choose PDF files</span>
                   <div className="drop-note">Local browser processing · no application document-processing request</div>
-                  <input ref={fileRef} type="file" accept=".pdf" multiple style={{ display:'none' }}
-                    onChange={e => { if (e.target.files) addFiles(e.target.files) }} />
                 </div>
-                {error && <div className="error-box" style={{ marginTop:14 }}>{error}</div>}
+                {errorState && (
+                  <div style={{ marginTop: 14 }}>
+                    <ToolWorkflowStatus
+                      state={errorState}
+                      detail={safeWorkflowErrorDetail(new Error(error))}
+                      primaryLabel="Choose PDF files"
+                      onPrimary={recoverFromError}
+                    />
+                  </div>
+                )}
               </>
             ) : (
               /* ── File list + merge UI ── */
@@ -338,18 +445,22 @@ export default function PDFMergerPage() {
                 {/* Add more strip */}
                 <div
                   className={`add-row${isAddDrop ? ' over' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Add more PDF files"
                   onClick={() => addFileRef.current?.click()}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addFileRef.current?.click() }
+                  }}
                   onDragOver={e => { e.preventDefault(); setIsAddDrop(true) }}
                   onDragLeave={() => setIsAddDrop(false)}
                   onDrop={e => { e.preventDefault(); setIsAddDrop(false); addFiles(e.dataTransfer.files) }}
                 >
                   <span style={{ fontSize:18 }}>➕</span>
                   <span>Drop more PDF files to add them</span>
-                  <button className="add-row-btn" onClick={e => { e.stopPropagation(); addFileRef.current?.click() }}>
+                  <span className="add-row-btn" aria-hidden="true">
                     Add PDF
-                  </button>
-                  <input ref={addFileRef} type="file" accept=".pdf" multiple style={{ display:'none' }}
-                    onChange={e => { if (e.target.files) addFiles(e.target.files) }} />
+                  </span>
                 </div>
 
                 {/* Summary */}
@@ -413,14 +524,15 @@ export default function PDFMergerPage() {
                         <div className="file-meta" style={{ display:'flex', alignItems:'center', gap:6 }}>
                           <span style={{ width:6, height:6, borderRadius:'50%', background:entry.color, display:'inline-block', flexShrink:0 }}/>
                           {fmt(entry.file.size)} · {entry.pages} page{entry.pages !== 1 ? 's' : ''}
-                        </div>
-                      </div>
+          </div>
+        </main>
+      </div>
 
                       {/* Actions */}
                       <div className="file-actions">
-                        <button className="move-btn" disabled={idx === 0} onClick={() => moveUp(idx)} title="Move up">▲</button>
-                        <button className="move-btn" disabled={idx === files.length - 1} onClick={() => moveDown(idx)} title="Move down">▼</button>
-                        <button className="rm-btn" onClick={() => remove(entry.id)} title="Remove">✕</button>
+                        <button className="move-btn" disabled={idx === 0} onClick={() => moveUp(idx)} title="Move up" aria-label={`Move ${entry.file.name} up`}>▲</button>
+                        <button className="move-btn" disabled={idx === files.length - 1} onClick={() => moveDown(idx)} title="Move down" aria-label={`Move ${entry.file.name} down`}>▼</button>
+                        <button className="rm-btn" onClick={() => remove(entry.id)} title="Remove" aria-label={`Remove ${entry.file.name}`}>✕</button>
                       </div>
                     </div>
                   ))}
@@ -428,8 +540,9 @@ export default function PDFMergerPage() {
 
                 {/* Output filename */}
                 <div className="name-row">
-                  <span className="name-label">Output name</span>
+                  <label className="name-label" htmlFor="merged-output-name">Output name</label>
                   <input
+                    id="merged-output-name"
                     className="name-input"
                     value={outputName}
                     onChange={e => setOutputName(e.target.value)}
@@ -439,7 +552,16 @@ export default function PDFMergerPage() {
                   <span className="name-ext">.pdf</span>
                 </div>
 
-                {error && <div className="error-box">{error}</div>}
+                {errorState && (
+                  <ToolWorkflowStatus
+                    state={errorState}
+                    detail={safeWorkflowErrorDetail(new Error(error))}
+                    preserveMessage="The readable PDFs, their order, and the output name are still ready."
+                    onPrimary={recoverFromError}
+                    secondaryLabel="Add another PDF"
+                    onSecondary={() => addFileRef.current?.click()}
+                  />
+                )}
 
                 {/* Action bar */}
                 <div className="action-bar">
@@ -459,10 +581,13 @@ export default function PDFMergerPage() {
 
                 {processing && (
                   <div className="prog-wrap">
-                    <div className="prog-bar">
-                      <div className="prog-fill" style={{ width:`${progress}%` }} />
-                    </div>
-                    <div className="prog-label">Merging PDFs…</div>
+                    <ToolWorkflowStatus
+                      state="processing"
+                      message="The selected PDFs are being copied in the order shown. Your originals will not be changed."
+                      progress={{ value: progress, max: progressMax, label: progressLabel }}
+                      cancelLabel="Cancel merge"
+                      onCancel={cancelMerge}
+                    />
                   </div>
                 )}
               </>
